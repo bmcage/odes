@@ -1,0 +1,61 @@
+!    -*- f90 -*-
+!Author: Benny Malengier
+!Date:   26 aug 2008
+!$Revision: 0 $
+
+python module ddaspk__user__routines 
+    interface ddaspk_user_interface
+       subroutine res(n,x,y,yprime,cj,delta,ires,rpar,ipar) 
+            integer intent(hide),depend(y) :: n=len(y)
+            double precision intent(in) :: x
+            double precision dimension(n),intent(in,c) :: y
+            double precision dimension(n),intent(in,c) :: yprime
+            double precision intent(in,cache) :: cj
+            double precision dimension(n),intent(out,c) :: delta
+            integer intent(out):: ires
+            double precision intent(hide) :: rpar
+            integer intent(hide) :: ipar
+        end subroutine res
+       subroutine jac(n,x,y,yprime,wm,cj,rpar,ipar) 
+            integer intent(hide),depend(y) :: n=len(y)
+            double precision intent(in) :: x
+            double precision dimension(n),intent(c,in) :: y
+            double precision dimension(n),intent(c,in) :: yprime
+            double precision dimension(*),intent(c,out) :: wm
+            double precision,intent(in,cache):: cj
+            double precision dimension(*),intent(hide) :: rpar
+            integer dimension(*),intent(hide) :: ipar
+       end subroutine jac
+    end interface
+end python module ddaspk__user__routines
+python module ddaspk 
+    interface 
+        subroutine ddaspk(res,jac,neq,y,yprime,t,tout,info,rtol,atol,idid,rwork,lrw,iwork,liw,rpar,ipar,psol)
+            ! y1,yprime1,t,istate = ddaspk(res,jac,y0,yp0,t0,t1,info,rtol,atol,itask,istate,rwork,iwork)
+            callstatement (*f2py_func)(cb_res_in_ddaspk__user__routines,&neq,&t,y,yprime,&tout,info,rtol,atol,&idid,rwork,&lrw,iwork,&liw,&rpar,&ipar,cb_jac_in_ddaspk__user__routines,psol)
+            use ddaspk__user__routines
+            external res
+            external jac
+            integer intent(hide),depend(y) :: neq = len(y)
+            double precision dimension(neq),intent(in,out,copy) :: y
+            double precision dimension(neq),intent(in,out,copy) :: yprime
+            double precision intent(in,out) :: t
+            double precision intent(in) :: tout
+            integer dimension(20),intent(in) :: info
+            double precision dimension(*),intent(in),check(len(atol)<&
+              &=1||len(atol)>=neq),depend(neq) :: atol
+            double precision dimension(*),intent(in),check(len(rtol)<&
+              &=1||len(rtol)>=neq),depend(neq) :: rtol
+            integer intent(out) :: idid
+            double precision dimension(lrw),intent(in,cache) :: rwork
+            integer intent(hide),check(len(rwork)>=lrw),depend(rwork) :: lrw=len(rwork)
+            integer dimension(liw),intent(in,cache) :: iwork
+            integer intent(hide),check(len(iwork)>=liw),depend(iwork) :: liw=len(iwork)
+            double precision intent(hide) :: rpar = 0.0
+            integer intent(hide) :: ipar = 0
+            integer intent(hide) :: psol = 0
+        end subroutine ddaspk
+    end interface 
+end python module ddaspk
+
+

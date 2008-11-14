@@ -1,0 +1,32 @@
+This is a scikit offering some extra ode/dae solvers, so they can mature outside of scipy. 
+
+Requirement
+===========
+* You need scipy, as the aim is to extend scipy.integrate
+* You need a fortran compiler to install from source. 
+
+Installation from sources
+=========================
+
+In the directory example (the same as the file you are reading now), just do as root:
+
+python setup.py install
+
+Usage
+=====
+This installs the scikit, to use it in your python scripts use eg:
+
+from scikits.odes import dae
+
+For examples, see the tests directory with the tests. 
+
+Tests
+=====
+To run the tests do in the python shell:
+
+>>> import scikits.odes
+>>> scikits.odes.test()
+
+NOTE: at the moment (11/2008) the above tests() only work in the old style of python installs (.egg directory or normal install), not with zipped eggs. So for above to work you need to install in the old method:
+
+sudo python setup.py install --single-version-externally-managed --root /
