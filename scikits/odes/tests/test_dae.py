@@ -18,8 +18,12 @@ class TestDae(TestCase):
         jac = None
         if hasattr(problem, 'jac'):
             jac = problem.jac
+        res = problem.res
+        ##if hasattr(problem, 'res_'+integrator):
+        ##    if integrator == 'lsodi':
+        ##        res = problem.res_lsodi
 
-        ig = dae(problem.res, jac)
+        ig = dae(res, jac)
         ig.set_integrator(integrator,
                           **integrator_params)
         ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
@@ -27,11 +31,14 @@ class TestDae(TestCase):
         zprime = [0]*len(problem.stop_t)
         i=0
         for time in problem.stop_t:
+            print time
             z[i],  zprime[i] = ig.solve(time)
+            print z[i],zprime[i]
             i += 1
-            assert ig.successful(), (problem,)
+            assert ig.successful(), (problem.info(),)
+        print 't', z, zprime, array(z)
         assert problem.verify(array(z), array(zprime),  problem.stop_t), \
-                    (problem,)
+                    (problem.info(),)
 
     def test_ddaspk(self):
         """Check the ddaspk solver"""
@@ -39,9 +46,20 @@ class TestDae(TestCase):
             problem = problem_cls()
             self._do_problem(problem, 'ddaspk', **problem.ddaspk_pars)
 
+    def test_lsodi(self):
+        """Check the lsodi solver"""
+        for problem_cls in PROBLEMS:
+            problem = problem_cls()
+            self._do_problem(problem, 'lsodi', **problem.lsodi_pars)
+
 #------------------------------------------------------------------------------
 # Test problems
 #------------------------------------------------------------------------------
+
+def simple_adda(t,y,ml,mu,p,nrowp):
+    p[0,0] += 1.0
+    p[1,1] += 1.0
+    return p
 
 class DAE:
     """
@@ -55,6 +73,10 @@ class DAE:
     rtol    = 1e-5
 
     ddaspk_pars = {}
+    lsodi_pars = {'adda' : simple_adda}
+    
+    def info(self):
+        return self.__class__.__name__ + ": No info given"
 
 class SimpleOscillator(DAE):
     r"""
@@ -63,14 +85,21 @@ class SimpleOscillator(DAE):
     Solution::
         u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
     """
-    stop_t  = [2 + 0.09,  3.]
+    stop_t  = [2 + 0.09, 3]
     u0      = 1.
     dotu0   = 0.1
 
     k = 4.0
     m = 1.0
     z0      = array([dotu0, u0], float)
-    zprime0 = array([-k*u0, dotu0], float)
+    zprime0 = array([-k*u0/m, dotu0], float)
+    
+    def __init__(self):
+        self.lsodi_pars = {'adda_func' : self.adda}
+
+    def info(self):
+        doc = self.__class__.__name__ + ": 2x2 constant mass matrix"
+        return doc
 
     def res(self, t, z, zp):
         tmp1 = zeros((2,2), float)
@@ -81,6 +110,20 @@ class SimpleOscillator(DAE):
         tmp2[1,0] = -1.
         return dot(tmp1, zp)+dot(tmp2, z)
 
+    ##def res_lsodi(self, t, z, zp):
+    ##    tmp1 = zeros((2,2), float)
+    ##    tmp2 = zeros((2,2), float)
+    ##    tmp1[0,0] = self.m
+    ##    tmp1[1,1] = 1.
+    ##    tmp2[0,1] = self.k
+    ##    tmp2[1,0] = -1.
+    ##    return -dot(tmp1, zp)-dot(tmp2, z)
+
+    def adda(self, t, y, ml, mu, p, nrowp):
+        p[0,0] -= self.m
+        p[1,1] -= 1.0
+        return p
+
     def verify(self, zs, zps, t):
         omega = sqrt(self.k / self.m)
         ok = True
@@ -88,6 +131,7 @@ class SimpleOscillator(DAE):
             u = self.z0[1]*cos(omega*time)+self.z0[0]*sin(omega*time)/omega
             ok = ok and allclose(u, z[1], atol=self.atol, rtol=self.rtol) and \
             allclose(z[0], zp[1], atol=self.atol, rtol=self.rtol)
+            print time, ok, z, u
         return ok
 
 class SimpleOscillatorJac(SimpleOscillator):
@@ -154,6 +198,10 @@ class StiffVODECompare(DAE):
         self.ddaspk_pars = {'rtol' : [1e-4,1e-4,1e-4], 
                             'atol' : [1e-8,1e-14,1e-6], 
                            }
+        self.lsodi_pars = {'rtol' : [1e-4,1e-4,1e-4], 
+                            'atol' : [1e-6,1e-10,1e-6], 
+                            'adda_func' : self.adda
+                           }
 
     def res(self, t, y, yp):
         eq0 = yp[0] + 0.04*y[0] - 1e4*y[1]*y[2]
@@ -161,7 +209,16 @@ class StiffVODECompare(DAE):
         eq1 = yp[1] +yp[0]+yp[2]
         return array([eq0,eq1,eq2])
 
+    def adda(self, t, y, ml, mu, p, nrowp):
+        p[0,0] -= 1.0
+        p[1,0] -= 1.0
+        p[1,1] -= 1.0
+        p[1,2] -= 1.0
+        p[2,2] -= 1.0
+        return p
+
     def verify(self, y, yp, t):
+        print 'solution', y
         return allclose(self.sol, y, atol=self.atol, rtol=self.rtol)
 
 PROBLEMS = [SimpleOscillator, StiffVODECompare,  

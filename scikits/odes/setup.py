@@ -17,10 +17,9 @@ def configuration(parent_package='',top_path=None):
                          sources=['ddaspk.pyf'],
                          libraries=['daepack'])
     # lsodi
-    #config.add_extension('lsodi',
-    #                     sources=['lsodi.pyf'],
-    #                     libraries=libs,
-    #                     **newblas)
+    config.add_extension('lsodi',
+                         sources=['lsodi.pyf'],
+                        libraries=['daepack'])
     config.add_data_dir('tests')
     return config
 

@@ -1,0 +1,70 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module lsodi__user__routines 
+    interface lsodi_user_interface 
+        subroutine res(neq,tn,y,s,r,ires)
+            integer intent(hide),depend(y) :: neq = len(y)
+            double precision intent(in) :: tn
+            double precision dimension(neq),intent(in) :: y
+            double precision dimension(neq),intent(in) :: s
+            double precision dimension(neq),intent(out):: r
+            integer intent(in) :: ires
+        end subroutine res
+        subroutine adda(neq,t,y,ml,mu,p,nrowp) ! in :lsodiuser:
+            integer intent(hide),depend(y) :: neq = len(y)
+            double precision intent(in) :: t
+            double precision dimension(neq),intent(in) :: y
+            integer intent(in) :: ml
+            integer intent(in) :: mu
+            double precision dimension(nrowp,neq),intent(in,out) :: p
+            integer optional,check(shape(p,0)==nrowp),depend(p) :: nrowp=shape(p,0)
+        end subroutine adda
+        subroutine jac(neq,t,y,s,ml,mu,p,nrowp)
+            integer intent(hide),depend(y) :: neq = len(y)
+            double precision intent(in) :: t
+            double precision dimension(neq),intent(in) :: y
+            double precision dimension(neq),intent(in) :: s
+            integer intent(in) :: ml
+            integer intent(in) :: mu
+            double precision dimension(nrowp,neq),intent(out) :: p
+            integer optional,check(shape(p,0)==nrowp),depend(p) :: nrowp=shape(p,0)
+        end subroutine jac
+   end interface lsodi_user_interface
+end python module lsodi__user__routines
+
+python module lsodi
+    interface
+       subroutine lsodi(res,adda,jac,neq,y,ydoti,t,tout,itol,rtol,atol,itask,istate,iopt,rwork,lrw,iwork,liw,mf)
+         use lsodi__user__routines
+         external res
+         external adda
+         external jac
+         integer intent(hide),depend(y) :: neq = len(y)
+         double precision dimension(neq),intent(in,out,copy) :: y
+         double precision dimension(neq),intent(in,out,copy) :: ydoti
+         double precision intent(in,out) :: t
+         double precision intent(in) :: tout
+         integer intent(in) :: itol
+         double precision intent(in) :: rtol
+         double precision dimension(*),intent(in),check(len(atol)=&
+              &=1||len(atol)==neq),depend(neq) :: atol
+         integer intent(in) :: itask
+         integer intent(in,out) :: istate
+         integer intent(in) :: iopt
+         double precision dimension(lrw),intent(in) :: rwork
+         integer optional,check(len(rwork)>=lrw),depend(rwork),intent(hide) :: lrw=len(rwork)
+         integer dimension(liw),intent(in) :: iwork
+         integer optional,check(len(iwork)>=liw),depend(iwork),intent(hide) :: liw=len(iwork)
+         integer intent(in) :: mf
+       end subroutine lsodi
+       subroutine intdy(t, k, yh, nyh, dky, iflag)
+         double precision intent(in) :: t
+         integer intent(in) :: k
+         double precision dimension(*),intent(in) :: yh
+         integer intent(in) :: nyh
+         double precision intent(out),dimension(nyh) :: dky
+         integer intent(out) :: iflag
+       end subroutine intdy
+   end interface
+end python module lsodi

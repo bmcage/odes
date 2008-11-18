@@ -56,11 +56,28 @@ This code solves a system of differential/algebraic equations of the form
 G(t,y,y') = 0 , using a combination of Backward Differentiation Formula 
 (BDF) methods and a choice of two linear system solution methods: direct 
 (dense or band) or Krylov (iterative). 
-Krylov is not supported from within scipy. In order to support it, a new
-interface should be created ddaspk_krylov, with a different signature,
-reflecting the changes needed.
+Krylov is not supported from within scikits.odes. 
+In order to support it, a new interface should be created ddaspk_krylov, 
+with a different signature, reflecting the changes needed.
 
 Source: http://www.netlib.org/ode/ddaspk.f
+
+On construction the function calculating the residual (res) must be given and 
+optionally also the function calculating the jacobian (jac). 
+Res has the signature: res(x, y, yprime, cj)
+with 
+    x : independent variable, eg the time, float
+    y : array of n unknowns in x
+    yprime : dy/dx array of n unknowns in x
+    cj : internal variable of ddaspk algorithm you can use, don't change it! 
+         cj can be ignored, or used to rescale constraint equations in the 
+         system
+return value should be an array with the result of the residual computation
+
+Jac has the signature jac(x, y, yprime, cj) as res, however the return value 
+should be a nxn shaped array in general or a banded shaped array as per the
+definition of lband/uband belop. Jac is optional. 
+Note that Jac is defined as dres(i)/dy(j) + cj*dres(i)/dyprime(j)
 
 This integrator accepts the following parameters in set_integrator()
 method of the ode class:
@@ -114,10 +131,59 @@ method of the ode class:
   a differential variable.
 
 lsodi
-~~~~~
-Not included, should be easy based on patch at 
-                 http://www.scipy.org/scipy/scipy/ticket/615
-Adda should however be a parameter passed to the set_integrator function.
+~~~~
+Integrator for linearly implicit systems of first-order odes.  lsodi
+provides the same methods as vode (adams and bdf).  This integrator
+accepts the following parameters in set_integrator() method of the ode class:
+           atol=float|seq
+           rtol=float
+           lband=None|int
+           rband=None|int
+           method='adams'|'bdf'
+           with_jacobian=0|1
+           nsteps = int
+           (first|min|max)_step = float
+           tcrit=None|float
+           order = int        # <=12 for adams, <=5 for bdf
+           compute_initcond = None|'yode0'
+           adda = function, see below
+
+Details: 
+- compute_initcond: None or 'yode0'
+  LSODI may be able to compute the initial conditions if you do not know them
+  precisely and the problem is not algebraic at t=0. 
+  If yode0, then the differential variables (y of the ode system at time 0) 
+    will be used to solve for the derivatives of the differential variables. 
+Source: http://www.netlib.org/ode/lsodi.f
+
+Implicit integration requires two functions do be defined to integrate 
+                    d y(t)[i]
+           a(t,y) * --------- = g(t,y)[i]
+                        dt
+where a(t,y) is a square matrix.
+
+res returns an (neq, ) array and is the residual which the user provides. It
+calculates something like
+        def res(t, y, s, ires):
+            r(t,y,s)=g(t,y)-a(t,y)*s 
+            return r
+
+adda must modify the provided matrix p.  If banded storage is used,
+ml and mu provide the upper and lower diagonals, see the lsodi.f
+source for full documentation.  adda is passed to the dae set_integrator()
+with the adda= keyword argument.
+        def adda(t,y,ml,mu,p,[nrowp]):
+            p += a(t,y)
+            return p
+Note: if your residual is a s - g, then adda must substract a !
+
+An optional jacobian can be specified which provides the derivatves of
+r(t,y,s)=g(t,y)-a(t,y)*s
+        def jac(t, y, s, ml, mu, nrowp):
+                       d r(t,y,s)[i]
+            p_{i,j} = --------------
+                          d y[j]
+            return p
 
 ddaskr  
 ~~~~~~
@@ -155,13 +221,11 @@ __doc__ += integrator_info
 #         # has_jac - whether user has supplied its own routine for Jacobian
 #         <allocate memory,initialize further>
 #
-#     def run(self,res,jac,y0,yprime0,t0,t1,res_params,jac_params): # required
+#     def run(self,res,jac,y0,yprime0,t0,t1): # required
 #         # this method is called to integrate from t=t0 to t=t1
 #         # with initial condition y0 yprime0. 
 #         #res and jac are user-supplied functions
-#         # that define the problem. res_params,jac_params are additional
-#         # arguments
-#         # to these functions.
+#         # that define the problem.
 #         <calculate y1>
 #         if <calculation was unsuccesful>:
 #             self.success = 0
@@ -262,7 +326,8 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         Define equation res = G(t,y,y') which can eg be G = f(y,t) - A y' when 
         solving A y' = f(y,t), 
         and where (optional) jac is the jacobian matrix of the nonlinear system
-        see fortran source code), so d res/dy + scaling * d res/dy'.
+        see fortran source code), so d res/dy + scaling * d res/dy' or d res/dy
+        depending on the backend
 
         Parameters
         ----------
@@ -343,6 +408,11 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
                             self.y,self.yprime,self.t,t)
         return self.y,  self.yprime
 
+    def change_tcrit(self, tcrit=None):
+        """Change the value of tcrit on a running solver between steps
+        """
+        self._integrator.set_tcrit(tcrit)
+
     def successful(self):
         """Check if integration was successful."""
         try: self._integrator
@@ -393,6 +463,12 @@ class DaeIntegratorBase(object):
         """Integrate from t=t0 to t>=t1 and return (y1,t)."""
         raise NotImplementedError,'%s does not support run_relax() method' %\
               (self.__class__.__name__)
+    
+    def set_tcrit(self, tcrit=None):
+        """Change the tcrit value if possible in the solver without 
+            reinitializing the running solver
+        """
+        raise NotImplementedError
 
     #XXX: __str__ method for getting visual state of the integrator
 
@@ -500,6 +576,18 @@ class ddaspk(DaeIntegratorBase):
         self.algebraic_var = algebraic_var
         self.success = 1
 
+    def set_tcrit(self, tcrit=None):
+        """Change the tcrit value if possible in the solver without 
+            reinitializing the running solver
+        """
+        self.tcrit = tcrit
+        if self.tcrit is not None:
+            self.info[3] = 1
+            self.rwork[0] = self.tcrit
+        else:
+            self.info[3] = 0
+            self.rwork[0] = 0.
+
     def reset(self,n,has_jac):
         # Calculate parameters for Fortran subroutine ddaspk.
         self.info = zeros((20,), int32)  # default is all info=0
@@ -587,3 +675,194 @@ class ddaspk(DaeIntegratorBase):
 
 if ddaspk.runner:
     DaeIntegratorBase.integrator_classes.append(ddaspk)
+
+class lsodi(DaeIntegratorBase):
+    try:
+        import lsodi as _lsodi
+    except ImportError:
+        print sys.exc_value
+        _lsodi = None
+    runner = getattr(_lsodi,'lsodi',None)
+    _intdy = getattr(_lsodi,'intdy',None)
+
+    messages = {2 : 'lsodi was successful.',
+               -1 : 'excess work done on this call (check all inputs).',
+               -2 : 'excess accuracy requested (tolerances too small).',
+               -3 : 'illegal input detected (see printed message).',
+               -4 : 'repeated error test failures (check all inputs).',
+               -5 : 'repeated convergence failures (perhaps bad jacobian'
+                    ' supplied or wrong choice of tolerances).',
+               -6 : 'error weight became zero during problem. (solution'
+                    ' component i vanished, and atol or atol(i) = 0.).',
+               -7 : 'cannot occur in casual use.',
+               -8 : 'lsodi was unable to compute the initial dy/dt.  In'
+                    ' casual use, this means a(t,y) is initially singular.'
+                    '  Supply ydoti and use istate = 1 on the first call.'
+               }
+    supports_run_relax = 1
+    supports_step = 1
+
+    def __init__(self,
+                 rtol=1e-6,atol=1e-12,
+                 lband=None,uband=None,
+                 tcrit=None, 
+                 order = 0,
+                 nsteps = 500,
+                 max_step = 0.0, # corresponds to infinite
+                 min_step = 0.0,
+                 first_step = 0.0, # determined by solver
+                 method="adams", 
+                 compute_initcond=None,
+                 adda_func = None
+                 ):
+
+        self.rtol = rtol
+        self.atol = atol
+        self.mu = uband
+        self.ml = lband
+
+        self.tcrit = tcrit
+        self.order = order
+        self.nsteps = nsteps
+        self.max_step = max_step
+        self.min_step = min_step
+        self.first_step = first_step
+        if re.match(method,r'adams',re.I): self.meth = 1
+        elif re.match(method,r'bdf',re.I): self.meth = 2
+        else: raise ValueError,'Unknown integration method %s'%(method)
+        if compute_initcond is None: self.compute_initcond = 0
+        elif re.match(compute_initcond,r'yode0',re.I): 
+            self.compute_initcond = 1
+        else: raise ValueError,'Unknown init cond calculation method %s' %(
+                                                            compute_initcond)
+        if adda_func is None:
+            raise ValueError, 'adda_func is required for lsodi algorithm!'
+        self.adda = adda_func
+        self.success = 1
+
+    def set_tcrit(self, tcrit=None):
+        """Change the tcrit value if possible in the solver without 
+            reinitializing the running solver
+        """
+        self.tcrit = tcrit
+        if self.tcrit is not None:
+            self.rwork[0]=self.tcrit
+        else:
+            self.rwork[0] = 0.
+
+    def reset(self,n,has_jac):
+        # Calculate parameters for Fortran subroutine lsodi.
+        self.neq=n
+        if has_jac:
+            if self.mu is None and self.ml is None:
+                miter = 1
+            else:
+                if self.mu is None: self.mu = 0
+                if self.ml is None: self.ml = 0
+                miter = 4
+        else:
+            if self.mu is None and self.ml is None:
+                miter = 2
+            else:
+                if self.mu is None: self.mu = 0
+                if self.ml is None: self.ml = 0
+                miter = 5
+        mf = 10*self.meth + miter
+        if mf in [11,12]:
+            lrw = 22 + 16*n + n**2
+        elif mf in [14,15]:
+            lrw = 22 + 17*n + (2*ml +mu)*neq
+        elif mf in [21,22]:
+            lrw = 22 + 9*n + n**2
+        elif mf in [24,25]:
+            lrw = 22 + 10*n + (2*ml +mu)*neq
+        else:
+            raise ValueError,'Unexpected mf=%s'%(mf)
+        liw = 20 + n
+        rwork = zeros((lrw,), float)
+        rwork[4] = self.first_step
+        rwork[5] = self.max_step
+        rwork[6] = self.min_step
+        self.rwork = rwork
+        iwork = zeros((liw,), int32)
+        if self.ml is not None:
+            iwork[0] = self.ml
+        if self.mu is not None:
+            iwork[1] = self.mu
+        iwork[4] = self.order
+        iwork[5] = self.nsteps
+        iwork[6] = 2           # mxhnil
+        self.iwork = iwork
+        if isscalar(self.atol) :
+            itol=1
+        else:
+            itol=2
+        itask=1
+        # don't internally compute ydot if it is provided
+        if self.compute_initcond==0:
+            istate=1
+        else:
+            istate=0
+        if self.tcrit is not None:
+            self.rwork[0]=self.tcrit
+        iopt=1
+        self.call_args = [itol,self.rtol,self.atol,itask,istate,iopt,
+                            self.rwork,self.iwork,mf]
+        self.success = 1
+
+    def _run(self,*args):
+        y1,y1prime_tmp,t,istate = self.runner(*((args[0],)+ (self.adda,) + args[1:]
+                                    +tuple(self.call_args)))
+        self.call_args[4]=istate
+        y1prime = None
+        if istate <0:
+            print 'lsodi:',self.messages.get(istate,'Unexpected istate=%s'%istate)
+            if istate in [-1,-4,-5] :
+                print 'lsodi: present residual is', y1prime_tmp
+            self.success = 0
+            
+        if self.success:
+            yh=self.rwork[20:]
+            order = 1
+            y1prime, iflag = self._intdy(t, order, yh, self.neq)
+            if iflag<0:
+                if iflag==-1: 
+                    raise ValueError, "order=%s invalid in call to intdy" \
+                                                        %order
+                if iflag==-2: 
+                    raise ValueError, "t=%s invalid in call to intdy"%t
+        return y1,y1prime,t
+
+    def step(self,*args):
+        itask = self.call_args[3]
+        if self.tcrit is None:
+            self.call_args[3] = 2
+        else:
+            self.call_args[3] = 5
+        r = self._run(*args)
+        self.call_args[3] = itask
+        return r
+
+    def run_relax(self,*args):
+        if self.tcrit is not None:
+            print 'Warning, relaxed run does not take into accout tcrit %g' \
+                        % self.tcrit
+        itask = self.call_args[3]
+        self.call_args[3] = 3
+        r = self._run(*args)
+        self.call_args[3] = itask
+        return r
+
+    def run(self,*args):
+        if self.tcrit is None:
+            itask = 1
+            self.call_args[3] = 1
+        else:
+            itask = self.call_args[3]
+            self.call_args[3] = 4
+        r = self._run(*args)
+        self.call_args[3] = itask
+        return r
+
+if lsodi.runner:
+    DaeIntegratorBase.integrator_classes.append(lsodi)
