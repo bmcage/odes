@@ -19,13 +19,15 @@ DOWNLOAD_URL        = URL
 
 MAJOR = 0
 MINOR = 2
-MICRO = 0
-DEV = False
+MICRO = 1
+DEV = True
 
 CLASSIFIERS = [
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: BSD License',
         'Topic :: Scientific/Engineering']
 
 def build_verstring():
