@@ -1,6 +1,10 @@
 #! /usr/bin/env python
+"""
+Odes is a scikit toolkit for scipy to add some extra ode solvers. 
+At present it provides dae solvers you can use, extending the capabilities 
+offered in scipy.integrade.ode.
 
-descr   = """
+LICENSE: the license of odes is the same as scipy, new BSD.
 """
 
 import os
@@ -8,19 +12,7 @@ import sys
 
 import setuptools
 
-DISTNAME            = 'scikits.odes'
-DESCRIPTION         = 'A python module for ordinary differential equation and'+\
-                      'differential algebraic equation solvers'
-LONG_DESCRIPTION    = descr
-MAINTAINER          = 'mainteiner of odes is B. Malengier'
-MAINTAINER_EMAIL    = 'benny.malengier@gmail.org'
-URL                 = 'http://todo.bb'
-LICENSE             = 'new BSD'
-
-odes_version = '0.01'
-
-DOWNLOAD_URL        = 'http://todo.bb/odes.' + odes_version + '.tar.bz2'
-
+from common import *
 
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
@@ -37,7 +29,7 @@ def setup_package():
 
     from numpy.distutils.core import setup
     setup(name=DISTNAME, packages=['scikits'],
-        version = odes_version,
+        version = VERSION,
         maintainer = MAINTAINER,
         maintainer_email = MAINTAINER_EMAIL,
         description = DESCRIPTION,
