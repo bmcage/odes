@@ -591,6 +591,7 @@ class ddaspk(DaeIntegratorBase):
     def reset(self,n,has_jac):
         # Calculate parameters for Fortran subroutine ddaspk.
         self.info = zeros((20,), int32)  # default is all info=0
+        self.info[17] = 2  # extra output on init cond computation
         if (isscalar(self.atol) <> isscalar(self.rtol)) or (
                not isscalar(self.atol) and len(self.atol) <> len(self.rtol)):
             raise ValueError,'atol (%s) and rtol (%s) must be both scalar or'\
