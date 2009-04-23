@@ -115,6 +115,9 @@ method of the ode class:
   If yode0, then the differential variables will be used to solve for the 
     algebraic variables and the derivative of the differential variables. 
     Which are the algebraic variables must be indicated with algebraic_var method
+- exclude_algvar_from_error: bool
+  To determine solution, do not take the algebraic variables error control into 
+  account. Default=False
 - constraint_init: bool
   Enforce the constraint checks of Y during initial condition computation
   Note: try first with no constraints
@@ -540,7 +543,8 @@ class ddaspk(DaeIntegratorBase):
                  compute_initcond=None,
                  constraint_init=False, 
                  constraint_type=None, 
-                 algebraic_var=None,  
+                 algebraic_var=None, 
+                 exclude_algvar_from_error=False, 
                  ):
 
         self.rtol = rtol
@@ -574,6 +578,7 @@ class ddaspk(DaeIntegratorBase):
                               'algebraic variables, +1 for diffential var, '\
                               '-1 for algebraic var'
         self.algebraic_var = algebraic_var
+        self.excl_algvar_err = exclude_algvar_from_error
         self.success = 1
 
     def set_tcrit(self, tcrit=None):
@@ -604,15 +609,18 @@ class ddaspk(DaeIntegratorBase):
             if self.mu is None: self.mu = 0
             if self.ml is None: self.ml = 0
             self.info[5] = 1
+        if self.excl_algvar_err:
+            self.info[15] = 1
         lrw = 50 + max(self.order+4,7)*n
         if self.info[5]==0: lrw += pow(n, 2)
         elif self.info[4]==0: 
             lrw += (2*self.ml+self.mu+1)*n + 2*(n/(self.ml+self.mu+1)+1)
         else: lrw += (2*self.ml+self.mu+1)*n
+        if self.info[15] == 1: lrw +=n
         rwork = zeros((lrw,), float)
         liw = 40 + n
         if self.nonneg in [1, 3]: liw += n
-        if self.compute_initcond: liw += n
+        if self.compute_initcond or self.excl_algvar_err: liw += n
         iwork = zeros((liw,), int32)
         if self.tcrit is not None:
             self.info[3] = 1
@@ -642,6 +650,8 @@ class ddaspk(DaeIntegratorBase):
             else: iwork[40:lid]=self.constraint_type[:]
         self.info[10]=self.compute_initcond
         if self.info[10] in [1, 2]:
+            iwork[lid:lid+n] = self.algebraic_var[:]
+        if self.excl_algvar_err:
             iwork[lid:lid+n] = self.algebraic_var[:]
         ## some overrides that one might want
         # self.info[17] = 1  # minimal printing inside init cond calc
