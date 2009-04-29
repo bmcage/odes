@@ -368,6 +368,8 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         self.y = asarray(y, self._integrator.scalar)
         self.yprime = asarray(yprime, self._integrator.scalar)
         self.t = t
+        self._integrator.set_init_val(self.y, self.yprime, self.t, 
+                                        self.res, self.jac)
         self._integrator.reset(len(self.y),self.jac is not None)
         return self
 
@@ -384,7 +386,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         """
         integrator = find_dae_integrator(name)
         if integrator is None:
-            print 'No integrator name match with %s or is not available.'\
+            raise ValueError, 'No integrator name match with %s or is not available.'\
                   %(`name`)
         else:
             self._integrator = integrator(**integrator_params)
@@ -416,6 +418,13 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         """
         self._integrator.set_tcrit(tcrit)
 
+    def print_info(self, info=True):
+        """If the backend supports it, the next solve method will output
+           relevant info about the solution step if info=True, no output
+            when info=False
+        """
+        self._integrator.printinfo = info
+
     def successful(self):
         """Check if integration was successful."""
         try: self._integrator
@@ -440,6 +449,13 @@ class DaeIntegratorBase(object):
     supports_step = None
     integrator_classes = []
     scalar = float
+    printinfo = False
+
+    def set_init_val(self, y, yprime, t, res, jac):
+        """Some backends might need initial values to set up themselves.
+           Note that the run routines also are passed init values!
+        """
+        pass
 
     def reset(self,n,has_jac):
         """Prepare integrator for call: allocate memory, set flags, etc.
@@ -877,3 +893,11 @@ class lsodi(DaeIntegratorBase):
 
 if lsodi.runner:
     DaeIntegratorBase.integrator_classes.append(lsodi)
+
+try:
+    from odes_ida import odesIDA
+    DaeIntegratorBase.integrator_classes.append(odesIDA)
+except:
+    print 'Could not load odesIDA'
+
+    
