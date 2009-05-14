@@ -114,6 +114,8 @@ class odesIDA(dae.DaeIntegratorBase):
     supports_run_relax = 0
     supports_step = 1
     scalar = nvecserial.numpyrealtype
+    
+    name = 'ida'
 
     def __init__(self,
                  rtol=1e-6,atol=1e-12,
@@ -249,26 +251,67 @@ class odesIDA(dae.DaeIntegratorBase):
             #dense jacobian
             ida.IDADense(self.ida_mem.obj, n)
             if has_jac:
-                ida.IDADenseSetJacFn(self.ida_mem.obj, self.jac, None)
+                ida.IDADenseSetJacFn(self.ida_mem.obj, self._jacDenseFn, None)
         else:
             #band jacobian
             if self.ml is None or self.mu is None:
                 raise ValueError, 'Give both uband and lband, or nothing'
             ida.IDABand(self.ida_mem.obj, n, self.mu, self.ml)
             if has_jac:
-                ida.IDABandSetJacFn(self.ida_mem.obj, self.jac, None)
+                ida.IDABandSetJacFn(self.ida_mem.obj, self._jacBandFn, None)
 
         self.__yret =  ida.NVector([0]*n)
         self.__ypret =  ida.NVector([0]*n)
         self.success = 1
 
     def _resFn(self, t, yy, yp, resval, *args):
+        """Wrapper function around the user provided res function so as to
+           create the correct call sequence
+        """
         out = resval.asarray()
         out[:] = self.res(t, yy.asarray(), yp.asarray() )[:]
         
         return 0
+    
+    def _jacDenseFn(self, Neq, tt, yy, yp, resvec, cj, jdata, JJ, 
+                    tempv1, tempv2, tempv3):
+        """Wrapper function around the user provided jac function so as to
+           create the correct call sequence.
+           JJ is a pysundials dense matrix, access is via JJ[i][j]
+           ida calls if dense: 
+                (long int Neq, realtype tt, N_Vector yy, N_Vector yp,
+                         N_Vector rr, realtype c_j, void *jac_data, DenseMat Jac,
+                         N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+           ida calls if band:
+                (long int Neq, long int mupper, long int mlower,
+                        realtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
+                        realtype c_j, void *jac_data, BandMat Jac,
+                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+        """
+        self.jac(tt, yy, yp, cj, JJ)
         
-    def _run(self, state, res, jac, y0, yprime0, t0, t1, *args):
+        return 0
+
+    def _jacBandFn(self, Neq, tt, yy, yp, resvec, cj, jdata, JJ, 
+                    tempv1, tempv2, tempv3):
+        """Wrapper function around the user provided jac function so as to
+           create the correct call sequence.
+           JJ is a pysundials band matrix, access is via JJ[i][j]
+           ida calls if dense: 
+                (long int Neq, realtype tt, N_Vector yy, N_Vector yp,
+                         N_Vector rr, realtype c_j, void *jac_data, DenseMat Jac,
+                         N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+           ida calls if band:
+                (long int Neq, long int mupper, long int mlower,
+                        realtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
+                        realtype c_j, void *jac_data, BandMat Jac,
+                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+        """
+        self.jac(tt, yy, yp, cj, JJ)
+        
+        return 0
+
+    def _run(self, state, y0, yprime0, t0, t1, *args):
         if self.compute_initcond: 
             #this run we compute the initial condition first
             if self.compute_initcond == 1:
@@ -286,10 +329,16 @@ class odesIDA(dae.DaeIntegratorBase):
         
         tret = ida.realtype(t0)
         
-        ida.IDASolve(self.ida_mem.obj, t1, ctypes.byref(tret), 
+        try:
+            ida.IDASolve(self.ida_mem.obj, t1, ctypes.byref(tret), 
                      self.__yret, self.__ypret, state)
+        except AssertionError, msg:
+            print msg
+            self.success = 0
+            
         if self.printinfo:
             self.info()
+
         return self.__yret.asarray().copy(), self.__ypret.asarray().copy(),  \
                 tret.value
 

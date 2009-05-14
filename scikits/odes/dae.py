@@ -44,13 +44,11 @@ you need to pass extra arguments to jac, use eg a python class method :
 Allowing the extra parameters to be kept in the Myproblem class
 """
 
-integrator_info = \
+integrator_info_ddaspk = \
 """
-Available integrators
----------------------
-
 ddaspk
 ~~~~~~
+Solver developed 1989 to 1996, with some corrections from 2000 - Fortran
 
 This code solves a system of differential/algebraic equations of the form 
 G(t,y,y') = 0 , using a combination of Backward Differentiation Formula 
@@ -64,7 +62,7 @@ Source: http://www.netlib.org/ode/ddaspk.f
 
 On construction the function calculating the residual (res) must be given and 
 optionally also the function calculating the jacobian (jac). 
-Res has the signature: res(x, y, yprime, cj)
+res has the signature: res(x, y, yprime, cj)
 with 
     x : independent variable, eg the time, float
     y : array of n unknowns in x
@@ -74,12 +72,12 @@ with
          system
 return value should be an array with the result of the residual computation
 
-Jac has the signature jac(x, y, yprime, cj) as res, however the return value 
+jac has the signature jac(x, y, yprime, cj) as res, however the return value 
 should be a nxn shaped array in general or a banded shaped array as per the
-definition of lband/uband belop. Jac is optional. 
-Note that Jac is defined as dres(i)/dy(j) + cj*dres(i)/dyprime(j)
+definition of lband/uband below. Jac is optional. 
+Note that jac is defined as dres(i)/dy(j) + cj*dres(i)/dyprime(j)
 
-This integrator accepts the following parameters in set_integrator()
+This integrator accepts the following parameters in the set_integrator()
 method of the ode class:
 
 - atol : float or sequence of length i
@@ -132,9 +130,15 @@ method of the ode class:
 - algebraic_var: integer array of length the number of unknowns, indicating the 
   algebraic variables in y. Use -1 to indicate an algebraic variable, and +1 for
   a differential variable.
+"""
 
+
+integrator_info_lsodi = \
+"""
 lsodi
 ~~~~
+Solver developed during the 1980s, this is the version from 1987 - Fortran
+
 Integrator for linearly implicit systems of first-order odes.  lsodi
 provides the same methods as vode (adams and bdf).  This integrator
 accepts the following parameters in set_integrator() method of the ode class:
@@ -187,7 +191,19 @@ r(t,y,s)=g(t,y)-a(t,y)*s
             p_{i,j} = --------------
                           d y[j]
             return p
+"""
 
+
+
+integrator_info = \
+"""
+Available integrators
+---------------------
+""" \
++ integrator_info_ddaspk \
++ integrator_info_lsodi \
++ \
+"""
 ddaskr  
 ~~~~~~
 Not included, starting hints:
@@ -338,7 +354,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             Residual of the DAE. t is a scalar, y.shape == (n,), 
             yprime.shape == (n,)
             res_args is determined by the solver backend, set it as required by
-            the backend you use
+            the backend you use, assume it to be unneeded
             res should return delta, status
             delta should be an array of the residuals, and status: 
               0 : continue
@@ -370,7 +386,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         self.t = t
         self._integrator.set_init_val(self.y, self.yprime, self.t, 
                                         self.res, self.jac)
-        self._integrator.reset(len(self.y),self.jac is not None)
+        self._integrator.reset(len(self.y), self.jac is not None)
         return self
 
     def set_integrator(self, name, **integrator_params):
@@ -408,9 +424,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             mth = self._integrator.run_relax
         else:
             mth = self._integrator.run
-        self.y, self.yprime, self.t = mth(self.res,
-                            self.jac or (lambda :None),
-                            self.y,self.yprime,self.t,t)
+        self.y, self.yprime, self.t = mth(self.y, self.yprime, self.t, t)
         return self.y,  self.yprime
 
     def change_tcrit(self, tcrit=None):
@@ -437,7 +451,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
 
 def find_dae_integrator(name):
     for cl in DaeIntegratorBase.integrator_classes:
-        if re.match(name,cl.__name__,re.I):
+        if re.match(name, cl.__name__, re.I) or re.match(name, cl.name, re.I):
             return cl
     return
 
@@ -450,35 +464,38 @@ class DaeIntegratorBase(object):
     integrator_classes = []
     scalar = float
     printinfo = False
+    
+    name = ''
 
-    def set_init_val(self, y, yprime, t, res, jac):
+    def set_init_val(self, y, yprime, t, res, jac=None):
         """Some backends might need initial values to set up themselves.
            Note that the run routines also are passed init values!
         """
-        pass
+        self.res = res
+        self.jac = jac or (lambda :None)
 
-    def reset(self,n,has_jac):
+    def reset(self, n, has_jac):
         """Prepare integrator for call: allocate memory, set flags, etc.
         n - number of equations
         has_jac - if user has supplied function for evaluating Jacobian.
         """
 
-    def run(self,res,jac,y0,yprime0,t0,t1):
+    def run(self, y0, yprime0, t0, t1):
         """Integrate from t=t0 to t=t1 using y0 and yprime0as an initial 
         condition.
         Return 4-tuple (y1,y1prime,t1,istate) where y1,y1prime is the result 
         and t=t1 defines the stoppage coordinate of the result.
         """
         raise NotImplementedError,\
-        'all daeintegrators must define run(res,jac,t0,t1,y0,yprime0,'
+        'all daeintegrators must define run(t0,t1,y0,yprime0,'
         'res_params,jac_params)'
 
-    def step(self,res,jac,y0,yprime0,t0,t1):
+    def step(self, y0, yprime0, t0, t1):
         """Make one integration step and return (y1,t1)."""
         raise NotImplementedError,'%s does not support step() method' %\
               (self.__class__.__name__)
 
-    def run_relax(self,res,jac,y0,yprime0,t0,t1):
+    def run_relax(self,y0,yprime0,t0,t1):
         """Integrate from t=t0 to t>=t1 and return (y1,t)."""
         raise NotImplementedError,'%s does not support run_relax() method' %\
               (self.__class__.__name__)
@@ -492,12 +509,15 @@ class DaeIntegratorBase(object):
     #XXX: __str__ method for getting visual state of the integrator
 
 class ddaspk(DaeIntegratorBase):
+    __doc__ += integrator_info_ddaspk
+    
     try:
         import ddaspk as _ddaspk
     except ImportError:
         print sys.exc_value
         _ddaspk = None
     runner = getattr(_ddaspk,'ddaspk',None)
+    name = 'ddaspk'
 
     messages = { 1: 'A step was successfully taken in the '
                     'intermediate-output mode.  The code has not '
@@ -609,8 +629,9 @@ class ddaspk(DaeIntegratorBase):
             self.info[3] = 0
             self.rwork[0] = 0.
 
-    def reset(self,n,has_jac):
+    def reset(self, n, has_jac):
         # Calculate parameters for Fortran subroutine ddaspk.
+        self.neq = n
         self.info = zeros((20,), int32)  # default is all info=0
         self.info[17] = 2  # extra output on init cond computation
         if (isscalar(self.atol) <> isscalar(self.rtol)) or (
@@ -677,9 +698,21 @@ class ddaspk(DaeIntegratorBase):
         self.call_args = [self.info,self.rtol,self.atol,self.rwork,self.iwork]
         self.success = 1
 
+    def _jacFn(self, t, y, yp, cj):
+        """Wrapper around the jacobian as defined by user, to create
+         the jacobian needed by ddaspk
+        """
+        if (self.ml is None or self.mu is None) :
+            jc = zeros((self.neq, self.neq), float)
+        else:
+            jc = zeros((self.ml + self.mu + 1, self.neq), float)
+        self.jac( t, y, yp, cj, jc)
+        return jc
+
     def _run(self, states, *args):
-        # args are: res,jac,y0,yprime0,t0,t1,res_params,jac_params
-        y1,y1prime,t,istate = self.runner(*(args[:6]+tuple(self.call_args)))
+        # args are: y0,yprime0,t0,t1,res_params,jac_params
+        y1,y1prime,t,istate = self.runner(*( (self.res, self._jacFn) \
+                                           + args[:4] + tuple(self.call_args)))
         if istate <0:
             print 'ddaspk:',self.messages.get(istate,'Unexpected istate=%s' % 
                                               istate)
@@ -704,6 +737,8 @@ if ddaspk.runner:
     DaeIntegratorBase.integrator_classes.append(ddaspk)
 
 class lsodi(DaeIntegratorBase):
+    __doc__ += integrator_info_ddaspk
+
     try:
         import lsodi as _lsodi
     except ImportError:
@@ -711,6 +746,8 @@ class lsodi(DaeIntegratorBase):
         _lsodi = None
     runner = getattr(_lsodi,'lsodi',None)
     _intdy = getattr(_lsodi,'intdy',None)
+    
+    name = 'lsodi'
 
     messages = {2 : 'lsodi was successful.',
                -1 : 'excess work done on this call (check all inputs).',
@@ -779,7 +816,7 @@ class lsodi(DaeIntegratorBase):
 
     def reset(self,n,has_jac):
         # Calculate parameters for Fortran subroutine lsodi.
-        self.neq=n
+        self.neq = n
         if has_jac:
             if self.mu is None and self.ml is None:
                 miter = 1
@@ -837,9 +874,22 @@ class lsodi(DaeIntegratorBase):
                             self.rwork,self.iwork,mf]
         self.success = 1
 
+    def _jacFn(self, t, y, yp, cj):
+        """Wrapper around the jacobian as defined by user, to create
+         the jacobian needed by lsodi
+        """
+        if (self.ml is None or self.mu is None) :
+            jc = zeros((self.neq, self.neq), float)
+        else:
+            jc = zeros((self.ml + self.mu + 1, self.neq), float)
+        self.jac( t, y, yp, cj, jc)
+        return jc
+
     def _run(self,*args):
-        y1,y1prime_tmp,t,istate = self.runner(*((args[0],)+ (self.adda,) + args[1:]
-                                    +tuple(self.call_args)))
+        y1,y1prime_tmp,t,istate = self.runner(*((self.res, self.adda, \
+                                                 self._jacFn) + args[0:] \
+                                                 + tuple(self.call_args)) 
+                                             )
         self.call_args[4]=istate
         y1prime = None
         if istate <0:

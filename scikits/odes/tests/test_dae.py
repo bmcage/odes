@@ -10,6 +10,13 @@ from numpy.testing import *
 from scipy.integrate import ode
 from scikits.odes import dae
 
+try:
+    TestCase()
+except:
+    class TestCase():
+        def __init__(self):
+            pass
+
 class TestDae(TestCase):
     """
     Check integrate.dae
@@ -51,6 +58,12 @@ class TestDae(TestCase):
         for problem_cls in PROBLEMS:
             problem = problem_cls()
             self._do_problem(problem, 'lsodi', **problem.lsodi_pars)
+    
+    def test_ida(self):
+        """Check the lsodi solver"""
+        for problem_cls in PROBLEMS:
+            problem = problem_cls()
+            self._do_problem(problem, 'ida', **problem.ida_pars)
 
 #------------------------------------------------------------------------------
 # Test problems
@@ -73,6 +86,7 @@ class DAE:
     rtol    = 1e-5
 
     ddaspk_pars = {}
+    ida_pars = {}
     lsodi_pars = {'adda' : simple_adda}
     
     def info(self):
@@ -135,14 +149,13 @@ class SimpleOscillator(DAE):
         return ok
 
 class SimpleOscillatorJac(SimpleOscillator):
-    def jac(self, t, y, yp, cj):
+    def jac(self, t, y, yp, cj, jac):
         """Jacobian[i,j] is dRES(i)/dY(j) + CJ*dRES(i)/dYPRIME(j)"""
         jc = zeros((len(y), len(y)), float)
         cj_in = cj
-        jc[0, 0] = self.m*cj_in ;jc[0, 1] = self.k
-        jc[1, 0] = -1       ;jc[1, 1] = cj_in;  
-        print 'jc at', t, cj,  jc
-        return jc
+        jac[0][0] = self.m*cj_in ;jac[0][1] = self.k
+        jac[1][0] = -1       ;jac[1][1] = cj_in;  
+        print 'jc at', t, cj,  jac
 
 class StiffVODECompare(DAE):
     r"""
@@ -198,6 +211,9 @@ class StiffVODECompare(DAE):
         self.ddaspk_pars = {'rtol' : [1e-4,1e-4,1e-4], 
                             'atol' : [1e-8,1e-14,1e-6], 
                            }
+        self.ida_pars = {'rtol' : 1e-4, 
+                         'atol' : [1e-8,1e-14,1e-6], 
+                        }
         self.lsodi_pars = {'rtol' : [1e-4,1e-4,1e-4], 
                             'atol' : [1e-6,1e-10,1e-6], 
                             'adda_func' : self.adda
@@ -227,4 +243,11 @@ PROBLEMS = [SimpleOscillator, StiffVODECompare,
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    run_module_suite()
+    try:
+        run_module_suite()
+    except NameError:
+        test = TestDae()
+        test.test_ddaspk()
+        test.test_lsodi()
+        test.test_ida()
+            

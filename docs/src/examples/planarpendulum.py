@@ -28,7 +28,7 @@ x u + y v =0
 Derivating a second time to time gives us:
 u^2 + v^2 + x \dot{u} + y \dot{v} = 0
 which can be written with the known form of \dot{u}, \dot{v} as
-u^2 + v^2 + \labmda l^2/m - g y = 0
+u^2 + v^2 + \lambda l^2/m - g y = 0
 
 This last expression will be used to find the solution to the planar 
 pendulum problem. 
