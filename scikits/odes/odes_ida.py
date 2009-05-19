@@ -130,7 +130,8 @@ class odesIDA(dae.DaeIntegratorBase):
                  constraints=False, 
                  constraint_type=None, 
                  algebraic_var=None, 
-                 exclude_algvar_from_error=False, 
+                 exclude_algvar_from_error=False,
+                 out = False
                  ):
         if not  isscalar(rtol) :
             raise ValueError,'rtol (%s) must be a scalar for IDA'\
@@ -177,6 +178,7 @@ class odesIDA(dae.DaeIntegratorBase):
             self.algebraic_var = None
         self.excl_algvar_err = exclude_algvar_from_error
         self.ida_mem = None
+        self.useoutval = out
         self.success = 1
 
     def set_tcrit(self, tcrit=None):
@@ -268,8 +270,11 @@ class odesIDA(dae.DaeIntegratorBase):
         """Wrapper function around the user provided res function so as to
            create the correct call sequence
         """
-        out = resval.asarray()
-        out[:] = self.res(t, yy.asarray(), yp.asarray() )[:]
+        if self.useoutval:
+            self.res(t, yy.asarray(), yp.asarray(), resval.asarray())
+        else:
+            out = resval.asarray()
+            out[:] = self.res(t, yy.asarray(), yp.asarray() )[:]
         
         return 0
     
