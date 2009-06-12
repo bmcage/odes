@@ -209,14 +209,6 @@ ddaskr
 Not included, starting hints:
                  http://osdir.com/ml/python.f2py.user/2005-07/msg00014.html
 
-ida/pysundials
-~~~~~~~~~~~~~~
-Not included.
-ida is the successor of ddaspk, written in C and part of sundials. 
-A python interface exists as pysundials, which allows numpy input arrays. 
-It should be possible to add here as a backend by checking if 'import pysundials'
-succeeds.
-
 Modified Extended Backward Differentiation Formulae (MEBDF)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Not included. Fortran codes: http://www.ma.ic.ac.uk/~jcash/IVP_software/readme.html
@@ -263,197 +255,6 @@ __docformat__ = "restructuredtext en"
 
 from numpy import asarray, array, zeros, sin, int32, isscalar
 import re, sys
-
-#------------------------------------------------------------------------------
-# User interface
-#------------------------------------------------------------------------------
-
-class dae(object):
-    """\
-A generic interface class to differential algebraic equation solvers.
-
-See also
---------
-odeint : an ODE integrator with a simpler interface based on lsoda from ODEPACK
-ode : class around vode ODE integrator
-
-Examples
---------
-DAE arise in many applications of dynamical systems, as well as in 
-discritisations of PDE (eg moving mesh combined with method of 
-lines). 
-As an easy example, consider the simple oscillator, which we write as 
-G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
-
->>>from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose)
->>>from scipy.integrate import dae
->>>class SimpleOscillator():
-    #Free vibration of a simple oscillator::
-    #    m \ddot{u} + k u = 0, u(0) = u_0, \dot{u}(0)=\dot{u}_0
-    #Solution::
-    #    u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
-    stop_t  = [2.09]
-    u0      = 1.
-    dotu0   = 0.1
-
-    k = 4.0
-    m = 1.0
-    z0      = array([dotu0, u0], float)    #Free vibration of a simple oscillator::
-    #    m \ddot{u} + k u = 0, u(0) = u_0, \dot{u}(0)=\dot{u}_0
-    #Solution::
-    #    u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
-    stop_t  = [2.09, 3.]
-    u0      = 1.
-    dotu0   = 0.1
-
-    k = 4.0
-    m = 1.0
-    z0      = array([dotu0, u0], float)
-    zprime0 = array([-k*u0, dotu0], float)
-
-    def res(self, t, z, zp):
-        tmp1 = zeros((2,2), float)
-        tmp2 = zeros((2,2), float)
-        tmp1[0,0] = self.m
-        tmp1[1,1] = 1.
-        tmp2[0,1] = self.k
-        tmp2[1,0] = -1.
-        return dot(tmp1, zp)+dot(tmp2, z)
-    def solution(self, t):
-        omega = sqrt(self.k / self.m)
-        u = self.z0[1]*cos(omega*t)+self.z0[0]*sin(omega*t)/omega
-
->>> problem = SimpleOscillator()
->>> ig = dae(problem.res, None)
->>> ig.set_integrator('ddaspk')
->>> ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
->>> z = [0]*len(problem.stop_t); zprime = [0]*len(problem.stop_t)
->>> i=0
->>> for time in problem.stop_t:
-      z[i],  zprime[i] = ig.solve(time)
-      i += 1
-      assert ig.successful(), (problem,)
->>> for (time, zv) in zip(problem.stop_t, z):
-      print 'calc', zv[1], ' ?? == ?? ', problem.solution(time)
-
-"""
-
-    __doc__ += integrator_info
-
-    def __init__(self, res, jac=None):
-        """
-        Define equation res = G(t,y,y') which can eg be G = f(y,t) - A y' when 
-        solving A y' = f(y,t), 
-        and where (optional) jac is the jacobian matrix of the nonlinear system
-        see fortran source code), so d res/dy + scaling * d res/dy' or d res/dy
-        depending on the backend
-
-        Parameters
-        ----------
-        res : res(t, y, yprime, *res_args)
-            Residual of the DAE. t is a scalar, y.shape == (n,), 
-            yprime.shape == (n,)
-            res_args is determined by the solver backend, set it as required by
-            the backend you use, assume it to be unneeded
-            res should return delta, status
-            delta should be an array of the residuals, and status: 
-              0 : continue
-              -1: Illigal input, try again
-              -2: Illigal input, stop
-             It is not guaranteed that a solver takes this status into account 
-        jac : jac(t, y, yprime, *jac_args)
-            Jacobian of the rhs, typically 
-                jac[i,j] = d res[i] / d y[j] + scaling *  d res[i] / d yprime[j]
-            jac_args is determined by the solver backend, set it as required by
-            the backend you use
-        """
-        self.res = res
-        self.jac  = jac
-        self.y = []
-        self.yprime = []
-
-    def set_initial_value(self, y, yprime, t=0.0):
-        """Set initial conditions y(t) = y, y'(t) = yprime """
-        if isscalar(y):
-            y = [y]
-        if isscalar(yprime):
-            yprime = [yprime]
-        n_prev = len(self.y)
-        if not n_prev:
-            self.set_integrator('') # find first available integrator
-        self.y = asarray(y, self._integrator.scalar)
-        self.yprime = asarray(yprime, self._integrator.scalar)
-        self.t = t
-        self._integrator.set_init_val(self.y, self.yprime, self.t, 
-                                        self.res, self.jac)
-        self._integrator.reset(len(self.y), self.jac is not None)
-        return self
-
-    def set_integrator(self, name, **integrator_params):
-        """
-        Set integrator by name.
-
-        Parameters
-        ----------
-        name : str
-            Name of the integrator
-        integrator_params
-            Additional parameters for the integrator.
-        """
-        integrator = find_dae_integrator(name)
-        if integrator is None:
-            raise ValueError, 'No integrator name match with %s or is not available.'\
-                  %(`name`)
-        else:
-            self._integrator = integrator(**integrator_params)
-            if not len(self.y):
-                self.t = 0.0
-                self.y = array([0.0], self._integrator.scalar)
-        return self
-
-    def solve(self, t, step=0, relax=0):
-        """Find y=y(t), and y'=y'(t) solution of the dae. 
-           If step, then one internal step is taken (use this if much output is
-                    needed). 
-           If relax, then the solution is returned based on the first internal 
-                    point at or over the requested endtime
-        """
-        if step and self._integrator.supports_step:
-            mth = self._integrator.step
-        elif relax and self._integrator.supports_run_relax:
-            mth = self._integrator.run_relax
-        else:
-            mth = self._integrator.run
-        self.y, self.yprime, self.t = mth(self.y, self.yprime, self.t, t)
-        return self.y,  self.yprime
-
-    def change_tcrit(self, tcrit=None):
-        """Change the value of tcrit on a running solver between steps
-        """
-        self._integrator.set_tcrit(tcrit)
-
-    def print_info(self, info=True):
-        """If the backend supports it, the next solve method will output
-           relevant info about the solution step if info=True, no output
-            when info=False
-        """
-        self._integrator.printinfo = info
-
-    def successful(self):
-        """Check if integration was successful."""
-        try: self._integrator
-        except AttributeError: self.set_integrator('')
-        return self._integrator.success==1
-
-#------------------------------------------------------------------------------
-# DAE integrators
-#------------------------------------------------------------------------------
-
-def find_dae_integrator(name):
-    for cl in DaeIntegratorBase.integrator_classes:
-        if re.match(name, cl.__name__, re.I) or re.match(name, cl.name, re.I):
-            return cl
-    return
 
 class DaeIntegratorBase(object):
 
@@ -945,9 +746,201 @@ if lsodi.runner:
     DaeIntegratorBase.integrator_classes.append(lsodi)
 
 try:
-    from odes_ida import odesIDA
+    from odes_ida import odesIDA, integrator_info_ida
     DaeIntegratorBase.integrator_classes.append(odesIDA)
-except:
-    print 'Could not load odesIDA'
+    __doc__ += integrator_info_ida
+    integrator_info += integrator_info_ida
+except ValueError, msg:
+    print 'Could not load odesIDA', msg
 
+#------------------------------------------------------------------------------
+# User interface
+#------------------------------------------------------------------------------
+
+class dae(object):
+    """\
+A generic interface class to differential algebraic equation solvers.
+
+See also
+--------
+odeint : an ODE integrator with a simpler interface based on lsoda from ODEPACK
+ode : class around vode ODE integrator
+
+Examples
+--------
+DAE arise in many applications of dynamical systems, as well as in 
+discritisations of PDE (eg moving mesh combined with method of 
+lines). 
+As an easy example, consider the simple oscillator, which we write as 
+G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
+
+>>>from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose)
+>>>from scipy.integrate import dae
+>>>class SimpleOscillator():
+    #Free vibration of a simple oscillator::
+    #    m \ddot{u} + k u = 0, u(0) = u_0, \dot{u}(0)=\dot{u}_0
+    #Solution::
+    #    u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
+    stop_t  = [2.09]
+    u0      = 1.
+    dotu0   = 0.1
+
+    k = 4.0
+    m = 1.0
+    z0      = array([dotu0, u0], float)    #Free vibration of a simple oscillator::
+    #    m \ddot{u} + k u = 0, u(0) = u_0, \dot{u}(0)=\dot{u}_0
+    #Solution::
+    #    u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
+    stop_t  = [2.09, 3.]
+    u0      = 1.
+    dotu0   = 0.1
+
+    k = 4.0
+    m = 1.0
+    z0      = array([dotu0, u0], float)
+    zprime0 = array([-k*u0, dotu0], float)
+
+    def res(self, t, z, zp):
+        tmp1 = zeros((2,2), float)
+        tmp2 = zeros((2,2), float)
+        tmp1[0,0] = self.m
+        tmp1[1,1] = 1.
+        tmp2[0,1] = self.k
+        tmp2[1,0] = -1.
+        return dot(tmp1, zp)+dot(tmp2, z)
+    def solution(self, t):
+        omega = sqrt(self.k / self.m)
+        u = self.z0[1]*cos(omega*t)+self.z0[0]*sin(omega*t)/omega
+
+>>> problem = SimpleOscillator()
+>>> ig = dae(problem.res, None)
+>>> ig.set_integrator('ddaspk')
+>>> ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
+>>> z = [0]*len(problem.stop_t); zprime = [0]*len(problem.stop_t)
+>>> i=0
+>>> for time in problem.stop_t:
+      z[i],  zprime[i] = ig.solve(time)
+      i += 1
+      assert ig.successful(), (problem,)
+>>> for (time, zv) in zip(problem.stop_t, z):
+      print 'calc', zv[1], ' ?? == ?? ', problem.solution(time)
+
+"""
+
+    __doc__ += integrator_info
+
+    def __init__(self, res, jac=None):
+        """
+        Define equation res = G(t,y,y') which can eg be G = f(y,t) - A y' when 
+        solving A y' = f(y,t), 
+        and where (optional) jac is the jacobian matrix of the nonlinear system
+        see fortran source code), so d res/dy + scaling * d res/dy' or d res/dy
+        depending on the backend
+
+        Parameters
+        ----------
+        res : res(t, y, yprime, *res_args)
+            Residual of the DAE. t is a scalar, y.shape == (n,), 
+            yprime.shape == (n,)
+            res_args is determined by the solver backend, set it as required by
+            the backend you use, assume it to be unneeded
+            res should return delta, status
+            delta should be an array of the residuals, and status: 
+              0 : continue
+              -1: Illigal input, try again
+              -2: Illigal input, stop
+             It is not guaranteed that a solver takes this status into account 
+        jac : jac(t, y, yprime, *jac_args)
+            Jacobian of the rhs, typically 
+                jac[i,j] = d res[i] / d y[j] + scaling *  d res[i] / d yprime[j]
+            jac_args is determined by the solver backend, set it as required by
+            the backend you use
+        """
+        self.res = res
+        self.jac  = jac
+        self.y = []
+        self.yprime = []
+
+    def set_initial_value(self, y, yprime, t=0.0):
+        """Set initial conditions y(t) = y, y'(t) = yprime """
+        if isscalar(y):
+            y = [y]
+        if isscalar(yprime):
+            yprime = [yprime]
+        n_prev = len(self.y)
+        if not n_prev:
+            self.set_integrator('') # find first available integrator
+        self.y = asarray(y, self._integrator.scalar)
+        self.yprime = asarray(yprime, self._integrator.scalar)
+        self.t = t
+        self._integrator.set_init_val(self.y, self.yprime, self.t, 
+                                        self.res, self.jac)
+        self._integrator.reset(len(self.y), self.jac is not None)
+        return self
+
+    def set_integrator(self, name, **integrator_params):
+        """
+        Set integrator by name.
+
+        Parameters
+        ----------
+        name : str
+            Name of the integrator
+        integrator_params
+            Additional parameters for the integrator.
+        """
+        integrator = find_dae_integrator(name)
+        if integrator is None:
+            raise ValueError, 'No integrator name match with %s or is not available.'\
+                  %(`name`)
+        else:
+            self._integrator = integrator(**integrator_params)
+            if not len(self.y):
+                self.t = 0.0
+                self.y = array([0.0], self._integrator.scalar)
+        return self
+
+    def solve(self, t, step=0, relax=0):
+        """Find y=y(t), and y'=y'(t) solution of the dae. 
+           If step, then one internal step is taken (use this if much output is
+                    needed). 
+           If relax, then the solution is returned based on the first internal 
+                    point at or over the requested endtime
+        """
+        if step and self._integrator.supports_step:
+            mth = self._integrator.step
+        elif relax and self._integrator.supports_run_relax:
+            mth = self._integrator.run_relax
+        else:
+            mth = self._integrator.run
+        self.y, self.yprime, self.t = mth(self.y, self.yprime, self.t, t)
+        return self.y,  self.yprime
+
+    def change_tcrit(self, tcrit=None):
+        """Change the value of tcrit on a running solver between steps
+        """
+        self._integrator.set_tcrit(tcrit)
+
+    def print_info(self, info=True):
+        """If the backend supports it, the next solve method will output
+           relevant info about the solution step if info=True, no output
+            when info=False
+        """
+        self._integrator.printinfo = info
+
+    def successful(self):
+        """Check if integration was successful."""
+        try: self._integrator
+        except AttributeError: self.set_integrator('')
+        return self._integrator.success==1
+
+#------------------------------------------------------------------------------
+# DAE integrators
+#------------------------------------------------------------------------------
+
+def find_dae_integrator(name):
+    for cl in DaeIntegratorBase.integrator_classes:
+        if re.match(name, cl.__name__, re.I) or re.match(name, cl.name, re.I):
+            return cl
+    return
     

@@ -1,52 +1,45 @@
 # Authors: B. Malengier based on ode.py
 
-integrator_info_ida = \
+integrator_info_cvode = \
 """
-odesIDA
+odesCVODE
 ~~~
 
-IDA is the evolution of the daspk algorithm, see 
+CVODE is the evolution of the VODE algorithm, see 
 https://computation.llnl.gov/casc/sundials/main.html
-To deliver IDA we use pysundials
+To deliver CVODE we use pysundials
 http://pysundials.sourceforge.net/
 
 This code solves a system of differential/algebraic equations of the form 
-G(t,y,y') = 0 , using a combination of Backward Differentiation Formula 
+y' = f(t,y) , using a combination of Backward Differentiation Formula 
 (BDF) methods and a choice of two linear system solution methods: direct 
 (dense or band) or Krylov (iterative). 
 Krylov is not supported from within scikits.odes. 
-In order to support it, a new interface should be created ddaspk_krylov, 
-with a different signature, reflecting the changes needed.
 
 Source: https://computation.llnl.gov/casc/sundials/main.html
         http://pysundials.sourceforge.net/
 
-On construction the function calculating the residual (res) must be given and 
+On construction the function calculating the rhs (f) must be given and 
 optionally also the function calculating the jacobian (jac). 
-Res has the signature: res(x, y, yprime) or res(x, y, yprime, out)
+f has the signature: f(x, y)
 with 
     x : independent variable, eg the time, float
     y : array of n unknowns in x
-    yprime : dy/dx array of n unknowns in x
-    out : the array to use to write the resulting residual. You need to pass
-          to the integrator the option out=True. This saves memory.
 
-return value should be an array with the result of the residual computation
+return value should be an array with the result of the rhs computation
 
-Jac has the signature jac(x, y, yprime, cj) as res, however the return value 
+Jac has the signature jac(x, y), the return value 
 should be a nxn shaped array in general or a banded shaped array as per the
 definition of lband/uband belop. Jac is optional. 
-Note that Jac is defined as dres(i)/dy(j) + cj*dres(i)/dyprime(j)
+Note that Jac is defined as df(i)/dy(j) 
 
 This integrator accepts the following parameters in set_integrator()
 method of the ode class:
 
 - atol : float or sequence of length i
   absolute tolerance for solution
-- rtol : float or sequence of length i
+- rtol : float
   relative tolerance for solution
-- out: boolean (default False)
-  If out==True, the function res is considered to have 
 - lband : None or int
 - uband : None or int
   Jacobian band width, jac[i,j] != 0 for i-lband <= j <= i+uband.
@@ -66,61 +59,32 @@ method of the ode class:
   internal value
 - order : int
   Maximum order used by the integrator, >=1,  <= 5 for BDF.
-  5 is the default
-- compute_initcond: None or 'yprime0' or 'yode0'
-  IDA may be able to compute the initial conditions if you do not know them
-  precisely. 
-  If yprime0, then y0 will be calculated
-  If yode0, then the differential variables will be used to solve for the 
-    algebraic variables and the derivative of the differential variables. 
-    Which are the algebraic variables must be indicated with algebraic_var method
-- compute_initcond_t0: float, default 0.01
-  first value of t at which a solution will be requested (from IDASolve), Needed
-  to determine direction of integration and a rough scale of variable t
-- exclude_algvar_from_error: bool
-  To determine solution, do not take the algebraic variables error control into 
-  account. Default=False
-- constraints: bool
-  Enforce constraint checks on the solution Y
-  Note: try first with no constraints
-- constraint_type: if constraint_init, give an integer array with for every
-  unknown the specific condition to check: 
-       1: y0[i] >= 0 
-       2: y0[i] >  0
-      -1: y0[i] <= 0
-      -2: y0[i] <  0
-       0: y0[i] not constrained
-  Alternatively, pass only one integer that then applies to all unknowns
-- algebraic_var: integer array of length the number of unknowns, indicating the 
-  algebraic variables in y. Use -1 to indicate an algebraic variable, and +1 for
-  a differential variable.
-"""
+  5 is the """
 
 __all__ = []
-__version__ = "$Id: odes_ida.py 2183 2009-04-23 07:50:12Z bmalengier $"
+__version__ = "$Id: odes_cvode bmalengier $"
 __docformat__ = "restructuredtext en"
 
 
 try:
-    from pysundials import ida
+    from pysundials import cvode
     from pysundials import nvecserial
 except:
-    print "Warning: ida solver not available, pysundials needed"
+    print "Warning: cvode solver not available, pysundials needed"
     raise ImportError
 
 from numpy import isscalar
 import re
 import ctypes
 
-import dae
+from scipy.integrate.ode import IntegratorBase
 
-class odesIDA(dae.DaeIntegratorBase):
-    __doc__ = integrator_info_ida
+class odesCVODE(IntegratorBase):
     supports_run_relax = 0
     supports_step = 1
     scalar = nvecserial.numpyrealtype
     
-    name = 'ida'
+    name = 'cvode'
 
     def __init__(self,
                  rtol=1e-6,atol=1e-12,
@@ -130,16 +94,10 @@ class odesIDA(dae.DaeIntegratorBase):
                  nsteps = 500,
                  max_step = 0.0, # corresponds to infinite
                  first_step = 0.0, # determined by solver
-                 compute_initcond=None,
-                 compute_initcond_t0 = 0.01,
-                 constraints=False, 
-                 constraint_type=None, 
-                 algebraic_var=None, 
-                 exclude_algvar_from_error=False,
                  out = False
                  ):
         if not  isscalar(rtol) :
-            raise ValueError,'rtol (%s) must be a scalar for IDA'\
+            raise ValueError,'rtol (%s) must be a scalar for CVODE'\
                         % (rtol)
         self.rtol = rtol
         if not isscalar(atol) : 
@@ -156,33 +114,8 @@ class odesIDA(dae.DaeIntegratorBase):
         self.nsteps = nsteps
         self.max_step = max_step
         self.first_step = first_step
-        if constraints and constraint_type is None:
-            raise ValueError, 'Give type of contraint as '\
-                              'an array (1:>=0, 2:>0, -1:<=0, -2:<0)'
-        elif constraints:
-            self.constraint_type = nvecserial.NVector(list(constraint_type))
-        else:
-            self.constraint_type = None
-        if compute_initcond is None: self.compute_initcond = 0
-        elif re.match(compute_initcond,r'yprime0',re.I): 
-            self.compute_initcond = 2
-        elif re.match(compute_initcond,r'yode0',re.I): self.compute_initcond = 1
-        else: raise ValueError,'Unknown init cond calculation method %s' %(
-                                                            compute_initcond)
-        self.compute_initcond_t0 = compute_initcond_t0
-        if self.compute_initcond == 1 and algebraic_var is None:
-            raise ValueError, 'Give integer array indicating which are the '\
-                              'algebraic variables, +1 for diffential var, '\
-                              '-1 for algebraic var'
-        #alg var in IDA is <=0 (officially 0) , differential var > 0 (off 1):
-        if algebraic_var is not None:
-            algebraic_var[algebraic_var<=0.] = 0.
-            algebraic_var[algebraic_var>0.] = 1.
-            self.algebraic_var = nvecserial.NVector(list(algebraic_var))
-        else:
-            self.algebraic_var = None
-        self.excl_algvar_err = exclude_algvar_from_error
-        self.ida_mem = None
+        
+        self.cvode_mem = None
         self.useoutval = out
         self.success = 1
 
@@ -190,29 +123,27 @@ class odesIDA(dae.DaeIntegratorBase):
         """Change the tcrit value if possible in the solver without 
             reinitializing the running solver
         """
-        
         if tcrit is not None:
             self.tcrit = tcrit
-            ida.IDASetStopTime(self.ida_mem.obj, self.tcrit)
+            cvode.CVodeSetStopTime(self.ida_mem.obj, self.tcrit)
         else:
             if self.tcrit is not None:
                 raise ValueError, 'Cannot unset tcrit once set, take a large'\
                         ' tcrit value instead.'
-    
-    def set_init_val(self, y, yprime, t, res, jac=None):
-        """IDA stores these and on a run the internal values are used
+            
+    def set_init_val(self, y, t, rhs, jac=None):
+        """CVODE stores these and on a run the internal values are used
         """
         self.t = t
         self.y = y
-        self.yprime = yprime
-        self.res = res
+        self.rhs = rhs
         self.jac = jac
 
     def reset(self,n,has_jac):
         # create the memory for the solver
-        if self.ida_mem is not None:
-            del self.ida_mem
-            
+        if self.cvode_mem is not None:
+            del self.cvode_mem
+        ## TODO UNDER THIS LINE
         self.ida_mem = ida.IdaMemObj(ida.IDACreate())
         
         #allocate internal memory
@@ -382,3 +313,4 @@ class odesIDA(dae.DaeIntegratorBase):
         print "Number of error test failures			= %ld"%(netf)
         print "Number of nonlinear conv. failures = %ld"%(ncfn)
         
+
