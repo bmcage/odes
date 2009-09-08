@@ -332,10 +332,14 @@ class odesIDA(dae.DaeIntegratorBase):
                                 self.compute_initcond_t0)
             self.compute_initcond = 0
             n = len(self.y)
-            corry = ida.NVector([0]*n)
-            corryp = ida.NVector([0]*n)
-            ida.IDAGetConsistentIC(self.ida_mem.obj, corry, corryp)
-            return corry, corryp, 0.
+            if t0 == t1:
+                corry = ida.NVector([0]*n)
+                corryp = ida.NVector([0]*n)
+                ida.IDAGetConsistentIC(self.ida_mem.obj, corry, corryp)
+                return corry, corryp, t0
+            else:
+                print("INFO IDA: Initial Condition calculated, continuing "
+                        "to time %g" % t1)
         
         tret = ida.realtype(t0)
         

@@ -29,4 +29,14 @@ To run the tests do in the python shell:
 
 NOTE: at the moment (11/2008) the above tests() only work in the old style of python installs (.egg directory or normal install), not with zipped eggs. So for above to work you need to install in the old method:
 
+1. remove existing install. From the root directory where you downloaded scikits.odes:
+sudo easy_install -m scikits.odes
+sudo rm -rf /usr/lib/python2.6/dist-packages/scikits.odes*
+sudo rm -rf scikits.odes.egg-info
+sudo rm -rf build
+
+2. reinstall:
+
 sudo python setup.py install --single-version-externally-managed --root /
+or
+use easy_install to install latest version pypy
