@@ -28,9 +28,14 @@ with
 
 return value should be an array with the result of the rhs computation
 
-Jac has the signature jac(x, y), the return value 
-should be a nxn shaped array in general or a banded shaped array as per the
-definition of lband/uband belop. Jac is optional. 
+Jac has the signature jac(x, y, out, f) with
+    x : independent variable, eg the time, float
+    y : array of n unknowns in x where  jacobian=df_i/dy_j must be calculated
+    out: the matrix (dense or bounded sundials matrix) that is the result of the
+        computation
+    f : computed value of f(x,y) that can be used in the determination of out
+out should be a nxn shaped matrix in dense or banded style as per the
+definition of lband/uband below. Jac is optional. 
 Note that Jac is defined as df(i)/dy(j) 
 
 This integrator accepts the following parameters in set_integrator()
@@ -40,6 +45,16 @@ method of the ode class:
   absolute tolerance for solution
 - rtol : float
   relative tolerance for solution
+- method: adams or bdf. 
+    This is the type of linear multistep method to be used.
+    adams = Adams-Moulton is recommended for non-stiff problems.
+    bdf = Backward Differentiation Formula is recommended for stiff problems.
+- itertype: functional or newton
+    specifies whether functional or newton iteration will be used.
+    functional = does not require linear algebra
+    newton = requires the solution of linear systems. Requires the 
+            specification of a CVODE linear solver. (Recommended for stiff 
+            problems).
 - lband : None or int
 - uband : None or int
   Jacobian band width, jac[i,j] != 0 for i-lband <= j <= i+uband.
@@ -56,10 +71,17 @@ method of the ode class:
   to circumvent this.
 - max_step : float
   Limits for the step sizes used by the integrator. This overrides the
-  internal value
+  internal value. Default 0.0 (no limit)
+- min_step : float
+  Sets the absolute minimum of step size allowed. Default is 0.0 (no limit)
 - order : int
   Maximum order used by the integrator, >=1,  <= 5 for BDF.
-  5 is the """
+  5 is the 
+- out : bool
+  Indicates if the rhs function has signature f(t, y, out) (True) or instead
+  out = f(t,y) (False). Default is False. Consider using the f(t,y,out) 
+  signature as it is faster (no intermediate arrays needed)
+"""
 
 __all__ = []
 __version__ = "$Id: odes_cvode bmalengier $"
@@ -84,16 +106,26 @@ class odesCVODE(IntegratorBase):
     supports_step = 1
     scalar = nvecserial.numpyrealtype
     
+    printinfo = False
+    
     name = 'cvode'
 
     def __init__(self,
                  rtol=1e-6,atol=1e-12,
+                 method='adams',
+                 itertype='functional',
                  lband=None,uband=None,
                  tcrit=None, 
-                 order = 5,
+                 order = None, # 12 for adams, 5 for bdf
                  nsteps = 500,
                  max_step = 0.0, # corresponds to infinite
+                 min_step = 0.0, # corresponds to no limit of minimum step
                  first_step = 0.0, # determined by solver
+                 stability_limit_detect = False,
+                 nonlin_convergence_coef = 0.1,
+                 maxerrtestfail = 7,
+                 maxnonliniters = 3,
+                 maxconvfails = 10,
                  out = False
                  ):
         if not  isscalar(rtol) :
@@ -106,14 +138,37 @@ class odesCVODE(IntegratorBase):
             self.atol = atol
         self.mu = uband
         self.ml = lband
+        self.order = order
+        if method == 'adams':
+            self.method = cvode.CV_ADAMS
+            if self.order is None:
+                self.order = 12
+        elif method == 'bdf':
+            self.method = cvode.CV_BDF
+            if self.order is None:
+                self.order = 5
+            if self.order > 5 or self.order < 1:
+                raise ValueError, 'bdf order '+str(self.order)+' should be >=1, <=5'
+        else:
+            raise ValueError, 'method should adams or bdf'
+        
+        if itertype == 'functional':
+            self.itert = cvode.CV_FUNCTIONAL
+        elif itertype == 'newton':
+            self.itert = cvode.CV_NEWTON
+        else:
+            raise ValueError, 'itertype should be functional or newton'
 
         self.tcrit = tcrit
-        if order > 5 or order < 1:
-            raise ValueError, 'order should be >=1, <=5'
-        self.order = order
         self.nsteps = nsteps
         self.max_step = max_step
+        self.min_step = min_step
         self.first_step = first_step
+        self.stablimdet = stability_limit_detect
+        self.nlinconvcoef = nonlin_convergence_coef
+        self.maxerrtestfail = maxerrtestfail
+        self.maxnonliniters = maxnonliniters
+        self.maxconvfails = maxconvfails
         
         self.cvode_mem = None
         self.useoutval = out
@@ -125,7 +180,7 @@ class odesCVODE(IntegratorBase):
         """
         if tcrit is not None:
             self.tcrit = tcrit
-            cvode.CVodeSetStopTime(self.ida_mem.obj, self.tcrit)
+            cvode.CVodeSetStopTime(self.cvode_mem.obj, self.tcrit)
         else:
             if self.tcrit is not None:
                 raise ValueError, 'Cannot unset tcrit once set, take a large'\
@@ -139,140 +194,159 @@ class odesCVODE(IntegratorBase):
         self.rhs = rhs
         self.jac = jac
 
-    def reset(self,n,has_jac):
+    def reset(self, n, has_jac):
         # create the memory for the solver
         if self.cvode_mem is not None:
             del self.cvode_mem
-        ## TODO UNDER THIS LINE
-        self.ida_mem = ida.IdaMemObj(ida.IDACreate())
+        self.cvode_mem = cvode.CVodeMemObj(cvode.CVodeCreate(self.method,
+                                                           self.itert))
         
         #allocate internal memory
         if isscalar(self.atol):
-            errtype = ida.IDA_SS
+            errtype = cvode.CV_SS
         else:
-            errtype = ida.IDA_SV
-        ida.IDAMalloc(self.ida_mem.obj, self._resFn, self.t,
+            errtype = cvode.CV_SV
+        cvode.CVodeMalloc(self.cvode_mem.obj, self._rhsFn, self.t,
                       nvecserial.NVector(self.y), 
-                      nvecserial.NVector(self.yprime), 
                       errtype, 
                       self.rtol, self.atol)
         
         
         # do the set functions for the user choices
-        # 1. determine differential/algebraic variables
-        if  self.algebraic_var == None:
-            self.algebraic_var = nvecserial.NVector([1.]*n)
-        ida.IDASetId(self.ida_mem.obj, self.algebraic_var)
-        # 2. exclude alg var on error control
-        if self.excl_algvar_err: 
-            ida.IDASetSuppressAlg(self.ida_mem.obj, self.excl_algvar_err)
-        # 3. set the contraints if given
-        if self.constraint_type is not None:
-            ida.IDASetConstraints(self.ida_mem.obj, self.constraint_type)
-        
-        # 4. order of the solver
-        ida.IDASetMaxOrd(self.ida_mem.obj, self.order)
-        # 5. max number of steps
-        ida.IDASetMaxNumSteps(self.ida_mem.obj, self.nsteps)
-        # 6. maximum step taken
+        # 1. order of the solver
+        cvode.CVodeSetMaxOrd(self.cvode_mem.obj, self.order)
+        # 2. max number of steps
+        cvode.CVodeSetMaxNumSteps(self.cvode_mem.obj, self.nsteps)
+        # 3. maximum step taken
         if self.max_step != 0.:
-            ida.IDASetMaxStep(self.ida_mem.obj, self.max_step)
-        # 7. critical time step not to pass
+            cvode.CVodeSetMaxStep(self.cvode_mem.obj, self.max_step)
+        # 4. critical time step not to pass
         if self.tcrit:
-            ida.IDASetStopTime(self.ida_mem.obj, self.tcrit)
-        # 8. initial step taken
+            cvode.CVodeSetStopTime(self.cvode_mem.obj, self.tcrit)
+        # 5. initial step taken
         if self.first_step != 0.0: 
-            ida.IDASetInitStep(self.ida_mem.obj, self.first_step)
+            cvode.CVodeSetInitStep(self.cvode_mem.obj, self.first_step)
+        # 5. minimum  step taken
+        if self.min_step != 0.:
+            cvode.CVodeSetMinStep(self.cvode_mem.obj, self.min_step)
+        # 6. maximum error test failures
+        cvode.CVodeSetMaxErrTestFails(self.cvode_mem.obj, self.maxerrtestfail)
+        # 7. maximum nonlinear iterations
+        cvode.CVodeSetMaxNonlinIters(self.cvode_mem.obj, self.maxnonliniters)
+        # 8. maximum convergence failures
+        cvode.CVodeSetMaxConvFails(self.cvode_mem.obj, self.maxconvfails)
+        # 6. stability limit detection
+        cvode.CVodeSetStabLimDet(self.cvode_mem.obj, self.stablimdet)
+        # 7. nonlinear convergence coefficient
+        cvode.CVodeSetNonlinConvCoef(self.cvode_mem.obj, self.nlinconvcoef)
 
         #Attach linear solver module (Krylov not supported now!)
         if self.ml is None and self.mu is None:
             #dense jacobian
-            ida.IDADense(self.ida_mem.obj, n)
+            cvode.CVDense(self.cvode_mem.obj, n)
             if has_jac:
-                ida.IDADenseSetJacFn(self.ida_mem.obj, self._jacDenseFn, None)
+                cvode.CVDenseSetJacFn(self.cvode_mem.obj, self._jacDenseFn, None)
         else:
             #band jacobian
             if self.ml is None or self.mu is None:
                 raise ValueError, 'Give both uband and lband, or nothing'
-            ida.IDABand(self.ida_mem.obj, n, self.mu, self.ml)
+            cvode.CVBand(self.cvode_mem.obj, n, self.mu, self.ml)
             if has_jac:
-                ida.IDABandSetJacFn(self.ida_mem.obj, self._jacBandFn, None)
+                cvode.CVBandSetJacFn(self.cvode_mem.obj, self._jacBandFn, None)
 
-        self.__yret =  ida.NVector([0]*n)
-        self.__ypret =  ida.NVector([0]*n)
+        self.__yret =  cvode.NVector([0]*n)
         self.success = 1
 
-    def _resFn(self, t, yy, yp, resval, *args):
-        """Wrapper function around the user provided res function so as to
-           create the correct call sequence
+    def _rhsFn(self, tt, yy, ydot, *args):
+        """Wrapper function around the user provided rhs function so as to
+           create the correct call sequence. Needed for CVode:
+             tt (realtype)   the current value of the independent variable
+             yy (NVector)    the vector of current dependent values
+             ydot (NVector)	undefined values, contents should be set to the new values of y
+             f_data         user data
         """
         if self.useoutval:
-            self.res(t, yy.asarray(), yp.asarray(), resval.asarray())
+            self.rhs(tt, yy.asarray(), ydot.asarray())
         else:
-            out = resval.asarray()
-            out[:] = self.res(t, yy.asarray(), yp.asarray() )[:]
+            out = ydot.asarray()
+            out[:] = self.rhs(tt, yy.asarray() )[:]
         
         return 0
     
-    def _jacDenseFn(self, Neq, tt, yy, yp, resvec, cj, jdata, JJ, 
+    def _jacDenseFn(self, Neq, JJ, tt, yy, fy, jdata, 
                     tempv1, tempv2, tempv3):
         """Wrapper function around the user provided jac function so as to
            create the correct call sequence.
            JJ is a pysundials dense matrix, access is via JJ[i][j]
-           ida calls if dense: 
-                (long int Neq, realtype tt, N_Vector yy, N_Vector yp,
-                         N_Vector rr, realtype c_j, void *jac_data, DenseMat Jac,
-                         N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-           ida calls if band:
-                (long int Neq, long int mupper, long int mlower,
-                        realtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
-                        realtype c_j, void *jac_data, BandMat Jac,
-                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+           cvode calls if dense: 
+            Neq (int)     the length of all NVector arguments
+            JJ (BandMat)  the matrix that will be loaded with anpproximation of
+                          the Jacobian Matrix J = (df_i/dy_j) at the point (t,y).
+            tt (realtype) the current value of the independent variable
+            yy (NVector)  the current value of the dependent variable vector
+            fy (NVector)  f(t,y)
+            jdata (c_void_p) pointer to user data set by CVDenseSetJacFunc
+            tmp1 (NVector)	 preallocated temporary working space
+            tmp2 (NVector)	 preallocated temporary working space
+            tmp3 (NVector)	 preallocated temporary working space
+           cvode calls if band:
+            Neq (int)       the length of all NVector arguments
+            mupper (int)    upper band width
+            mlower (int)    lower band width
+            J (BandMat)	    the matrix that will be loaded with anpproximation 
+                            of the Jacobian Matrix J = (df_i/dy_j) at the point (t,y).
+            tt (realtype)   the current value of the independent variable
+            yy (NVector)    the current value of the dependent variable vector
+            fy (NVector)    f(t,y)
+            jdata (c_void_p) pointer to user data set by CVBandSetJacFunc
+            tmp1 (NVector)	 preallocated temporary working space
+            tmp2 (NVector)	 preallocated temporary working space
+            tmp3 (NVector)	 preallocated temporary working space
         """
-        self.jac(tt, yy, yp, cj, JJ)
+        self.jac(tt, yy, JJ, fy)
         
         return 0
 
-    def _jacBandFn(self, Neq, tt, yy, yp, resvec, cj, jdata, JJ, 
+    def _jacBandFn(self, Neq, mupper, mlower, JJ, tt, yy, fy, jdata, 
                     tempv1, tempv2, tempv3):
         """Wrapper function around the user provided jac function so as to
            create the correct call sequence.
-           JJ is a pysundials band matrix, access is via JJ[i][j]
-           ida calls if dense: 
-                (long int Neq, realtype tt, N_Vector yy, N_Vector yp,
-                         N_Vector rr, realtype c_j, void *jac_data, DenseMat Jac,
-                         N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-           ida calls if band:
-                (long int Neq, long int mupper, long int mlower,
-                        realtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
-                        realtype c_j, void *jac_data, BandMat Jac,
-                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+           JJ is a pysundials dense matrix, access is via JJ[i][j]
+           cvode calls if dense: 
+            Neq (int)     the length of all NVector arguments
+            JJ (BandMat)  the matrix that will be loaded with anpproximation of
+                          the Jacobian Matrix J = (df_i/dy_j) at the point (t,y).
+            tt (realtype) the current value of the independent variable
+            yy (NVector)  the current value of the dependent variable vector
+            fy (NVector)  f(t,y)
+            jdata (c_void_p) pointer to user data set by CVDenseSetJacFunc
+            tmp1 (NVector)	 preallocated temporary working space
+            tmp2 (NVector)	 preallocated temporary working space
+            tmp3 (NVector)	 preallocated temporary working space
+           cvode calls if band:
+            Neq (int)       the length of all NVector arguments
+            mupper (int)    upper band width
+            mlower (int)    lower band width
+            J (BandMat)	    the matrix that will be loaded with anpproximation 
+                            of the Jacobian Matrix J = (df_i/dy_j) at the point (t,y).
+            tt (realtype)   the current value of the independent variable
+            yy (NVector)    the current value of the dependent variable vector
+            fy (NVector)    f(t,y)
+            jdata (c_void_p) pointer to user data set by CVBandSetJacFunc
+            tmp1 (NVector)	 preallocated temporary working space
+            tmp2 (NVector)	 preallocated temporary working space
+            tmp3 (NVector)	 preallocated temporary working space
         """
-        self.jac(tt, yy, yp, cj, JJ)
+        self.jac(tt, yy, JJ, fy)
         
         return 0
 
-    def _run(self, state, y0, yprime0, t0, t1, *args):
-        if self.compute_initcond: 
-            #this run we compute the initial condition first
-            if self.compute_initcond == 1:
-                ida.IDACalcIC(self.ida_mem.obj, ida.IDA_YA_YDP_INIT, 
-                                self.compute_initcond_t0)
-            if self.compute_initcond == 2:
-                ida.IDACalcIC(self.ida_mem.obj, ida.IDA_Y_INIT, 
-                                self.compute_initcond_t0)
-            self.compute_initcond = 0
-            n = len(self.y)
-            corry = ida.NVector([0]*n)
-            corryp = ida.NVector([0]*n)
-            ida.IDAGetConsistentIC(self.ida_mem.obj, corry, corryp)
-            return corry, corryp, 0.
-        
-        tret = ida.realtype(t0)
+    def _run(self, state, rhs, jac, y0, t0, t1, *args):
+        tret = cvode.realtype(t0)
         
         try:
-            ida.IDASolve(self.ida_mem.obj, t1, ctypes.byref(tret), 
-                     self.__yret, self.__ypret, state)
+            cvode.CVode(self.cvode_mem.obj, t1, 
+                      self.__yret, ctypes.byref(tret), state)
         except AssertionError, msg:
             print msg
             self.success = 0
@@ -280,29 +354,32 @@ class odesCVODE(IntegratorBase):
         if self.printinfo:
             self.info()
 
-        return self.__yret.asarray().copy(), self.__ypret.asarray().copy(),  \
-                tret.value
+        return self.__yret.asarray(),  tret.value
 
     def run(self, *args):
-        state = ida.IDA_NORMAL
+        state = cvode.CV_NORMAL
         if self.tcrit:
-            state = ida.IDA_NORMAL_TSTOP
+            state = cvode.CV_NORMAL_TSTOP
         return self._run(state, *args)
 
     def step(self,*args):
-        state = ida.IDA_ONE_STEP
+        state = cvode.CV_ONE_STEP
         if self.tcrit:
-            state = ida.IDA_ONE_STEP_TSTOP
+            state = cvode.CV_ONE_STEP_TSTOP
         return self._run(state, *args)
     
     def info(self):
-        nst = ida.IDAGetNumSteps(self.ida_mem.obj)
-        nni = ida.IDAGetNumNonlinSolvIters(self.ida_mem.obj)
-        nre = ida.IDAGetNumResEvals(self.ida_mem.obj)
-        netf = ida.IDAGetNumErrTestFails(self.ida_mem.obj)
-        ncfn = ida.IDAGetNumNonlinSolvConvFails(self.ida_mem.obj)
-        nje = ida.IDABandGetNumJacEvals(self.ida_mem.obj)
-        nreLS = ida.IDABandGetNumResEvals(self.ida_mem.obj)
+        nst = cvode.CVGetNumSteps(self.cvode_mem.obj)
+        nni = cvode.CVGetNumNonlinSolvIters(self.cvode_mem.obj)
+        nre = cvode.CVGetNumResEvals(self.cvode_mem.obj)
+        netf = cvode.CVGetNumErrTestFails(self.cvode_mem.obj)
+        ncfn = cvode.CVGetNumNonlinSolvConvFails(self.cvode_mem.obj)
+        if self.ml is None and self.mu is None:
+            nje = cvode.CVDenseGetNumJacEvals(self.cvode_mem.obj)
+            nreLS = cvode.CVDenseGetNumResEvals(self.cvode_mem.obj)
+        else:
+            nje = cvode.CVBandGetNumJacEvals(self.cvode_mem.obj)
+            nreLS = cvode.CVBandGetNumResEvals(self.cvode_mem.obj)
 
         print "-----------------------------------------------------------"
         print "Solve statistics: \n"

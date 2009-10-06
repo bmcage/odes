@@ -17,13 +17,13 @@ where::
     i = 0, ..., len(y0) - 1
     f(t,y) is a vector of size i
 
-class odesystem
+class ODEsystem
 ---------------
 
 A generic interface class to ordinary differential equation solvers. 
 It has the following methods::
 
-    integrator = odesystem(rhs,jac=None)
+    integrator = ODEsystem(rhs,jac=None)
     integrator = integrator.set_integrator(name, **params)
     integrator = integrator.set_initial_value(y0, t=0.0)
     y1 = integrator.integrate(t1,step=0,relax=0)
@@ -32,7 +32,7 @@ It has the following methods::
 rhs and jac need to have the signature as required by the integrator name. If
 you need to pass extra arguments to jac, use eg a python class method : 
     problem = Myproblem()
-    integrator = odesystem(problem.res, problem.jac)
+    integrator = ODEsystem(problem.res, problem.jac)
 Allowing the extra parameters to be kept in the Myproblem class
 """
 
@@ -53,6 +53,7 @@ import re
 
 from scipy.integrate import ode
 from scipy.integrate.ode import IntegratorBase
+from numpy import isscalar, array, asarray
 
 try:
     from odes_cvode import odesCVODE, integrator_info_cvode
@@ -62,7 +63,7 @@ try:
 except:
     print 'Could not load odesCVODE'
 
-class odesystem(ode):
+class ODEsystem(ode):
     __doc__ = ode.__doc__ + integrator_info
 
     def set_integrator(self, name, **integrator_params):
@@ -85,7 +86,6 @@ class odesystem(ode):
             if not len(self.y):
                 self.t = 0.0
                 self.y = array([0.0], self._integrator.scalar)
-            self._integrator.reset(len(self.y),self.jac is not None)
         return self
     
     def set_initial_value(self, y, t=0.0):
@@ -94,7 +94,9 @@ class odesystem(ode):
             y = [y]
         y = asarray(y, self._integrator.scalar)
         #if method needs to initialize init val itself, do that
-        if hasattr(self._integrator, set_init_val):
+        print 'set_initial_value called'
+        print hasattr(self._integrator, 'set_init_val')
+        if hasattr(self._integrator, 'set_init_val'):
             self._integrator.set_init_val(y, t, 
                                         self.f, self.jac)
             

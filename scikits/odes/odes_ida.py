@@ -33,9 +33,10 @@ with
 
 return value should be an array with the result of the residual computation
 
-Jac has the signature jac(x, y, yprime, cj) as res, however the return value 
-should be a nxn shaped array in general or a banded shaped array as per the
-definition of lband/uband belop. Jac is optional. 
+Jac has the signature jac(x, y, yprime, cj, out) as res, however the resulting
+jacobian computation should be stored in out, which should be a nxn shaped 
+sundials matrix in dense  or banded shaped style, as per the given values of 
+lband/uband below. Jac is optional. 
 Note that Jac is defined as dres(i)/dy(j) + cj*dres(i)/dyprime(j)
 
 This integrator accepts the following parameters in set_integrator()
@@ -374,8 +375,12 @@ class odesIDA(dae.DaeIntegratorBase):
         nre = ida.IDAGetNumResEvals(self.ida_mem.obj)
         netf = ida.IDAGetNumErrTestFails(self.ida_mem.obj)
         ncfn = ida.IDAGetNumNonlinSolvConvFails(self.ida_mem.obj)
-        nje = ida.IDABandGetNumJacEvals(self.ida_mem.obj)
-        nreLS = ida.IDABandGetNumResEvals(self.ida_mem.obj)
+        if self.ml is None and self.mu is None:
+            nje = ida.IDADenseGetNumJacEvals(self.ida_mem.obj)
+            nreLS = ida.IDADenseGetNumResEvals(self.ida_mem.obj)
+        else:
+            nje = ida.IDABandGetNumJacEvals(self.ida_mem.obj)
+            nreLS = ida.IDABandGetNumResEvals(self.ida_mem.obj)
 
         print "-----------------------------------------------------------"
         print "Solve statistics: \n"
