@@ -115,6 +115,7 @@ class odesCVODE(IntegratorBase):
                  method='adams',
                  itertype='functional',
                  lband=None,uband=None,
+                 krylov=None,  # None or spgmr
                  tcrit=None, 
                  order = None, # 12 for adams, 5 for bdf
                  nsteps = 500,
@@ -138,6 +139,14 @@ class odesCVODE(IntegratorBase):
             self.atol = atol
         self.mu = uband
         self.ml = lband
+        self.krylov = krylov
+        if self.krylov is not None and (self.mu is not None or self.ml is not None):
+            raise ValueError, 'Krylov solver '+ str(self.krylov) + ' given, '\
+                    'uband and lband should be None'
+        if not self.krylov in [None, 'spgmr']:
+            raise ValueError, 'krylov parameter should be None or spgmr'
+        self.krylovprecond = cvode.PREC_NONE  #no preconditiong
+        self.maxkrylovdim = 0 #max krylov subspace dim, use default (5)
         self.order = order
         if method == 'adams':
             self.method = cvode.CV_ADAMS
@@ -173,6 +182,18 @@ class odesCVODE(IntegratorBase):
         self.cvode_mem = None
         self.useoutval = out
         self.success = 1
+        self.return_code = None
+
+    def successmsg(self):
+        """ A message that constructed based on return_code and if run was
+        successfull or not
+        """
+        if self.return_code == None:
+            return ' - no outputmsg - '
+        if self.success:
+            return ' integration successfull, ret code %i' % self.return_code
+        else:
+            return ' ERROR: ret code %i' % self.return_code
 
     def set_tcrit(self, tcrit=None):
         """Change the tcrit value if possible in the solver without 
@@ -241,7 +262,12 @@ class odesCVODE(IntegratorBase):
         cvode.CVodeSetNonlinConvCoef(self.cvode_mem.obj, self.nlinconvcoef)
 
         #Attach linear solver module (Krylov not supported now!)
-        if self.ml is None and self.mu is None:
+        if self.krylov is not None:
+            if self.krylov == 'spgmr':
+                cvode.CVSpgmr(self.cvode_mem.obj, self.krylovprecond, 
+                              self.maxkrylovdim)
+        elif self.ml is None and self.mu is None:
+                
             #dense jacobian
             cvode.CVDense(self.cvode_mem.obj, n)
             if has_jac:
@@ -345,12 +371,15 @@ class odesCVODE(IntegratorBase):
         tret = cvode.realtype(t0)
         
         try:
-            cvode.CVode(self.cvode_mem.obj, t1, 
+            self.return_code = cvode.CVode(self.cvode_mem.obj, t1, 
                       self.__yret, ctypes.byref(tret), state)
         except AssertionError, msg:
             print msg
             self.success = 0
-            
+
+        if self.return_code < 0:
+            self.success = 0
+
         if self.printinfo:
             self.info()
 

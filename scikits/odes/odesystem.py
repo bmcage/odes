@@ -28,6 +28,8 @@ It has the following methods::
     integrator = integrator.set_initial_value(y0, t=0.0)
     y1 = integrator.integrate(t1,step=0,relax=0)
     flag = integrator.successful()
+    if not flag:
+        print 'return message', integrator.successmsg
 
 rhs and jac need to have the signature as required by the integrator name. If
 you need to pass extra arguments to jac, use eg a python class method : 

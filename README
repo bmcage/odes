@@ -38,5 +38,9 @@ sudo rm -rf build
 2. reinstall:
 
 sudo python setup.py install --single-version-externally-managed --root /
-or
-use easy_install to install latest version pypy
+
+note, use the flag: --install-layout=deb on debian systems
+
+Alternatively:
+
+use easy_install to install latest version
