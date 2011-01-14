@@ -36,7 +36,8 @@ def setup_package():
         url = URL,
         license = LICENSE,
         configuration = configuration,
-        install_requires = 'scipy'
+        install_requires = 'scipy',
+        zip_safe = False
         )
     return
 
