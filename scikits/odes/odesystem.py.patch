@@ -1,0 +1,39 @@
+--- odesystem.py	(original)
++++ odesystem.py	(refactored)
+@@ -58,12 +58,12 @@
+ from numpy import isscalar, array, asarray
+ 
+ try:
+-    from odes_cvode import odesCVODE, integrator_info_cvode
++    from .odes_cvode import odesCVODE, integrator_info_cvode
+     IntegratorBase.integrator_classes.append(odesCVODE)
+     __doc__ += integrator_info_cvode
+     integrator_info += integrator_info_cvode
+ except:
+-    print 'Could not load odesCVODE'
++    print('Could not load odesCVODE')
+ 
+ class ODEsystem(ode):
+     __doc__ = ode.__doc__ + integrator_info
+@@ -81,8 +81,8 @@
+         """
+         integrator = find_odes_integrator(name)
+         if integrator is None:
+-            print 'No integrator name match with %s or is not available.'\
+-                  %(`name`)
++            print('No integrator name match with %s or is not available.'\
++                  %(repr(name)))
+         else:
+             self._integrator = integrator(**integrator_params)
+             if not len(self.y):
+@@ -96,8 +96,8 @@
+             y = [y]
+         y = asarray(y, self._integrator.scalar)
+         #if method needs to initialize init val itself, do that
+-        print 'set_initial_value called'
+-        print hasattr(self._integrator, 'set_init_val')
++        print('set_initial_value called')
++        print(hasattr(self._integrator, 'set_init_val'))
+         if hasattr(self._integrator, 'set_init_val'):
+             self._integrator.set_init_val(y, t, 
+                                         self.f, self.jac)
