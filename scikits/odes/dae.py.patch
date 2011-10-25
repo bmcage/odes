@@ -1,0 +1,206 @@
+--- dae.py	(original)
++++ dae.py	(refactored)
+@@ -287,19 +287,18 @@
+         Return 4-tuple (y1,y1prime,t1,istate) where y1,y1prime is the result 
+         and t=t1 defines the stoppage coordinate of the result.
+         """
+-        raise NotImplementedError,\
+-        'all daeintegrators must define run(t0,t1,y0,yprime0,'
++        raise NotImplementedError('all daeintegrators must define run(t0,t1,y0,yprime0,')
+         'res_params,jac_params)'
+ 
+     def step(self, y0, yprime0, t0, t1):
+         """Make one integration step and return (y1,t1)."""
+-        raise NotImplementedError,'%s does not support step() method' %\
+-              (self.__class__.__name__)
++        raise NotImplementedError('%s does not support step() method' %\
++              (self.__class__.__name__))
+ 
+     def run_relax(self,y0,yprime0,t0,t1):
+         """Integrate from t=t0 to t>=t1 and return (y1,t)."""
+-        raise NotImplementedError,'%s does not support run_relax() method' %\
+-              (self.__class__.__name__)
++        raise NotImplementedError('%s does not support run_relax() method' %\
++              (self.__class__.__name__))
+     
+     def set_tcrit(self, tcrit=None):
+         """Change the tcrit value if possible in the solver without 
+@@ -315,7 +314,7 @@
+     try:
+         import ddaspk as _ddaspk
+     except ImportError:
+-        print sys.exc_value
++        print(sys.exc_info()[1])
+         _ddaspk = None
+     runner = getattr(_ddaspk,'ddaspk',None)
+     name = 'ddaspk'
+@@ -391,7 +390,7 @@
+ 
+         self.tcrit = tcrit
+         if order > 5 or order < 1:
+-            raise ValueError, 'order should be >=1, <=5'
++            raise ValueError('order should be >=1, <=5')
+         self.order = order
+         self.nsteps = nsteps
+         self.max_step = max_step
+@@ -401,19 +400,19 @@
+         elif enforce_nonnegativity: self.nonneg = 2
+         elif constraint_init: self.nonneg = 1
+         if (self.nonneg == 1 or self.nonneg == 3) and constraint_type is None:
+-            raise ValueError, 'Give type of init cond contraint as '\
+-                              'an int array (>=0, >0, <=0, <0) or as int'
++            raise ValueError('Give type of init cond contraint as '\
++                              'an int array (>=0, >0, <=0, <0) or as int')
+         else: self.constraint_type = constraint_type
+         if compute_initcond is None: self.compute_initcond = 0
+         elif re.match(compute_initcond,r'yprime0',re.I): 
+             self.compute_initcond = 2
+         elif re.match(compute_initcond,r'yode0',re.I): self.compute_initcond = 1
+-        else: raise ValueError,'Unknown init cond calculation method %s' %(
+-                                                            compute_initcond)
++        else: raise ValueError('Unknown init cond calculation method %s' %(
++                                                            compute_initcond))
+         if self.compute_initcond == 1 and algebraic_var is None:
+-            raise ValueError, 'Give integer array indicating which are the '\
++            raise ValueError('Give integer array indicating which are the '\
+                               'algebraic variables, +1 for diffential var, '\
+-                              '-1 for algebraic var'
++                              '-1 for algebraic var')
+         self.algebraic_var = algebraic_var
+         self.excl_algvar_err = exclude_algvar_from_error
+         self.success = 1
+@@ -435,10 +434,10 @@
+         self.neq = n
+         self.info = zeros((20,), int32)  # default is all info=0
+         self.info[17] = 2  # extra output on init cond computation
+-        if (isscalar(self.atol) <> isscalar(self.rtol)) or (
+-               not isscalar(self.atol) and len(self.atol) <> len(self.rtol)):
+-            raise ValueError,'atol (%s) and rtol (%s) must be both scalar or'\
+-                    ' both arrays of length %s' % (self.atol, self.rtol, n)
++        if (isscalar(self.atol) != isscalar(self.rtol)) or (
++               not isscalar(self.atol) and len(self.atol) != len(self.rtol)):
++            raise ValueError('atol (%s) and rtol (%s) must be both scalar or'\
++                    ' both arrays of length %s' % (self.atol, self.rtol, n))
+         if not isscalar(self.atol):
+             self.info[1] = 1
+         if has_jac:
+@@ -515,13 +514,13 @@
+         y1,y1prime,t,istate = self.runner(*( (self.res, self._jacFn) \
+                                            + args[:4] + tuple(self.call_args)))
+         if istate <0:
+-            print 'ddaspk:',self.messages.get(istate,'Unexpected istate=%s' % 
+-                                              istate)
++            print('ddaspk:',self.messages.get(istate,'Unexpected istate=%s' % 
++                                              istate))
+             self.success = 0
+         elif istate not in states:
+-            print 'ddaspk: Run successfull. Unexpected istate=%s, stopping' % \
+-                                            istate
+-            print self.messages.get(istate, 'Unknown istate=%s' % istate)
++            print('ddaspk: Run successfull. Unexpected istate=%s, stopping' % \
++                                            istate)
++            print(self.messages.get(istate, 'Unknown istate=%s' % istate))
+             self.success = 0
+         return y1,y1prime,t
+ 
+@@ -543,7 +542,7 @@
+     try:
+         import lsodi as _lsodi
+     except ImportError:
+-        print sys.exc_value
++        print(sys.exc_info()[1])
+         _lsodi = None
+     runner = getattr(_lsodi,'lsodi',None)
+     _intdy = getattr(_lsodi,'intdy',None)
+@@ -594,14 +593,14 @@
+         self.first_step = first_step
+         if re.match(method,r'adams',re.I): self.meth = 1
+         elif re.match(method,r'bdf',re.I): self.meth = 2
+-        else: raise ValueError,'Unknown integration method %s'%(method)
++        else: raise ValueError('Unknown integration method %s'%(method))
+         if compute_initcond is None: self.compute_initcond = 0
+         elif re.match(compute_initcond,r'yode0',re.I): 
+             self.compute_initcond = 1
+-        else: raise ValueError,'Unknown init cond calculation method %s' %(
+-                                                            compute_initcond)
++        else: raise ValueError('Unknown init cond calculation method %s' %(
++                                                            compute_initcond))
+         if adda_func is None:
+-            raise ValueError, 'adda_func is required for lsodi algorithm!'
++            raise ValueError('adda_func is required for lsodi algorithm!')
+         self.adda = adda_func
+         self.success = 1
+ 
+@@ -642,7 +641,7 @@
+         elif mf in [24,25]:
+             lrw = 22 + 10*n + (2*ml +mu)*neq
+         else:
+-            raise ValueError,'Unexpected mf=%s'%(mf)
++            raise ValueError('Unexpected mf=%s'%(mf))
+         liw = 20 + n
+         rwork = zeros((lrw,), float)
+         rwork[4] = self.first_step
+@@ -694,9 +693,9 @@
+         self.call_args[4]=istate
+         y1prime = None
+         if istate <0:
+-            print 'lsodi:',self.messages.get(istate,'Unexpected istate=%s'%istate)
++            print('lsodi:',self.messages.get(istate,'Unexpected istate=%s'%istate))
+             if istate in [-1,-4,-5] :
+-                print 'lsodi: present residual is', y1prime_tmp
++                print('lsodi: present residual is', y1prime_tmp)
+             self.success = 0
+             
+         if self.success:
+@@ -705,10 +704,10 @@
+             y1prime, iflag = self._intdy(t, order, yh, self.neq)
+             if iflag<0:
+                 if iflag==-1: 
+-                    raise ValueError, "order=%s invalid in call to intdy" \
+-                                                        %order
++                    raise ValueError("order=%s invalid in call to intdy" \
++                                                        %order)
+                 if iflag==-2: 
+-                    raise ValueError, "t=%s invalid in call to intdy"%t
++                    raise ValueError("t=%s invalid in call to intdy"%t)
+         return y1,y1prime,t
+ 
+     def step(self,*args):
+@@ -723,8 +722,8 @@
+ 
+     def run_relax(self,*args):
+         if self.tcrit is not None:
+-            print 'Warning, relaxed run does not take into accout tcrit %g' \
+-                        % self.tcrit
++            print('Warning, relaxed run does not take into accout tcrit %g' \
++                        % self.tcrit)
+         itask = self.call_args[3]
+         self.call_args[3] = 3
+         r = self._run(*args)
+@@ -746,12 +745,12 @@
+     DaeIntegratorBase.integrator_classes.append(lsodi)
+ 
+ try:
+-    from odes_ida import odesIDA, integrator_info_ida
++    from .odes_ida import odesIDA, integrator_info_ida
+     DaeIntegratorBase.integrator_classes.append(odesIDA)
+     __doc__ += integrator_info_ida
+     integrator_info += integrator_info_ida
+-except ValueError, msg:
+-    print 'Could not load odesIDA', msg
++except ValueError as msg:
++    print('Could not load odesIDA', msg)
+ 
+ #------------------------------------------------------------------------------
+ # User interface
+@@ -891,8 +890,8 @@
+         """
+         integrator = find_dae_integrator(name)
+         if integrator is None:
+-            raise ValueError, 'No integrator name match with %s or is not available.'\
+-                  %(`name`)
++            raise ValueError('No integrator name match with %s or is not available.'\
++                  %(repr(name)))
+         else:
+             self._integrator = integrator(**integrator_params)
+             if not len(self.y):
