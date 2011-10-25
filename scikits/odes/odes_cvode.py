@@ -92,7 +92,7 @@ try:
     from pysundials import cvode
     from pysundials import nvecserial
 except:
-    print "Warning: cvode solver not available, pysundials needed"
+    print("Warning: cvode solver not available, pysundials needed")
     raise ImportError
 
 from numpy import isscalar
@@ -130,8 +130,8 @@ class odesCVODE(IntegratorBase):
                  out = False
                  ):
         if not  isscalar(rtol) :
-            raise ValueError,'rtol (%s) must be a scalar for CVODE'\
-                        % (rtol)
+            raise ValueError('rtol (%s) must be a scalar for CVODE'\
+                        % (rtol))
         self.rtol = rtol
         if not isscalar(atol) : 
             self.atol = nvecserial.NVector(list(atol))
@@ -141,10 +141,10 @@ class odesCVODE(IntegratorBase):
         self.ml = lband
         self.krylov = krylov
         if self.krylov is not None and (self.mu is not None or self.ml is not None):
-            raise ValueError, 'Krylov solver '+ str(self.krylov) + ' given, '\
-                    'uband and lband should be None'
+            raise ValueError('Krylov solver '+ str(self.krylov) + ' given, '\
+                    'uband and lband should be None')
         if not self.krylov in [None, 'spgmr']:
-            raise ValueError, 'krylov parameter should be None or spgmr'
+            raise ValueError('krylov parameter should be None or spgmr')
         self.krylovprecond = cvode.PREC_NONE  #no preconditiong
         self.maxkrylovdim = 0 #max krylov subspace dim, use default (5)
         self.order = order
@@ -157,16 +157,16 @@ class odesCVODE(IntegratorBase):
             if self.order is None:
                 self.order = 5
             if self.order > 5 or self.order < 1:
-                raise ValueError, 'bdf order '+str(self.order)+' should be >=1, <=5'
+                raise ValueError('bdf order '+str(self.order)+' should be >=1, <=5')
         else:
-            raise ValueError, 'method should adams or bdf'
+            raise ValueError('method should adams or bdf')
         
         if itertype == 'functional':
             self.itert = cvode.CV_FUNCTIONAL
         elif itertype == 'newton':
             self.itert = cvode.CV_NEWTON
         else:
-            raise ValueError, 'itertype should be functional or newton'
+            raise ValueError('itertype should be functional or newton')
 
         self.tcrit = tcrit
         self.nsteps = nsteps
@@ -204,8 +204,8 @@ class odesCVODE(IntegratorBase):
             cvode.CVodeSetStopTime(self.cvode_mem.obj, self.tcrit)
         else:
             if self.tcrit is not None:
-                raise ValueError, 'Cannot unset tcrit once set, take a large'\
-                        ' tcrit value instead.'
+                raise ValueError('Cannot unset tcrit once set, take a large'\
+                        ' tcrit value instead.')
             
     def set_init_val(self, y, t, rhs, jac=None):
         """CVODE stores these and on a run the internal values are used
@@ -275,7 +275,7 @@ class odesCVODE(IntegratorBase):
         else:
             #band jacobian
             if self.ml is None or self.mu is None:
-                raise ValueError, 'Give both uband and lband, or nothing'
+                raise ValueError('Give both uband and lband, or nothing')
             cvode.CVBand(self.cvode_mem.obj, n, self.mu, self.ml)
             if has_jac:
                 cvode.CVBandSetJacFn(self.cvode_mem.obj, self._jacBandFn, None)
@@ -373,8 +373,8 @@ class odesCVODE(IntegratorBase):
         try:
             self.return_code = cvode.CVode(self.cvode_mem.obj, t1, 
                       self.__yret, ctypes.byref(tret), state)
-        except AssertionError, msg:
-            print msg
+        except AssertionError as msg:
+            print(msg)
             self.success = 0
 
         if self.return_code < 0:
@@ -410,13 +410,13 @@ class odesCVODE(IntegratorBase):
             nje = cvode.CVBandGetNumJacEvals(self.cvode_mem.obj)
             nreLS = cvode.CVBandGetNumResEvals(self.cvode_mem.obj)
 
-        print "-----------------------------------------------------------"
-        print "Solve statistics: \n"
-        print "Number of steps										= %ld"%(nst)
-        print "Number of residual evaluations		 = %ld"%(nre+nreLS)
-        print "Number of Jacobian evaluations		 = %ld"%(nje)
-        print "Number of nonlinear iterations		 = %ld"%(nni)
-        print "Number of error test failures			= %ld"%(netf)
-        print "Number of nonlinear conv. failures = %ld"%(ncfn)
+        print("-----------------------------------------------------------")
+        print("Solve statistics: \n")
+        print("Number of steps										= %ld"%(nst))
+        print("Number of residual evaluations		 = %ld"%(nre+nreLS))
+        print("Number of Jacobian evaluations		 = %ld"%(nje))
+        print("Number of nonlinear iterations		 = %ld"%(nni))
+        print("Number of error test failures			= %ld"%(netf))
+        print("Number of nonlinear conv. failures = %ld"%(ncfn))
         
 
