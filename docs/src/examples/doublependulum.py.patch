@@ -1,0 +1,102 @@
+--- doublependulum.py	(original)
++++ doublependulum.py	(refactored)
+@@ -233,7 +233,7 @@
+     """
+     The main program: instantiate a problem, then use odes package to solve it
+     """
+-    input = raw_input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
++    input = input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
+                 " 3 = index 1 problem with jacobian\n 4 = info\n\n"
+                 "Answer (1,2,3 or 4) : ")
+     if input == '1':
+@@ -243,7 +243,7 @@
+     elif input == '3':
+         problem = Doublependulum(type='index1_jac')
+     else:
+-        print __doc__
++        print(__doc__)
+         return
+     
+     z = [0]*(1+len(problem.stop_t)); zprime = [0]*(1+len(problem.stop_t))
+@@ -259,8 +259,8 @@
+     i=0
+     z[i],  zprime[i] = ig.solve(1e-18);
+     assert ig.successful(), (problem,)
+-    print 'started from z0 = ', problem.z0
+-    print 'initial condition calculated, [z,zprime] = [', z[0], zprime[0], ']'
++    print('started from z0 = ', problem.z0)
++    print('initial condition calculated, [z,zprime] = [', z[0], zprime[0], ']')
+ 
+     ig.set_integrator('odesIDA',algebraic_var=problem.algvar,
+                         first_step=1e-9,
+@@ -280,13 +280,13 @@
+             i += 1
+             if not ig.successful():
+                 error = True
+-                print 'Error in solver, breaking solution at time %g' % time
++                print('Error in solver, breaking solution at time %g' % time)
+                 break
+ 
+ 
+-    print 'last sol', z[i-1], zprime[i-1]
+-    print 'has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
+-                                        zprime[i-1])
++    print('last sol', z[i-1], zprime[i-1])
++    print('has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
++                                        zprime[i-1]))
+ 
+     nr = i
+     x1t = [z[i][0] for i in range(nr)]
+@@ -361,14 +361,14 @@
+         norm_path = os.path.normpath( file_path )
+         
+         if not os.path.exists(norm_path):
+-            print "%s does not exist" % file_path
++            print("%s does not exist" % file_path)
+             return
+             
+         if os.sys.platform == 'win32':
+             try:
+                 os.startfile(norm_path)
+-            except WindowsError, msg:
+-                print "Error Opening File. " + str(msg)
++            except WindowsError as msg:
++                print("Error Opening File. " + str(msg))
+         else:
+             search = os.environ['PATH'].split(':')
+             for path in search:
+@@ -394,15 +394,15 @@
+         pylab.figure(2)
+         secs = 0
+         frame = 0
+-        print 'Generating output ...\n'
++        print('Generating output ...\n')
+         for solnr in range(0,nr,5):
+             drawonesol(solnr, sizex, sizey, frame)
+             frame += 1
+-            if solnr // 500 <> secs :
++            if solnr // 500 != secs :
+                 secs = solnr // 500
+-                print '     ... at %i seconds ' % (secs * 5 ) 
+-        
+-        print 'Creating movie using ffmpeg with output ... \n'
++                print('     ... at %i seconds ' % (secs * 5 )) 
++        
++        print('Creating movie using ffmpeg with output ... \n')
+         import subprocess
+         subprocess.call(['ffmpeg', '-r', '20', '-i', 'figsdoublependulum' + os.sep + 
+                         'outsol%8d.png',  '-f',  'avi', '-vcodec', 'xvid', '-y', 
+@@ -411,11 +411,11 @@
+         #remove unused pictures
+         shutil.rmtree('figsdoublependulum')
+         #opening movie with default player
+-        print 'Opening user with default application ... \n'
++        print('Opening user with default application ... \n')
+         open_file_with_default_application('anidoublependulum' + os.sep +
+                     'doublependulum'+ext+'.mpg')
+ 
+-    input2 = raw_input('Create animation of the solution? (y/n): ')
++    input2 = input('Create animation of the solution? (y/n): ')
+     print('\n')
+     if (input2 == 'y' or input2 == 'yes'):
+         extend = problem.radius1 + problem.radius2 + 1

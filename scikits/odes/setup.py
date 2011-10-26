@@ -3,10 +3,10 @@ from os.path import join
 
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
-    print "============================================="
-    print "parent package is %s" % parent_package
-    print "top path is %s" % top_path
-    print "============================================="
+    print("=============================================")
+    print("parent package is %s" % parent_package)
+    print("top path is %s" % top_path)
+    print("=============================================")
     config = Configuration('odes',parent_package,top_path)
 
     config.add_library('daepack',

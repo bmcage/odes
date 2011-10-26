@@ -82,8 +82,8 @@ ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
 i=0
 z[i],  zprime[i] = ig.solve(1e-18);
 assert ig.successful(), (problem,)
-print 'started from z0 = ', problem.z0
-print 'initial condition calculated, [z,zprime] = [', z[0], zprime[0], ']'
+print('started from z0 = ', problem.z0)
+print('initial condition calculated, [z,zprime] = [', z[0], zprime[0], ']')
 
 ig.set_integrator('odesIDA',algebraic_var=array([1,1,1,1,algvar]),
                     first_step=1e-9,
@@ -103,9 +103,9 @@ for time in problem.stop_t:
             break
 
 
-print 'last sol', z[i-1], zprime[i-1]
-print 'has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
-                                    zprime[i-1])
+print('last sol', z[i-1], zprime[i-1])
+print('has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
+                                    zprime[i-1]))
 
 nr = i
 xt = [z[i][0] for i in range(nr)]
