@@ -22,41 +22,44 @@ from common_defs cimport *
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *self_obj):
 
-         cdef np.ndarray[float, ndim=1] residual_tmp, yy_tmp, yp_tmp
+    #cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
          
-         self = <object> self_obj
-         
-         cdef bint parallel_implementation = self.parallel_implementation
-
-         if parallel_implementation:
-            raise NotImplemented 
-         else:
-            yy_tmp = self.yy_tmp
-            yp_tmp = self.yp_tmp
-            residual_tmp = self.residual_tmp
+    self = <object> self_obj
+    print('Self object: ')
+    print(self)
+    print()
+    raise NotImplemented    
+    cdef bint parallel_implementation = self.parallel_implementation
+    raise NotImplemented   
+    if parallel_implementation:
+        raise NotImplemented 
+    else:
+        yy_tmp = self.yy_tmp
+        yp_tmp = self.yp_tmp
+        residual_tmp = self.residual_tmp
              
-            nv_s2ndarray(yy, yy_tmp)
-            nv_s2ndarray(yp, yp_tmp)
+        nv_s2ndarray(yy, yy_tmp)
+        nv_s2ndarray(yp, yp_tmp)
          
-         #TODO: probably a bottleneck, because self.res is not typed
-         #      so the compiler will not optimize it... but otoh, in 
-         #      general it is a python function...:)
-         #TODO: pass user data to the function
-         #      (add to 'set_options' option 'user_data' and pass it
-         #      to the user "res" function
-         self.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp)
+    #TODO: probably a bottleneck, because self.res is not typed
+    #      so the compiler will not optimize it... but otoh, in 
+    #      general it is a python function...:)
+    #TODO: pass user data to the function
+    #      (add to 'set_options' option 'user_data' and pass it
+    #      to the user "res" function
+    self.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp)
          
-         if parallel_implementation:
-            raise NotImplemented 
-         else:
-             ndarray2nv_s(rr, residual_tmp)
+    if parallel_implementation:
+        raise NotImplemented 
+    else:
+        ndarray2nv_s(rr, residual_tmp)
          
-         return 0
+    return 0
 
 cdef class IDA:
     cdef realtype _jacFn(self, Neq, tt, yy, yp, resvec, cj, jdata, JJ, 
                          tempv1, tempv2, tempv3):
-        cdef float jac_return = self.jac.evaluate(tt, yy, yp, cj, JJ)
+        cdef DTYPE_t jac_return = self.jac.evaluate(tt, yy, yp, cj, JJ)
         # TODO: convert jacmat to the jacobi matrix
         #raise NotImplemented
         return jac_return
@@ -99,6 +102,7 @@ cdef class IDA:
         
         
         self.options = default_values
+        self.N       = -1
         
         #np.ndarray rtol=1e-6, np.ndarray atol=1e-12,
         #lband=None,uband=None,
@@ -150,8 +154,7 @@ cdef class IDA:
             
     cpdef init_step(self, DTYPE_t t0, 
                  np.ndarray[DTYPE_t, ndim=1] y0, 
-                 np.ndarray[DTYPE_t, ndim=1] ydot0, 
-                 bint compute_initcond):
+                 np.ndarray[DTYPE_t, ndim=1] ydot0):
         """ 
             Applies the set by 'set_options' method to the IDA solver.
             
@@ -173,6 +176,9 @@ cdef class IDA:
             raise MemoryError
  
         cdef dict opts = self.options
+        print('Options: ')
+        print(opts)
+        print()
         self.parallel_implementation = (opts['implementation'].lower() == 'parallel')
      
         if opts['resfn'] == None:
@@ -212,11 +218,11 @@ cdef class IDA:
             self.yp = N_VClone(self.yp0)
         
         # auxiliary variables
-        self.yy_tmp = np.empty([1,N], float)
-        self.yp_tmp = np.empty([1,N], float)
-        self.residual_tmp = np.empty([1,N], float)
+        self.yy_tmp = np.empty(N, float)
+        self.yp_tmp = np.empty(N, float)
+        self.residual_tmp = np.empty(N, float)
         
-        if ida_mem is NULL:
+        if self.N <= 0:
             IDAInit(ida_mem, _res, <realtype> t0, self.y0, self.yp0)
         elif self.N == N:
             IDAReInit(ida_mem, <realtype> t0, self.y0, self.yp0)
@@ -226,14 +232,14 @@ cdef class IDA:
             # ==> add them to the (possible) options (set_options(...))
             raise NotImplemented('IDA object reallocation not implemented !')
         
-
+        self.N = N
         
         if not np.isscalar(opts['rtol']) :
             raise ValueError('rtol (%s) must be a scalar for IDA'\
                                 % (opts['rtol']))
         #cdef np.ndarray atol
         cdef N_Vector atol
-        cdef np.ndarray[float, ndim=1] np_atol
+        cdef np.ndarray[DTYPE_t, ndim=1] np_atol
         cdef int maxl = <int> opts['maxl']
         if np.isscalar(opts['atol']):
             IDASStolerances(ida_mem, <realtype> opts['rtol'], <realtype> opts['atol'])
@@ -290,7 +296,8 @@ cdef class IDA:
             #cdef int maxl = <int> opts['maxl']
             IDASptfqmr(ida_mem, maxl)
         
-        cdef np.ndarray[float, ndim=1] dae_vars = np.ones([1,N], float)
+        cdef np.ndarray[DTYPE_t, ndim=1] dae_vars = np.ones(N, float)
+        compute_initcond = opts['compute_initcond']
         if compute_initcond == 'yprime0':
             for algvar_idx in opts['algebraic_var_idx']:
                 dae_vars[algvar_idx] = 0.0
@@ -307,7 +314,7 @@ cdef class IDA:
             t0_init = opts['compute_initcond_t0']
         elif compute_initcond == '':
             t0_init = t0
-        else: raise ValueError('Unknown init cond calculation method %s' 
+        else: raise ValueError('Unknown ''compute_initcond'' calculation method: ''%s''' 
                                     %(compute_initcond))
         #TODO: implement the rest of IDA*Set* functions for linear solvers
 
@@ -347,12 +354,12 @@ cdef class IDA:
         """
         #TODO: what if an error occures? what is the returned value then?
         #      should we return also the time at which error occured?
-        self.init_step(tspan[0], y0, yp0, 0)
+        self.init_step(tspan[0], y0, yp0)
         
-        cdef np.ndarray[float, ndim=2] y_retn
+        cdef np.ndarray[DTYPE_t, ndim=2] y_retn
         #TODO: store also yp - add another option "store_yp" to return it if needed
         y_retn = np.empty([len(tspan), len(y0)], float)
-        cdef float t
+        cdef DTYPE_t t
         cdef unsigned int idx
         #TODO: Parallel version
         cdef N_Vector y  = self.y

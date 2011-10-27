@@ -3,6 +3,7 @@ from c_sundials cimport N_Vector, realtype
 from common_defs cimport ResFunction, JacFunction
 
 ctypedef np.float_t DTYPE_t
+
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj)
 
 cdef class IDA:
@@ -24,6 +25,8 @@ cdef class IDA:
     cdef dict options
     cdef bint parallel_implementation
     cdef realtype t, t0
+    cdef np.ndarray yy_tmp, yp_tmp, residual_tmp
+        
     #cdef realtype *y0, *yprime0
     cdef JacFunction jac
     cdef ResFunction res
@@ -34,8 +37,7 @@ cdef class IDA:
     #def set_options(self, dict options)
     cpdef init_step(self, DTYPE_t t0, 
                  np.ndarray[DTYPE_t, ndim=1] y0, 
-                 np.ndarray[DTYPE_t, ndim=1] ydot0, 
-                 bint compute_initcond)
+                 np.ndarray[DTYPE_t, ndim=1] ydot0)
     #def run_solver(self, np.ndarray[float, ndim=1] tspan, np.ndarray[float, ndim=1] y0, 
     #               np.ndarray[float, ndim=1] yp0)
     #def step(self, realtype t)
