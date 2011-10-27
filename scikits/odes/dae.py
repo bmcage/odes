@@ -744,13 +744,13 @@ class lsodi(DaeIntegratorBase):
 if lsodi.runner:
     DaeIntegratorBase.integrator_classes.append(lsodi)
 
-try:
-    from .odes_ida import odesIDA, integrator_info_ida
-    DaeIntegratorBase.integrator_classes.append(odesIDA)
-    __doc__ += integrator_info_ida
-    integrator_info += integrator_info_ida
-except ValueError as msg:
-    print('Could not load odesIDA', msg)
+##try:
+##    from .odes_ida import odesIDA, integrator_info_ida
+##    DaeIntegratorBase.integrator_classes.append(odesIDA)
+##    __doc__ += integrator_info_ida
+##    integrator_info += integrator_info_ida
+##except ValueError as msg:
+##    print('Could not load odesIDA', msg)
 
 #------------------------------------------------------------------------------
 # User interface
@@ -942,4 +942,3 @@ def find_dae_integrator(name):
         if re.match(name, cl.__name__, re.I) or re.match(name, cl.name, re.I):
             return cl
     return
-    

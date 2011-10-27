@@ -57,13 +57,13 @@ from scipy.integrate import ode
 from scipy.integrate.ode import IntegratorBase
 from numpy import isscalar, array, asarray
 
-try:
-    from .odes_cvode import odesCVODE, integrator_info_cvode
-    IntegratorBase.integrator_classes.append(odesCVODE)
-    __doc__ += integrator_info_cvode
-    integrator_info += integrator_info_cvode
-except:
-    print('Could not load odesCVODE')
+##try:
+##    from .odes_cvode import odesCVODE, integrator_info_cvode
+##    IntegratorBase.integrator_classes.append(odesCVODE)
+##    __doc__ += integrator_info_cvode
+##    integrator_info += integrator_info_cvode
+##except:
+##    print('Could not load odesCVODE')
 
 class ODEsystem(ode):
     __doc__ = ode.__doc__ + integrator_info
@@ -126,4 +126,4 @@ def find_odes_integrator(name):
     for cl in IntegratorBase.integrator_classes:
         if re.match(name,cl.__name__,re.I):
             return cl
-    return    
+    return
