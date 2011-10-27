@@ -3,4 +3,9 @@
 *.pyo
 *.bak
 .directory
-*.rdat*
+\#*\#
+*.so
+*.o
+*.c
+build/*
+
