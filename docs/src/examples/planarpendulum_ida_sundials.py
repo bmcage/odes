@@ -43,8 +43,10 @@ import numpy as np
 import ida
 #import pylab
 
-class res(ResFunction):
-    def evaluate(self, t, y, ydot, result):
+class oscres(ResFunction):
+    def evaluate(self, t, x, xdot, result):
+        x=[1,2,3,4,5]
+        xdot=[2,4,6,8,18]
         g=1
         result[0]=x[2]-xdot[0]
         result[1]=x[3]-xdot[1]
@@ -53,11 +55,12 @@ class res(ResFunction):
         #tmp[4]=x[0]*x[0]+x[1]*x[1]-1
         #tmp[4]=x[0]*x[2]+x[1]*x[3]
         result[4] = x[2]**2 + x[3]**2 \
-                    - (x[0]**2 + x[1]**2)*x[4] - x[1] * SimpleOscillator.g
+                    - (x[0]**2 + x[1]**2)*x[4] - x[1] * g
         return 0
+        
+res=oscres()        
 
 class SimpleOscillator():
-    
     stop_t  = arange(.0,5,1e-2,dtype=np.float)
     theta= 3.14/3 #starting angle
     x0=sin(theta)
@@ -73,7 +76,6 @@ class SimpleOscillator():
 
 problem = SimpleOscillator()
 z = [0]*(1+len(problem.stop_t)); zprime = [0]*(1+len(problem.stop_t))
-algvar = -1
 
 print('Stepping in 1...')
 solver=ida.IDA()
