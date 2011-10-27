@@ -7,5 +7,6 @@
 *.so
 *.o
 *.c
+!scikits/sundials_odes/sundials_auxiliary/*
 build/*
 
