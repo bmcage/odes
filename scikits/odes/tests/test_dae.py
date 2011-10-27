@@ -1,4 +1,6 @@
 # Authors: B. Malengier, russel (scipy trac)
+from __future__ import print_function
+
 """
 Tests for differential algebraic equation solvers.
 """
