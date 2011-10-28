@@ -27,6 +27,17 @@ Installation from sources
 
 In the directory example (the same as the file you are reading now), just do as root:
 
+python setup.py build
+
+This builds the packages in the build directory.
+You can try it without installation using PYTHONPATH. For example:
+On my box, the build libs are in odes/build/lib.linux-x86_64-2.7/, hence I can
+use them with:
+
+PYTHONPATH=/path-to-odes/odes/build/lib.linux-x86_64-2.7/  python -c'import scikits.odes.sundials'
+
+To install, as root:
+
 python setup.py install
 
 Usage
