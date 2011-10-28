@@ -10,6 +10,7 @@ cdef class IDA_data:
     cdef np.ndarray yy_tmp, yp_tmp, residual_tmp
     cdef ResFunction res
     cdef bint parallel_implementation
+    cdef object user_data
     
 cdef class IDA:
     cdef N_Vector atol

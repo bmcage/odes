@@ -7,7 +7,8 @@ cdef class ResFunction:
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                       #void *userdata = NULL
-                       np.ndarray[DTYPE_t, ndim=1] result):
+                       np.ndarray[DTYPE_t, ndim=1] result,
+                       object userdata = None):
         return 0
         
 cdef class JacFunction:

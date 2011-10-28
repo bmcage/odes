@@ -44,7 +44,7 @@ from scikits.odes.sundials import ida
 import matplotlib.pyplot as plt
 
 class oscres(ResFunction):
-    def evaluate(self, t, x, xdot, result):
+    def evaluate(self, t, x, xdot, result, userdata):
         g=1
         result[0]=x[2]-xdot[0]
         result[1]=x[3]-xdot[1]
@@ -85,7 +85,7 @@ solver=ida.IDA()
 #                    first_step=1e-9,
 #                    atol=1e-6,rtol=1e-6)
 solver.set_options(resfn=res,
-                   compute_initcond='yode0',               
+                   compute_initcond='yp0',               
                    first_step=1e-18,
                    atol=1e-6,rtol=1e-6,
                    algebraic_vars_idx=[4])

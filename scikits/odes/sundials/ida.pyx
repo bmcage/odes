@@ -18,11 +18,12 @@ from common_defs cimport *
 # TODO: linsolvers: check the output value for errors
 # TODO: flag for indicating the resfn (in set_options) whether is a c-function or python function
 # TODO: implement event handler
+# TODO: unify using float/double/realtype variable
 
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *auxiliary_data):
 
-    #cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
+    cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
     
     aux_data = <IDA_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
@@ -40,10 +41,7 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
     #TODO: probably a bottleneck, because self.res is not typed
     #      so the compiler will not optimize it... but otoh, in 
     #      general it is a python function...:)
-    #TODO: pass user data to the function
-    #      (add to 'set_options' option 'user_data' and pass it
-    #      to the user "res" function
-    aux_data.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp)
+    aux_data.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, aux_data.user_data)
          
     if parallel_implementation:
         raise NotImplemented 
@@ -51,7 +49,17 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
         ndarray2nv_s(rr, residual_tmp)
          
     return 0
-
+    
+cdef class IDA_data:
+    def __cinit__(self, N):
+        self.parallel_implementation = False
+        #self.*res = NULL
+        self.user_data = None
+        
+        self.yy_tmp = np.empty(N, float)
+        self.yp_tmp = np.empty(N, float)
+        self.residual_tmp = np.empty(N, float)
+    
 cdef class IDA:
     cdef realtype _jacFn(self, Neq, tt, yy, yp, resvec, cj, jdata, JJ, 
                          tempv1, tempv2, tempv3):
@@ -78,71 +86,136 @@ cdef class IDA:
             'nsteps':500,
             'max_step': 0.,
             'first_step': 0.,
-            'compute_initcond': '',
+            'compute_initcond': None,
             'compute_initcond_t0': 0.01,
             'constraints': False,        #
             'constraint_type': None,     # 
-            'algebraic_vars_idx': np.array([]), 
-            'exclude_algvar_from_error': False,   #
+            'algebraic_vars_idx':None, 
+            'exclude_algvar_from_error': False,
+            'user_data': None,
             'out': False, #
             'resfn': None
             }
-        
-        #NOTE: 1. max_step=0.0 corresponds to infinite
-        #      2. first_step =. 0.0 => first step will be determined by solver
-        #      3. possible linsolvers: 'dense', 'lapackdense', 'band', 'labackband',
-        #                              'spgmr', 'spbcg', 'sptfqmr'
-        #      4. maxl - dimension of the number of used Krylov subspaces (0 = default)
-        #              (used by 'spgmr', 'spbcg', 'sptfqmr' linsolvers)
-        #      5. compute_initcond: '', 'yode0', 'yprime0'
-        
-        
+ 
         self.options = default_values
         self.N       = -1
         
-        #np.ndarray rtol=1e-6, np.ndarray atol=1e-12,
-        #lband=None,uband=None,
-        #tcrit=None, 
-        #int order = 5,
-        #int nsteps = 500,
-        #double max_step = 0.0, # corresponds to infinite
-        #double first_step = 0.0, # determined by solver
-        #char* compute_initcond='',
-        #double compute_initcond_t0 = 0.01,
-        #constraints=False, 
-        #constraint_type=None, 
-        #algebraic_vars_idx=None, 
-        #exclude_algvar_from_error=False,
-        #out = False
-        
-        
-          
+
     def set_options(self, **options):
         """ 
         Reads the options list and assigns values for the solver.
         
         Mandatory options are: 'resfn'.
         
-        All options (and their defaults) are:
-            'implementation': 'serial'
-            'use_relaxation': False
-            'rtol': 1e-6, 'atol': 1e-12
-            'linsolver': 'dense'
-            'lband': 0,'uband': 0
-            'maxl': 0
-            'tcrit': 0.
-            'order': 5,
-            'nsteps':500
-            'max_step': 0.
-            'first_step': 0.
-            'compute_initcond': '',
-            'compute_initcond_t0': 0.01
-            'constraints': False,        #
+        All options list:
+            'implementation':
+                Values: 'serial' (= default), 'parallel'
+                Description:
+                    Using serial or parallel implementation of the solver.
+                    #TODO: curently only serial implementation is working
+            'use_relaxation': 
+                Values: False (= default), True
+                Description:
+                    Uses relaxation algorithm for solving (if possible).
+             'rtol':
+                Values: float,  1e-6 = default
+                Description:
+                    Relative tolerancy. 
+             'atol':
+                Values: float or numpy array of floats,  1e-12 = default
+                Description:
+                    Absolute tolerancy
+             'linsolver': 
+                Values: 'dense' (= default), 'lapackdense', 'band', 'lapackband', 'spgmr', 'spbcg', 'sptfqmr'
+                Description:
+                    Specifies used linear solver.
+                    Limitations: Linear solvers for dense and band matrices can be used only
+                                 for serial implementation. For parallel implementation use_relaxation
+                                 use lapackdense or lapackband respectively.
+            'lband', 'uband':
+                Values: non-negative integer, 0 = default
+                Description:
+                    Specifies the width of the lower band (below the main diagonal) and/or upper diagonal
+                    (above the main diagonal). So the total band width is lband + 1 + uband, where the 1 
+                    stands for the main diagonal (specially, lband = uband = 0 [that is the default] 
+                    denotes the band width = 1, i.e. the main diagonal only).
+                    Used only if 'linsolver' is band.
+            'maxl':
+                Values: 0 (= default), 1, 2, 3, 4, 5
+                Description:
+                    Dimension of the number of used Krylov subspaces 
+                    (used only by 'spgmr', 'spbcg', 'sptfqmr' linsolvers)
+            'tcrit': 
+                Values: float, 0.0 = default
+                Description:
+                    Maximum time until which we perform the computations.
+                    Unconstrained (i.e. infinite time) is value of 0.0.
+            'order': 
+                Values: 1, 2, 3, 4, 5 (= default)
+                Description:
+                    Specifies the maximum order of the linear multistep method.
+            'nsteps':
+                Values: positive integer, 500 = default
+                Description:
+                    Maximum number of (internally defined) steps allowed during one call to the solver.
+            'max_step': 
+                Values: non-negative float, 0.0 = default
+                Description:
+                    Restricts the maximal (absolute) internal step value taken by the solver. The value of 0.0 uses
+                    no restriction on the maximal step size.
+            'first_step': 
+                Values: float , 0.0 = default
+                Description:
+                    Sets the first step size. DAE solver can suffer on the first step, so set this
+                    to circumvent this. The value of 0.0 uses the solver's internal default value.
+            'compute_initcond':
+                Values: 'y0', 'yp0', None
+                Description:
+                    Specifies what initial condition is calculated for given problem.
+                    'y0'  - calculates/improves the y0 initial condition (considering yp0 to be accurate)
+                    'yp0' - calculates/improves the yp0 initial condition (considering y0 to be accurate)
+                    None  - don't compute any initial conditions (user provided values for y0 an yp0
+                            are considered to be consistent and accurate)
+            'compute_initcond_t0': 
+                Values: non-negative float, 0.01 = default
+                Description:
+                    When calculating the initial condition, specifies the time until which the solver tries to
+                    get the consistent values for either y0 or yp0.
+            'user_data':
+                Values: python object, None = default
+                Description:
+                    Additional data that are supplied to each call of the residual function 'resfn' (see below)
+                    and Jacobi function 'jacfn' (if specified one).
+            'resfn':
+                Values: function of class ResFunction
+                Description:
+                    Defines the residual function (which has to be a subclass of ResFunction class). This function 
+                    takes as input arguments current time t, current value of y, yp, numpy array of returned residual
+                    and optional userdata. Return value is 0 if successfull.
+                    This option is mandatory.
+            'algebraic_vars_idx': 
+                Values: numpy vector or None (= default)
+                Description:
+                    If given problem is of type DAE, some items of the residual vector returned by the 'resfn' have to
+                    be treated as algebraic variables. These are denoted by the position (index) in the residual vector.
+                    All these indexes have to be specified in the 'algebraic_vars_idx' array.
+            'exclude_algvar_from_error': 
+                Values: False (= default), True
+                Description:
+                    Indicates whether or not to suppress algebraic variables in the local error test. If 'algebraic_vars_idx'
+                    vector not specified, this value is ignored.
+                    
+                    The use of this option (i.e. set to True) is discouraged when solving DAE systems of index 1, whereas it 
+                    is generally encouraged for systems of index 2 or more.
+            'constraints':
+                Values: False (= default), True
             'constraint_type': None,     # 
-            'algebraic_vars_idx': np.array([]), 
-            'exclude_algvar_from_error': False,   #
             'out': False, #
-            'resfn': None
+            
+             
+        #constraints=False, 
+        #constraint_type=None, 
+        #out = False
         """
 
         for (key, value) in options.items():
@@ -188,8 +261,8 @@ cdef class IDA:
         if not len(y0) == len(yp0):
             raise ValueError('Arrays inconsistency: y0 and ydot0 have to be of the'
                              'same length !')
-        if (((len(y0) == 0) and (not opts['compute_initcond'] == 'yode0'))
-                or ((len(yp0) == 0) and (not opts['compute_initcond'] == 'yprime0'))):
+        if (((len(y0) == 0) and (not opts['compute_initcond'] == 'y0'))
+                or ((len(yp0) == 0) and (not opts['compute_initcond'] == 'yp0'))):
             raise ValueError('Not passed y0 or ydot0 value has to computed'
                              'by ''init_cond'', but ''init_cond'' not set apropriately !')
         cdef long int N
@@ -214,14 +287,7 @@ cdef class IDA:
             self.residual = N_VNew_Serial(N)
             self.y  = N_VClone(self.y0)
             self.yp = N_VClone(self.yp0)
-            self.aux_data = IDA_data()
-        
-        # auxiliary variables
-        self.aux_data.yy_tmp = np.empty(N, float)
-        self.aux_data.yp_tmp = np.empty(N, float)
-        self.aux_data.residual_tmp = np.empty(N, float)
-        self.aux_data.parallel_implementation = self.parallel_implementation
-        self.aux_data.res = opts['resfn']
+ 
         
         if self.N <= 0:
             IDAInit(ida_mem, _res, <realtype> t0, self.y0, self.yp0)
@@ -234,6 +300,12 @@ cdef class IDA:
             raise NotImplemented('IDA object reallocation not implemented !')
         
         self.N = N
+        
+        # auxiliary variables
+        self.aux_data = IDA_data(N)
+        self.aux_data.parallel_implementation = self.parallel_implementation
+        self.aux_data.res = opts['resfn']
+        self.aux_data.user_data = opts['user_data']
         
         if not np.isscalar(opts['rtol']) :
             raise ValueError('rtol (%s) must be a scalar for IDA'\
@@ -255,6 +327,7 @@ cdef class IDA:
         
         # As user data we pass the (self) IDA object
         IDASetUserData(ida_mem, <void*> self.aux_data)
+        
         cdef int order = <int> opts['order']
         if (order < 1) or (order > 5):
             raise ValueError('order should be betwen 1 and 5')
@@ -288,22 +361,21 @@ cdef class IDA:
                 IDABand(ida_mem, N, <int> opts['uband'], <int> opts['lband']) 
         elif linsolver == 'lapackband':
             IDALapackBand(ida_mem, N, <int> opts['uband'], <int> opts['lband']) 
-#        elif linsolver == 'spgmr':
-#            IDASpgmr(ida_mem, maxl)
+        elif linsolver == 'spgmr':
+            IDASpgmr(ida_mem, maxl)
         elif linsolver == 'spbcg':
-            #cdef int maxl = <int> opts['maxl']
             IDASpbcg(ida_mem, maxl)
         elif linsolver == 'sptfqmr':
-            #cdef int maxl = <int> opts['maxl']
             IDASptfqmr(ida_mem, maxl)
         
-        cdef np.ndarray[DTYPE_t, ndim=1] dae_vars = np.ones(N, float)
-        cdef int return_flag
-        cdef float t0_init
+        cdef np.ndarray[DTYPE_t, ndim=1] dae_vars
+        alg_vars_idx = opts['algebraic_vars_idx']
         compute_initcond = opts['compute_initcond']
-        if compute_initcond == 'yode0':
-            for algvar_idx in opts['algebraic_vars_idx']:
-                dae_vars[algvar_idx] = 0.0
+        if (compute_initcond == 'yp0') or (opts['exclude_algvar_from_error'] and not alg_vars_idx is None):
+            dae_vars = np.ones(N, float)
+            if not alg_vars_idx is None:
+                for algvar_idx in opts['algebraic_vars_idx']:
+                    dae_vars[algvar_idx] = 0.0
             if not self.dae_vars_id is NULL:
                 N_VDestroy(self.dae_vars_id)
             if self.parallel_implementation:
@@ -311,13 +383,21 @@ cdef class IDA:
             else:
                 self.dae_vars_id = N_VMake_Serial(N, <realtype*> dae_vars.data) 
             IDASetId(ida_mem, self.dae_vars_id)
+            
+            if opts['exclude_algvar_from_error'] and not alg_vars_idx is None:
+                IDASetSuppressAlg(ida_mem, True)
+        
+        cdef int return_flag
+        cdef float t0_init
+        if compute_initcond == 'yp0':
             IDACalcIC(ida_mem, IDA_YA_YDP_INIT, <realtype>opts['compute_initcond_t0'])
-        elif compute_initcond == 'yprime0':
+            t0_init = opts['compute_initcond_t0']
+        elif compute_initcond == 'y0':
             return_flag = IDACalcIC(ida_mem, IDA_Y_INIT, <realtype> opts['compute_initcond_t0'])
             if not (return_flag == IDA_SUCCESS):
                 raise ValueError('IDA did not compute successfully the initial condition')
             t0_init = opts['compute_initcond_t0']
-        elif compute_initcond == '':
+        elif compute_initcond == None or compute_initcond == '':
             t0_init = t0
         else: raise ValueError('Unknown ''compute_initcond'' calculation method: ''%s''' 
                                     %(compute_initcond))
@@ -412,7 +492,7 @@ cdef class IDA:
         #TODO: implement next step
         #TODO: check whether 'init_step' has been called
         raise NotImplemented
-        pass
+        return 0
 
     def __dealloc__(self):
         if not self._ida_mem is NULL: IDAFree(&self._ida_mem)

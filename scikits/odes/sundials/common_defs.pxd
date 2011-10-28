@@ -7,7 +7,8 @@ cdef class ResFunction:
     cpdef int evaluate(self, DTYPE_t t, 
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
-                       np.ndarray[DTYPE_t, ndim=1] result)
+                       np.ndarray[DTYPE_t, ndim=1] result,
+                       object userdata = *)
         
 cdef class JacFunction:
     cpdef np.ndarray[DTYPE_t, ndim=2] evaluate(self, DTYPE_t t, 
