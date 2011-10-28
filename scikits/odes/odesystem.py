@@ -55,7 +55,10 @@ __docformat__ = "restructuredtext en"
 import re
 
 from scipy.integrate import ode
-from scipy.integrate._ode import IntegratorBase
+try:
+    from scipy.integrate._ode import IntegratorBase
+except:
+    from scipy.integrate.ode import IntegratorBase
 from numpy import isscalar, array, asarray
 
 ##try:
