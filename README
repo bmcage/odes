@@ -21,6 +21,8 @@ and as root:
 make install
 
 This should install sundials in /usr/local/lib
+Make sure you use the fortran compiler as used for your lapack/blas install. Eg, on linux that would be gfortran, so:
+./configure --disable-mpi --with-cflags=-fPIC F77=gfortran
 
 Installation from sources
 =========================
@@ -30,7 +32,7 @@ In the directory example (the same as the file you are reading now), just do as 
 python setup.py build
 
 This builds the packages in the build directory.
-You can try it without installation using PYTHONPATH. For example:
+You can try it without installation by using PYTHONPATH. For example:
 On my box, the build libs are in odes/build/lib.linux-x86_64-2.7/, hence I can
 use them with:
 
