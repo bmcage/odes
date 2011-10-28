@@ -38,9 +38,9 @@ then it solves the problme at hand. We take g=1, m=1
 
 """
 from numpy import (arange, zeros, array, sin)
-from common_defs import ResFunction
+from scikits.odes.sundials.common_defs import ResFunction
 import numpy as np
-import ida
+from scikits.odes.sundials import ida
 import matplotlib.pyplot as plt
 
 class oscres(ResFunction):
