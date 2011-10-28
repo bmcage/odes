@@ -45,13 +45,6 @@ import matplotlib.pyplot as plt
 
 class oscres(ResFunction):
     def evaluate(self, t, x, xdot, result):
-        print('t = ', t)
-        print('x = ')
-        print(x)
-        print('xdot = ')
-        print(xdot)
-        #x=[1,2,3,4,5]
-        #xdot=[2,4,6,8,18]
         g=1
         result[0]=x[2]-xdot[0]
         result[1]=x[3]-xdot[1]
@@ -61,14 +54,12 @@ class oscres(ResFunction):
         #tmp[4]=x[0]*x[2]+x[1]*x[3]
         result[4] = x[2]**2 + x[3]**2 \
                     - (x[0]**2 + x[1]**2)*x[4] - x[1] * g
-        print('result = ')
-        print(result)
         return 0
         
 res=oscres()        
 
 class SimpleOscillator():
-    stop_t  = arange(.0,5,1.,dtype=np.float)
+    stop_t  = arange(.0,5,0.2,dtype=np.float)
     theta= 3.14/3 #starting angle
     x0=sin(theta)
     y0=-(1-x0**2)**.5
@@ -102,16 +93,15 @@ y1 = solver.run_solver(problem.stop_t, problem.z0, problem.zprime0)
 #print("Dtype = ", problem.stop_t.dtype)
 #y1 = solver.run_solver(problem.stop_t, problem.z0, problem.stop_t)
 #ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
-print('Result y1 =')
-print(y1)
 
 #print('last sol', z[i-1], zprime[i-1])
 #print('has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
 #                                    zprime[i-1]))
 
 nr = len(problem.stop_t)
-xt = y1[0][:]
-yt = y1[0][:]
+print(type(y1))
+xt = y1[:, 0]
+yt = y1[:, 1]
 time = problem.stop_t
 print(xt, yt)
 plt.figure(1)
