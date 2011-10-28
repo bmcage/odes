@@ -20,23 +20,19 @@ from common_defs cimport *
 # TODO: implement event handler
 
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
-              N_Vector rr, void *self_obj):
+              N_Vector rr, void *auxiliary_data):
 
     #cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
-         
-    self = <object> self_obj
-    print('Self object: ')
-    print(self)
-    print()
-    raise NotImplemented    
-    cdef bint parallel_implementation = self.parallel_implementation
-    raise NotImplemented   
+    
+    aux_data = <IDA_data> auxiliary_data
+    cdef bint parallel_implementation = aux_data.parallel_implementation
+
     if parallel_implementation:
         raise NotImplemented 
     else:
-        yy_tmp = self.yy_tmp
-        yp_tmp = self.yp_tmp
-        residual_tmp = self.residual_tmp
+        yy_tmp = aux_data.yy_tmp
+        yp_tmp = aux_data.yp_tmp
+        residual_tmp = aux_data.residual_tmp
              
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
@@ -47,7 +43,7 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
     #TODO: pass user data to the function
     #      (add to 'set_options' option 'user_data' and pass it
     #      to the user "res" function
-    self.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp)
+    aux_data.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp)
          
     if parallel_implementation:
         raise NotImplemented 
@@ -86,7 +82,7 @@ cdef class IDA:
             'compute_initcond_t0': 0.01,
             'constraints': False,        #
             'constraint_type': None,     # 
-            'algebraic_vars': np.array([]), 
+            'algebraic_vars_idx': np.array([]), 
             'exclude_algvar_from_error': False,   #
             'out': False, #
             'resfn': None
@@ -115,7 +111,7 @@ cdef class IDA:
         #double compute_initcond_t0 = 0.01,
         #constraints=False, 
         #constraint_type=None, 
-        #algebraic_var=None, 
+        #algebraic_vars_idx=None, 
         #exclude_algvar_from_error=False,
         #out = False
         
@@ -143,7 +139,7 @@ cdef class IDA:
             'compute_initcond_t0': 0.01
             'constraints': False,        #
             'constraint_type': None,     # 
-            'algebraic_vars': np.array([]), 
+            'algebraic_vars_idx': np.array([]), 
             'exclude_algvar_from_error': False,   #
             'out': False, #
             'resfn': None
@@ -171,7 +167,7 @@ cdef class IDA:
         #TODO: jacobi function ?isset
         #TODO: implement relaxation algoithm for opt: opts['use_relaxation']
         #TODO: return also the values of y at the initial time
-        
+
         if self._ida_mem is NULL:
             raise MemoryError
  
@@ -184,8 +180,6 @@ cdef class IDA:
         if opts['resfn'] == None:
             raise ValueError('The residual function ResFn not assigned '
                               'during ''set_options'' call !')
-        else:
-            self.res = opts['resfn']
                
         if not len(y0) == len(ydot0):
             raise ValueError('Arrays inconsistency: y0 and ydot0 have to be of the'
@@ -216,11 +210,14 @@ cdef class IDA:
             self.residual = N_VNew_Serial(N)
             self.y  = N_VClone(self.y0)
             self.yp = N_VClone(self.yp0)
+            self.aux_data = IDA_data()
         
         # auxiliary variables
-        self.yy_tmp = np.empty(N, float)
-        self.yp_tmp = np.empty(N, float)
-        self.residual_tmp = np.empty(N, float)
+        self.aux_data.yy_tmp = np.empty(N, float)
+        self.aux_data.yp_tmp = np.empty(N, float)
+        self.aux_data.residual_tmp = np.empty(N, float)
+        self.aux_data.parallel_implementation = self.parallel_implementation
+        self.aux_data.res = opts['resfn']
         
         if self.N <= 0:
             IDAInit(ida_mem, _res, <realtype> t0, self.y0, self.yp0)
@@ -253,7 +250,7 @@ cdef class IDA:
         #TODO: implement IDAFWtolerances(ida_mem, efun)
         
         # As user data we pass the (self) IDA object
-        IDASetUserData(ida_mem, <void*> self)
+        IDASetUserData(ida_mem, <void*> self.aux_data)
         cdef int order = <int> opts['order']
         if (order < 1) or (order > 5):
             raise ValueError('order should be betwen 1 and 5')
@@ -297,9 +294,11 @@ cdef class IDA:
             IDASptfqmr(ida_mem, maxl)
         
         cdef np.ndarray[DTYPE_t, ndim=1] dae_vars = np.ones(N, float)
+        cdef int return_flag
+        cdef float t0_init
         compute_initcond = opts['compute_initcond']
-        if compute_initcond == 'yprime0':
-            for algvar_idx in opts['algebraic_var_idx']:
+        if compute_initcond == 'yode0':
+            for algvar_idx in opts['algebraic_vars_idx']:
                 dae_vars[algvar_idx] = 0.0
             if not self.dae_vars_id is NULL:
                 N_VDestroy(self.dae_vars_id)
@@ -309,8 +308,10 @@ cdef class IDA:
                 self.dae_vars_id = N_VMake_Serial(N, <realtype*> dae_vars.data) 
             IDASetId(ida_mem, self.dae_vars_id)
             IDACalcIC(ida_mem, IDA_YA_YDP_INIT, <realtype>opts['compute_initcond_t0'])
-        elif compute_initcond == 'yode0':
-            IDACalcIC(ida_mem, IDA_Y_INIT, <realtype> opts['compute_initcond_t0'])
+        elif compute_initcond == 'yprime0':
+            return_flag = IDACalcIC(ida_mem, IDA_Y_INIT, <realtype> opts['compute_initcond_t0'])
+            if not (return_flag == IDA_SUCCESS):
+                raise ValueError('IDA did not compute successfully the initial condition')
             t0_init = opts['compute_initcond_t0']
         elif compute_initcond == '':
             t0_init = t0
@@ -365,7 +366,8 @@ cdef class IDA:
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp
         cdef realtype t_out
-        for idx in range(len(tspan)):
+        y_retn[0,:] = y0
+        for idx in range(len(tspan))[1:]:
             t = tspan[idx]
             IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
             nv_s2ndarray(y, y_retn[idx, :])
