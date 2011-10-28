@@ -41,8 +41,8 @@ cdef class IDA:
                          tempv1, tempv2, tempv3)
     #def set_options(self, dict options)
     cpdef init_step(self, DTYPE_t t0, 
-                 np.ndarray[DTYPE_t, ndim=1] y0, 
-                 np.ndarray[DTYPE_t, ndim=1] ydot0)
+                    np.ndarray[DTYPE_t, ndim=1] y0, 
+                    np.ndarray[DTYPE_t, ndim=1] yp0)
     #def run_solver(self, np.ndarray[float, ndim=1] tspan, np.ndarray[float, ndim=1] y0, 
     #               np.ndarray[float, ndim=1] yp0)
     #def step(self, realtype t)
