@@ -3,6 +3,10 @@ cdef extern from "sundials/sundials_types.h":
     ctypedef unsigned int booleantype
 
 cdef extern from "sundials/sundials_nvector.h":
+    struct _generic_N_Vector_Ops:
+        pass
+    struct _generic_N_Vector:
+        pass
     ctypedef _generic_N_Vector *N_Vector	
     ctypedef _generic_N_Vector_Ops *N_Vector_Ops
 

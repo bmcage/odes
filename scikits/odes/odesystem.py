@@ -1,5 +1,4 @@
 # Authors: B. Malengier based on ode.py
-from __future__ import print_function
 """
 First-order ODE solver
 
@@ -38,6 +37,8 @@ you need to pass extra arguments to jac, use eg a python class method :
 Allowing the extra parameters to be kept in the Myproblem class
 """
 
+from __future__ import print_function
+
 #the following will be extended as solvers are loaded
 integrator_info = \
 """
@@ -54,7 +55,7 @@ __docformat__ = "restructuredtext en"
 import re
 
 from scipy.integrate import ode
-from scipy.integrate.ode import IntegratorBase
+from scipy.integrate._ode import IntegratorBase
 from numpy import isscalar, array, asarray
 
 ##try:

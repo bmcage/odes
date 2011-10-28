@@ -23,6 +23,7 @@ def configuration(parent_package='',top_path=None):
                          sources=['lsodi.pyf'],
                         libraries=['daepack'])
     config.add_data_dir('tests')
+    config.add_subpackage('sundials')
     return config
 
 if __name__ == '__main__':

@@ -4,6 +4,23 @@ Requirement
 ===========
 * You need scipy, as the aim is to extend scipy.integrate
 * You need a fortran compiler to install from source. 
+* You need cython installed to install from source
+* Tested with python 2.7 and 3.2
+
+Requirements before install
+===========================
+1. You need numpy and scipy installed
+2. You need to have cython installed and executable
+3. You need to have the sundials package version 2.4.0 installed from 
+https://computation.llnl.gov/casc/sundials/download/download.html
+This package *must* be installed with the MPI disabled and the fPIC flag. On a *nix systhem, do after extraction of the downloaded tar.gz:
+
+./configure --disable-mpi --with-cflags=-fPIC
+make
+and as root:
+make install
+
+This should install sundials in /usr/local/lib
 
 Installation from sources
 =========================

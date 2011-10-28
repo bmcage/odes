@@ -1,6 +1,4 @@
 # Authors: B. Malengier based on ode.py
-from __future__ import print_function
-
 """
 First-order DAE solver
 
@@ -45,6 +43,8 @@ you need to pass extra arguments to jac, use eg a python class method :
     integrator = dae(problem.res,problem.jac)
 Allowing the extra parameters to be kept in the Myproblem class
 """
+
+from __future__ import print_function
 
 integrator_info_ddaspk = \
 """
@@ -215,7 +215,6 @@ Modified Extended Backward Differentiation Formulae (MEBDF)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Not included. Fortran codes: http://www.ma.ic.ac.uk/~jcash/IVP_software/readme.html
 """
-
 __doc__ += integrator_info
 
 #
