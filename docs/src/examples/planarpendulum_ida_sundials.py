@@ -41,12 +41,17 @@ from numpy import (arange, zeros, array, sin)
 from common_defs import ResFunction
 import numpy as np
 import ida
-#import pylab
+import matplotlib.pyplot as plt
 
 class oscres(ResFunction):
     def evaluate(self, t, x, xdot, result):
-        x=[1,2,3,4,5]
-        xdot=[2,4,6,8,18]
+        print('t = ', t)
+        print('x = ')
+        print(x)
+        print('xdot = ')
+        print(xdot)
+        #x=[1,2,3,4,5]
+        #xdot=[2,4,6,8,18]
         g=1
         result[0]=x[2]-xdot[0]
         result[1]=x[3]-xdot[1]
@@ -56,12 +61,14 @@ class oscres(ResFunction):
         #tmp[4]=x[0]*x[2]+x[1]*x[3]
         result[4] = x[2]**2 + x[3]**2 \
                     - (x[0]**2 + x[1]**2)*x[4] - x[1] * g
+        print('result = ')
+        print(result)
         return 0
         
 res=oscres()        
 
 class SimpleOscillator():
-    stop_t  = arange(.0,5,1e-2,dtype=np.float)
+    stop_t  = arange(.0,5,1.,dtype=np.float)
     theta= 3.14/3 #starting angle
     x0=sin(theta)
     y0=-(1-x0**2)**.5
@@ -88,18 +95,59 @@ solver=ida.IDA()
 #                    atol=1e-6,rtol=1e-6)
 solver.set_options(resfn=res,
                    compute_initcond='yode0',               
-                   first_step=1e-9,
+                   first_step=1e-18,
                    atol=1e-6,rtol=1e-6,
-                   algvar=[4])
+                   algebraic_vars_idx=[4])
 y1 = solver.run_solver(problem.stop_t, problem.z0, problem.zprime0)
 #print("Dtype = ", problem.stop_t.dtype)
 #y1 = solver.run_solver(problem.stop_t, problem.z0, problem.stop_t)
 #ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
+print('Result y1 =')
+print(y1)
+
+#print('last sol', z[i-1], zprime[i-1])
+#print('has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
+#                                    zprime[i-1]))
+
+nr = len(problem.stop_t)
+xt = y1[0][:]
+yt = y1[0][:]
+time = problem.stop_t
+print(xt, yt)
+plt.figure(1)
+plt.subplot(211)
+plt.scatter(xt, yt)
+plt.axis('equal')
+plt.subplot(212)
+plt.plot(time, xt, 'b', time, yt, 'k')
+plt.ylabel('Something')
+plt.xlabel('Time')
+plt.show()
+
+raise NotImplemented('wait patiently')
+xt = [z[i][0] for i in range(nr)]
+yt = [z[i][1] for i in range(nr)]
+time = zeros(nr,float)
+time[0] = 0.0
+if error:
+    time[1:]  = problem.stop_t[:nr-1] 
+else:
+    time[1:]  = problem.stop_t[:nr] 
+    
+pylab.figure(1)
+pylab.subplot(211)
+pylab.scatter(xt, yt)
+pylab.axis('equal')
+pylab.subplot(212)
+pylab.plot(time, xt, 'b', time, yt, 'k')
+pylab.axis()
+pylab.show()
 print('Stepping out 1...')
 
 raise NotImplemented('Wait to have it implemented...:D')
 
 print('Stepping in 2...')
+
 solver=ida.IDA()
 solver.set_options(resfn=problem.res,
                    compute_initcond='yode0',               
