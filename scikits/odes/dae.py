@@ -933,6 +933,18 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         try: self._integrator
         except AttributeError: self.set_integrator('')
         return self._integrator.success==1
+    
+    # New methods inteded to replace previous ones
+    def set_options(self, **options):
+        self._integrator.set_options(options)
+    def run_solver(self, tspan, y0, yp0):
+        tspan_in = np.asarray(tspan, float)
+        y0_in    = np.asarray(y0, float)
+        yp0_in   = np.asarray(yp0, float)
+        
+        assert (len(y0) == len(yp0), 'Length of y0 and yp0 has to be the same.')
+        
+        self._integrator.run_solver(tspan_in, y0_in, yp0_in)
 
 #------------------------------------------------------------------------------
 # DAE integrators
