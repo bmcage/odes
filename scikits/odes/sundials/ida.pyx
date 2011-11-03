@@ -476,14 +476,17 @@ cdef class IDA:
             
         return y_retn
 
-    def step(self, realtype t, y_retn):
+    def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
         """
         Method for calling successive next step of the IDA solver to allow
         more precise control over the IDA solver. The 'init_step' method has to
         be called before the 'step' method.
         
         Input:
-            t - time (scalar) when next values are computed
+            t - if t>0.0 then integration is performed until this time
+                         and results at this time are returned in y_retn
+                otherwise only one internal step is perfomed and them
+                         results after this one time step are returned
             y_retn - numpy vector (ndim = 1) in which the computed
                      value will be stored
         Return values:
@@ -491,7 +494,16 @@ cdef class IDA:
         """
         #TODO: implement next step
         #TODO: check whether 'init_step' has been called
-        raise NotImplemented
+        #TODO: how to return time t_out?
+        #TODO: parse IDASolve returne flags
+        cdef N_Vector y  = self.y
+        cdef N_Vector yp = self.yp
+        cdef realtype t_out
+        if t>0.0:
+            IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
+        else:
+            IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_ONE_STEP) 
+        nv_s2ndarray(y, y_retn)
         return 0
 
     def __dealloc__(self):
