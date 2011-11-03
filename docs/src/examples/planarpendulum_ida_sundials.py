@@ -43,6 +43,21 @@ import numpy as np
 from scikits.odes.sundials import ida
 import matplotlib.pyplot as plt
 
+def draw_graphs(fignum, t, x, y):
+    plt.figure(fignum)
+    plt.subplot(211)
+    plt.scatter(x, y)
+    plt.xlabel('x coordinate')
+    plt.ylabel('y coordinate')
+    plt.axis('equal')
+    plt.subplot(212)
+    plt.plot(t, x, 'b', label='x coordinate')
+    plt.plot(t, y, 'k', label='y coordinate')
+    plt.legend()
+    plt.ylabel('Coordinate')
+    plt.xlabel('Time')
+    plt.show()
+    
 class oscres(ResFunction):
     def evaluate(self, t, x, xdot, result, userdata):
         g=1
@@ -73,109 +88,38 @@ class SimpleOscillator():
     
 
 problem = SimpleOscillator()
-z = [0]*(1+len(problem.stop_t)); zprime = [0]*(1+len(problem.stop_t))
+time = problem.stop_t
+nr = len(time)
 
-print('Stepping in 1...')
+# Variant 1: Solving the problem with the 'run_solver' method
 solver=ida.IDA()
-#raise NotImplemented('Wait a second... :D')
-#ig = dae(problem.res, None)
-#first compute the correct initial condition from the values of z0
-#ig.set_integrator('odesIDA',algebraic_var=array([1,1,1,1,algvar]),
-#                    compute_initcond='yode0',
-#                    first_step=1e-9,
-#                    atol=1e-6,rtol=1e-6)
 solver.set_options(resfn=res,
                    compute_initcond='yp0',               
                    first_step=1e-18,
                    atol=1e-6,rtol=1e-6,
                    algebraic_vars_idx=[4])
-y1 = solver.run_solver(problem.stop_t, problem.z0, problem.zprime0)
-#print("Dtype = ", problem.stop_t.dtype)
-#y1 = solver.run_solver(problem.stop_t, problem.z0, problem.stop_t)
-#ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
+                   
+y1 = solver.run_solver(time, problem.z0, problem.zprime0)
 
-#print('last sol', z[i-1], zprime[i-1])
-#print('has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
-#                                    zprime[i-1]))
 
-nr = len(problem.stop_t)
-print(type(y1))
 xt = y1[:, 0]
 yt = y1[:, 1]
-time = problem.stop_t
-print(xt, yt)
-plt.figure(1)
-plt.subplot(211)
-plt.scatter(xt, yt)
-plt.axis('equal')
-plt.subplot(212)
-plt.plot(time, xt, 'b', time, yt, 'k')
-plt.ylabel('Something')
-plt.xlabel('Time')
-plt.show()
 
-raise NotImplemented('wait patiently')
-xt = [z[i][0] for i in range(nr)]
-yt = [z[i][1] for i in range(nr)]
-time = zeros(nr,float)
-time[0] = 0.0
-if error:
-    time[1:]  = problem.stop_t[:nr-1] 
-else:
-    time[1:]  = problem.stop_t[:nr] 
-    
-pylab.figure(1)
-pylab.subplot(211)
-pylab.scatter(xt, yt)
-pylab.axis('equal')
-pylab.subplot(212)
-pylab.plot(time, xt, 'b', time, yt, 'k')
-pylab.axis()
-pylab.show()
-print('Stepping out 1...')
+draw_graphs(1, time, xt, yt)
 
-raise NotImplemented('Wait to have it implemented...:D')
+# Variant 2: Solving the problem with the more versatile (but slower) method 'step'
+problem.x0 = problem.x0 * 2
+problem.y0 = problem.y0 * 2
+problem.z0 =  array([problem.x0, problem.y0, 0., 0., problem.lambdaval], np.float)
 
-print('Stepping in 2...')
+y2 = np.empty([nr, len(problem.z0)], float)
+# options for solver remain the same
+solver.init_step(time[0], problem.z0, problem.zprime0)
+y2[0, :] = problem.z0
+for i in range(len(time))[1:]:
+    solver.step(time[i], y2[i, :])
 
-solver=ida.IDA()
-solver.set_options(resfn=problem.res,
-                   compute_initcond='yode0',               
-                   first_step=1e-9,
-                   atol=1e-6,rtol=1e-6,
-                   algvar=[4])
-solver.init_step(problem.stop_t[0], problem.z0, problem.zprime0)
+xt = y2[:, 0]
+yt = y2[:, 1]
 
-error = False
-for time in problem.stop_t[1:]:
-    ct = solver.step(time)
-    if ct < 0:
-        error = True
-        break
-
-print('Stepping out 2...')
-
-raise NotImplemented('Not this time...')
-
-print('last sol', z[i-1], zprime[i-1])
-print('has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
-                                    zprime[i-1]))
-
-nr = i
-xt = [z[i][0] for i in range(nr)]
-yt = [z[i][1] for i in range(nr)]
-time = zeros(nr,float)
-time[0] = 0.0
-if error:
-    time[1:]  = problem.stop_t[:nr-1] 
-else:
-    time[1:]  = problem.stop_t[:nr] 
-    
-pylab.figure(1)
-pylab.subplot(211)
-pylab.scatter(xt, yt)
-pylab.axis('equal')
-pylab.subplot(212)
-pylab.plot(time, xt, 'b', time, yt, 'k')
-pylab.axis()
-pylab.show()
+draw_graphs(2, time, xt, yt)
