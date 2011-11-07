@@ -2,49 +2,49 @@ from c_sundials cimport *
 from libc.stdio cimport FILE
 
 cdef extern from "ida/ida.h":
-    enum: IDA_NORMAL
-    enum: IDA_ONE_STEP
+    enum: IDA_NORMAL          # 1
+    enum: IDA_ONE_STEP        # 2
 
     #/* icopt */
-    enum: IDA_YA_YDP_INIT
-    enum: IDA_Y_INIT
+    enum: IDA_YA_YDP_INIT     # 1
+    enum: IDA_Y_INIT          # 2
 
     #/* 
     #* ----------------------------------------
     #* IDA return flags 
     #* ----------------------------------------
     #*/
+    enum: IDA_SUCCESS         # 0
+    enum: IDA_TSTOP_RETURN    # 1
+    enum: IDA_ROOT_RETURN     # 2
 
-    enum: IDA_SUCCESS
-    enum: IDA_TSTOP_RETURN
-    enum: IDA_ROOT_RETURN
+    enum: IDA_WARNING         # 99
 
-    enum: IDA_WARNING
+    enum: IDA_MEM_NULL        #-1
+    enum: IDA_ILL_INPUT       #-2
+    enum: IDA_NO_MALLOC       #-3
+    enum: IDA_TOO_MUCH_WORK   #-4
+    enum: IDA_TOO_MUCH_ACC    #-5
+    enum: IDA_ERR_FAIL        #-6
+    enum: IDA_CONV_FAIL       #-7
+    enum: IDA_LINIT_FAIL      #-8
+    enum: IDA_LSETUP_FAIL     #-9
+    enum: IDA_LSOLVE_FAIL     #-10
+    enum: IDA_RES_FAIL        #-11
+    enum: IDA_CONSTR_FAIL     #-12
+    enum: IDA_REP_RES_ERR     #-13
 
-    enum: IDA_MEM_NULL
-    enum: IDA_ILL_INPUT
-    enum: IDA_NO_MALLOC
-    enum: IDA_TOO_MUCH_WORK
-    enum: IDA_TOO_MUCH_ACC
-    enum: IDA_ERR_FAIL
-    enum: IDA_CONV_FAIL
-    enum: IDA_LINIT_FAIL
-    enum: IDA_LSETUP_FAIL
-    enum: IDA_LSOLVE_FAIL
-    enum: IDA_RES_FAIL
-    enum: IDA_CONSTR_FAIL
-    enum: IDA_REP_RES_ERR
+    enum: IDA_MEM_FAIL        #-14
 
-    enum: IDA_MEM_FAIL
+    enum: IDA_BAD_T           #-15
 
-    enum: IDA_BAD_T
+    enum: IDA_BAD_EWT         #-16
+    enum: IDA_FIRST_RES_FAIL  #-17
+    enum: IDA_LINESEARCH_FAIL #-18
+    enum: IDA_NO_RECOVERY     #-19
 
-    enum: IDA_BAD_EWT
-    enum: IDA_FIRST_RES_FAIL
-    enum: IDA_LINESEARCH_FAIL
-    enum: IDA_NO_RECOVERY
+    enum: IDA_RTFUNC_FAIL     #-20
 
-    enum: IDA_RTFUNC_FAIL
     
     ctypedef int (*IDAResFn)(realtype tt, N_Vector yy, N_Vector yp,
                     N_Vector rr, void *user_data)
