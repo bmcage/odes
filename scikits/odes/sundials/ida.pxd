@@ -16,17 +16,19 @@ cdef class IDA:
     cdef N_Vector atol
     
     cdef N_Vector y0, yp0, residual, y, yp
-    cdef N_Vector dae_vars_id
+    cdef N_Vector dae_vars_id, constraints
     cdef long int N #problem size, i.e. len(y0) = N
     
     cdef int order, nsteps
     cdef double maxstep, first_step
-    cdef bint constraints, exclude_algvar_from_error, out
+    cdef exclude_algvar_from_error, out
     cdef int compute_initcond
     cdef double compute_initcond_t0
     cdef int mupper, mlower
     # ??? lband, uband, tcrit
     # ??? constraint_type, algebraic_var
+    cdef int solver_return_flag
+    
     cdef void* _ida_mem
     cdef dict options
     cdef bint parallel_implementation

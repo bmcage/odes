@@ -99,13 +99,13 @@ solver.set_options(resfn=res,
                    atol=1e-6,rtol=1e-6,
                    algebraic_vars_idx=[4])
                    
-y1 = solver.run_solver(time, problem.z0, problem.zprime0)
+t1, y1 = solver.run_solver(time, problem.z0, problem.zprime0)
 
 
 xt = y1[:, 0]
 yt = y1[:, 1]
 
-draw_graphs(1, time, xt, yt)
+draw_graphs(1, t1, xt, yt)
 
 # Variant 2: Solving the problem with the more versatile (but slower) method 'step'
 problem.x0 = problem.x0 * 2

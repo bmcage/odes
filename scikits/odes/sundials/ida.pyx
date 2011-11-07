@@ -88,8 +88,8 @@ cdef class IDA:
             'first_step': 0.,
             'compute_initcond': None,
             'compute_initcond_t0': 0.01,
-            'constraints': False,        #
-            'constraint_type': None,     # 
+            'constraints_idx': None,
+            'constraints_type': None,
             'algebraic_vars_idx':None, 
             'exclude_algvar_from_error': False,
             'user_data': None,
@@ -207,15 +207,21 @@ cdef class IDA:
                     
                     The use of this option (i.e. set to True) is discouraged when solving DAE systems of index 1, whereas it 
                     is generally encouraged for systems of index 2 or more.
-            'constraints':
-                Values: False (= default), True
-            'constraint_type': None,     # 
+            'constraints_idx':
+                Values: numpy vector or None (= default)
+                Description:
+                    Constraint the individual variables. The variables are denoted by the position (index) in the residual vector.
+                    All these indexes are/have to be specified in this 'constraints_idx' array.
+            'constraints_type':
+                Values: numpy vector or None (= default)
+                Description:
+                    The actuall type of contraints applied to the of the variables specified by 'constraints_idx'. The type is
+                    one of:  0.0 - no contraint
+                             1.0 - variable has to be non-negative (i.e. >= 0)
+                             2.0 - variable has to be positive (i.e. > 0)
+                            -1.0 - variable has to be non-positive (i.e. <= 0)
+                            -2.0 - variable has to be negative (i.e. < 0)
             'out': False, #
-            
-             
-        #constraints=False, 
-        #constraint_type=None, 
-        #out = False
         """
 
         for (key, value) in options.items():
@@ -367,7 +373,27 @@ cdef class IDA:
             IDASpbcg(ida_mem, maxl)
         elif linsolver == 'sptfqmr':
             IDASptfqmr(ida_mem, maxl)
-        
+            
+        constraints_idx = opts['constraints_idx']
+        constraints_type = opts['constraints_type']
+        cdef unsigned int idx
+        cdef np.ndarray[DTYPE_t, ndim=1] constraints_vars
+        if not constraints_type is None:
+            if not constraints_idx is None:
+                constraints_vars = np.zeros(N, float)
+                for idx in range(constraints_idx):
+                    constraints_vars[constraints_idx[idx]] = constraints_type[idx]
+            else:
+                assert len(constraints_type) == N, 'Without ''constraints_idx'' specified the ''constraints_type'' has to be of the same length as y.'
+                constraints_vars = np.asarray(constraints_type, float)
+            if not self.constraints is NULL:
+                N_VDestroy(self.constraints)
+            if self.parallel_implementation:
+                raise NotImplemented
+            else:   
+                self.constraints = N_VMake_Serial(N, <realtype*> constraints_vars.data)
+            IDASetConstraints(ida_mem, self.constraints)
+ 
         cdef np.ndarray[DTYPE_t, ndim=1] dae_vars
         alg_vars_idx = opts['algebraic_vars_idx']
         compute_initcond = opts['compute_initcond']
@@ -406,20 +432,6 @@ cdef class IDA:
 
         #TODO: Rootfinding
 
-        #TODO: Constraints
-#            elif key == 'constraints':
-                # TODO: constraints, constraint_type 
-                #if constraints and constraint_type is None:
-                #    raise ValueError('Give type of contraint as '\
-                #                      'an array (1:>=0, 2:>0, -1:<=0, -2:<0)')
-                #elif constraints:
-                #    self.constraint_type = nvecserial.NVector(list(constraint_type))
-                #else:
-                #    self.constraint_type = None
-
-        #self.excl_algvar_err = exclude_algvar_from_error
-        
-        
         # TODO: useoutval, success    
         #self.useoutval = out
         #self.success = 1
@@ -468,13 +480,24 @@ cdef class IDA:
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp
         cdef realtype t_out
+        cdef int flag
         y_retn[0,:] = y0
         for idx in range(len(tspan))[1:]:
             t = tspan[idx]
-            IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
-            nv_s2ndarray(y, y_retn[idx, :])
-            
-        return y_retn
+            flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
+            self.solver_return_flag = flag
+            if flag == -1 or flag == -2:
+                print('An error occured. See ''solver_return_flag'' variable and documentation.')
+                return np.asarray([]), np.asarray([])
+                
+            nv_s2ndarray(y, y_retn[idx, :])    
+            if flag < -3:
+                y_retn = np.asarray(y_retn[0:idx+1, :])
+                t_retn = np.asarray(tspan[0:idx+1])
+                t_retn[idx] = t_out
+                return t_retn, y_retn
+                
+        return tspan, y_retn
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
         """
@@ -517,4 +540,5 @@ cdef class IDA:
         if not self.yp is NULL: N_VDestroy(self.yp)
         if not self.residual is NULL: N_VDestroy(self.residual)
         if not self.dae_vars_id is NULL: N_VDestroy(self.dae_vars_id)
+        if not self.constraints is NULL: N_VDestroy(self.constraints)
         
