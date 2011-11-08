@@ -531,12 +531,10 @@ cdef class IDA:
             yp_retn - numpy vector (ndim = 1) of None. If not None, will be filled
                       with derivatives of y at time t.
         Return values:
-            flag - status of the computation
+            flag  - status of the computation (successful or error occured)
+            t_out - time, where the solver stopped (when no error occured, t_out == t)
         """
-        #TODO: implement next step
         #TODO: check whether 'init_step' has been called
-        #TODO: how to return time t_out?
-        #TODO: parse IDASolve returne flags
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp
         cdef realtype t_out
@@ -549,7 +547,7 @@ cdef class IDA:
         if yp_retn:
             nv_s2ndarray(yp, yp_retn)
             
-        return flag
+        return flag, t_out
 
     def __dealloc__(self):
         if not self._ida_mem is NULL: IDAFree(&self._ida_mem)
