@@ -460,15 +460,23 @@ cdef class IDA:
             yp0   - numpy array of initial values of derivatives
             
         Return values:
-            numpy array of computed values at time specified by 'tspan' input argument
+            flag   - indicating return status of the solver
+            t      - numpy array of times at which the computations were successful
+            y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+            yp     - numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])
+            t_err  - float or None - if recoverable error occured (for example reached maximum
+                     number of allowed iterations), this is the time at which it happened
+            y_err  - numpy array of values corresponding to time t_err
+            yp_err - numpy array of derivatives corresponding to time t_err
         """
-        #TODO: what if an error occures? what is the returned value then?
-        #      should we return also the time at which error occured?
-        self.init_step(tspan[0], y0, yp0)
+        cdef np.ndarray[DTYPE_t, ndim=2] y_retn, yp_retn
+        y_retn  = np.empty([len(tspan), len(y0)], float)
+        yp_retn = np.empty([len(tspan), len(y0)], float)
+        cdef np.ndarray[DTYPE_t, ndim=1] t_retn
+        t_retn  = np.empty([len(tspan), ], float)
         
-        cdef np.ndarray[DTYPE_t, ndim=2] y_retn
-        #TODO: store also yp - add another option "store_yp" to return it if needed
-        y_retn = np.empty([len(tspan), len(y0)], float)
+        t_retn[0] = self.init_step(tspan[0], y0, yp0, y_retn[0, :], yp_retn[0, :])
+
         cdef DTYPE_t t
         cdef unsigned int idx
         #TODO: Parallel version
@@ -476,7 +484,8 @@ cdef class IDA:
         cdef N_Vector yp = self.yp
         cdef realtype t_out
         cdef int flag
-        y_retn[0,:] = y0
+        cdef np.ndarray[DTYPE_t, ndim=1] y_err, yp_err
+
         for idx in range(len(tspan))[1:]:
             t = tspan[idx]
             flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
@@ -485,16 +494,28 @@ cdef class IDA:
                 print('An error occured. See ''solver_return_flag'' variable and documentation.')
                 return np.asarray([]), np.asarray([])
                 
-            nv_s2ndarray(y, y_retn[idx, :])    
             if flag < -3:
-                y_retn = np.asarray(y_retn[0:idx+1, :])
-                t_retn = np.asarray(tspan[0:idx+1])
-                t_retn[idx] = t_out
-                return t_retn, y_retn
+                t_retn  = np.asarray(t_retn[0:idx])
+                y_retn  = np.asarray(y_retn[0:idx, :])
+                yp_retn = np.asarray(yp_retn[0:idx, :])
                 
-        return tspan, y_retn
+                y_err = np.empty([self.N, ], float)
+                yp_err = np.empty([self.N, ], float)
+                nv_s2ndarray(y,  y_err) 
+                nv_s2ndarray(yp, yp_err)
+                
+                t_retn[idx] = t_out
+                return flag, t_retn, y_retn, yp_retn, t_out, y_err, yp_err
+            else:
+                t_retn[idx] = t_out
+                nv_s2ndarray(y,  y_retn[idx, :]) 
+                nv_s2ndarray(yp, yp_retn[idx, :]) 
+            
+                
+        return flag, t_retn, y_retn, yp_retn, None, None, None
 
-    def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
+    def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn,
+                              np.ndarray[DTYPE_t, ndim=1] yp_retn = None):
         """
         Method for calling successive next step of the IDA solver to allow
         more precise control over the IDA solver. The 'init_step' method has to
@@ -507,8 +528,10 @@ cdef class IDA:
                          results after this one time step are returned
             y_retn - numpy vector (ndim = 1) in which the computed
                      value will be stored
+            yp_retn - numpy vector (ndim = 1) of None. If not None, will be filled
+                      with derivatives of y at time t.
         Return values:
-            0 - successive step
+            flag - status of the computation
         """
         #TODO: implement next step
         #TODO: check whether 'init_step' has been called
@@ -517,12 +540,16 @@ cdef class IDA:
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp
         cdef realtype t_out
+        cdef int flag
         if t>0.0:
-            IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
+            flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
         else:
-            IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_ONE_STEP) 
+            flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_ONE_STEP) 
         nv_s2ndarray(y, y_retn)
-        return 0
+        if yp_retn:
+            nv_s2ndarray(yp, yp_retn)
+            
+        return flag
 
     def __dealloc__(self):
         if not self._ida_mem is NULL: IDAFree(&self._ida_mem)

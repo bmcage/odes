@@ -97,8 +97,9 @@ solver=ida.IDA(res,
                first_step=1e-18,
                atol=1e-6,rtol=1e-6,
                algebraic_vars_idx=[4])
-                   
-t1, y1 = solver.run_solver(time, problem.z0, problem.zprime0)
+
+# strip unneeded return values from run_solver
+_flag, t1, y1 = solver.run_solver(time, problem.z0, problem.zprime0)[:3]
 
 
 xt = y1[:, 0]
