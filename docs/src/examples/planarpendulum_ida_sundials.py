@@ -92,12 +92,11 @@ time = problem.stop_t
 nr = len(time)
 
 # Variant 1: Solving the problem with the 'run_solver' method
-solver=ida.IDA()
-solver.set_options(resfn=res,
-                   compute_initcond='yp0',               
-                   first_step=1e-18,
-                   atol=1e-6,rtol=1e-6,
-                   algebraic_vars_idx=[4])
+solver=ida.IDA(res,
+               compute_initcond='yp0',               
+               first_step=1e-18,
+               atol=1e-6,rtol=1e-6,
+               algebraic_vars_idx=[4])
                    
 t1, y1 = solver.run_solver(time, problem.z0, problem.zprime0)
 
@@ -114,6 +113,7 @@ problem.z0 =  array([problem.x0, problem.y0, 0., 0., problem.lambdaval], np.floa
 
 y2 = np.empty([nr, len(problem.z0)], float)
 # options for solver remain the same
+# solver.set_options(...)
 solver.init_step(time[0], problem.z0, problem.zprime0)
 y2[0, :] = problem.z0
 for i in range(len(time))[1:]:

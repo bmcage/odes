@@ -69,7 +69,7 @@ cdef class IDA:
         return jac_return
           
 
-    def __cinit__(self):
+    def __cinit__(self, residualfn, **options):
         """ Create the IDA Solver and initialize default values """
         
         self._ida_mem = IDACreate()
@@ -99,6 +99,7 @@ cdef class IDA:
  
         self.options = default_values
         self.N       = -1
+        self.set_options(resfn=residualfn, **options)
         
 
     def set_options(self, **options):
