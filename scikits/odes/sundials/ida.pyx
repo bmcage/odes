@@ -230,7 +230,9 @@ cdef class IDA:
             
     cpdef init_step(self, DTYPE_t t0, 
                     np.ndarray[DTYPE_t, ndim=1] y0, 
-                    np.ndarray[DTYPE_t, ndim=1] yp0):
+                    np.ndarray[DTYPE_t, ndim=1] yp0,
+                    np.ndarray y_ic0_retn = None,
+                    np.ndarray yp_ic0_retn = None):
         """ 
             Applies the set by 'set_options' method to the IDA solver.
             
@@ -428,6 +430,15 @@ cdef class IDA:
             t0_init = t0
         else: raise ValueError('Unknown ''compute_initcond'' calculation method: ''%s''' 
                                     %(compute_initcond))
+        
+        if not ((y_ic0_retn is None) and (yp_ic0_retn is None)):
+            assert len(y_ic0_retn) == len(yp_ic0_retn) == N, 'y_ic0 and/or yp_ic0 have to be of the same size as y0.'
+            return_flag = IDAGetConsistentIC(self._ida_mem, self.y, self.yp)
+            if return_flag == IDA_ILL_INPUT:
+                raise NameError('Method ''get_consistent_ic'' has to be called before'
+                                'the first call to ''step'' method.')
+            if not y_ic0_retn is None: nv_s2ndarray(self.y, y_ic0_retn)
+            if not yp_ic0_retn is None: nv_s2ndarray(self.yp, yp_ic0_retn)
             
         #TODO: implement the rest of IDA*Set* functions for linear solvers
 
@@ -438,23 +449,6 @@ cdef class IDA:
         #self.success = 1
         return t0_init
         
-    def get_consistent_ic(self, np.ndarray[DTYPE_t, ndim=1] y_ic0_retn,
-                                np.ndarray[DTYPE_t, ndim=1] yp_ic0_retn):
-        """
-        Return the computed initial condition. 
-        Input arguments:
-            Both are either numpy array or None (if no output is needed)
-        """
-        if (y_ic0_retn is None) and (yp_ic0_retn is None): return 0
-        
-        ret_val = IDAGetConsistentIC(self._ida_mem, self.y, self.yp)
-        if ret_val == IDA_ILL_INPUT:
-            raise NameError('Method ''get_consistent_ic'' has to be called before'
-                                'the first call to ''step'' method.')
-        if not y_ic0_retn is None: nv_s2ndarray(self.y, y_ic0_retn)
-        if not yp_ic0_retn is None: nv_s2ndarray(self.yp, yp_ic0_retn)
-        
-            
     def run_solver(self, np.ndarray[DTYPE_t, ndim=1] tspan, np.ndarray[DTYPE_t, ndim=1] y0, 
                    np.ndarray[DTYPE_t, ndim=1] yp0):
         """
