@@ -454,6 +454,11 @@ cdef class IDA:
                      number of allowed iterations), this is the time at which it happened
             y_err  - numpy array of values corresponding to time t_err
             yp_err - numpy array of derivatives corresponding to time t_err
+            
+        Note:
+            If 'calc_initcond' then solver returns instead of user supplied y0, yp0 values as
+            the starting values the values calculated by the solver (i.e. consistent initial
+            conditions. The starting time is then also the precomputed time.
         """
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn, yp_retn
         y_retn  = np.empty([len(tspan), len(y0)], float)
