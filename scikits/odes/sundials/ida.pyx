@@ -5,20 +5,12 @@ from c_sundials cimport realtype, N_Vector
 from c_ida cimport *
 from common_defs cimport *
 
-#try:
-#    cimport c_ida
-#    cimport c_nvector_serial as c_nvecserial
-#except:
-#     print("Warning: ida solver not available, sundials wrapper package needed")
-#     raise ImportError
-
-#from c_ida import N_Vector     
-
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
 # TODO: flag for indicating the resfn (in set_options) whether is a c-function or python function
 # TODO: implement event handler
 # TODO: unify using float/double/realtype variable
+# TODO: optimize code for compiler
 
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *auxiliary_data):
@@ -38,9 +30,6 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
          
-    #TODO: probably a bottleneck, because self.res is not typed
-    #      so the compiler will not optimize it... but otoh, in 
-    #      general it is a python function...:)
     aux_data.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, aux_data.user_data)
          
     if parallel_implementation:
@@ -53,7 +42,6 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
 cdef class IDA_data:
     def __cinit__(self, N):
         self.parallel_implementation = False
-        #self.*res = NULL
         self.user_data = None
         
         self.yy_tmp = np.empty(N, float)
@@ -255,7 +243,6 @@ cdef class IDA:
         """
         #TODO: jacobi function ?isset
         #TODO: implement relaxation algoithm for opt: opts['use_relaxation']
-        #TODO: return also the values of y at the initial time
 
         if self._ida_mem is NULL:
             raise MemoryError
@@ -319,7 +306,6 @@ cdef class IDA:
         if not np.isscalar(opts['rtol']) :
             raise ValueError('rtol (%s) must be a scalar for IDA'\
                                 % (opts['rtol']))
-        #cdef np.ndarray atol
         cdef N_Vector atol
         cdef np.ndarray[DTYPE_t, ndim=1] np_atol
         cdef int maxl = <int> opts['maxl']
