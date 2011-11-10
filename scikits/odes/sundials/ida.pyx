@@ -535,7 +535,7 @@ cdef class IDA:
         else:
             flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_ONE_STEP) 
         nv_s2ndarray(y, y_retn)
-        if yp_retn:
+        if not yp_retn is None:
             nv_s2ndarray(yp, yp_retn)
             
         return flag, t_out
