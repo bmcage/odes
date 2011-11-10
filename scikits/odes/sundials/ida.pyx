@@ -515,8 +515,8 @@ cdef class IDA:
         Input:
             t - if t>0.0 then integration is performed until this time
                          and results at this time are returned in y_retn
-                otherwise only one internal step is perfomed and them
-                         results after this one time step are returned
+              - if t<0.0 only one internal step is perfomed towards time abs(t)
+                         and results after this one time step are returned
             y_retn - numpy vector (ndim = 1) in which the computed
                      value will be stored
             yp_retn - numpy vector (ndim = 1) of None. If not None, will be filled
@@ -533,7 +533,7 @@ cdef class IDA:
         if t>0.0:
             flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
         else:
-            flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_ONE_STEP) 
+            flag = IDASolve(self._ida_mem, <realtype> -t, &t_out, y, yp, IDA_ONE_STEP) 
         nv_s2ndarray(y, y_retn)
         if not yp_retn is None:
             nv_s2ndarray(yp, yp_retn)
