@@ -17,7 +17,7 @@ cdef class IDA:
     
     cdef N_Vector y0, yp0, residual, y, yp
     cdef N_Vector dae_vars_id, constraints
-    cdef long int N #the size of the problem, i.e. len(y0) = N
+    cdef long int N #problem size, i.e. len(y0) = N
     
     cdef int order, nsteps
     cdef double maxstep, first_step
@@ -25,8 +25,10 @@ cdef class IDA:
     cdef int compute_initcond
     cdef double compute_initcond_t0
     cdef int mupper, mlower
-
+    # ??? lband, uband, tcrit
+    # ??? constraint_type, algebraic_var
     cdef int solver_return_flag
+    cdef bint initialized
     
     cdef void* _ida_mem
     cdef dict options
@@ -50,5 +52,3 @@ cdef class IDA:
     #def run_solver(self, np.ndarray[float, ndim=1] tspan, np.ndarray[float, ndim=1] y0, 
     #               np.ndarray[float, ndim=1] yp0)
     #def step(self, realtype t)
-    
-    

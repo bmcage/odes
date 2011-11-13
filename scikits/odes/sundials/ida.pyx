@@ -88,6 +88,7 @@ cdef class IDA:
         self.options = default_values
         self.N       = -1
         self.set_options(resfn=residualfn, **options)
+        self.initialized = False
         
 
     def set_options(self, **options):
@@ -215,6 +216,7 @@ cdef class IDA:
 
         for (key, value) in options.items():
             self.options[key.lower()] = value
+        self.initialized = False
             
     cpdef init_step(self, DTYPE_t t0, 
                     np.ndarray[DTYPE_t, ndim=1] y0, 
@@ -433,6 +435,8 @@ cdef class IDA:
         # TODO: useoutval, success    
         #self.useoutval = out
         #self.success = 1
+
+        self.initialized = True
         return t0_init
         
     def run_solver(self, np.ndarray[DTYPE_t, ndim=1] tspan, np.ndarray[DTYPE_t, ndim=1] y0, 
@@ -526,7 +530,9 @@ cdef class IDA:
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
         """
-        #TODO: check whether 'init_step' has been called
+        if not self.initialized:
+            raise ValueError('Method ''init_step'' has to be called prir to the'
+                             'first call of ''step'' method.')
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp
         cdef realtype t_out
