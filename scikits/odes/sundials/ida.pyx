@@ -518,8 +518,9 @@ cdef class IDA:
               - if t<0.0 only one internal step is perfomed towards time abs(t)
                          and results after this one time step are returned
             y_retn - numpy vector (ndim = 1) in which the computed
-                     value will be stored
-            yp_retn - numpy vector (ndim = 1) of None. If not None, will be filled
+                     value will be stored  (needs to be preallocated)
+            yp_retn - numpy vector (ndim = 1) of None. If not None, will be
+                      filled (needs to be preallocated)
                       with derivatives of y at time t.
         Return values:
             flag  - status of the computation (successful or error occured)
