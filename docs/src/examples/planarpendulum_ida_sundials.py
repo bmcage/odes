@@ -124,3 +124,19 @@ xt = y2[:, 0]
 yt = y2[:, 1]
 
 draw_graphs(2, time, xt, yt)
+
+# Variant 3: The same as variant 1 (intial value as in variant 2), but adding
+#            a HOOK_FN - in this case we simply output the current values
+
+def hook_fn(t, x, xdot, userdata):
+    print('t = ', t, ', x = ', x[0], ', y = ', x[1],
+          ', xdot = ', xdot[0], ', ydot = ', xdot[1])
+
+    return 0
+
+_flag, t3, y3 = solver.run_solver(time, problem.z0, problem.zprime0, hook_fn)[:3]
+
+xt = y3[:, 0]
+yt = y3[:, 1]
+
+draw_graphs(3, t3, xt, yt)
