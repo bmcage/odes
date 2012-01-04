@@ -37,9 +37,11 @@ The algorithm first needs to find initial conditions for the derivatives,
 then it solves the problme at hand. We take g=1, m=1
 
 """
+from __future__ import print_function
+
 from numpy import (arange, zeros, array, sin)
-from scikits.odes.sundials.common_defs import ResFunction
 import numpy as np
+from scikits.odes.sundials.common_defs import ResFunction
 from scikits.odes.sundials import ida
 import matplotlib.pyplot as plt
 

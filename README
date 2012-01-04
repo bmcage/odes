@@ -27,7 +27,7 @@ Make sure you use the fortran compiler as used for your lapack/blas install. Eg,
 Installation from sources
 =========================
 
-In the directory example (the same as the file you are reading now), just do as root:
+In the top directory (the same as the file you are reading now), just do as root:
 
 python setup.py build
 

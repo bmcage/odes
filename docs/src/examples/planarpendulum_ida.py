@@ -37,6 +37,8 @@ The algorithm first needs to find initial conditions for the derivatives,
 then it solves the problme at hand. We take g=1, m=1
 
 """
+from __future__ import print_function
+
 from numpy import (arange, zeros, array, sin)
 from scikits.odes import dae
 import pylab

@@ -91,7 +91,6 @@ cdef class IDA:
         self.N       = -1
         self.set_options(resfn=residualfn, **options)
         self.initialized = False
-        
 
     def set_options(self, **options):
         """ 
@@ -109,15 +108,15 @@ cdef class IDA:
                 Values: False (= default), True
                 Description:
                     Uses relaxation algorithm for solving (if possible).
-             'rtol':
+            'rtol':
                 Values: float,  1e-6 = default
                 Description:
                     Relative tolerancy. 
-             'atol':
+            'atol':
                 Values: float or numpy array of floats,  1e-12 = default
                 Description:
                     Absolute tolerancy
-             'linsolver': 
+            'linsolver': 
                 Values: 'dense' (= default), 'lapackdense', 'band', 'lapackband', 'spgmr', 'spbcg', 'sptfqmr'
                 Description:
                     Specifies used linear solver.
@@ -574,7 +573,7 @@ cdef class IDA:
                          and results after this one time step are returned
             y_retn - numpy vector (ndim = 1) in which the computed
                      value will be stored  (needs to be preallocated)
-            yp_retn - numpy vector (ndim = 1) of None. If not None, will be
+            yp_retn - numpy vector (ndim = 1) or None. If not None, will be
                       filled (needs to be preallocated)
                       with derivatives of y at time t.
         Return values:

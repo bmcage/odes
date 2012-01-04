@@ -52,17 +52,53 @@ solution (this is slow!). For this you need to have the ffmpeg program
 installed. The animation is stored in the directory anidoublependulum.
 
 """
+
+from __future__ import print_function
+import numpy as np
 from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi)
+from scikits.odes.sundials.common_defs import ResFunction
+from scikits.odes.sundials import ida
 from scikits.odes import dae
 import pylab
 import os
 
+#Set following False to not compute solution with ddaspk
+alsoddaspk = True
+
+class resindex2(ResFunction):
+    """ Residual function class as needed by the IDA DAE solver"""
+    
+    def set_dblpend(self, dblpend):
+        """ Set the double pendulum problem to solve"""
+        self.dblpend = dblpend
+
+    def evaluate(self, t, x, xdot, result, userdata):
+        """ compute the residual of the ode/dae system"""
+        m1 = self.dblpend.m1
+        m2 = self.dblpend.m2
+        g = self.dblpend.g
+        result[0]= m1*xdot[4]        -x[9]*(x[0] - x[2])  - x[0]*x[8]
+        result[1]= m1*xdot[5] + g*m1 -x[9]*(x[1] - x[3])  - x[1]*x[8]
+        result[2]= m2*xdot[6]       + x[9]*(x[0] - x[2])
+        result[3]= m2*xdot[7] +g*m2 + x[9]*(x[1] - x[3])
+        result[4]= xdot[0] - x[4] + x[10]*x[0]
+        result[5]= xdot[1] - x[5] + x[10]*x[1]
+        result[6]= xdot[2] - x[6] + x[11]*x[2]
+        result[7]= xdot[3] - x[7] + x[11]*x[3]
+        result[8]= self.dblpend.radius1*self.dblpend.radius1 \
+                    - x[0]**2 - x[1]**2
+        result[9]= self.dblpend.radius2*self.dblpend.radius2 \
+                    - (x[0] - x[2])**2 - (x[1] - x[3])**2
+        result[10]= x[0]*x[4] + x[1]*x[5]
+        result[11]=(x[4] - x[6])*(x[2] - x[0]) - (x[1] - x[3])*(x[5] - x[7])
+        return 0
+    
 class Doublependulum():
     """ The problem class with the residual function and the constants defined
     """
     
     #default values
-    deftend = 125.
+    deftend = 5.
     deftstep = 1e-2
     defx0 = 5
     defy0 = 0
@@ -74,7 +110,6 @@ class Doublependulum():
     defm2 = 1.0
     defradius1 = 5.
     defradius2 = 2.
-    
     
     def __init__(self, data=None, type='index2'):
         self.tend = Doublependulum.deftend
@@ -105,50 +140,44 @@ class Doublependulum():
             self.radius2 = data.radius2
             self.g = data.g
         
-        self.stop_t  = arange(.0, self.tend, self.tstep)[1:]
+        self.stop_t  = arange(.0, self.tend, self.tstep)
         
         lambdaval = 0.0
         if type == 'index2':
             self.neq = 12
-            self.z0 =  array([self.x0, self.y0, self.x1, self.y1, 0., 0., 0., 0., lambdaval,
-                                 lambdaval, lambdaval, lambdaval]) 
-            self.zprime0 = array([0., 0., 0., 0., -lambdaval*self.x0, -lambdaval*self.y0-self.g
-                            , -lambdaval*self.x1, -lambdaval*self.y1-self.g, 0., 0., 0., 0.], float)
-            self.res = self.resindex2
-            self.algvar = array([1,1,1,1,1,1,1,1,-1,-1,-1,-1])
+            self.z0 =  array([self.x0, self.y0, self.x1, self.y1, 0., 0., 0., 
+                              0., lambdaval, lambdaval, lambdaval, lambdaval]) 
+            self.zprime0 = array([0., 0., 0., 0., -lambdaval*self.x0,
+                                  -lambdaval*self.y0-self.g, -lambdaval*self.x1,
+                                  -lambdaval*self.y1-self.g, 0., 0., 0., 0.],
+                                  float)
+            self.algvar_idx = [8, 9, 10, 11]
+            self.algvar = array([1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1])
             self.exclalg_err = True
         elif type == 'index1' or type == 'index1_jac':
             self.neq = 10
-            self.z0 =  array([self.x0, self.y0, self.x1, self.y1, 0., 0., 0., 0., lambdaval,
-                                 lambdaval]) 
-            self.zprime0 = array([0., 0., 0., 0., -lambdaval*self.x0, -lambdaval*self.y0-self.g
-                            , -lambdaval*self.x1, -lambdaval*self.y1-self.g, 0., 0.], float)
+            self.z0 =  array([self.x0, self.y0, self.x1, self.y1, 0., 0., 0.,
+                              0., lambdaval, lambdaval]) 
+            self.zprime0 = array([0., 0., 0., 0., -lambdaval*self.x0, 
+                                  -lambdaval*self.y0-self.g, 
+                                  -lambdaval*self.x1, 
+                                  -lambdaval*self.y1-self.g, 0., 0.], float)
             self.res = self.resindex1
-            self.algvar = array([1,1,1,1,1,1,1,1,-1,-1])
+            self.algvar_idx = [8, 9]
+            self.algvar = array([1, 1, 1, 1, 1, 1, 1, 1, -1, -1])
             self.exclalg_err = False
             if type == 'index1_jac':
                 self.jac = self.jacindex1
-    
-    def resindex2(self, tres, yy, yp):
-        m1 = self.m1
-        m2 = self.m2
-        g = self.g
-        tmp = zeros(self.neq)
-        tmp[0]= m1*yp[4]        -yy[9]*(yy[0] - yy[2])  - yy[0]*yy[8]
-        tmp[1]= m1*yp[5] + g*m1 -yy[9]*(yy[1] - yy[3])  - yy[1]*yy[8]
-        tmp[2]= m2*yp[6]       + yy[9]*(yy[0] - yy[2])
-        tmp[3]= m2*yp[7] +g*m2 + yy[9]*(yy[1] - yy[3])
-        tmp[4]= yp[0] - yy[4] + yy[10]*yy[0]
-        tmp[5]= yp[1] - yy[5] + yy[10]*yy[1]
-        tmp[6]= yp[2] - yy[6] + yy[11]*yy[2]
-        tmp[7]= yp[3] - yy[7] + yy[11]*yy[3]
-        tmp[8]= self.radius1*self.radius1 \
-                    - yy[0]**2 - yy[1]**2
-        tmp[9]= self.radius2*self.radius2 \
-                    - (yy[0] - yy[2])**2 - (yy[1] - yy[3])**2
-        tmp[10]= yy[0]*yy[4] + yy[1]*yy[5]
-        tmp[11]=(yy[4] - yy[6])*(yy[2] - yy[0]) - (yy[1] - yy[3])*(yy[5] - yy[7])
-        return tmp
+
+    def set_res(self, resfunction):
+        """Function to set the resisual function as required by IDA"""
+        self.res = resfunction
+
+    def ddaspk_res(self, tres, yy, yp, idares):
+        """the residual function as required by ddaspk"""
+        fres = np.empty(self.neq, float)
+        self.res.evaluate(tres, yy, yp, fres, None)
+        return fres
     
     def resindex1(self, tres, yy, yp):
         m1 = self.m1
@@ -233,11 +262,13 @@ def main():
     """
     The main program: instantiate a problem, then use odes package to solve it
     """
-    input = input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
+    input = raw_input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
                 " 3 = index 1 problem with jacobian\n 4 = info\n\n"
                 "Answer (1,2,3 or 4) : ")
     if input == '1':
         problem = Doublependulum(type='index2')
+        res = resindex2()
+
     elif input == '2':
         problem = Doublependulum(type='index1')
     elif input == '3':
@@ -248,76 +279,137 @@ def main():
     
     z = [0]*(1+len(problem.stop_t)); zprime = [0]*(1+len(problem.stop_t))
 
-    ig = dae(problem.res, problem.jac)
-    #first compute the correct initial condition from the values of z0
-    ig.set_integrator('odesIDA',algebraic_var=problem.algvar,
-                        compute_initcond='yode0',
-                        first_step=1e-9,
-                        atol=1e-6,rtol=1e-6)
-    ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
-
-    i=0
-    z[i],  zprime[i] = ig.solve(1e-18);
-    assert ig.successful(), (problem,)
-    print('started from z0 = ', problem.z0)
-    print('initial condition calculated, [z,zprime] = [', z[0], zprime[0], ']')
-
-    ig.set_integrator('odesIDA',algebraic_var=problem.algvar,
-                        first_step=1e-9,
-                        atol=1e-8,
-                        rtol=1e-8,
-                        exclude_algvar_from_error=problem.exclalg_err,
-                        nsteps = 1500)
-    ig.set_initial_value(z[0], zprime[0], t=0.0)
+    res.set_dblpend(problem)
+    solver = ida.IDA(res,
+                compute_initcond='yp0',
+                first_step=1e-18,
+                atol=1e-6,rtol=0.5e-5,
+                algebraic_vars_idx=problem.algvar_idx,
+                exclude_algvar_from_error=problem.exclalg_err,
+                )
+    
+    z[0] = np.empty(problem.neq, float)
+    zprime[0] = np.empty(problem.neq, float)
+    t0_init = solver.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
+    print ('init time', t0_init)
+    realtime = [t0_init]
 
     i=1
-
     error = False
-    for time in problem.stop_t:
+    for time in problem.stop_t[1:]:
             #print 'at time', time
-            z[i],  zprime[i] = ig.solve(time)
+            z[i] = np.empty(problem.neq, float)
+            zprime[i] = np.empty(problem.neq, float)
+            flag, rt = solver.step(time, z[i], zprime[i])
+            realtime += [rt]
             #print 'sol at ', time, z[i]
+            
             i += 1
-            if not ig.successful():
+            if flag != 0:
                 error = True
                 print('Error in solver, breaking solution at time %g' % time)
                 break
 
-
-    print('last sol', z[i-1], zprime[i-1])
-    print('has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
-                                        zprime[i-1]))
+    fres = np.empty(problem.neq, float)
+    res.evaluate(problem.stop_t[i-1], z[i-1], zprime[i-1], fres, None)
+    print('last sol has residual: ', fres)
 
     nr = i
-    x1t = [z[i][0] for i in range(nr)]
-    y1t = [z[i][1] for i in range(nr)]
-    x2t = [z[i][2] for i in range(nr)]
-    y2t = [z[i][3] for i in range(nr)]
-    energy = asarray([problem.m1*problem.g*z[i][1] + \
-                problem.m2*problem.g *z[i][3] + \
-                .5 *(problem.m1 * (z[i][4]**2 + z[i][5]**2) 
-                     + problem.m2 * (z[i][6]**2 + z[i][7]**2) ) for i in 
-                        range(nr)])
+    x1t = asarray([z[i][0] for i in range(nr)])
+    y1t = asarray([z[i][1] for i in range(nr)])
+    x2t = asarray([z[i][2] for i in range(nr)])
+    y2t = asarray([z[i][3] for i in range(nr)])
+    xp1t = asarray([z[i][4] for i in range(nr)])
+    yp1t = asarray([z[i][5] for i in range(nr)])
+    xp2t = asarray([z[i][6] for i in range(nr)])
+    yp2t = asarray([z[i][7] for i in range(nr)])
+    energy = problem.m1*problem.g*y1t + \
+                problem.m2*problem.g*y2t + \
+                .5 *(problem.m1 * (xp1t**2 + yp1t**2) 
+                     + problem.m2 * (xp2t**2 + yp2t**2) )
     initenergy = energy[0]
-    time = zeros(nr,float)
-    time[0] = 0.0
-    if error:
-        time[1:]  = problem.stop_t[:nr-1] 
-    else:
-        time[1:]  = problem.stop_t[:nr]
+
+    #solve the same with ddaspk
+    if alsoddaspk:
+        ddaspkz = [0]*(1+len(problem.stop_t))
+        ddaspkzprime = [0]*(1+len(problem.stop_t))
+        ddaspkz[0] = np.empty(problem.neq, float)
+        ddaspkzprime[0] = np.empty(problem.neq, float)
         
+        problem.set_res(res)
+        ig = dae(problem.ddaspk_res, problem.jac)
+        #first compute the correct initial condition from the values of z0
+        ig.set_integrator('ddaspk',algebraic_var=problem.algvar,
+                            compute_initcond='yode0',
+                            first_step=1e-9,
+                            atol=1e-6,rtol=1e-6)
+        ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
+
+        i=0
+        ddaspkz[i],  ddaspkzprime[i] = ig.solve(1e-18);
+        assert ig.successful(), (problem,)
+        print('ddaspk started from z0 = ', problem.z0)
+        print('ddaspk initial condition calculated, [z,zprime] = [', z[0], zprime[0], ']')
+
+        ig.set_integrator('ddaspk',algebraic_var=problem.algvar,
+                            first_step=1e-9,
+                            atol=1e-6,rtol=0.5e-5, #atol=1e-8,rtol=1e-8,
+                            exclude_algvar_from_error=problem.exclalg_err,
+                            nsteps = 1500)
+        ig.set_initial_value(ddaspkz[0], ddaspkzprime[0], t=0.0)
+        i=1
+        error = False
+        for time in problem.stop_t[1:]:
+                #print 'at time', time
+                ddaspkz[i],  ddaspkzprime[i] = ig.solve(time)
+                #print 'sol at ', time, z[i]
+                
+                i += 1
+                if not ig.successful():
+                    error = True
+                    print('Error in ddaspk solver, breaking solution at time %g' % time)
+                    break
+        dnr = i
+        ddaspkx1t = asarray([ddaspkz[i][0] for i in range(dnr)])
+        ddaspky1t = asarray([ddaspkz[i][1] for i in range(dnr)])
+        ddaspkx2t = asarray([ddaspkz[i][2] for i in range(dnr)])
+        ddaspky2t = asarray([ddaspkz[i][3] for i in range(dnr)])
+        ddaspkxp1t = asarray([ddaspkzprime[i][0] for i in range(dnr)])
+        ddaspkyp1t = asarray([ddaspkzprime[i][1] for i in range(dnr)])
+        ddaspkxp2t = asarray([ddaspkzprime[i][2] for i in range(dnr)])
+        ddaspkyp2t = asarray([ddaspkzprime[i][3] for i in range(dnr)])
+        ddaspkenergy = problem.m1*problem.g*ddaspky1t + \
+                    problem.m2*problem.g*ddaspky2t + \
+                    .5 *(problem.m1 * (ddaspkxp1t**2 + ddaspkyp1t**2) 
+                         + problem.m2 * (ddaspkxp2t**2 + ddaspkyp2t**2) )
+        ddaspkrealtime = problem.stop_t[:dnr]
+    pylab.ion()
     pylab.figure(1)
     pylab.subplot(211)
     pylab.scatter(x1t, y1t)
     pylab.scatter(x2t, y2t)
     pylab.axis('equal')
     pylab.subplot(212)
-    pylab.plot(time, energy, 'b')
+    pylab.plot(realtime, energy, 'b')
     pylab.title('Energy Invariant Violation for a Double Pendulum')
     pylab.xlabel('Time (s)')
     pylab.ylabel('Total Energy')
     pylab.axis()
     pylab.show()
+    if alsoddaspk:
+        pylab.ion()
+        pylab.figure(2)
+        pylab.subplot(211)
+        pylab.scatter(ddaspkx1t, ddaspky1t)
+        pylab.scatter(ddaspkx2t, ddaspky2t)
+        pylab.axis('equal')
+        pylab.subplot(212)
+        pylab.plot(ddaspkrealtime, ddaspkenergy, 'b')
+        pylab.title('Energy Invariant Violation for a Double Pendulum')
+        pylab.xlabel('Time (s)')
+        pylab.ylabel('Total Energy DDASPK solution')
+        pylab.axis()
+        pylab.show()
 
     def circle(ax, x, y, r, color='r'):
         count = 20
@@ -405,7 +497,7 @@ def main():
         print('Creating movie using ffmpeg with output ... \n')
         import subprocess
         subprocess.call(['ffmpeg', '-r', '20', '-i', 'figsdoublependulum' + os.sep + 
-                        'outsol%8d.png',  '-f',  'avi', '-vcodec', 'xvid', '-y', 
+                        'outsol%8d.png',  '-f',  'avi', '-vcodec', 'mpeg2video', '-y', 
                         'anidoublependulum' + os.sep + 
                                             'doublependulum'+ext+'.mpg'])
         #remove unused pictures
@@ -415,7 +507,7 @@ def main():
         open_file_with_default_application('anidoublependulum' + os.sep +
                     'doublependulum'+ext+'.mpg')
 
-    input2 = input('Create animation of the solution? (y/n): ')
+    input2 = raw_input('Create animation of the solution? (y/n): ')
     print('\n')
     if (input2 == 'y' or input2 == 'yes'):
         extend = problem.radius1 + problem.radius2 + 1
