@@ -164,6 +164,10 @@ cdef extern from "sundials_auxiliary/sundials_auxiliary.c":
     cdef inline void set_nv_ith_s(nv_content_data_s vcd_s, int i, realtype new_value)
 
     ctypedef realtype *DlsMat_col
+    cdef inline int get_dense_N(DlsMat A)
+    cdef inline int get_dense_M(DlsMat A)
+    cdef inline int get_band_mu(DlsMat A)
+    cdef inline int get_band_ml(DlsMat A)
     cdef inline realtype* get_dense_col(DlsMat A, int j)
     cdef inline void set_dense_col(DlsMat A, int j, realtype *data)
     cdef inline realtype get_dense_element(DlsMat A, int i, int j)
@@ -182,7 +186,7 @@ cdef extern from "sundials/sundials_band.h":
     void bandGBTRS(realtype **a, int n, int smu, int ml, int *p, realtype *b)
     void BandCopy(DlsMat A, DlsMat B, int copymu, int copyml)
     void bandCopy(realtype **a, realtype **b, int n, int a_smu, int b_smu,
-			      int copymu, int copyml)
+                  int copymu, int copyml)
     void BandScale(realtype c, DlsMat A)
     void bandScale(realtype c, realtype **a, int n, int mu, int ml, int smu)
     void bandAddIdentity(realtype **a, int n, int smu)

@@ -34,6 +34,21 @@ inline void set_nv_ith_s(nv_content_data_s vcd_s, int i,
 /* Dense matrix: acces functions */
 typedef realtype *DlsMat_col;
 
+inline int get_dense_N(DlsMat A) {
+    return A->N;
+}
+
+inline int get_dense_M(DlsMat A) {
+    return A->M;
+}
+
+inline int get_band_mu(DlsMat A) {
+    return A->mu;
+}
+
+inline int get_band_ml(DlsMat A) {
+    return A->ml;
+}
 inline realtype* get_dense_col(DlsMat A, int j) {
     return (A->cols)[j];
 }

@@ -7,8 +7,9 @@ ctypedef np.float_t DTYPE_t
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj)
 
 cdef class IDA_data:
-    cdef np.ndarray yy_tmp, yp_tmp, residual_tmp
+    cdef np.ndarray yy_tmp, yp_tmp, residual_tmp, jac_tmp
     cdef ResFunction res
+    cdef JacFunction jac
     cdef bint parallel_implementation
     cdef object user_data
     
@@ -38,11 +39,9 @@ cdef class IDA:
     cdef IDA_data aux_data
         
     #cdef realtype *y0, *yprime0
-    cdef JacFunction jac
     
     # Functions
-    cdef realtype _jacFn(self, Neq, tt, yy, yp, resvec, cj, jdata, JJ, 
-                         tempv1, tempv2, tempv3)
+
     #def set_options(self, dict options)
     cpdef init_step(self, DTYPE_t t0, 
                     np.ndarray[DTYPE_t, ndim=1] y0, 

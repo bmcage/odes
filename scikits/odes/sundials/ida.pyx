@@ -16,7 +16,7 @@ cdef enum: HOOK_FN_STOP = 128
 
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *auxiliary_data):
-
+    """function with the signature of IDAResFn"""
     cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
     
     aux_data = <IDA_data> auxiliary_data
@@ -40,7 +40,38 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
         ndarray2nv_s(rr, residual_tmp)
          
     return 0
+
+cdef int _jacdense(int Neq, realtype tt, realtype cj, 
+            N_Vector yy, N_Vector yp, N_Vector rr, DlsMat Jac, 
+            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
+    """function with the signature of IDADlsDenseJacFn """
+    cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
+    cdef np.ndarray jac_tmp
     
+    aux_data = <IDA_data> auxiliary_data
+    cdef bint parallel_implementation = aux_data.parallel_implementation
+    if parallel_implementation:
+        raise NotImplemented 
+    else:
+        yy_tmp = aux_data.yy_tmp
+        yp_tmp = aux_data.yp_tmp
+        if aux_data.jac_tmp == None:
+            N = len(yy_tmp)
+            aux_data.jac_tmp = np.empty((N,N), float)
+        jac_tmp = aux_data.jac_tmp
+             
+        nv_s2ndarray(yy, yy_tmp)
+        nv_s2ndarray(yp, yp_tmp)
+    aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, cj, jac_tmp)
+
+    if parallel_implementation:
+        raise NotImplemented 
+    else:
+        #we convert the python jac_tmp array to DslMat of sundials
+        ndarray2DlsMatd(Jac, jac_tmp)
+         
+    return 0
+
 cdef class IDA_data:
     def __cinit__(self, N):
         self.parallel_implementation = False
@@ -49,15 +80,9 @@ cdef class IDA_data:
         self.yy_tmp = np.empty(N, float)
         self.yp_tmp = np.empty(N, float)
         self.residual_tmp = np.empty(N, float)
+        self.jac_tmp = None
     
 cdef class IDA:
-    cdef realtype _jacFn(self, Neq, tt, yy, yp, resvec, cj, jdata, JJ, 
-                         tempv1, tempv2, tempv3):
-        cdef DTYPE_t jac_return = self.jac.evaluate(tt, yy, yp, cj, JJ)
-        # TODO: convert jacmat to the jacobi matrix
-        #raise NotImplemented
-        return jac_return
-          
 
     def __cinit__(self, residualfn, **options):
         """ Create the IDA Solver and initialize default values """
@@ -83,8 +108,9 @@ cdef class IDA:
             'algebraic_vars_idx':None, 
             'exclude_algvar_from_error': False,
             'user_data': None,
-            'out': False, #
-            'resfn': None
+            'out': False, #,
+            'resfn': None,
+            'jacfn': None
             }
  
         self.options = default_values
@@ -178,12 +204,18 @@ cdef class IDA:
                     Additional data that are supplied to each call of the residual function 'resfn' (see below)
                     and Jacobi function 'jacfn' (if specified one).
             'resfn':
-                Values: function of class ResFunction
+                Values: function of class ResFunction or a python function with signature (t, y, yp, resultout)
                 Description:
-                    Defines the residual function (which has to be a subclass of ResFunction class). This function 
-                    takes as input arguments current time t, current value of y, yp, numpy array of returned residual
+                    Defines the residual function (which has to be a subclass of ResFunction class, or a normal python function with signature (t, y, yp, resultout) ).
+                    This function takes as input arguments current time t, current value of y, yp, numpy array of returned residual
                     and optional userdata. Return value is 0 if successfull.
                     This option is mandatory.
+            'jacfn':
+                Values: function of class JacFunction
+                Description:
+                    Defines the residual function (which has to be a subclass of ResFunction class).
+                    This function takes as input arguments current time t, current value of y, yp, cj, and 2D numpy array of returned jacobian
+                    and optional userdata. Return value is 0 if successfull.
             'algebraic_vars_idx': 
                 Values: numpy vector or None (= default)
                 Description:
@@ -303,12 +335,13 @@ cdef class IDA:
         # auxiliary variablesis
         self.aux_data = IDA_data(N)
         self.aux_data.parallel_implementation = self.parallel_implementation
-        print
+
         if not isinstance(opts['resfn'] , ResFunction):
             tmpfun = WrapResFunction()
             tmpfun.set_resfn(opts['resfn'])
             opts['resfn'] = tmpfun
         self.aux_data.res = opts['resfn']
+        self.aux_data.jac = opts['jacfn']
         self.aux_data.user_data = opts['user_data']
         
         if not np.isscalar(opts['rtol']) :
@@ -370,7 +403,10 @@ cdef class IDA:
             IDASpbcg(ida_mem, maxl)
         elif linsolver == 'sptfqmr':
             IDASptfqmr(ida_mem, maxl)
-            
+        
+        if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
+            IDADlsSetDenseJacFn(ida_mem, _jacdense)
+
         constraints_idx = opts['constraints_idx']
         constraints_type = opts['constraints_type']
         cdef unsigned int idx

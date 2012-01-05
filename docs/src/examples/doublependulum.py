@@ -1,5 +1,8 @@
 # Authors: B. Malengier 
 """
+Example to show the use of stepwise solving, using the ida or the ddaspk 
+solver. It also shows how a class is used to hold the problem data.
+
 This example shows how to solve the double pendulum in full coordinate space.
 This results in a dae system.
 
@@ -56,7 +59,7 @@ installed. The animation is stored in the directory anidoublependulum.
 from __future__ import print_function
 import numpy as np
 from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi)
-from scikits.odes.sundials.common_defs import ResFunction
+from scikits.odes.sundials.common_defs import ResFunction, JacFunction
 from scikits.odes.sundials import ida
 from scikits.odes import dae
 import pylab
@@ -65,40 +68,13 @@ import os
 #Set following False to not compute solution with ddaspk
 alsoddaspk = True
 
-class resindex2(ResFunction):
-    """ Residual function class as needed by the IDA DAE solver"""
-    
-    def set_dblpend(self, dblpend):
-        """ Set the double pendulum problem to solve"""
-        self.dblpend = dblpend
-
-    def evaluate(self, t, x, xdot, result, userdata):
-        """ compute the residual of the ode/dae system"""
-        m1 = self.dblpend.m1
-        m2 = self.dblpend.m2
-        g = self.dblpend.g
-        result[0]= m1*xdot[4]        -x[9]*(x[0] - x[2])  - x[0]*x[8]
-        result[1]= m1*xdot[5] + g*m1 -x[9]*(x[1] - x[3])  - x[1]*x[8]
-        result[2]= m2*xdot[6]       + x[9]*(x[0] - x[2])
-        result[3]= m2*xdot[7] +g*m2 + x[9]*(x[1] - x[3])
-        result[4]= xdot[0] - x[4] + x[10]*x[0]
-        result[5]= xdot[1] - x[5] + x[10]*x[1]
-        result[6]= xdot[2] - x[6] + x[11]*x[2]
-        result[7]= xdot[3] - x[7] + x[11]*x[3]
-        result[8]= self.dblpend.radius1*self.dblpend.radius1 \
-                    - x[0]**2 - x[1]**2
-        result[9]= self.dblpend.radius2*self.dblpend.radius2 \
-                    - (x[0] - x[2])**2 - (x[1] - x[3])**2
-        result[10]= x[0]*x[4] + x[1]*x[5]
-        result[11]=(x[4] - x[6])*(x[2] - x[0]) - (x[1] - x[3])*(x[5] - x[7])
-        return 0
-    
+#class to hold the problem data
 class Doublependulum():
     """ The problem class with the residual function and the constants defined
     """
     
     #default values
-    deftend = 5.
+    deftend = 125.
     deftstep = 1e-2
     defx0 = 5
     defy0 = 0
@@ -124,6 +100,7 @@ class Doublependulum():
         self.radius2 = Doublependulum.defradius2
         self.g = Doublependulum.defg
         
+        #res and jac needed for ddaspk run
         self.res = None
         self.jac = None
         
@@ -162,54 +139,108 @@ class Doublependulum():
                                   -lambdaval*self.y0-self.g, 
                                   -lambdaval*self.x1, 
                                   -lambdaval*self.y1-self.g, 0., 0.], float)
-            self.res = self.resindex1
             self.algvar_idx = [8, 9]
             self.algvar = array([1, 1, 1, 1, 1, 1, 1, 1, -1, -1])
             self.exclalg_err = False
-            if type == 'index1_jac':
-                self.jac = self.jacindex1
 
     def set_res(self, resfunction):
-        """Function to set the resisual function as required by IDA"""
+        """Function to set the resisual function as required by IDA
+           needed for the ddaspk simulation"""
         self.res = resfunction
 
+    def set_jac(self, jacfunction):
+        """Function to set the resisual function as required by IDA
+           needed for the ddaspk simulation"""
+        self.jac = jacfunction
+        
     def ddaspk_res(self, tres, yy, yp, idares):
         """the residual function as required by ddaspk"""
         fres = np.empty(self.neq, float)
         self.res.evaluate(tres, yy, yp, fres, None)
         return fres
+
+    def ddaspk_jac(self, tres, yy, yp, cj, jac):
+        """the jacobian function as required by ddaspk"""
+        self.jac.evaluate(tres, yy, yp, cj, jac)
+        return 0
+
+#classes for the equations, as needed for the chosen solution method
+class resindex2(ResFunction):
+    """ Residual function class as needed by the IDA DAE solver"""
     
-    def resindex1(self, tres, yy, yp):
-        m1 = self.m1
-        m2 = self.m2
-        g = self.g
-        tmp = zeros(self.neq)
-        tmp[0]= m1*yp[4]        - yy[9]*(yy[0] - yy[2])  - yy[0]*yy[8]
-        tmp[1]= m1*yp[5] + g*m1 - yy[9]*(yy[1] - yy[3])  - yy[1]*yy[8] 
-        tmp[2]= m2*yp[6]        + yy[9]*(yy[0] - yy[2]) 
-        tmp[3]= m2*yp[7] + g*m2 + yy[9]*(yy[1] - yy[3]) 
-        tmp[4]= yp[0] - yy[4] #+ yy[10]*yy[0]
-        tmp[5]= yp[1] - yy[5] #+ yy[10]*yy[1]
-        tmp[6]= yp[2] - yy[6] #+ yy[11]*yy[2]
-        tmp[7]= yp[3] - yy[7] #+ yy[11]*yy[3]
-        #tmp[8]= Doublependulum.radius1*Doublependulum.radius1 \
+    def set_dblpend(self, dblpend):
+        """ Set the double pendulum problem to solve to have access to
+            the data """
+        self.dblpend = dblpend
+
+    def evaluate(self, t, x, xdot, result, userdata):
+        """ compute the residual of the ode/dae system"""
+        m1 = self.dblpend.m1
+        m2 = self.dblpend.m2
+        g = self.dblpend.g
+        result[0]= m1*xdot[4]        -x[9]*(x[0] - x[2])  - x[0]*x[8]
+        result[1]= m1*xdot[5] + g*m1 -x[9]*(x[1] - x[3])  - x[1]*x[8]
+        result[2]= m2*xdot[6]       + x[9]*(x[0] - x[2])
+        result[3]= m2*xdot[7] +g*m2 + x[9]*(x[1] - x[3])
+        result[4]= xdot[0] - x[4] + x[10]*x[0]
+        result[5]= xdot[1] - x[5] + x[10]*x[1]
+        result[6]= xdot[2] - x[6] + x[11]*x[2]
+        result[7]= xdot[3] - x[7] + x[11]*x[3]
+        result[8]= self.dblpend.radius1*self.dblpend.radius1 \
+                    - x[0]**2 - x[1]**2
+        result[9]= self.dblpend.radius2*self.dblpend.radius2 \
+                    - (x[0] - x[2])**2 - (x[1] - x[3])**2
+        result[10]= x[0]*x[4] + x[1]*x[5]
+        result[11]=(x[4] - x[6])*(x[2] - x[0]) - (x[1] - x[3])*(x[5] - x[7])
+        return 0
+
+class resindex1(ResFunction):
+    """ Residual function class as needed by the IDA DAE solver"""
+    
+    def set_dblpend(self, dblpend):
+        """ Set the double pendulum problem to solve to have access to
+            the data """
+        self.dblpend = dblpend
+
+    def evaluate(self, tres, yy, yp, result, userdata):
+        m1 = self.dblpend.m1
+        m2 = self.dblpend.m2
+        g = self.dblpend.g
+        
+        result[0]= m1*yp[4]        - yy[9]*(yy[0] - yy[2])  - yy[0]*yy[8]
+        result[1]= m1*yp[5] + g*m1 - yy[9]*(yy[1] - yy[3])  - yy[1]*yy[8] 
+        result[2]= m2*yp[6]        + yy[9]*(yy[0] - yy[2]) 
+        result[3]= m2*yp[7] + g*m2 + yy[9]*(yy[1] - yy[3]) 
+        result[4]= yp[0] - yy[4] #+ yy[10]*yy[0]
+        result[5]= yp[1] - yy[5] #+ yy[10]*yy[1]
+        result[6]= yp[2] - yy[6] #+ yy[11]*yy[2]
+        result[7]= yp[3] - yy[7] #+ yy[11]*yy[3]
+        #result[8]= Doublependulum.radius1*Doublependulum.radius1 \
         #            - yy[0]**2 - yy[1]**2
-        #tmp[9]= Doublependulum.radius2*Doublependulum.radius2 \
+        #result[9]= Doublependulum.radius2*Doublependulum.radius2 \
         #            - (yy[0] - yy[2])**2 - (yy[1] - yy[3])**2
-        #tmp[8]= yy[0]*yy[4] + yy[1]*yy[5]
-        #tmp[9]=(yy[4] - yy[6])*(yy[2] - yy[0]) - (yy[1] - yy[3])*(yy[5] - yy[7])
-        tmp[8] = yy[4]**2 + yy[5]**2 + yy[8]/m1*(yy[0]**2 + yy[1]**2) \
+        #result[8]= yy[0]*yy[4] + yy[1]*yy[5]
+        #result[9]=(yy[4] - yy[6])*(yy[2] - yy[0]) - (yy[1] - yy[3])*(yy[5] - yy[7])
+        result[8] = yy[4]**2 + yy[5]**2 + yy[8]/m1*(yy[0]**2 + yy[1]**2) \
                     - g * yy[1] + yy[9]/m1 *(yy[0]*(yy[0]-yy[2]) +
                                             yy[1]*(yy[1]-yy[3]) ) 
-        tmp[9] = (yy[4]-yy[6])**2 + (yy[5]-yy[7])**2 \
+        result[9] = (yy[4]-yy[6])**2 + (yy[5]-yy[7])**2 \
                   + yy[9]*(1./m1+1./m2)*((yy[0]-yy[2])**2 + (yy[1]-yy[3])**2)\
                   + yy[8]/m1 *(yy[0]*(yy[0]-yy[2]) + yy[1]*(yy[1]-yy[3]) )
-        return tmp
+        return 0
 
-    def jacindex1(self, tres, yy, yp, cj, jac):
-        m1 = self.m1
-        m2 = self.m2
-        g = self.g
+class jacindex1(JacFunction):
+    
+    def set_dblpend(self, dblpend):
+        """ Set the double pendulum problem to solve to have access to
+            the data """
+        self.dblpend = dblpend
+
+    def evaluate(self, tres, yy, yp, cj, jac):
+        
+        m1 = self.dblpend.m1
+        m2 = self.dblpend.m2
+        g = self.dblpend.g
         jac[0][0] = - yy[9]   - yy[8] 
         jac[0][2] =  yy[9]
         jac[0][4] = cj * m1
@@ -258,6 +289,7 @@ class Doublependulum():
         jac[9][8] = 1./m1 *(yy[0]*(yy[0]-yy[2]) + yy[1]*(yy[1]-yy[3]) )
         jac[9][9] = (1./m1+1./m2)*((yy[0]-yy[2])**2 + (yy[1]-yy[3])**2)
 
+#Now that all is defined, solve it
 def main():
     """
     The main program: instantiate a problem, then use odes package to solve it
@@ -265,14 +297,17 @@ def main():
     input = raw_input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
                 " 3 = index 1 problem with jacobian\n 4 = info\n\n"
                 "Answer (1,2,3 or 4) : ")
+    jac = None
     if input == '1':
         problem = Doublependulum(type='index2')
         res = resindex2()
-
     elif input == '2':
         problem = Doublependulum(type='index1')
+        res = resindex1()
     elif input == '3':
         problem = Doublependulum(type='index1_jac')
+        res = resindex1()
+        jac = jacindex1()
     else:
         print(__doc__)
         return
@@ -280,19 +315,24 @@ def main():
     z = [0]*(1+len(problem.stop_t)); zprime = [0]*(1+len(problem.stop_t))
 
     res.set_dblpend(problem)
+    if jac:
+        jac.set_dblpend(problem)
+
     solver = ida.IDA(res,
                 compute_initcond='yp0',
                 first_step=1e-18,
                 atol=1e-6,rtol=0.5e-5,
+                jacfn=jac,
                 algebraic_vars_idx=problem.algvar_idx,
                 exclude_algvar_from_error=problem.exclalg_err,
                 )
-    
+
     z[0] = np.empty(problem.neq, float)
     zprime[0] = np.empty(problem.neq, float)
     t0_init = solver.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
     print ('init time', t0_init)
     realtime = [t0_init]
+    #flag, rt = solver.step(t0_init, z[0], zprime[0])
 
     i=1
     error = False
@@ -330,6 +370,7 @@ def main():
     initenergy = energy[0]
 
     #solve the same with ddaspk
+    #sys.exit()
     if alsoddaspk:
         ddaspkz = [0]*(1+len(problem.stop_t))
         ddaspkzprime = [0]*(1+len(problem.stop_t))
@@ -337,12 +378,16 @@ def main():
         ddaspkzprime[0] = np.empty(problem.neq, float)
         
         problem.set_res(res)
-        ig = dae(problem.ddaspk_res, problem.jac)
+        if jac:
+            problem.set_jac(jac)
+            ig = dae(problem.ddaspk_res, problem.ddaspk_jac)
+        else:
+            ig = dae(problem.ddaspk_res, None)
         #first compute the correct initial condition from the values of z0
         ig.set_integrator('ddaspk',algebraic_var=problem.algvar,
                             compute_initcond='yode0',
                             first_step=1e-9,
-                            atol=1e-6,rtol=1e-6)
+                            atol=1e-6,rtol=0.5e-5)
         ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
 
         i=0
