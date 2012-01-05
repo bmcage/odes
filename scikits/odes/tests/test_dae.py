@@ -8,16 +8,10 @@ import numpy
 
 from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose)
 
-from numpy.testing import *
+from numpy.testing import TestCase, run_module_suite
 from scipy.integrate import ode
 from scikits.odes import dae
 
-try:
-    TestCase()
-except:
-    class TestCase():
-        def __init__(self):
-            pass
 
 class TestDae(TestCase):
     """

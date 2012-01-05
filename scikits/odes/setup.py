@@ -22,8 +22,11 @@ def configuration(parent_package='',top_path=None):
     config.add_extension('lsodi',
                          sources=['lsodi.pyf'],
                         libraries=['daepack'])
-    config.add_data_dir('tests')
+    # sundials
     config.add_subpackage('sundials')
+
+    # add the test directory
+    config.add_subpackage('tests')
     return config
 
 if __name__ == '__main__':

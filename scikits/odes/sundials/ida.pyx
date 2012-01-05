@@ -300,9 +300,14 @@ cdef class IDA:
         
         self.N = N
         
-        # auxiliary variables
+        # auxiliary variablesis
         self.aux_data = IDA_data(N)
         self.aux_data.parallel_implementation = self.parallel_implementation
+        print
+        if not isinstance(opts['resfn'] , ResFunction):
+            tmpfun = WrapResFunction()
+            tmpfun.set_resfn(opts['resfn'])
+            opts['resfn'] = tmpfun
         self.aux_data.res = opts['resfn']
         self.aux_data.user_data = opts['user_data']
         

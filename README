@@ -13,7 +13,13 @@ Requirements before install
 2. You need to have cython installed and executable
 3. You need to have the sundials package version 2.4.0 installed from 
 https://computation.llnl.gov/casc/sundials/download/download.html
-This package *must* be installed with the MPI disabled and the fPIC flag. On a *nix systhem, do after extraction of the downloaded tar.gz:
+
+It is required that the Blas/Lapack interface in included in sundials, so check
+the Fortran Settings section of configure that they are present! If problems,
+use the F77 flag to set the fortran compiler, see below.
+
+The sundials package *must* also be installed with the MPI disabled and the 
+fPIC flag. On a *nix systhem, do after extraction of the downloaded tar.gz:
 
 ./configure --disable-mpi --with-cflags=-fPIC
 make
@@ -21,7 +27,9 @@ and as root:
 make install
 
 This should install sundials in /usr/local/lib
-Make sure you use the fortran compiler as used for your lapack/blas install. Eg, on linux that would be gfortran, so:
+Make sure you use the fortran compiler as used for your lapack/blas install. 
+Eg, on linux that would be gfortran, so:
+
 ./configure --disable-mpi --with-cflags=-fPIC F77=gfortran
 
 Installation from sources
@@ -31,7 +39,9 @@ In the top directory (the same as the file you are reading now), just do as root
 
 python setup.py build
 
-This builds the packages in the build directory.
+This builds the packages in the build directory. Libraries are searched in /usr/lib 
+and /usr/local/lib, edit setup.py for other locations.
+
 You can try it without installation by using PYTHONPATH. For example:
 On my box, the build libs are in odes/build/lib.linux-x86_64-2.7/, hence I can
 use them with:
@@ -54,23 +64,5 @@ Tests
 =====
 To run the tests do in the python shell:
 
->>> import scikits.odes
->>> scikits.odes.test()
-
-NOTE: at the moment (11/2008) the above tests() only work in the old style of python installs (.egg directory or normal install), not with zipped eggs. So for above to work you need to install in the old method:
-
-1. remove existing install. From the root directory where you downloaded scikits.odes:
-sudo easy_install -m scikits.odes
-sudo rm -rf /usr/lib/python2.6/dist-packages/scikits.odes*
-sudo rm -rf scikits.odes.egg-info
-sudo rm -rf build
-
-2. reinstall:
-
-sudo python setup.py install --single-version-externally-managed --root /
-
-note, use the flag: --install-layout=deb on debian systems
-
-Alternatively:
-
-use easy_install to install latest version
+>>> import scikits.odes as od
+>>> od.test()
