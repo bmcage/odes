@@ -61,11 +61,11 @@ class TestDae(TestCase):
             problem = problem_cls()
             self._do_problem(problem, 'lsodi', **problem.lsodi_pars)
     
-    def test_ida(self):
-        """Check the lsodi solver"""
-        for problem_cls in PROBLEMS:
-            problem = problem_cls()
-            self._do_problem(problem, 'ida', **problem.ida_pars)
+##    def test_ida(self):
+##        """Check the lsodi solver"""
+##        for problem_cls in PROBLEMS:
+##            problem = problem_cls()
+##            self._do_problem(problem, 'ida', **problem.ida_pars)
 
 #------------------------------------------------------------------------------
 # Test problems
