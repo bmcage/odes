@@ -1,4 +1,4 @@
-#import numpy as np
+import numpy as np
 cimport numpy as np
 from c_sundials cimport (N_Vector, nv_content_data_s, nv_content_s, nv_length_s,
                         nv_data_s, get_nv_ith_s, set_nv_ith_s, get_dense_col,
@@ -84,3 +84,23 @@ cdef inline int ndarray2DlsMatd(DlsMat m, np.ndarray a):
     for i in range(N):
         for j in range(N):
             set_dense_element(m, i, j, a[i,j])
+
+cdef ensure_numpy_float_array(object value):
+    try:
+        if (type(value) == float or type(value) == int
+            or type(value) == np.float
+            or type(value) == np.float32
+            or type(value) == np.float64
+            or type(value) == np.float128
+            or type(value) == np.int
+            or type(value) == np.int8
+            or type(value) == np.int16
+            or type(value) == np.int32
+            or type(value) == np.int64):
+
+            return np.array([value, ], float)
+        else:
+            return np.asarray(value, float)
+    except:
+        raise ValueError('ensure_numpy_float_array: value not a number or sequence of numbers: %s' % value)
+

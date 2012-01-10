@@ -84,9 +84,10 @@ class SimpleOscillator():
     g=1
 
     lambdaval = 0.1
-    z0 =  array([x0, y0, 0., 0., lambdaval], np.float) 
-    zprime0 = array([0., 0., -lambdaval*x0, -lambdaval*y0-g, -g], np.float)
-    
+    #z0  =  array([x0, y0, 0., 0., lambdaval], np.float) 
+    #zp0 = array([0., 0., -lambdaval*x0, -lambdaval*y0-g, -g], np.float)
+    z0  = [x0, y0, 0., 0., lambdaval]
+    zp0 = [0., 0., -lambdaval*x0, -lambdaval*y0-g, -g]
     
 
 problem = SimpleOscillator()
@@ -101,7 +102,7 @@ solver=ida.IDA(res,
                algebraic_vars_idx=[4])
 
 # strip unneeded return values from run_solver
-_flag, t1, y1 = solver.run_solver(time, problem.z0, problem.zprime0)[:3]
+_flag, t1, y1 = solver.solve(time, problem.z0, problem.zp0)[:3]
 
 
 xt = y1[:, 0]
@@ -117,7 +118,9 @@ problem.z0 =  array([problem.x0, problem.y0, 0., 0., problem.lambdaval], np.floa
 y2 = np.empty([nr, len(problem.z0)], float)
 # options for solver remain the same
 # solver.set_options(...)
-solver.init_step(time[0], problem.z0, problem.zprime0)
+p2_z0  = np.asarray(problem.z0, float)
+p2_zp0 = np.asarray(problem.zp0, float)
+solver.init_step(time[0], p2_z0, p2_zp0)
 y2[0, :] = problem.z0
 for i in range(len(time))[1:]:
     solver.step(time[i], y2[i, :])
@@ -136,7 +139,7 @@ def hook_fn(t, x, xdot, userdata):
 
     return 0
 
-_flag, t3, y3 = solver.run_solver(time, problem.z0, problem.zprime0, hook_fn)[:3]
+_flag, t3, y3 = solver.solve(time, problem.z0, problem.zp0, hook_fn)[:3]
 
 xt = y3[:, 0]
 yt = y3[:, 1]

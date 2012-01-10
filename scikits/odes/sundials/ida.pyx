@@ -3,7 +3,8 @@ cimport numpy as np
 
 from c_sundials cimport realtype, N_Vector
 from c_ida cimport *
-from common_defs cimport *
+from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
+                          ensure_numpy_float_array)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
@@ -481,15 +482,15 @@ cdef class IDA:
         self.initialized = True
         return t0_init
         
-    def run_solver(self, np.ndarray[DTYPE_t, ndim=1] tspan, np.ndarray[DTYPE_t, ndim=1] y0, 
-                   np.ndarray[DTYPE_t, ndim=1] yp0, hook_fn = None):
+    def solve(self, object tspan_in, object y0_in,  object yp0_in, 
+                    hook_fn = None):
         """
         Runs the solver.
         
         Input:
-            tspan - an numpy array of times at which the computed value will be returned
-            y0    - numpy array of initial values
-            yp0   - numpy array of initial values of derivatives
+            tspan_in - an numpy array of times at which the computed value will be returned
+            y0_in    - numpy array of initial values
+            yp0_in   - numpy array of initial values of derivatives
             hook_fn - if set, this function is evaluated after each succestive (internal) step. Input values: t, x, xdot, userdata. Output is 0 (success), otherwise computation is stopped and a return flag = ? is set. Values are stored in (see) t_err, y_err, yp_err
             
         Return values:
@@ -507,6 +508,11 @@ cdef class IDA:
             the starting values the values calculated by the solver (i.e. consistent initial
             conditions. The starting time is then also the precomputed time.
         """
+        cdef np.ndarray[DTYPE_t, ndim=1] tspan, y0, yp0
+        tspan = ensure_numpy_float_array(tspan_in)
+        y0    = ensure_numpy_float_array(y0_in)
+        yp0   = ensure_numpy_float_array(yp0_in)
+        
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn, yp_retn
         y_retn  = np.empty([len(tspan), len(y0)], float)
         yp_retn = np.empty([len(tspan), len(y0)], float)
@@ -589,7 +595,8 @@ cdef class IDA:
                     yp_err = np.empty([self.N, ], float)
                     nv_s2ndarray(y,  y_err) 
                     nv_s2ndarray(yp, yp_err)
-
+                    
+                    print('idx: ', idx, 't_out: ', t_out, 't_retn', t_retn)
                     t_retn[idx] = t_out
                     return flag, t_retn, y_retn, yp_retn, t_out, y_err, yp_err
                 else:
