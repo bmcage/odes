@@ -1,4 +1,5 @@
 from c_sundials cimport *
+from libc.stdio cimport FILE
 
 cdef extern from "cvode/cvode.h":
     # lmm
@@ -48,7 +49,7 @@ cdef extern from "cvode/cvode.h":
     ctypedef int (*CVRootFn)(realtype t, N_Vector y, realtype *gout, void *user_data)
     ctypedef int (*CVEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
     ctypedef void (*CVErrHandlerFn)(int error_code, 
-                               const char *module, const char *function, 
+                               char *module, char *function, 
                                char *msg, void *user_data)
 
     void *CVodeCreate(int lmm, int iter)
@@ -132,7 +133,7 @@ cdef extern from "cvode/cvode_direct.h":
                                     N_Vector y, N_Vector fy, 
                                     DlsMat Jac, void *user_data,
                                     N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-    typedef int (*CVDlsBandJacFn)(int N, int mupper, int mlower,
+    ctypedef int (*CVDlsBandJacFn)(int N, int mupper, int mlower,
                               realtype t, N_Vector y, N_Vector fy, 
                               DlsMat Jac, void *user_data,
                               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
@@ -192,6 +193,7 @@ cdef extern from "cvode/cvode_dense.h":
 
 cdef extern from "cvode/cvode_lapack.h":
     int CVLapackDense(void *cvode_mem, int N)
+    int CVLapackBand(void *cvode_mem, int N, int mupper, int mlower)
 
 cdef extern from "cvode/cvode_spils.h":
     # CVSPILS return values 
@@ -249,6 +251,5 @@ cdef extern from "cvode/cvode_spbcgs.h":
 cdef extern from "cvode/cvode_sptfqmr.h":
     int CVSptfqmr(void *cvode_mem, int pretype, int maxl)
 
+#cdef extern from "cvode/cvode_impl.h":
 
-cdef extern from "cvode/cvode_.h":
-cdef extern from "cvode/cvode_.h":

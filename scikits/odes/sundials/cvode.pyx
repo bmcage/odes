@@ -3,6 +3,9 @@ cimport numpy as np
 
 from c_sundials cimport realtype, N_Vector
 from c_cvode cimport *
+from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
+                          ndarray2DlsMatd,
+                          RhsFunction, WrapRhsFunction)
 
 cdef enum: HOOK_FN_STOP = 128
 
@@ -19,18 +22,12 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
     else:
         yy_tmp = aux_data.yy_tmp
         yp_tmp = aux_data.yp_tmp
-        residual_tmp = aux_data.residual_tmp
              
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
          
-    aux_data.res.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
-         
-    if parallel_implementation:
-        raise NotImplemented 
-    else:
-        ndarray2nv_s(rr, residual_tmp)
-         
+    aux_data.rhs.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
+
     return 0
 
 cdef class CV_data:
@@ -43,14 +40,6 @@ cdef class CV_data:
         self.jac_tmp = None
 
 cdef class CVODE:
-    cdef N_Vector atol
-    cdef void* _cv_mem
-    cdef dict options
-    cdef bint parallel_implementation, initialized
-    cdef CV_data aux_data
-
-    cdef N_Vector y0, y # for 'step' method
-    cdef N_Vector atol
 
     def __cinit__(self, Rfn, **options):
         """ 
@@ -66,23 +55,23 @@ cdef class CVODE:
         default_values = {
             'implementation': 'serial',
             'lmm_type': 'BDF', 
-            'iter_type': 'NEWTON'
+            'iter_type': 'NEWTON',
             # 'use_relaxation': False,
             'rtol': 1e-6, 'atol': 1e-12,
             'linsolver': 'dense',
             'lband': 0,'uband': 0,
             'maxl': 0,
-            'precond_type': 'none',
+            'precond_type': 'NONE',
             'tcrit': 0.,
             'order': 0,
             'max_step_size': 0.,
             'min_step_size': 0.,
             'first_step': 0.,
-            'max_steps': 0
+            'max_steps': 0,
             'bdf_stability_detection': False,
             'max_conv_fails': 0,
             'max_nonlin_iters': 0,
-            'nonlin_conv_coef': 0.
+            'nonlin_conv_coef': 0.,
             'user_data': None,
             'rfn': None,
             # 'jacfn': None
@@ -91,7 +80,7 @@ cdef class CVODE:
         self.options  = default_values
         self.N        = -1
         self.set_options(rfn=Rfn, **options)
-        self._ida_mem = NULL
+        self._cv_mem = NULL
         self.initialized = False
 
     def set_options(self, **options):
@@ -134,14 +123,14 @@ cdef class CVODE:
             self.options[key.lower()] = value
         self.initialized = False
 
-    cpdef init_step(self, double t0, object y0)
+    def init_step(self, double t0, object y0):
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         np_y0 = np.asarray(y0)
 
         return self._init_step(t0, np_y0)
 
-    cdef _init_step(self, DTYPE_t t0, 
-                    np.ndarray[DTYPE_t, ndim=1] y0)
+    cpdef _init_step(self, DTYPE_t t0, 
+                    np.ndarray[DTYPE_t, ndim=1] y0):
 
         cdef dict opts = self.options
 
@@ -181,27 +170,25 @@ cdef class CVODE:
         else:
             self.y0 = N_VMake_Serial(N, <realtype *>y0.data)
             self.y  = N_VClone(self.y0)
-            self.yp = N_VClone(self.yp0)
 
-        int flag
-        cdef void* cv_mem
-        if (self._cv_mem is NULL) or (self.N != N):
-            if (not cv_mem is NULL) and (self.N != N):
+        cdef int flag
+        cdef void* cv_mem = self._cv_mem
+        if (cv_mem is NULL) or (self.N != N):
+            if (not cv_mem is NULL):
                 CVodeFree(&cv_mem)
             cv_mem = CVodeCreate(lmm, itert)
-            if self._cv_mem is NULL:
+            if cv_mem is NULL:
                 raise MemoryError('Could not create cv_mem object')
             
             self._cv_mem = cv_mem
             flag = CVodeInit(cv_mem, _rhsfn,  <realtype> t0, self.y0)
         elif self.N == N:
-            cv_mem = self._cv_mem
             flag = CVodeReInit(cv_mem, <realtype> t0, self.y0)
         else:
             raise ValueError('CVodeInit:Error: You should not be here...')
         if flag == CV_ILL_INPUT:
                 raise ValueError('CVode[Re]Init: Ill input')
-        elif (flag == CV_MEM_FAIL) or (flag == CV_MEM_NULL)
+        elif (flag == CV_MEM_FAIL) or (flag == CV_MEM_NULL):
             raise MemoryError('CVode[Re]Init: Memory allocation error')
         elif flag == CV_NO_MALLOC:
             raise MemoryError('CVodeReInit: No memory allocated in CVInit.')
@@ -238,9 +225,8 @@ cdef class CVODE:
                 raise NotImplemented
             else:
                 atol = N_VMake_Serial(N, <realtype *> np_atol.data)
-                flag = IDASVtolerances(ida_mem, <realtype> opts['rtol'], 
-                                                     atol)
-        #TODO: implement CVFWtolerances(ida_mem, efun)
+                flag = CVodeSVtolerances(cv_mem, <realtype> opts['rtol'], atol)
+        #TODO: implement CVFWtolerances(cv_mem, efun)
         
         if flag == CV_ILL_INPUT:
             raise ValueError('CVodeStolerances: negative atol or rtol value.')
@@ -249,18 +235,18 @@ cdef class CVODE:
         CVodeSetUserData(cv_mem, <void*> self.aux_data)
 
         if (opts['order'] > 0):
-            CVodeSetMaxOrder(cv_mem, <int> opts['order'])
+            CVodeSetMaxOrd(cv_mem, <int> opts['order'])
         CVodeSetMaxNumSteps(cv_mem, <int> opts['max_steps'])
-        if lmm_type = 'bdf':
-            CVodeSetstabLimDet(cv_mem, <bint> opts['bdf_stability_detection'])
+        if lmm_type == 'bdf':
+            CVodeSetStabLimDet(cv_mem, <bint> opts['bdf_stability_detection'])
         CVodeSetInitStep(cv_mem, <realtype> opts['first_step'])
-        if (opts['min_step_size'] > 0.)
+        if (opts['min_step_size'] > 0.):
            CVodeSetMinStep(cv_mem, <realtype> opts['min_step_size'])
         flag = CVodeSetMaxStep(cv_mem, <realtype> opts['max_step_size'])
         if flag == CV_ILL_INPUT:
             raise ValueError('CVodeSetMaxStep: max_step_size is negative or smaller than min_step_size.')
         if opts['tcrit'] > 0.:
-            CVodeSetStopTime(cv_mem, <realtype> opts['tcrit']
+            CVodeSetStopTime(cv_mem, <realtype> opts['tcrit'])
         if opts['max_nonlin_iters'] > 0:
             CVodeSetMaxNonlinIters(cv_mem, <int> opts['max_nonlin_iters'])
         if opts['max_conv_fails'] > 0:
@@ -280,19 +266,19 @@ cdef class CVODE:
                                      'used only for serial implementation. Use'
                                      ' ''lapackdense'' for parallel implementation.')
                 else:
-                    flag = CVDense(ida_mem, N)
+                    flag = CVDense(cv_mem, N)
                     if flag == CVDLS_ILL_INPUT:
                         raise ValueError('CVDense solver is not compatible with'
                                          ' the current nvector implementation.')
                     elif flag == CVDLS_MEM_FAIL:
                         raise MemoryError('CVDense memory allocation error.')
             elif linsolver == 'lapackdense':
-                flag = CVLapackDense(ida_mem, N)
+                flag = CVLapackDense(cv_mem, N)
                 if flag == CVDLS_ILL_INPUT:
-                        raise ValueError('CVLapackDense solver is not compatible with'
+                    raise ValueError('CVLapackDense solver is not compatible with'
                                          ' the current nvector implementation.')
-                    elif flag == CVDLS_MEM_FAIL:
-                        raise MemoryError('CVLapackDense memory allocation error.')
+                elif flag == CVDLS_MEM_FAIL:
+                    raise MemoryError('CVLapackDense memory allocation error.')
             elif linsolver == 'band':
                 flag = CVBand(cv_mem, N, <int> opts['uband'], 
                                          <int> opts['lband'])
@@ -321,13 +307,13 @@ cdef class CVODE:
             elif ((linsolver == 'spgmr') or (linsolver == 'spbcg') 
                   or (linsolver == 'sptfqmr')):
                 precond_type = opts['precond_type'].lower()
-                if precond_type = 'none':
+                if precond_type == 'none':
                     pretype = PREC_NONE
-                elif precond_type = 'left':
+                elif precond_type == 'left':
                     pretype = PREC_LEFT
-                elif precond_type = 'right':
+                elif precond_type == 'right':
                     pretype = PREC_RIGHT
-                elif precond_type = 'both':
+                elif precond_type == 'both':
                     pretype = PREC_BOTH
                 else:
                     raise ValueError('LinSolver::Precondition: Unknown type: %s'
@@ -336,12 +322,12 @@ cdef class CVODE:
                 if linsolver == 'spgmr':
                     flag = CVSpgmr(cv_mem, pretype, <int> opts['maxl'])
                 elif linsolver == 'spbcg':
-                    flag = CVSbcg(cv_mem, pretype, <int> opts['maxl'])
+                    flag = CVSpbcg(cv_mem, pretype, <int> opts['maxl'])
                 else:
                     flag = CVSptfqmr(cv_mem, pretype, <int> opts['maxl'])
 
                 if flag == CVSPILS_MEM_FAIL:
-                        raise MemoryError('CVSpils memory allocation error.')
+                        raise MemoryError('LinSolver:CVSpils memory allocation error.')
             else:
                 raise ValueError('LinSolver: Unknown solver type: %s'
                                      % opts['linsolver'])
@@ -352,9 +338,9 @@ cdef class CVODE:
 
         return t0
 
-    def solve(self, object tspan, object y0, object hook_fn = None)
+    def solve(self, object tspan, object y0, object hook_fn = None):
 
-        cdef np.ndarray[DTYPE_t, ndim=1] tspan, y0
+        cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0
         np_tspan = np.asarray(tspan)
         np_y0    = np.asarray(y0)
         #TODO: determine hook_fn type
@@ -375,7 +361,7 @@ cdef class CVODE:
         cdef unsigned int idx
         cdef DTYPE_t t, t_onestep
         cdef int flag
-        cdef cv_mem = self._cv_mem
+        cdef void *cv_mem = self._cv_mem
         cdef realtype t_out
         cdef N_Vector y  = self.y
         cdef bint _flag
@@ -387,7 +373,7 @@ cdef class CVODE:
                 t = tspan[idx]
 
                 while True:
-                    flag = CVSolve(cv_mem, <realtype> t,  y, &t_out, 
+                    flag = CVode(cv_mem, <realtype> t,  y, &t_out, 
                                    CV_ONE_STEP)
 
                     nv_s2ndarray(y,  y_last)
@@ -413,7 +399,7 @@ cdef class CVODE:
             for idx in np.arange(len(tspan))[1:]:
                 t = tspan[idx]
 
-                flag = CVSolve(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
+                flag = CVode(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
 
                 nv_s2ndarray(y,  y_last)
 
@@ -430,7 +416,7 @@ cdef class CVODE:
                     
         return flag, t_retn, y_retn, None, None
 
-    def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn)
+    def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
         if not self.initialized:
             raise ValueError('Method ''init_step'' has to be called prior to the'
                              'first call of ''step'' method.')
@@ -440,9 +426,9 @@ cdef class CVODE:
         cdef int flag
 
         if t>0.0:
-            flag = CVSolve(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
+            flag = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
         else:
-            flag = CVSolve(cv_mem, <realtype> t,  y, &t_out, CV_ONE_STEP)
+            flag = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_ONE_STEP)
 
         nv_s2ndarray(y, y_retn)
 
@@ -454,7 +440,6 @@ cdef class CVODE:
         #      for parallel version or it's a generic one?
         if not self.y0   is NULL: N_VDestroy(self.y0)
         if not self.y    is NULL: N_VDestroy(self.y)
-        if not self.yp   is NULL: N_VDestroy(self.yp)
         if not self.atol is NULL: N_VDestroy(self.atol)
 
            
