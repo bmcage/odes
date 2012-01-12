@@ -57,7 +57,7 @@ cdef int _jacdense(int Neq, realtype tt, realtype cj,
         yy_tmp = aux_data.yy_tmp
         yp_tmp = aux_data.yp_tmp
         if aux_data.jac_tmp == None:
-            N = len(yy_tmp)
+            N = np.alen(yy_tmp)
             aux_data.jac_tmp = np.empty((N,N), float)
         jac_tmp = aux_data.jac_tmp
              
@@ -122,8 +122,6 @@ cdef class IDA:
     def set_options(self, **options):
         """ 
         Reads the options list and assigns values for the solver.
-        
-        Mandatory options are: 'resfn'.
         
         All options list:
             'implementation':
@@ -202,9 +200,9 @@ cdef class IDA:
             'user_data':
                 Values: python object, None = default
                 Description:
-                    Additional data that are supplied to each call of the residual function 'resfn' (see below)
+                    Additional data that are supplied to each call of the residual function 'Rfn' (see below)
                     and Jacobi function 'jacfn' (if specified one).
-            'resfn':
+            'Rfn':
                 Values: function of class ResFunction or a python function with signature (t, y, yp, resultout)
                 Description:
                     Defines the residual function (which has to be a subclass of ResFunction class, or a normal python function with signature (t, y, yp, resultout) ).
@@ -290,15 +288,15 @@ cdef class IDA:
             raise ValueError('The residual function ResFn not assigned '
                               'during ''set_options'' call !')
                
-        if not len(y0) == len(yp0):
+        if not np.alen(y0) == np.alen(yp0):
             raise ValueError('Arrays inconsistency: y0 and ydot0 have to be of the'
                              'same length !')
-        if (((len(y0) == 0) and (not opts['compute_initcond'] == 'y0'))
-                or ((len(yp0) == 0) and (not opts['compute_initcond'] == 'yp0'))):
+        if (((np.alen(y0) == 0) and (not opts['compute_initcond'] == 'y0'))
+                or ((np.alen(yp0) == 0) and (not opts['compute_initcond'] == 'yp0'))):
             raise ValueError('Not passed y0 or ydot0 value has to computed'
                              'by ''init_cond'', but ''init_cond'' not set apropriately !')
         cdef long int N
-        N = <long int>len(y0)
+        N = <long int> np.alen(y0)
         
         cdef void* ida_mem = self._ida_mem
 
@@ -333,7 +331,7 @@ cdef class IDA:
         
         self.N = N
         
-        # auxiliary variablesis
+        # auxiliary variables
         self.aux_data = IDA_data(N)
         self.aux_data.parallel_implementation = self.parallel_implementation
 
@@ -351,6 +349,9 @@ cdef class IDA:
         cdef N_Vector atol
         cdef np.ndarray[DTYPE_t, ndim=1] np_atol
         cdef int maxl = <int> opts['maxl']
+        if not (self.atol is NULL):
+            N_VDestroy(self.atol)
+            self.atol = NULL
         if np.isscalar(opts['atol']):
             IDASStolerances(ida_mem, <realtype> opts['rtol'], <realtype> opts['atol'])
         else:
@@ -362,7 +363,7 @@ cdef class IDA:
             IDASVtolerances(ida_mem, <realtype> opts['rtol'], atol)
         #TODO: implement IDAFWtolerances(ida_mem, efun)
         
-        # As user data we pass the (self) IDA object
+        # As user data we pass the IDA_data object
         IDASetUserData(ida_mem, <void*> self.aux_data)
         
         cdef int order = <int> opts['order']
@@ -418,7 +419,7 @@ cdef class IDA:
                 for idx in range(constraints_idx):
                     constraints_vars[constraints_idx[idx]] = constraints_type[idx]
             else:
-                assert len(constraints_type) == N, 'Without ''constraints_idx'' specified the ''constraints_type'' has to be of the same length as y.'
+                assert np.alen(constraints_type) == N, 'Without ''constraints_idx'' specified the ''constraints_type'' has to be of the same length as y.'
                 constraints_vars = np.asarray(constraints_type, float)
             if not self.constraints is NULL:
                 N_VDestroy(self.constraints)
@@ -463,7 +464,7 @@ cdef class IDA:
                                     %(compute_initcond))
         
         if not ((y_ic0_retn is None) and (yp_ic0_retn is None)):
-            assert len(y_ic0_retn) == len(yp_ic0_retn) == N, 'y_ic0 and/or yp_ic0 have to be of the same size as y0.'
+            assert np.alen(y_ic0_retn) == np.alen(yp_ic0_retn) == N, 'y_ic0 and/or yp_ic0 have to be of the same size as y0.'
             return_flag = IDAGetConsistentIC(self._ida_mem, self.y, self.yp)
             if return_flag == IDA_ILL_INPUT:
                 raise NameError('Method ''get_consistent_ic'' has to be called before'
@@ -474,10 +475,6 @@ cdef class IDA:
         #TODO: implement the rest of IDA*Set* functions for linear solvers
 
         #TODO: Rootfinding
-
-        # TODO: useoutval, success    
-        #self.useoutval = out
-        #self.success = 1
 
         self.initialized = True
         return t0_init
@@ -514,10 +511,10 @@ cdef class IDA:
         yp0   = ensure_numpy_float_array(yp0_in)
         
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn, yp_retn
-        y_retn  = np.empty([len(tspan), len(y0)], float)
-        yp_retn = np.empty([len(tspan), len(y0)], float)
+        y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
+        yp_retn = np.empty([np.alen(tspan), np.alen(y0)], float)
         cdef np.ndarray[DTYPE_t, ndim=1] t_retn
-        t_retn  = np.empty([len(tspan), ], float)
+        t_retn  = np.empty([np.alen(tspan), ], float)
         
         t_retn[0] = self.init_step(tspan[0], y0, yp0, y_retn[0, :], yp_retn[0, :])
 
@@ -531,7 +528,7 @@ cdef class IDA:
         cdef np.ndarray[DTYPE_t, ndim=1] y_err, yp_err
 
         if hook_fn:
-            for idx in range(len(tspan))[1:]:
+            for idx in np.arange(np.alen(tspan))[1:]:
                 t = tspan[idx]
                 while True:
                     flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_ONE_STEP)
@@ -578,10 +575,9 @@ cdef class IDA:
             return flag, t_retn, y_retn, yp_retn, None, None, None
                 
         else:
-            for idx in range(len(tspan))[1:]:
+            for idx in np.arange(np.alen(tspan))[1:]:
                 t = tspan[idx]
                 flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
-                self.solver_return_flag = flag
                 if flag == -1 or flag == -2:
                     print('An error occured. See ''solver_return_flag'' variable and documentation.')
                     return np.asarray([]), np.asarray([])
@@ -629,7 +625,7 @@ cdef class IDA:
             t_out - time, where the solver stopped (when no error occured, t_out == t)
         """
         if not self.initialized:
-            raise ValueError('Method ''init_step'' has to be called prir to the'
+            raise ValueError('Method ''init_step'' has to be called prior to the'
                              'first call of ''step'' method.')
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp

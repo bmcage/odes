@@ -28,7 +28,6 @@ cdef class IDA:
     cdef int mupper, mlower
     # ??? lband, uband, tcrit
     # ??? constraint_type, algebraic_var
-    cdef int solver_return_flag
     cdef bint initialized
     
     cdef void* _ida_mem
