@@ -3,8 +3,9 @@ cimport numpy as np
 
 from c_sundials cimport realtype, N_Vector
 from c_ida cimport *
-from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
-                          ensure_numpy_float_array)
+from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
+                          ndarray2DlsMatd,
+                          ResFunction, WrapResFunction)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
