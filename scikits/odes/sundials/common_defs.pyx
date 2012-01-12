@@ -46,7 +46,7 @@ cdef class WrapRhsFunction(RhsFunction):
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        object userdata = None):
-        self._rhsfn(t, y, ydot, result)
+        self._rhsfn(t, y, ydot)
         return 0
 
 cdef class JacFunction:

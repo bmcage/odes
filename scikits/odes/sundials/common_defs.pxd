@@ -18,7 +18,7 @@ cdef class RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
-                       object userdata = None)
+                       object userdata = *)
 cdef class WrapRhsFunction(RhsFunction):
     cpdef object _rhs_fn
     cpdef set_rhsfn(self, object rhsfn)
