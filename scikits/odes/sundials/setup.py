@@ -49,11 +49,19 @@ def configuration(parent_package='',top_path=None):
         config.add_extension("common_defs", 
                              sources=['common_defs.c'], 
                              include_dirs=INCL_DIRS_SUNDIALS)
-        cython(['ida.pyx'], working_path=base_path)
 
-        config.add_extension("ida", 
-                             sources=['ida.c'], 
+        cython(['ida.pyx'], working_path=base_path)
+        config.add_extension("ida",
+                             sources=['ida.c'],
                              depends=['common_defs.c'], 
+                             include_dirs=INCL_DIRS_SUNDIALS+INCL_DIRS_LAPACK,
+                             library_dirs=LIB_DIRS_SUNDIALS+LIB_DIRS_LAPACK,
+                             libraries=LIBS_SUNDIALS+LIBS_LAPACK)
+
+        cython(['cvode.pyx'], working_path=base_path)
+        config.add_extension("cvode",
+                             sources=['cvode.c'],
+                             depends=['common_defs.c'],
                              include_dirs=INCL_DIRS_SUNDIALS+INCL_DIRS_LAPACK,
                              library_dirs=LIB_DIRS_SUNDIALS+LIB_DIRS_LAPACK,
                              libraries=LIBS_SUNDIALS+LIBS_LAPACK)
