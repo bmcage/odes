@@ -533,7 +533,6 @@ cdef class IDA:
                 t = tspan[idx]
                 while True:
                     flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_ONE_STEP)
-                    self.solver_return_flag = flag
                     if flag == -1 or flag == -2:
                         print('An error occured. See ''solver_return_flag'' variable and documentation.')
                         return np.asarray([]), np.asarray([])
