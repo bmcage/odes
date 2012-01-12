@@ -4,7 +4,7 @@ from c_sundials cimport N_Vector, DlsMat
 ctypedef np.float_t DTYPE_t
 
 cdef class ResFunction:
-    cpdef int evaluate(self, DTYPE_t t, 
+    cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] result,
@@ -14,8 +14,17 @@ cdef class WrapResFunction(ResFunction):
     cdef object _resfn
     cpdef set_resfn(self, object resfn)
 
+cdef class RhsFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       object userdata = None)
+cdef class WrapRhsFunction(RhsFunction):
+    cpdef object _rhs_fn
+    cpdef set_rhsfn(self, object rhsfn)
+
 cdef class JacFunction:
-    cpdef np.ndarray[DTYPE_t, ndim=2] evaluate(self, DTYPE_t t, 
+    cpdef np.ndarray[DTYPE_t, ndim=2] evaluate(self, DTYPE_t t,
                                              np.ndarray[DTYPE_t, ndim=1] y,
                                              np.ndarray[DTYPE_t, ndim=1] ydot,
                                              DTYPE_t cj,
