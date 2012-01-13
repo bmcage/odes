@@ -18,10 +18,10 @@ It is required that the Blas/Lapack interface in included in sundials, so check
 the Fortran Settings section of configure that they are present! If problems,
 use the F77 flag to set the fortran compiler, see below.
 
-The sundials package *must* also be installed with the MPI disabled and the 
-fPIC flag. On a *nix systhem, do after extraction of the downloaded tar.gz:
+The sundials package *must* also be installed with the fPIC flag. 
+On a *nix systhem, do after extraction of the downloaded tar.gz:
 
-./configure --disable-mpi --with-cflags=-fPIC
+./configure --with-cflags=-fPIC
 make
 and as root:
 make install
@@ -30,7 +30,7 @@ This should install sundials in /usr/local/lib
 Make sure you use the fortran compiler as used for your lapack/blas install. 
 Eg, on linux that would be gfortran, so:
 
-./configure --disable-mpi --with-cflags=-fPIC F77=gfortran
+./configure --with-cflags=-fPIC F77=gfortran
 
 Installation from sources
 =========================

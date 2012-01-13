@@ -3,32 +3,31 @@
 This example shows the most simple way of using a solver. 
 We solve free vibration of a simple oscillator::
         m \ddot{u} + k u = 0, u(0) = u_0, \dot{u}(0) = \dot{u}_0
-using the IDA solver, which means we use residuals.
+using the CVODE solver, which means we use a rhs function of \dot{u}.
 Solution::
         u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
     
 """
 from __future__ import print_function
-from numpy import cos, sin, sqrt
+from numpy import asarray, cos, sin, sqrt
 
 #data
 k = 4.0
 m = 1.0
 #initial data on t=0, x[0] = u, x[1] = \dot{u}, xp = \dot{x}
 initx = [1, 0.1]
-initxp = [initx[1], -k/m*initx[0]]
 
-#define function for the residual equations which has specific signature
-def reseqn(t, x, xdot, result):
-    """ we create residual equations for the problem"""
-    result[0] = m*xdot[1] + k*x[0]
-    result[1] = xdot[0] - x[1]
+#define function for the right-hand-side equations which has specific signature
+def rhseqn(t, x, xdot, result):
+    """ we create rhs equations for the problem"""
+    result[0] = - k/m * x[0]
+    result[1] = x[1]
     
 #instantiate the solver
-from scikits.odes.sundials import ida
-solver = ida.IDA(reseqn)
+from scikits.odes.sundials import cvode
+solver = cvode.CVODE(rhseqn)
 #obtain solution at a required time
-result = solver.solve([0., 1., 2.], initx, initxp)
+result = solver.solve([0., 1., 2.], initx)
 
 print ('t - Solution - Exact')
 for t, u in zip(result[1], result[2]):
