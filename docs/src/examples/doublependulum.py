@@ -65,6 +65,9 @@ from scikits.odes import dae
 import pylab
 import os
 
+if not input:
+    input = raw_input
+
 #Set following False to not compute solution with ddaspk
 alsoddaspk = True
 ATOL = 1e-9
@@ -298,17 +301,17 @@ def main():
     """
     The main program: instantiate a problem, then use odes package to solve it
     """
-    input = raw_input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
+    uinput = input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
                 " 3 = index 1 problem with jacobian\n 4 = info\n\n"
                 "Answer (1,2,3 or 4) : ")
     jac = None
-    if input == '1':
+    if uinput == '1':
         problem = Doublependulum(type='index2')
         res = resindex2()
-    elif input == '2':
+    elif uinput == '2':
         problem = Doublependulum(type='index1')
         res = resindex1()
-    elif input == '3':
+    elif uinput == '3':
         problem = Doublependulum(type='index1_jac')
         res = resindex1()
         jac = jacindex1()
@@ -435,7 +438,7 @@ def main():
     pylab.ion()
     pylab.figure(1)
     pylab.subplot(211)
-    pylab.title('IDA solution option %s' % input)
+    pylab.title('IDA solution option %s' % uinput)
     pylab.scatter(x1t, y1t)
     pylab.scatter(x2t, y2t)
     pylab.xlim(-10, 10)
@@ -452,7 +455,7 @@ def main():
         pylab.ion()
         pylab.figure(2)
         pylab.subplot(211)
-        pylab.title('DDASPK solution option %s' % input)
+        pylab.title('DDASPK solution option %s' % uinput)
         pylab.scatter(ddaspkx1t, ddaspky1t)
         pylab.scatter(ddaspkx2t, ddaspky2t)
         pylab.xlim(-10, 10)
@@ -562,11 +565,11 @@ def main():
         open_file_with_default_application('anidoublependulum' + os.sep +
                     'doublependulum'+ext+'.mpg')
 
-    input2 = raw_input('Create animation of the solution? (y/n): ')
+    uinput2 = input('Create animation of the solution? (y/n): ')
     print('\n')
-    if (input2 == 'y' or input2 == 'yes'):
+    if (uinput2 == 'y' or uinput2 == 'yes'):
         extend = problem.radius1 + problem.radius2 + 1
-        create_animation(extend, extend, input)
+        create_animation(extend, extend, uinput)
 
 if __name__ == "__main__":
     main()
