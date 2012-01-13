@@ -383,29 +383,28 @@ cdef class CVODE:
 
         cdef np.ndarray[DTYPE_t, ndim=1] y_last
         cdef unsigned int idx
-        cdef DTYPE_t t, t_onestep
+        cdef DTYPE_t t
         cdef int flag
         cdef void *cv_mem = self._cv_mem
         cdef realtype t_out
         cdef N_Vector y  = self.y
-        cdef bint _flag
 
         y_last   = np.empty(np.shape(y0), float)
                 
         if hook_fn:
-            for idx in np.arange(len(tspan))[1:]:
+            for idx in np.arange(np.alen(tspan))[1:]:
                 t = tspan[idx]
 
                 while True:
-                    flag = CVode(cv_mem, <realtype> t,  y, &t_out, 
-                                   CV_ONE_STEP)
+                    flag = CVode(cv_mem, <realtype> t,  y, &t_out,
+                                 CV_ONE_STEP)
 
                     nv_s2ndarray(y,  y_last)
                     
                     if ((flag < 0) or 
                         hook_fn(t_out, y_last, self.aux_data.user_data) != 0):
                         if flag < 0:
-                            print('Error occured. See ''solver_return_flag'' '
+                            print('Error occured. See returned flag '
                                   'variable and CVode documentation.')
                         else:
                             flag = HOOK_FN_STOP
@@ -420,7 +419,7 @@ cdef class CVODE:
                 t_retn[idx]    = t_out 
                 y_retn[idx, :] = y_last
         else:
-            for idx in np.arange(len(tspan))[1:]:
+            for idx in np.arange(np.alen(tspan))[1:]:
                 t = tspan[idx]
 
                 flag = CVode(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
@@ -428,7 +427,7 @@ cdef class CVODE:
                 nv_s2ndarray(y,  y_last)
 
                 if flag < 0:
-                    print('Error occured. See ''solver_return_flag'' '
+                    print('Error occured. See returned flag '
                           'variable and CVode documentation.')
                     t_retn  = t_retn[0:idx]
                     y_retn  = y_retn[0:idx, :]
