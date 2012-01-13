@@ -523,46 +523,68 @@ cdef class IDA:
 
         # DAE variables and Initial condition
         cdef np.ndarray[DTYPE_t, ndim=1] dae_vars
-        alg_vars_idx = opts['algebraic_vars_idx']
-        compute_initcond = opts['compute_initcond']
+
+        alg_vars_idx     = opts['algebraic_vars_idx']
+        compute_initcond = opts['compute_initcond'].lower()
+
         if ((compute_initcond == 'yp0') or
             (opts['exclude_algvar_from_error'] and not alg_vars_idx is None)):
+
+            # DAE variables
             dae_vars = np.ones(N, float)
+
             if not alg_vars_idx is None:
                 for algvar_idx in opts['algebraic_vars_idx']:
                     dae_vars[algvar_idx] = 0.0
+
             if not self.dae_vars_id is NULL:
                 N_VDestroy(self.dae_vars_id)
+                self.dae_vars_id = NULL
+
             if self.parallel_implementation:
                 raise NotImplemented
             else:
                 self.dae_vars_id = N_VMake_Serial(N, <realtype*> dae_vars.data) 
+
             IDASetId(ida_mem, self.dae_vars_id)
             
             if opts['exclude_algvar_from_error'] and not alg_vars_idx is None:
                 IDASetSuppressAlg(ida_mem, True)
-        
-        cdef int return_flag
+
+        # Initial condition
+        cdef bint compute_initcond_p
         cdef float t0_init
-        if compute_initcond == 'yp0':
-            IDACalcIC(ida_mem, IDA_YA_YDP_INIT, <realtype>opts['compute_initcond_t0'])
-            t0_init = opts['compute_initcond_t0']
-        elif compute_initcond == 'y0':
-            return_flag = IDACalcIC(ida_mem, IDA_Y_INIT, <realtype> opts['compute_initcond_t0'])
+        cdef realtype ic_t0 = <realtype>opts['compute_initcond_t0']
+
+        if compute_initcond in [None, 'y0', 'yp0', '']:
+            compute_initcond_p = (compute_initcond == 'y0' or
+                                  compute_initcond == 'yp0')
+        else:
+            raise ValueError('InitCond: Unknown ''compute_initcond'' value: %s'
+                             % compute_initcond)
+
+        if compute_initcond_p:
+            if compute_initcond == 'yp0':
+                flag = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, ic_t0)
+            elif compute_initcond == 'y0':
+                flag = IDACalcIC(ida_mem, IDA_Y_INIT, ic_t0)
+
             if not (return_flag == IDA_SUCCESS):
-                raise ValueError('IDA did not compute successfully the initial condition')
-            t0_init = opts['compute_initcond_t0']
-        elif compute_initcond == None or compute_initcond == '':
+                raise ValueError('IDAInitCond: Error occured during computation of initial condition')
+
+            t0_init = ic_t0
+        else:
             t0_init = t0
-        else: raise ValueError('Unknown ''compute_initcond'' calculation method: ''%s''' 
-                                    %(compute_initcond))
-        
+
         if not ((y_ic0_retn is None) and (yp_ic0_retn is None)):
             assert np.alen(y_ic0_retn) == np.alen(yp_ic0_retn) == N, 'y_ic0 and/or yp_ic0 have to be of the same size as y0.'
-            return_flag = IDAGetConsistentIC(self._ida_mem, self.y, self.yp)
-            if return_flag == IDA_ILL_INPUT:
-                raise NameError('Method ''get_consistent_ic'' has to be called before'
-                                'the first call to ''step'' method.')
+
+            flag = IDAGetConsistentIC(self._ida_mem, self.y, self.yp)
+
+            if flag == IDA_ILL_INPUT:
+                raise NameError('Method ''get_consistent_ic'' has to be called'
+                                ' prior the first call to the ''step'' method.')
+
             if not y_ic0_retn is None: nv_s2ndarray(self.y, y_ic0_retn)
             if not yp_ic0_retn is None: nv_s2ndarray(self.yp, yp_ic0_retn)
             
