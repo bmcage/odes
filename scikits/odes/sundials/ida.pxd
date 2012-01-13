@@ -42,11 +42,15 @@ cdef class IDA:
     # Functions
 
     #def set_options(self, dict options)
-    cpdef init_step(self, DTYPE_t t0, 
+    cpdef _init_step(self, DTYPE_t t0, 
                     np.ndarray[DTYPE_t, ndim=1] y0, 
                     np.ndarray[DTYPE_t, ndim=1] yp0,
                     np.ndarray y_ic0_retn = ?,
                     np.ndarray yp_ic0_retn = ?)
+    cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan, 
+                       np.ndarray[DTYPE_t, ndim=1]y0, 
+                       np.ndarray[DTYPE_t, ndim=1] yp0,
+                       hook_fn = ?)
     #def run_solver(self, np.ndarray[float, ndim=1] tspan, np.ndarray[float, ndim=1] y0, 
     #               np.ndarray[float, ndim=1] yp0)
     #def step(self, realtype t)

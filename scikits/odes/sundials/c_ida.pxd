@@ -180,6 +180,15 @@ cdef extern from "ida/ida_lapack.h":
      int IDALapackBand(void *ida_mem, int N, int mupper, int mlower)
      
 cdef extern from "ida/ida_spils.h":
+
+
+    enum: IDASPILS_SUCCESS   #  0
+    enum: IDASPILS_MEM_NULL  # -1 
+    enum: IDASPILS_LMEM_NULL # -2 
+    enum: IDASPILS_ILL_INPUT # -3
+    enum: IDASPILS_MEM_FAIL  # -4
+    enum: IDASPILS_PMEM_NULL # -5
+
     ctypedef int (*IDASpilsPrecSetupFn)(realtype tt,
                                          N_Vector yy, N_Vector yp, N_Vector rr,
                                          realtype c_j, void *user_data,

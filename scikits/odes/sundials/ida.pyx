@@ -255,7 +255,7 @@ cdef class IDA:
             self.options[key.lower()] = value
         self.initialized = False
 
-     def init_step(self, double t0, object y0, object yp0,
+    def init_step(self, double t0, object y0, object yp0,
                    np.ndarray y_ic0_retn = None,
                    np.ndarray yp_ic0_retn = None):
         """
@@ -415,7 +415,7 @@ cdef class IDA:
         IDASetUserData(ida_mem, <void*> self.aux_data)
 
         if (opts['order'] > 0):
-            IDASetMaxOrd(cv_mem, <int> opts['order'])
+            IDASetMaxOrd(ida_mem, <int> opts['order'])
         IDASetMaxNumSteps(ida_mem, <int> opts['max_steps'])
         if opts['first_step_size'] > 0.:
             IDASetInitStep(ida_mem, <realtype> opts['first_step_size'])
@@ -443,17 +443,17 @@ cdef class IDA:
             else:
                  flag = IDADense(ida_mem, N)
                  if flag == IDADLS_ILL_INPUT:
-                        raise ValueError('IDADense solver is not compatible with'
-                                         ' the current nvector implementation.')
-                    elif flag == IDADLS_MEM_FAIL:
-                        raise MemoryError('IDADense memory allocation error.')
+                     raise ValueError('IDADense solver is not compatible with'
+                                      ' the current nvector implementation.')
+                 elif flag == IDADLS_MEM_FAIL:
+                     raise MemoryError('IDADense memory allocation error.')
         elif linsolver == 'lapackdense':
             flag = IDALapackDense(ida_mem, N)
             if flag == IDADLS_ILL_INPUT:
-                    raise ValueError('IDALapackDense solver is not compatible with'
-                                         ' the current nvector implementation.')
-                elif flag == IDADLS_MEM_FAIL:
-                    raise MemoryError('IDALapackDense memory allocation error.')
+                raise ValueError('IDALapackDense solver is not compatible with'
+                                 ' the current nvector implementation.')
+            elif flag == IDADLS_MEM_FAIL:
+                raise MemoryError('IDALapackDense memory allocation error.')
         elif linsolver == 'band':
             if self.parallel_implementation:
                 raise ValueError('Linear solver for band matrices can be used'
@@ -569,7 +569,7 @@ cdef class IDA:
             elif compute_initcond == 'y0':
                 flag = IDACalcIC(ida_mem, IDA_Y_INIT, ic_t0)
 
-            if not (return_flag == IDA_SUCCESS):
+            if not (flag == IDA_SUCCESS):
                 raise ValueError('IDAInitCond: Error occured during computation of initial condition')
 
             t0_init = ic_t0
@@ -622,7 +622,7 @@ cdef class IDA:
             conditions. The starting time is then also the precomputed time.
         """
         
-        cdef np.ndarray[DTYPE_t, ndim=1] tspan, y0, yp0
+        cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0, np_yp0
 
         np_tspan = np.asarray(tspan)
         np_y0    = np.asarray(y0)
