@@ -34,7 +34,7 @@ for t, u in zip(result[1], result[2]):
     print (t, u[0], '    - ', initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m))
 
 #continue the solver
-result = solver.solve([result[1][-1], result[1][-1]+1], result[2][-1])
+result = solver.solve([result[1][-1], result[1][-1]+1])
 print ('Continuation of the solution')
 print ('t - Solution - Exact')
 for t, u in zip(result[1], result[2]):
