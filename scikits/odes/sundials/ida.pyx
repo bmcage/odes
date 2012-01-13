@@ -485,7 +485,7 @@ cdef class IDA:
                 flag = IDASpgmr(ida_mem, maxl)
             elif linsolver == 'spbcg':
                 flag = IDASpbcg(ida_mem, maxl)
-            elif linsolver == 'sptfqmr':
+            else:
                 flag = IDASptfqmr(ida_mem, maxl)
 
             if flag == IDASPILS_MEM_FAIL:
@@ -593,18 +593,18 @@ cdef class IDA:
         #TODO: Rootfinding
 
         self.initialized = True
+
         return t0_init
         
-    def solve(self, object tspan_in, object y0_in,  object yp0_in, 
-                    hook_fn = None):
+    def solve(self, object tspan, object y0,  object yp0, hook_fn = None):
         """
         Runs the solver.
         
         Input:
-            tspan_in - an numpy array of times at which the computed value will be returned
-            y0_in    - numpy array of initial values
-            yp0_in   - numpy array of initial values of derivatives
-            hook_fn - if set, this function is evaluated after each succestive (internal) step. Input values: t, x, xdot, userdata. Output is 0 (success), otherwise computation is stopped and a return flag = ? is set. Values are stored in (see) t_err, y_err, yp_err
+            tspan - an numpy array of times at which the computed value will be returned
+            y0    - numpy array of initial values
+            yp0   - numpy array of initial values of derivatives
+            hook  - if set, this function is evaluated after each succestive (internal) step. Input values: t, x, xdot, userdata. Output is 0 (success), otherwise computation is stopped and a return flag = ? is set. Values are stored in (see) t_err, y_err, yp_err
             
         Return values:
             flag   - indicating return status of the solver
@@ -621,101 +621,97 @@ cdef class IDA:
             the starting values the values calculated by the solver (i.e. consistent initial
             conditions. The starting time is then also the precomputed time.
         """
-        cdef np.ndarray[DTYPE_t, ndim=1] tspan, y0, yp0
-        tspan = ensure_numpy_float_array(tspan_in)
-        y0    = ensure_numpy_float_array(y0_in)
-        yp0   = ensure_numpy_float_array(yp0_in)
         
+        cdef np.ndarray[DTYPE_t, ndim=1] tspan, y0, yp0
+
+        np_tspan = np.asarray(tspan)
+        np_y0    = np.asarray(y0)
+        np_yp0   = np.asarray(yp0)
+         #TODO: determine hook_fn type
+
+        return self._solve(np_tspan, np_y0, np_yp0, hook_fn)
+        
+    cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan, 
+                       np.ndarray[DTYPE_t, ndim=1]y0, 
+                       np.ndarray[DTYPE_t, ndim=1] yp0,
+                       hook_fn = None):
+        
+        
+        cdef np.ndarray[DTYPE_t, ndim=1] t_retn
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn, yp_retn
+        t_retn  = np.empty([np.alen(tspan), ], float)
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
         yp_retn = np.empty([np.alen(tspan), np.alen(y0)], float)
-        cdef np.ndarray[DTYPE_t, ndim=1] t_retn
-        t_retn  = np.empty([np.alen(tspan), ], float)
         
         t_retn[0] = self.init_step(tspan[0], y0, yp0, y_retn[0, :], yp_retn[0, :])
-
-        cdef DTYPE_t t, t_onestep
-        cdef unsigned int idx
         #TODO: Parallel version
+        cdef np.ndarray[DTYPE_t, ndim=1] y_last, yp_last
+        cdef unsigned int idx
+        cdef DTYPE_t t
+        cdef int flag
+        cdef void *ida_mem = self._ida_mem
+        cdef realtype t_out
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp
-        cdef realtype t_out
-        cdef int flag
-        cdef np.ndarray[DTYPE_t, ndim=1] y_err, yp_err
+
+        y_last   = np.empty(np.shape(y0), float)
+        yp_last  = np.empty(np.shape(y0), float)
 
         if hook_fn:
             for idx in np.arange(np.alen(tspan))[1:]:
                 t = tspan[idx]
+
                 while True:
-                    flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_ONE_STEP)
-                    if flag == -1 or flag == -2:
-                        print('An error occured. See ''solver_return_flag'' variable and documentation.')
-                        return np.asarray([]), np.asarray([])
+                    flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+                                    IDA_ONE_STEP)
 
-                    if flag < -3:
-                        t_retn  = np.asarray(t_retn[0:idx])
-                        y_retn  = np.asarray(y_retn[0:idx, :])
-                        yp_retn = np.asarray(yp_retn[0:idx, :])
-
-                        y_err = np.empty([self.N, ], float)
-                        yp_err = np.empty([self.N, ], float)
-                        nv_s2ndarray(y,  y_err) 
-                        nv_s2ndarray(yp, yp_err)
-
-                        t_retn[idx] = t_out
-                        return flag, t_retn, y_retn, yp_retn, t_out, y_err, yp_err
+                    nv_s2ndarray(y,  y_last)
+                    nv_s2ndarray(y,  yp_last)
                     
-                    nv_s2ndarray(y,  y_retn[idx, :]) 
-                    nv_s2ndarray(yp, yp_retn[idx, :])
-                    
-                    if not (hook_fn(t_out, y_retn[idx, :], yp_retn[idx, :], self.aux_data.user_data) == 0):
-                        y_err     = np.empty([self.N, ], float)
-                        yp_err    = np.empty([self.N, ], float)
-                        y_err[:]  = y_retn[idx, :]
-                        yp_err[:] = yp_retn[idx, :]
-                        
-                        t_retn  = np.asarray(t_retn[0:idx])
-                        y_retn  = np.asarray(y_retn[0:idx, :])
-                        yp_retn = np.asarray(yp_retn[0:idx, :])
+                    if ((flag < 0) or
+                        (hook_fn(t_out, y_last, yp_last, 
+                                 self.aux_data.user_data) != 0)):
+                        if flag < 0:
+                             print('Error occured. See returned flag '
+                                  'variable and IDA documentation.')
+                        else:
+                            flag = HOOK_FN_STOP
 
-                        nv_s2ndarray(y,  y_err) 
-                        nv_s2ndarray(yp, yp_err)
-                        return HOOK_FN_STOP, t_retn, y_retn, yp_retn, t_out, y_err, yp_err
+                        t_retn  = t_retn[0:idx]
+                        y_retn  = y_retn[0:idx, :]
+                        yp_retn = yp_retn[0:idx, :]
+
+                        return (flag, t_retn, y_retn, yp_retn, 
+                                t_out, y_last, yp_last)
 
                     if t_out >= t: break
 
-                t_retn[idx] = t_out
-                # y_retn[idx, :], yp_retn[idx, :] are set in previous code already
-
-            return flag, t_retn, y_retn, yp_retn, None, None, None
-                
+                t_retn[idx]     = t_out
+                y_retn[idx, :]  = y_last
+                yp_retn[idx, :] = yp_last
         else:
             for idx in np.arange(np.alen(tspan))[1:]:
                 t = tspan[idx]
-                flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
-                if flag == -1 or flag == -2:
-                    print('An error occured. See ''solver_return_flag'' variable and documentation.')
-                    return np.asarray([]), np.asarray([])
 
-                if flag < -3:
-                    t_retn  = np.asarray(t_retn[0:idx])
-                    y_retn  = np.asarray(y_retn[0:idx, :])
-                    yp_retn = np.asarray(yp_retn[0:idx, :])
+                flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, 
+                                IDA_NORMAL)
 
-                    y_err = np.empty([self.N, ], float)
-                    yp_err = np.empty([self.N, ], float)
-                    nv_s2ndarray(y,  y_err) 
-                    nv_s2ndarray(yp, yp_err)
-                    
-                    print('idx: ', idx, 't_out: ', t_out, 't_retn', t_retn)
-                    t_retn[idx] = t_out
-                    return flag, t_retn, y_retn, yp_retn, t_out, y_err, yp_err
-                else:
-                    t_retn[idx] = t_out
-                    nv_s2ndarray(y,  y_retn[idx, :]) 
-                    nv_s2ndarray(yp, yp_retn[idx, :]) 
-            
-                
+                nv_s2ndarray(y,  y_last)
+                nv_s2ndarray(y,  yp_last)
+
+                if flag < 0:
+                    print('Error occured. See returned flag '
+                          'variable and IDA documentation.')
+                    t_retn   = t_retn[0:idx]
+                    y_retn   = y_retn[0:idx, :]
+                    yp_retn  = yp_retn[0:idx, :]
+
+                    return flag, t_retn, y_retn, yp_retn, t_out, y_last, yp_last
+
+                t_retn[idx]     = t_out
+                y_retn[idx, :]  = y_last
+                yp_retn[idx, :] = yp_last
+
         return flag, t_retn, y_retn, yp_retn, None, None, None
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn,
