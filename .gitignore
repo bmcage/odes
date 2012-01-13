@@ -4,12 +4,11 @@
 *.bak
 .directory
 \#*\#
-*.so
-*.o
 *.c
 *swp
 *.egg
 scikits.odes.egg-info/*
-!scikits/odes/sundials/sundials_auxiliary/*
 build/*
+.emacs.desktop*
+docs/src/examples/scikits
 
