@@ -56,7 +56,7 @@ installed. The animation is stored in the directory anidoublependulum.
 
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 import numpy as np
 from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi)
 from scikits.odes.sundials.common_defs import ResFunction, JacFunction
@@ -67,6 +67,8 @@ import os
 
 #Set following False to not compute solution with ddaspk
 alsoddaspk = True
+ATOL = 1e-9
+RTOL = 1e-7
 
 #class to hold the problem data
 class Doublependulum():
@@ -223,7 +225,7 @@ class resindex1(ResFunction):
         #result[9]=(yy[4] - yy[6])*(yy[2] - yy[0]) - (yy[1] - yy[3])*(yy[5] - yy[7])
         result[8] = yy[4]**2 + yy[5]**2 + yy[8]/m1*(yy[0]**2 + yy[1]**2) \
                     - g * yy[1] + yy[9]/m1 *(yy[0]*(yy[0]-yy[2]) +
-                                            yy[1]*(yy[1]-yy[3]) ) 
+                                            yy[1]*(yy[1]-yy[3]) )
         result[9] = (yy[4]-yy[6])**2 + (yy[5]-yy[7])**2 \
                   + yy[9]*(1./m1+1./m2)*((yy[0]-yy[2])**2 + (yy[1]-yy[3])**2)\
                   + yy[8]/m1 *(yy[0]*(yy[0]-yy[2]) + yy[1]*(yy[1]-yy[3]) )
@@ -241,6 +243,8 @@ class jacindex1(JacFunction):
         m1 = self.dblpend.m1
         m2 = self.dblpend.m2
         g = self.dblpend.g
+        for i in range(10):
+            jac[i][:] = 0.
         jac[0][0] = - yy[9]   - yy[8] 
         jac[0][2] =  yy[9]
         jac[0][4] = cj * m1
@@ -321,7 +325,7 @@ def main():
     solver = ida.IDA(res,
                 compute_initcond='yp0',
                 first_step=1e-18,
-                atol=1e-6,rtol=0.5e-5,
+                atol=ATOL,rtol=RTOL,
                 jacfn=jac,
                 algebraic_vars_idx=problem.algvar_idx,
                 exclude_algvar_from_error=problem.exclalg_err,
@@ -386,8 +390,8 @@ def main():
         #first compute the correct initial condition from the values of z0
         ig.set_integrator('ddaspk',algebraic_var=problem.algvar,
                             compute_initcond='yode0',
-                            first_step=1e-9,
-                            atol=1e-6,rtol=0.5e-5)
+                            first_step=1e-18,
+                            atol=ATOL,rtol=RTOL)
         ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
 
         i=0
@@ -431,8 +435,11 @@ def main():
     pylab.ion()
     pylab.figure(1)
     pylab.subplot(211)
+    pylab.title('IDA solution option %s' % input)
     pylab.scatter(x1t, y1t)
     pylab.scatter(x2t, y2t)
+    pylab.xlim(-10, 10)
+    pylab.ylim(-8, 2)
     pylab.axis('equal')
     pylab.subplot(212)
     pylab.plot(realtime, energy, 'b')
@@ -445,8 +452,11 @@ def main():
         pylab.ion()
         pylab.figure(2)
         pylab.subplot(211)
+        pylab.title('DDASPK solution option %s' % input)
         pylab.scatter(ddaspkx1t, ddaspky1t)
         pylab.scatter(ddaspkx2t, ddaspky2t)
+        pylab.xlim(-10, 10)
+        pylab.ylim(-8, 2)
         pylab.axis('equal')
         pylab.subplot(212)
         pylab.plot(ddaspkrealtime, ddaspkenergy, 'b')
