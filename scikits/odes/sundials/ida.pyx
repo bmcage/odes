@@ -525,7 +525,11 @@ cdef class IDA:
         cdef np.ndarray[DTYPE_t, ndim=1] dae_vars
 
         alg_vars_idx     = opts['algebraic_vars_idx']
-        compute_initcond = opts['compute_initcond'].lower()
+
+        if opts['compute_initcond']:
+            compute_initcond = opts['compute_initcond'].lower()
+        else:
+            compute_initcond = ''
 
         if ((compute_initcond == 'yp0') or
             (opts['exclude_algvar_from_error'] and not alg_vars_idx is None)):
