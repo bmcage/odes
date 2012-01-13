@@ -7,6 +7,12 @@ from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
                           ndarray2DlsMatd,
                           RhsFunction, WrapRhsFunction)
 
+# TODO: parallel implementation: N_VectorParallel
+# TODO: linsolvers: check the output value for errors
+# TODO: flag for indicating the resfn (in set_options) whether is a c-function or python function
+# TODO: unify using float/double/realtype variable
+# TODO: optimize code for compiler
+
 cdef enum: HOOK_FN_STOP = 128
 
 cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
@@ -27,6 +33,11 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
         nv_s2ndarray(yp, yp_tmp)
          
     aux_data.rhs.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
+
+	if parallel_implementation:
+        raise NotImplemented 
+    else:
+        ndarray2nv_s(yp, yp_tmp)
 
     return 0
 
@@ -51,12 +62,10 @@ cdef class CVODE:
             
         """
         
-        
         default_values = {
             'implementation': 'serial',
             'lmm_type': 'BDF', 
             'iter_type': 'NEWTON',
-            # 'use_relaxation': False,
             'rtol': 1e-6, 'atol': 1e-12,
             'linsolver': 'dense',
             'lband': 0,'uband': 0,
@@ -66,7 +75,7 @@ cdef class CVODE:
             'order': 0,
             'max_step_size': 0.,
             'min_step_size': 0.,
-            'first_step': 0.,
+            'first_step_size': 0.,
             'max_steps': 0,
             'bdf_stability_detection': False,
             'max_conv_fails': 0,
@@ -76,9 +85,9 @@ cdef class CVODE:
             'rfn': None,
             # 'jacfn': None
             }
-         
-        self.options  = default_values
-        self.N        = -1
+
+        self.options = default_values
+        self.N       = -1
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
         self.initialized = False
@@ -130,7 +139,7 @@ cdef class CVODE:
         return self._init_step(t0, np_y0)
 
     cpdef _init_step(self, DTYPE_t t0, 
-                    np.ndarray[DTYPE_t, ndim=1] y0):
+                     np.ndarray[DTYPE_t, ndim=1] y0):
 
         cdef dict opts = self.options
 
@@ -150,10 +159,13 @@ cdef class CVODE:
             itert = CV_NEWTON
         else:
             raise ValueError('CVODE:init: Unrecognized iter_type: %s' % iter_type)
+ 
         self.parallel_implementation = (opts['implementation'].lower() == 'parallel')
+        if self.parallel_implementation:
+            raise ValueError('Error: Parallel implementation not implemented !')
         cdef long int N
-        N = <long int>len(y0)
-        
+        N = <long int> np.alen(y0)
+
         if opts['rfn'] == None:
             raise ValueError('The right-hand-side function rfn not assigned '
                               'during ''set_options'' call !')
@@ -168,17 +180,18 @@ cdef class CVODE:
         if self.parallel_implementation:
             raise NotImplemented
         else:
-            self.y0 = N_VMake_Serial(N, <realtype *>y0.data)
-            self.y  = N_VClone(self.y0)
+            self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
+            self.y   = N_VClone(self.y0)
 
         cdef int flag
         cdef void* cv_mem = self._cv_mem
+
         if (cv_mem is NULL) or (self.N != N):
             if (not cv_mem is NULL):
                 CVodeFree(&cv_mem)
             cv_mem = CVodeCreate(lmm, itert)
             if cv_mem is NULL:
-                raise MemoryError('Could not create cv_mem object')
+                raise MemoryError('CVodeCreate:MemoryError: Could not create cv_mem object')
             
             self._cv_mem = cv_mem
             flag = CVodeInit(cv_mem, _rhsfn,  <realtype> t0, self.y0)
@@ -188,8 +201,10 @@ cdef class CVODE:
             raise ValueError('CVodeInit:Error: You should not be here...')
         if flag == CV_ILL_INPUT:
                 raise ValueError('CVode[Re]Init: Ill input')
-        elif (flag == CV_MEM_FAIL) or (flag == CV_MEM_NULL):
-            raise MemoryError('CVode[Re]Init: Memory allocation error')
+        elif flag == CV_MEM_FAIL:
+            raise MemoryError('CV[Re]Init: Memory allocation error')
+        elif flag == IDA_MEM_NULL:
+            raise MemoryError('CVodeCreate: Memory allocation error')
         elif flag == CV_NO_MALLOC:
             raise MemoryError('CVodeReInit: No memory allocated in CVInit.')
 
@@ -199,11 +214,13 @@ cdef class CVODE:
         self.aux_data = CV_data(N)
         self.aux_data.parallel_implementation = self.parallel_implementation
 
-        if not isinstance(opts['rfn'] , RhsFunction):
+        rfn = opts['rfn']
+        if not isinstance(rfn , RhsFunction):
             tmpfun = WrapRhsFunction()
-            tmpfun.set_rhsfn(opts['rfn'])
+            tmpfun.set_rhsfn(rfn)
+            rfn = tmpfun
             opts['rfn'] = tmpfun
-        self.aux_data.res = opts['rfn']
+        self.aux_data.res = rfn
         #self.aux_data.jac = opts['jacfn']
         self.aux_data.user_data = opts['user_data']
 
@@ -213,12 +230,13 @@ cdef class CVODE:
 
         cdef N_Vector atol
         cdef np.ndarray[DTYPE_t, ndim=1] np_atol
-        if not (self.atol is NULL):
+
+       if not (self.atol is NULL):
             N_VDestroy(self.atol)
             self.atol = NULL
         if np.isscalar(opts['atol']):
-            flag = CVodeSStolerances(cv_mem, <realtype> opts['rtol'], 
-                                               <realtype> opts['atol'])
+            flag = CVodeSStolerances(cv_mem, <realtype> opts['rtol'],
+                                             <realtype> opts['atol'])
         else:
             np_atol = np.asarray(opts['atol'])
             if self.parallel_implementation:
@@ -239,12 +257,14 @@ cdef class CVODE:
         CVodeSetMaxNumSteps(cv_mem, <int> opts['max_steps'])
         if lmm_type == 'bdf':
             CVodeSetStabLimDet(cv_mem, <bint> opts['bdf_stability_detection'])
-        CVodeSetInitStep(cv_mem, <realtype> opts['first_step'])
+        if opts['first_step_size'] > 0.:
+            CVodeSetInitStep(cv_mem, <realtype> opts['first_step_size'])
         if (opts['min_step_size'] > 0.):
            CVodeSetMinStep(cv_mem, <realtype> opts['min_step_size'])
-        flag = CVodeSetMaxStep(cv_mem, <realtype> opts['max_step_size'])
-        if flag == CV_ILL_INPUT:
-            raise ValueError('CVodeSetMaxStep: max_step_size is negative or smaller than min_step_size.')
+        if opts['max_step_size'] > 0.:
+            flag = CVodeSetMaxStep(cv_mem, <realtype> opts['max_step_size'])
+            if flag == CV_ILL_INPUT:
+                raise ValueError('CVodeSetMaxStep: max_step_size is negative or smaller than min_step_size.')
         if opts['tcrit'] > 0.:
             CVodeSetStopTime(cv_mem, <realtype> opts['tcrit'])
         if opts['max_nonlin_iters'] > 0:
@@ -254,9 +274,8 @@ cdef class CVODE:
         if opts['nonlin_conv_coef'] > 0:
             CVodeSetNonlinConvCoef(cv_mem, <int> opts['nonlin_conv_coef'])
 
+        # Linsolver
         if iter_type == 'newton':
-            if self.parallel_implementation:
-                raise NotImplementedError
                 
             linsolver = opts['linsolver'].lower()
 
@@ -280,14 +299,19 @@ cdef class CVODE:
                 elif flag == CVDLS_MEM_FAIL:
                     raise MemoryError('CVLapackDense memory allocation error.')
             elif linsolver == 'band':
-                flag = CVBand(cv_mem, N, <int> opts['uband'], 
-                                         <int> opts['lband'])
-                if flag == CVDLS_ILL_INPUT:
-                     raise ValueError('CVBand solver is not compatible'
-                                      ' with the current nvector implementation'
-                                      ' or bandwith outside range.')
-                elif flag == CVDLS_MEM_FAIL:
-                    raise MemoryError('CVBand memory allocation error.')
+                if self.parallel_implementation:
+                    raise ValueError('Linear solver for band matrices can be used'
+                                     'only for serial implementation. Use ''lapackband'' '
+                                     'instead for parallel implementation.')
+                else:
+                    flag = CVBand(cv_mem, N, <int> opts['uband'], 
+                                             <int> opts['lband'])
+                    if flag == CVDLS_ILL_INPUT:
+                        raise ValueError('CVBand solver is not compatible'
+                                         ' with the current nvector implementation'
+                                         ' or bandwith outside range.')
+                    elif flag == CVDLS_MEM_FAIL:
+                        raise MemoryError('CVBand memory allocation error.')
             elif linsolver == 'lapackband':
                 flag = CVLapackBand(cv_mem, N, <int> opts['uband'], 
                                                <int> opts['lband'])
