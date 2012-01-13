@@ -34,7 +34,7 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
          
     aux_data.rhs.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
 
-	if parallel_implementation:
+    if parallel_implementation:
         raise NotImplemented 
     else:
         ndarray2nv_s(yp, yp_tmp)
@@ -203,7 +203,7 @@ cdef class CVODE:
                 raise ValueError('CVode[Re]Init: Ill input')
         elif flag == CV_MEM_FAIL:
             raise MemoryError('CV[Re]Init: Memory allocation error')
-        elif flag == IDA_MEM_NULL:
+        elif flag == CV_MEM_NULL:
             raise MemoryError('CVodeCreate: Memory allocation error')
         elif flag == CV_NO_MALLOC:
             raise MemoryError('CVodeReInit: No memory allocated in CVInit.')
@@ -231,7 +231,7 @@ cdef class CVODE:
         cdef N_Vector atol
         cdef np.ndarray[DTYPE_t, ndim=1] np_atol
 
-       if not (self.atol is NULL):
+        if not (self.atol is NULL):
             N_VDestroy(self.atol)
             self.atol = NULL
         if np.isscalar(opts['atol']):
