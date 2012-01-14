@@ -24,10 +24,12 @@ if lapack_opt:
 
 # Edit following lines if sundials is installed differently!
 INCL_DIRS_SUNDIALS = [os.path.abspath(os.path.dirname(__file__))]
-LIB_DIRS_SUNDIALS = [os.path.abspath(os.path.dirname(__file__)), 
-                     '/usr/lib', '/usr/local/lib/',
+LIB_DIRS_SUNDIALS  = [os.path.abspath(os.path.dirname(__file__)),
+                      '/usr/lib', '/usr/local/lib/',
                     ]
-LIBS_SUNDIALS = ['sundials_ida', 'sundials_nvecserial']
+LIBS_SUNDIALS = ['sundials_nvecserial']
+LIBS_IDA   = ['sundials_ida']
+LIBS_CVODE = ['sundials_cvode']
 
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
@@ -56,7 +58,7 @@ def configuration(parent_package='',top_path=None):
                              depends=['common_defs.c'], 
                              include_dirs=INCL_DIRS_SUNDIALS+INCL_DIRS_LAPACK,
                              library_dirs=LIB_DIRS_SUNDIALS+LIB_DIRS_LAPACK,
-                             libraries=LIBS_SUNDIALS+LIBS_LAPACK)
+                             libraries=LIBS_IDA+LIBS_SUNDIALS+LIBS_LAPACK)
 
         cython(['cvode.pyx'], working_path=base_path)
         config.add_extension("cvode",
@@ -64,7 +66,7 @@ def configuration(parent_package='',top_path=None):
                              depends=['common_defs.c'],
                              include_dirs=INCL_DIRS_SUNDIALS+INCL_DIRS_LAPACK,
                              library_dirs=LIB_DIRS_SUNDIALS+LIB_DIRS_LAPACK,
-                             libraries=LIBS_SUNDIALS+LIBS_LAPACK)
+                             libraries=LIBS_CVODE+LIBS_SUNDIALS+LIBS_LAPACK)
     return config
 
 if __name__ == '__main__':
