@@ -18,10 +18,10 @@ m = 1.0
 initx = [1, 0.1]
 
 #define function for the right-hand-side equations which has specific signature
-def rhseqn(t, x, xdot, result):
+def rhseqn(t, x, xdot, userdata):
     """ we create rhs equations for the problem"""
-    result[0] = - k/m * x[0]
-    result[1] = x[1]
+    xdot[0] = - k/m * x[0]
+    xdot[1] = x[1]
     
 #instantiate the solver
 from scikits.odes.sundials import cvode
@@ -29,13 +29,16 @@ solver = cvode.CVODE(rhseqn)
 #obtain solution at a required time
 result = solver.solve([0., 1., 2.], initx)
 
-print ('t - Solution - Exact')
+print('\n   t        Solution          Exact')
+print('------------------------------------')
 for t, u in zip(result[1], result[2]):
-    print (t, u[0], '    - ', initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m))
+    print('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
 
 #continue the solver
 result = solver.solve([result[1][-1], result[1][-1]+1], result[2][-1])
-print ('Continuation of the solution')
-print ('t - Solution - Exact')
+print('------------------------------------')
+print('  ...continuation of the solution')
+print('------------------------------------')
+
 for t, u in zip(result[1], result[2]):
-    print (t, u[0], '    - ', initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m))
+    print ('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
