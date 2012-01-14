@@ -2,4 +2,4 @@
 # odes - Extra ode integrators
 #
 
-from .ida import *
+#from .ida import *
