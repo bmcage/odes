@@ -20,7 +20,7 @@ cdef class RhsFunction:
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        object userdata = *)
 cdef class WrapRhsFunction(RhsFunction):
-    cpdef object _rhs_fn
+    cpdef object _rhsfn
     cpdef set_rhsfn(self, object rhsfn)
 
 cdef class JacFunction:

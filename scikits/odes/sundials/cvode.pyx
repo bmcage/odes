@@ -9,7 +9,7 @@ from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
-# TODO: flag for indicating the resfn (in set_options) whether is a c-function or python function
+# TODO: flag for indicating the rhsfn (in set_options) whether is a c-function or python function
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
 
@@ -32,7 +32,7 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
          
-    aux_data.rhs.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
+    aux_data.rfn.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
 
     if parallel_implementation:
         raise NotImplemented 
@@ -96,8 +96,6 @@ cdef class CVODE:
         """ 
         Reads the options list and assigns values for the solver.
         
-        Mandatory options are: 'resfn'.
-        
         All options list:
             'implementation':
                 Values: 'serial' (= default), 'parallel'
@@ -120,9 +118,9 @@ cdef class CVODE:
                 Description:
                     See 'lmm_type'.
             'rfn':
-                Values: function of class ResFunction or a python function with signature (t, y, yp, resultout)
+                Values: function of class RhsFunction or a python function with signature (t, y, yp, resultout)
                 Description:
-                    Defines the right-hand-side function (which has to be a subclass of ResFunction class, or a normal python function with signature (t, y, yp, resultout) ).
+                    Defines the right-hand-side function (which has to be a subclass of RhsFunction class, or a normal python function with signature (t, y, yp, resultout) ).
                     This function takes as input arguments current time t, current value of y, yp, numpy array of returned residual
                     and optional userdata. Return value is 0 if successfull.
                     This option is mandatory.
@@ -220,7 +218,7 @@ cdef class CVODE:
             tmpfun.set_rhsfn(rfn)
             rfn = tmpfun
             opts['rfn'] = tmpfun
-        self.aux_data.res = rfn
+        self.aux_data.rfn = rfn
         #self.aux_data.jac = opts['jacfn']
         self.aux_data.user_data = opts['user_data']
 
@@ -376,7 +374,7 @@ cdef class CVODE:
 
         cdef np.ndarray[DTYPE_t, ndim=1] t_retn
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn
-        t_retn  = np.empty([np.shape(tspan), ], float)
+        t_retn  = np.empty(np.shape(tspan), float)
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
             
         self._init_step(tspan[0], y0)

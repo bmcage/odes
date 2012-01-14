@@ -1,12 +1,12 @@
 cimport numpy as np
 from c_sundials cimport N_Vector, realtype
-from common_defs cimport ResFunction, JacFunction
+from common_defs cimport RhsFunction, JacFunction
 
 ctypedef np.float_t DTYPE_t
 
 cdef class CV_data:
     cdef np.ndarray yy_tmp, yp_tmp, jac_tmp
-    cdef ResFunction res
+    cdef RhsFunction rfn
     cdef JacFunction jac
     cdef bint parallel_implementation
     cdef object user_data
@@ -18,6 +18,7 @@ cdef class CVODE:
     cdef bint parallel_implementation, initialized
     cdef CV_data aux_data
 
+    cdef long int N #problem size, i.e. len(y0) = N
     cdef N_Vector y0, y, yp # for 'step' method
 
     # Functions
