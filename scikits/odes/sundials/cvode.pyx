@@ -380,6 +380,8 @@ cdef class CVODE:
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
             
         self._init_step(tspan[0], y0)
+        t_retn[0] = tspan[0]
+        y_retn[0, :] = y0
 
         cdef np.ndarray[DTYPE_t, ndim=1] y_last
         cdef unsigned int idx
