@@ -20,8 +20,8 @@ initx = [1, 0.1]
 #define function for the right-hand-side equations which has specific signature
 def rhseqn(t, x, xdot):
     """ we create rhs equations for the problem"""
-    xdot[0] = - k/m * x[0]
-    xdot[1] = x[1]
+    xdot[0] = x[1]
+    xdot[1] = - k/m * x[0]
     
 #instantiate the solver
 from scikits.odes.sundials import cvode
