@@ -1,5 +1,6 @@
 import numpy as np
 cimport numpy as np
+import inspect
 from c_sundials cimport (N_Vector, nv_content_data_s, nv_content_s, nv_length_s,
                         nv_data_s, get_nv_ith_s, set_nv_ith_s, get_dense_col,
                         get_dense_N, set_dense_element,
@@ -14,10 +15,16 @@ cdef class ResFunction:
         return 0
 
 cdef class WrapResFunction(ResFunction):
+    
     cpdef set_resfn(self, object resfn):
         """
         set some residual equations as a ResFunction executable class
         """
+        nrarg = len(inspect.getargspec(resfn)[0])
+        if nrarg == 5:
+            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._resfn = resfn
 
     cpdef int evaluate(self, DTYPE_t t,
@@ -25,7 +32,10 @@ cdef class WrapResFunction(ResFunction):
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] result,
                        object userdata = None):
-        self._resfn(t, y, ydot, result, userdata)
+        if self.with_userdata == 1:
+            self._resfn(t, y, ydot, result, userdata)
+        else:
+            self._resfn(t, y, ydot, result)
         return 0
 
 cdef class RhsFunction:
@@ -40,13 +50,21 @@ cdef class WrapRhsFunction(RhsFunction):
         """
         set some residual equations as a RhsFunction executable class
         """
+        nrarg = len(inspect.getargspec(rhsfn)[0])
+        if nrarg == 4:
+            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._rhsfn = rhsfn
 
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        object userdata = None):
-        self._rhsfn(t, y, ydot, userdata)
+        if self.with_userdata == 1:
+            self._rhsfn(t, y, ydot, userdata)
+        else:
+            self._rhsfn(t, y, ydot)
         return 0
 
 cdef class JacFunction:

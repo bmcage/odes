@@ -12,6 +12,7 @@ cdef class ResFunction:
 
 cdef class WrapResFunction(ResFunction):
     cdef object _resfn
+    cdef int with_userdata
     cpdef set_resfn(self, object resfn)
 
 cdef class RhsFunction:
@@ -21,6 +22,7 @@ cdef class RhsFunction:
                        object userdata = *)
 cdef class WrapRhsFunction(RhsFunction):
     cpdef object _rhsfn
+    cdef int with_userdata
     cpdef set_rhsfn(self, object rhsfn)
 
 cdef class JacFunction:

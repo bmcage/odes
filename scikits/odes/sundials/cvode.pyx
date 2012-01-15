@@ -30,7 +30,7 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
         yp_tmp = aux_data.yp_tmp
              
         nv_s2ndarray(yy, yy_tmp)
-        nv_s2ndarray(yp, yp_tmp)
+        #nv_s2ndarray(yp, yp_tmp)
          
     aux_data.rfn.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
 
@@ -118,11 +118,12 @@ cdef class CVODE:
                 Description:
                     See 'lmm_type'.
             'rfn':
-                Values: function of class RhsFunction or a python function with signature (t, y, yp, resultout)
+                Values: function of class RhsFunction or a python function with signature (t, y, yp) or
+                        (t, y, yp, userdata)
                 Description:
-                    Defines the right-hand-side function (which has to be a subclass of RhsFunction class, or a normal python function with signature (t, y, yp, resultout) ).
-                    This function takes as input arguments current time t, current value of y, yp, numpy array of returned residual
-                    and optional userdata. Return value is 0 if successfull.
+                    Defines the right-hand-side function (which has to be a subclass of RhsFunction class, or a normal python function with signature (t, y, yp) or (t, y, yp, userdata)).
+                    This function takes as input arguments current time t, current value of y, and yp must be used as output numpy array of returned values of \dot{y} at t
+                    Optional userdata. Return value is 0 if successfull.
                     This option is mandatory.
         """
 
@@ -180,6 +181,7 @@ cdef class CVODE:
         else:
             self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
             self.y   = N_VClone(self.y0)
+            self.yp = N_VNew_Serial(N)
 
         cdef int flag
         cdef void* cv_mem = self._cv_mem
