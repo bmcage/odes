@@ -31,17 +31,15 @@ class dae
 A generic interface class to differential algebraic equations. 
 It has the following methods::
 
-    integrator = dae(res,jac=None)
-    integrator = integrator.set_integrator(name,**params)
-    integrator = integrator.set_initial_value(y0,yprime0, t=0.0)
-    y1, y1prime = integrator.solve(t1,step=0,relax=0)
-    flag = integrator.successful()
+    integrator = dae(integrator_name, resfn, **options)
+    integrator.set_options(options)
+    result = integrator.solve(times, init_val_y, init_val_yp, user_data)
 
-res and jac need to have the signature as required by the integrator name. If
-you need to pass extra arguments to jac, use eg a python class method : 
-    problem = Myproblem()
-    integrator = dae(problem.res,problem.jac)
-Allowing the extra parameters to be kept in the Myproblem class
+Alternatively, an init_step, and step method can be used to iterate over a 
+solution.
+
+For dae resfn is required, this is the residual equations evaluator
+function, which must satisfy a specific signature.
 """
 
 from __future__ import print_function
@@ -79,8 +77,8 @@ should be a nxn shaped array in general or a banded shaped array as per the
 definition of lband/uband below. Jac is optional. 
 Note that jac is defined as dres(i)/dy(j) + cj*dres(i)/dyprime(j)
 
-This integrator accepts the following parameters in the set_integrator()
-method of the ode class:
+This integrator accepts the following parameters in the initializer or 
+set_options method of the dae class:
 
 - atol : float or sequence of length i
   absolute tolerance for solution
@@ -143,7 +141,8 @@ Solver developed during the 1980s, this is the version from 1987 - Fortran
 
 Integrator for linearly implicit systems of first-order odes.  lsodi
 provides the same methods as vode (adams and bdf).  This integrator
-accepts the following parameters in set_integrator() method of the ode class:
+accepts the following parameters in initializer or set_options method of the 
+dae class:
            atol=float|seq
            rtol=float
            lband=None|int
@@ -254,62 +253,152 @@ __all__ = ['dae']
 __version__ = "$Id$"
 __docformat__ = "restructuredtext en"
 
-from numpy import asarray, array, zeros, sin, int32, isscalar
+from numpy import asarray, array, zeros, sin, int32, isscalar, empty, alen
+from copy import copy
 import re, sys
 
-class DaeIntegratorBase(object):
-
-    runner = None            # runner is None => integrator is not available
-    success = None           # success==1 if integrator was called successfully
-    supports_run_relax = None
-    supports_step = None
+class DaeBase(object):
+    """ the interface which DAE solvers must implement"""
+    
     integrator_classes = []
-    scalar = float
-    printinfo = False
+
+    def __init__(self, Rfn, **options):
+        """
+        Initialize the DAE Solver and it's default values
+
+        Input:
+            Rfn     - residual function
+            options - additional options for initialization
+        """
+        raise NotImplementedError('all DAE solvers must implement this')
+
+    def set_options(self, **options):
+        """
+        Set specific options for the solver.
+        """
+        raise NotImplementedError('all DAE solvers must implement this')
+
     
-    name = ''
-
-    def set_init_val(self, y, yprime, t, res, jac=None):
-        """Some backends might need initial values to set up themselves.
-           Note that the run routines also are passed init values!
+    def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
         """
-        self.res = res
-        self.jac = jac or (lambda :None)
+        Initializes the solver and allocates memory.
 
-    def reset(self, n, has_jac):
-        """Prepare integrator for call: allocate memory, set flags, etc.
-        n - number of equations
-        has_jac - if user has supplied function for evaluating Jacobian.
+        Input:
+            t0     - initial time
+            y0     - initial condition for y (can be list or numpy array)
+            yp0    - initial condition for yp (can be list or numpy array)
+            y_ic0  - (optional) returns the calculated consistent initial condition for y
+                     It MUST be a numpy array.
+            yp_ic0 - (optional) returns the calculated consistent initial
+                     condition for y derivated. It MUST be a numpy array.
         """
+        raise NotImplementedError('all DAE solvers must implement this')
 
-    def run(self, y0, yprime0, t0, t1):
-        """Integrate from t=t0 to t=t1 using y0 and yprime0as an initial 
-        condition.
-        Return 4-tuple (y1,y1prime,t1,istate) where y1,y1prime is the result 
-        and t=t1 defines the stoppage coordinate of the result.
+    def solve(self, tspan, y0,  yp0, hook_fn = None):
         """
-        raise NotImplementedError('all daeintegrators must define run(t0,t1,y0,yprime0,')
-        'res_params,jac_params)'
-
-    def step(self, y0, yprime0, t0, t1):
-        """Make one integration step and return (y1,t1)."""
-        raise NotImplementedError('%s does not support step() method' %\
-              (self.__class__.__name__))
-
-    def run_relax(self,y0,yprime0,t0,t1):
-        """Integrate from t=t0 to t>=t1 and return (y1,t)."""
-        raise NotImplementedError('%s does not support run_relax() method' %\
-              (self.__class__.__name__))
-    
-    def set_tcrit(self, tcrit=None):
-        """Change the tcrit value if possible in the solver without 
-            reinitializing the running solver
+        Runs the solver.
+        
+        Input:
+            tspan - an list/array of times at which the computed value will be
+                    returned. Must contain the start time.
+            y0    - list/numpy array of initial values
+            yp0   - list/numpy array of initial values of derivatives
+            hook_fn  - if set, this function is evaluated after each successive 
+                       internal) step. Input values: t, x, xdot, userdata. 
+                       Output is 0 (success), otherwise computation is stopped 
+                      and a return flag = ? is set. Values are stored in (see) t_err, y_err, yp_err
+            
+        Return values:
+            flag   - indicating return status of the solver
+            t      - numpy array of times at which the computations were successful
+            y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+            yp     - numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])
+            t_err  - float or None - if recoverable error occured (for example reached maximum
+                     number of allowed iterations), this is the time at which it happened
+            y_err  - numpy array of values corresponding to time t_err
+            yp_err - numpy array of derivatives corresponding to time t_err
+            
+        Note:
+            If 'calc_initcond' option set, then solver returns instead of user 
+            supplied y0, yp0 values as the starting values the values calculated 
+            by the solver (i.e. consistent initial
+            conditions. The starting time is then also the precomputed time.
         """
-        raise NotImplementedError
+        raise NotImplementedError('all DAE solvers must implement this')
+
+    def step(self, t, y_retn, yp_retn = None):
+        """
+        Method for calling successive next step of the IDA solver to allow
+        more precise control over the IDA solver. The 'init_step' method has to
+        be called before the 'step' method.
+        
+        Input:
+            t - if t>0.0 then integration is performed until this time
+                         and results at this time are returned in y_retn
+              - if t<0.0 only one internal step is perfomed towards time abs(t)
+                         and results after this one time step are returned
+            y_retn - numpy vector (ndim = 1) in which the computed
+                     value will be stored  (needs to be preallocated)
+            yp_retn - numpy vector (ndim = 1) or None. If not None, will be
+                      filled (needs to be preallocated)
+                      with derivatives of y at time t.
+        Return values:
+            flag  - status of the computation (successful or error occured)
+            t_out - time, where the solver stopped (when no error occured, t_out == t)
+        """
+        
+##
+##    runner = None            # runner is None => integrator is not available
+##    success = None           # success==1 if integrator was called successfully
+##    supports_run_relax = None
+##    supports_step = None
+##    integrator_classes = []
+##    scalar = float
+##    printinfo = False
+##    
+##    name = ''
+##
+##    def set_init_val(self, y, yprime, t, res, jac=None):
+##        """Some backends might need initial values to set up themselves.
+##           Note that the run routines also are passed init values!
+##        """
+##        self.res = res
+##        self.jac = jac or (lambda :None)
+##
+##    def reset(self, n, has_jac):
+##        """Prepare integrator for call: allocate memory, set flags, etc.
+##        n - number of equations
+##        has_jac - if user has supplied function for evaluating Jacobian.
+##        """
+##
+##    def run(self, y0, yprime0, t0, t1):
+##        """Integrate from t=t0 to t=t1 using y0 and yprime0as an initial 
+##        condition.
+##        Return 4-tuple (y1,y1prime,t1,istate) where y1,y1prime is the result 
+##        and t=t1 defines the stoppage coordinate of the result.
+##        """
+##        raise NotImplementedError('all daeintegrators must define run(t0,t1,y0,yprime0,')
+##        'res_params,jac_params)'
+##
+##    def step(self, y0, yprime0, t0, t1):
+##        """Make one integration step and return (y1,t1)."""
+##        raise NotImplementedError('%s does not support step() method' %\
+##              (self.__class__.__name__))
+##
+##    def run_relax(self,y0,yprime0,t0,t1):
+##        """Integrate from t=t0 to t>=t1 and return (y1,t)."""
+##        raise NotImplementedError('%s does not support run_relax() method' %\
+##              (self.__class__.__name__))
+##    
+##    def set_tcrit(self, tcrit=None):
+##        """Change the tcrit value if possible in the solver without 
+##            reinitializing the running solver
+##        """
+##        raise NotImplementedError
 
     #XXX: __str__ method for getting visual state of the integrator
 
-class ddaspk(DaeIntegratorBase):
+class ddaspk(DaeBase):
     __doc__ += integrator_info_ddaspk
     
     try:
@@ -317,7 +406,7 @@ class ddaspk(DaeIntegratorBase):
     except ImportError:
         print(sys.exc_info()[1])
         _ddaspk = None
-    runner = getattr(_ddaspk,'ddaspk',None)
+    _runner = getattr(_ddaspk,'ddaspk',None)
     name = 'ddaspk'
 
     messages = { 1: 'A step was successfully taken in the '
@@ -367,70 +456,118 @@ class ddaspk(DaeIntegratorBase):
     supports_run_relax = 0
     supports_step = 1
 
-    def __init__(self,
-                 rtol=1e-6,atol=1e-12,
-                 lband=None,uband=None,
-                 tcrit=None, 
-                 order = 5,
-                 nsteps = 500,
-                 max_step = 0.0, # corresponds to infinite
-                 first_step = 0.0, # determined by solver
-                 enforce_nonnegativity=False, 
-                 nonneg_type=None, 
-                 compute_initcond=None,
-                 constraint_init=False, 
-                 constraint_type=None, 
-                 algebraic_var=None, 
-                 exclude_algvar_from_error=False, 
-                 ):
+    def __init__(self,resfn, **options):
+        default_values = {
+            'rtol':1e-6,
+            'atol':1e-12,
+            'lband':None,
+            'uband':None,
+            'tcrit':None, 
+            'order' : 5,
+            'nsteps' : 500,
+            'max_step' : 0.0, # corresponds to infinite
+            'first_step' : 0.0, # determined by solver
+            'enforce_nonnegativity':False, 
+            'nonneg_type':None, 
+            'compute_initcond':None,
+            'constraint_init':False, 
+            'constraint_type':None, 
+            'algebraic_var':None, 
+            'exclude_algvar_from_error':False, 
+            'rfn': None,
+            'jacfn': None,
+            }
+        self.t = None
+        self.y = None
+        self.yp = None
+        self.options = default_values
+        self.set_options(rfn=resfn, **options)
+        self.initialized = False
 
-        self.rtol = rtol
-        self.atol = atol
-        self.mu = uband
-        self.ml = lband
+    def set_options(self, **options):
+        for (key, value) in options.items():
+            self.options[key.lower()] = value
+        self.initialized = False
+        
+    def _init_data(self):
+        self.rtol = self.options['rtol']
+        self.atol = self.options['atol']
+        self.mu = self.options['uband']
+        self.ml = self.options['lband']
 
-        self.tcrit = tcrit
-        if order > 5 or order < 1:
+        self.tcrit = self.options['tcrit']
+        if self.options['order'] > 5 or self.options['order'] < 1:
             raise ValueError('order should be >=1, <=5')
-        self.order = order
-        self.nsteps = nsteps
-        self.max_step = max_step
-        self.first_step = first_step
+        self.order = self.options['order']
+        self.nsteps = self.options['nsteps']
+        self.max_step = self.options['max_step']
+        self.first_step = self.options['first_step']
         self.nonneg =0 
-        if enforce_nonnegativity and constraint_init: self.nonneg = 3
-        elif enforce_nonnegativity: self.nonneg = 2
-        elif constraint_init: self.nonneg = 1
-        if (self.nonneg == 1 or self.nonneg == 3) and constraint_type is None:
+        if self.options['enforce_nonnegativity'] and self.options['constraint_init']: 
+            self.nonneg = 3
+        elif self.options['enforce_nonnegativity']: 
+            self.nonneg = 2
+        elif self.options['constraint_init']: 
+            self.nonneg = 1
+        if (self.nonneg == 1 or self.nonneg == 3) and self.options['constraint_type'] is None:
             raise ValueError('Give type of init cond contraint as '\
                               'an int array (>=0, >0, <=0, <0) or as int')
-        else: self.constraint_type = constraint_type
-        if compute_initcond is None: self.compute_initcond = 0
-        elif re.match(compute_initcond,r'yprime0',re.I): 
+        else: self.constraint_type = self.options['constraint_type']
+        if self.options['compute_initcond'] is None: 
+            self.compute_initcond = 0
+        elif re.match(self.options['compute_initcond'], r'yprime0', re.I): 
             self.compute_initcond = 2
-        elif re.match(compute_initcond,r'yode0',re.I): self.compute_initcond = 1
-        else: raise ValueError('Unknown init cond calculation method %s' %(
-                                                            compute_initcond))
-        if self.compute_initcond == 1 and algebraic_var is None:
+        elif re.match(self.options['compute_initcond'], r'yode0', re.I): 
+            self.compute_initcond = 1
+        else: 
+            raise ValueError('Unknown init cond calculation method %s' %(
+                                            self.options['compute_initcond']))
+        if self.compute_initcond == 1 and self.options['algebraic_var'] is None:
             raise ValueError('Give integer array indicating which are the '\
                               'algebraic variables, +1 for diffential var, '\
                               '-1 for algebraic var')
-        self.algebraic_var = algebraic_var
-        self.excl_algvar_err = exclude_algvar_from_error
+        self.algebraic_var = self.options['algebraic_var']
+        self.excl_algvar_err = self.options['exclude_algvar_from_error']
+
         self.success = 1
-
-    def set_tcrit(self, tcrit=None):
-        """Change the tcrit value if possible in the solver without 
-            reinitializing the running solver
-        """
-        self.tcrit = tcrit
-        if self.tcrit is not None:
-            self.info[3] = 1
-            self.rwork[0] = self.tcrit
+    
+    def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
+        self._init_data()
+        self.y0 = y0
+        self.yp0 = yp0
+        self.t = t0
+        self._reset(len(y0), self.options['jacfn'] is not None)
+        
+        if self.compute_initcond:
+            if self.first_step <= 0.:
+                first_step = 1e-18
+            else:
+                first_step = self.first_step
+            self.y, self.yp, t = self.__run([3, 4], y0, yp0, t0, t0 + first_step)
+            t0_init = t
+            if not y_ic0_retn is None: y_ic0_retn[:] = self.y[:]
+            if not yp_ic0_retn is None: yp_ic0_retn[:] = self.yp[:]
         else:
-            self.info[3] = 0
-            self.rwork[0] = 0.
+            self.y = copy(y0)
+            self.yp = copy(yp0)
+            t0_init = t0
 
-    def reset(self, n, has_jac):
+        self.initialized = True
+        return t0_init
+
+##    def set_tcrit(self, tcrit=None):
+##        """Change the tcrit value if possible in the solver without 
+##            reinitializing the running solver
+##        """
+##        self.tcrit = tcrit
+##        if self.tcrit is not None:
+##            self.info[3] = 1
+##            self.rwork[0] = self.tcrit
+##        else:
+##            self.info[3] = 0
+##            self.rwork[0] = 0.
+
+    def _reset(self, n, has_jac):
         # Calculate parameters for Fortran subroutine ddaspk.
         self.neq = n
         self.info = zeros((20,), int32)  # default is all info=0
@@ -494,6 +631,13 @@ class ddaspk(DaeIntegratorBase):
         ## some overrides that one might want
         # self.info[17] = 1  # minimal printing inside init cond calc
         # self.info[17] = 2  # full printing inside init cond calc
+        if self.tcrit is not None:
+            self.info[3] = 1
+            self.rwork[0] = self.tcrit
+        else:
+            self.info[3] = 0
+            self.rwork[0] = 0.
+
         self.iwork = iwork
         
         self.call_args = [self.info,self.rtol,self.atol,self.rwork,self.iwork]
@@ -510,34 +654,65 @@ class ddaspk(DaeIntegratorBase):
         self.jac( t, y, yp, cj, jc)
         return jc
 
-    def _run(self, states, *args):
+    def solve(self, tspan, y0,  yp0, hook_fn = None):
+        
+        t_retn  = empty([alen(tspan), ], float)
+        y_retn  = empty([alen(tspan), alen(y0)], float)
+        yp_retn = empty([alen(tspan), alen(y0)], float)
+        
+        y_ic0_retn  = empty(alen(y0), float)
+        yp_ic0_retn  = empty(alen(y0), float)
+        tinit = self.init_step(tspan[0], y0, yp0, y_ic0_retn, yp_ic0_retn)
+        
+        t_retn[0] = tinit
+        y_retn[0,:] = y0[:]
+        yp_retn[0, :] = yp0[:]
+        for ind, time in enumerate(tspan[1:]):
+            if not self.success:
+                break
+            result = self.__run([2, 3], y_retn[ind], yp_retn[0], t_retn[ind], time)
+            t_retn[ind+1] = result[2]
+            y_retn[ind+1][:] = result[0][:]
+            yp_retn[ind+1][:] = result[1][:]
+        self.t = t_retn[-1]
+        return self.success, t_retn, y_retn, yp_retn, None, None, None
+
+    def __run(self, states, *args):
         # args are: y0,yprime0,t0,t1,res_params,jac_params
-        y1,y1prime,t,istate = self.runner(*( (self.res, self._jacFn) \
+        y1, y1prime, t, self.flag = self._runner(*( (self.options['rfn'], self._jacFn) \
                                            + args[:4] + tuple(self.call_args)))
-        if istate <0:
-            print('ddaspk:',self.messages.get(istate,'Unexpected istate=%s' % 
-                                              istate))
+        if self.flag < 0:
+            print('ddaspk:',self.messages.get(self.flag,
+                                        'Unexpected istate=%s' % self.flag))
             self.success = 0
-        elif istate not in states:
-            print('ddaspk: Run successfull. Unexpected istate=%s, stopping' % \
-                                            istate)
-            print(self.messages.get(istate, 'Unknown istate=%s' % istate))
+        elif self.flag not in states:
+            print('ddaspk: Run successfull. Unexpected istate=%s, stopping' %
+                                            self.flag)
+            print(self.messages.get(self.flag, 'Unknown istate=%s' % self.flag))
             self.success = 0
-        return y1,y1prime,t
+        return y1, y1prime, t
 
-    def run(self, *args):
-        return self._run([2, 3], *args)
+    def step(self, t, y_retn, yp_retn = None):
+        if not self.initialized:
+            raise ValueError('Method ''init_step'' has to be called prior to the'
+                    'first call of ''step'' method, or after changing options')
+            yp_retn = empty(alen(y_retn), float)
+        if t > 0.0:
+            self.y, self.yp, self.t = self.__run([2, 3], self.y, self.yp, self.t, self.t+t)
+        else:
+            self.info[2] = 1
+            self.y, self.yp, self.t = self.__run([1, 2], self.y, self.yp, self.t, self.t-t)
+            self.info[2] = 0
+        y_retn[:] = self.y[:]
+        if yp_retn is not None:
+            yp_retn[:] = self.yp[:]
+        
+        return self.flag, self.t
 
-    def step(self,*args):
-        self.info[2] = 1
-        r = self._run([1, 2], *args)
-        self.info[2] = 0
-        return r
+if ddaspk._runner:
+    DaeBase.integrator_classes.append(ddaspk)
 
-if ddaspk.runner:
-    DaeIntegratorBase.integrator_classes.append(ddaspk)
-
-class lsodi(DaeIntegratorBase):
+class lsodi(DaeBase):
     __doc__ += integrator_info_ddaspk
 
     try:
@@ -743,7 +918,7 @@ class lsodi(DaeIntegratorBase):
         return r
 
 if lsodi.runner:
-    DaeIntegratorBase.integrator_classes.append(lsodi)
+    DaeBase.integrator_classes.append(lsodi)
 
 ##try:
 ##    from .odes_ida import odesIDA, integrator_info_ida
@@ -829,7 +1004,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
 
     __doc__ += integrator_info
 
-    def __init__(self, res, jac=None):
+    def __init__(self, integrator_name, eqsres, **options):
         """
         Define equation res = G(t,y,y') which can eg be G = f(y,t) - A y' when 
         solving A y' = f(y,t), 
@@ -856,102 +1031,32 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             jac_args is determined by the solver backend, set it as required by
             the backend you use
         """
-        self.res = res
-        self.jac  = jac
-        self.y = []
-        self.yprime = []
-
-    def set_initial_value(self, y, yprime, t=0.0):
-        """Set initial conditions y(t) = y, y'(t) = yprime """
-        if isscalar(y):
-            y = [y]
-        if isscalar(yprime):
-            yprime = [yprime]
-        n_prev = len(self.y)
-        if not n_prev:
-            self.set_integrator('') # find first available integrator
-        self.y = asarray(y, self._integrator.scalar)
-        self.yprime = asarray(yprime, self._integrator.scalar)
-        self.t = t
-        self._integrator.set_init_val(self.y, self.yprime, self.t, 
-                                        self.res, self.jac)
-        self._integrator.reset(len(self.y), self.jac is not None)
-        return self
-
-    def set_integrator(self, name, **integrator_params):
-        """
-        Set integrator by name.
-
-        Parameters
-        ----------
-        name : str
-            Name of the integrator
-        integrator_params
-            Additional parameters for the integrator.
-        """
-        integrator = find_dae_integrator(name)
+        
+        integrator = find_dae_integrator(integrator_name)
         if integrator is None:
             raise ValueError('No integrator name match with %s or is not available.'\
-                  %(repr(name)))
+                  %(repr(integrator_name)))
         else:
-            self._integrator = integrator(**integrator_params)
-            if not len(self.y):
-                self.t = 0.0
-                self.y = array([0.0], self._integrator.scalar)
-        return self
+            self._integrator = integrator(eqsres, **options)
 
-    def solve(self, t, step=0, relax=0):
-        """Find y=y(t), and y'=y'(t) solution of the dae. 
-           If step, then one internal step is taken (use this if much output is
-                    needed). 
-           If relax, then the solution is returned based on the first internal 
-                    point at or over the requested endtime
-        """
-        if step and self._integrator.supports_step:
-            mth = self._integrator.step
-        elif relax and self._integrator.supports_run_relax:
-            mth = self._integrator.run_relax
-        else:
-            mth = self._integrator.run
-        self.y, self.yprime, self.t = mth(self.y, self.yprime, self.t, t)
-        return self.y,  self.yprime
-
-    def change_tcrit(self, tcrit=None):
-        """Change the value of tcrit on a running solver between steps
-        """
-        self._integrator.set_tcrit(tcrit)
-
-    def print_info(self, info=True):
-        """If the backend supports it, the next solve method will output
-           relevant info about the solution step if info=True, no output
-            when info=False
-        """
-        self._integrator.printinfo = info
-
-    def successful(self):
-        """Check if integration was successful."""
-        try: self._integrator
-        except AttributeError: self.set_integrator('')
-        return self._integrator.success==1
-    
-    # New methods inteded to replace previous ones
     def set_options(self, **options):
-        self._integrator.set_options(options)
-    def run_solver(self, tspan, y0, yp0):
-        tspan_in = np.asarray(tspan, float)
-        y0_in    = np.asarray(y0, float)
-        yp0_in   = np.asarray(yp0, float)
-        
-        assert (len(y0) == len(yp0), 'Length of y0 and yp0 has to be the same.')
-        
-        self._integrator.run_solver(tspan_in, y0_in, yp0_in)
+        self._integrator.set_options(**options)
+
+    def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
+        return self._integrator.init_step(t0, y0, yp0, y_ic0_retn, yp_ic0_retn)
+
+    def solve(self, tspan, y0,  yp0, hook_fn = None):
+        return self._integrator.solve(tspan, y0,  yp0, hook_fn)
+
+    def step(self, t, y_retn, yp_retn = None):
+        return self._integrator.step(t, y_retn, yp_retn)
 
 #------------------------------------------------------------------------------
 # DAE integrators
 #------------------------------------------------------------------------------
 
 def find_dae_integrator(name):
-    for cl in DaeIntegratorBase.integrator_classes:
+    for cl in DaeBase.integrator_classes:
         if re.match(name, cl.__name__, re.I) or re.match(name, cl.name, re.I):
             return cl
     return

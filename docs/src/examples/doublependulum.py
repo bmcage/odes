@@ -405,7 +405,7 @@ def main():
 
         ig.set_integrator('ddaspk',algebraic_var=problem.algvar,
                             first_step=1e-9,
-                            atol=1e-6,rtol=0.5e-5, #atol=1e-8,rtol=1e-8,
+                            atol=ATOL, rtol=RTOL, #atol=1e-8,rtol=1e-8,
                             exclude_algvar_from_error=problem.exclalg_err,
                             nsteps = 1500)
         ig.set_initial_value(ddaspkz[0], ddaspkzprime[0], t=0.0)
