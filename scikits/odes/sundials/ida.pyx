@@ -636,7 +636,7 @@ cdef class IDA:
         return self._solve(np_tspan, np_y0, np_yp0, hook_fn)
         
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan, 
-                       np.ndarray[DTYPE_t, ndim=1]y0, 
+                       np.ndarray[DTYPE_t, ndim=1] y0, 
                        np.ndarray[DTYPE_t, ndim=1] yp0,
                        hook_fn = None):
         
@@ -701,7 +701,7 @@ cdef class IDA:
                                 IDA_NORMAL)
 
                 nv_s2ndarray(y,  y_last)
-                nv_s2ndarray(y,  yp_last)
+                nv_s2ndarray(yp,  yp_last)
 
                 if flag < 0:
                     print('Error occured. See returned flag '
