@@ -442,6 +442,22 @@ cdef class CVODE:
         return flag, t_retn, y_retn, None, None
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
+        """
+        Method for calling successive next step of the CVODE solver to allow
+        more precise control over the solver. The 'init_step' method has to
+        be called before the 'step' method.
+        
+        Input:
+            t - if t>0.0 then integration is performed until this time
+                         and results at this time are returned in y_retn
+              - if t<0.0 only one internal step is perfomed towards time abs(t)
+                         and results after this one time step are returned
+            y_retn - numpy vector (ndim = 1) in which the computed
+                     value will be stored  (needs to be preallocated)
+        Return values:
+            flag  - status of the computation (successful or error occured)
+            t_out - time, where the solver stopped (when no error occured, t_out == t)
+        """
         if not self.initialized:
             raise ValueError('Method ''init_step'' has to be called prior to the'
                              'first call of ''step'' method.')
