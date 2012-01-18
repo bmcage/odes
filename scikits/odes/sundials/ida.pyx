@@ -5,7 +5,8 @@ from c_sundials cimport realtype, N_Vector
 from c_ida cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
                           ndarray2DlsMatd,
-                          ResFunction, WrapResFunction)
+                          ResFunction, WrapResFunction,
+                          JacFunction, WrapJacFunction)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
@@ -49,6 +50,8 @@ cdef int _jacdense(int Neq, realtype tt, realtype cj,
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
     cdef np.ndarray jac_tmp
     
+    print ('********** T0 *********')
+    
     aux_data = <IDA_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
     if parallel_implementation:
@@ -63,14 +66,19 @@ cdef int _jacdense(int Neq, realtype tt, realtype cj,
              
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
+    print ('********** T1 *********')
+    print(aux_data.jac)
+    ##print(aux_data.jac.evaluate)
     aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, cj, jac_tmp)
 
     if parallel_implementation:
         raise NotImplemented 
     else:
         #we convert the python jac_tmp array to DslMat of sundials
+        print ('********** T2 *********')
         ndarray2DlsMatd(Jac, jac_tmp)
-         
+
+    print ('********** T3 *********')
     return 0
 
 cdef class IDA_data:
@@ -383,7 +391,13 @@ cdef class IDA:
             rfn = tmpfun
             opts['rfn'] = tmpfun
         self.aux_data.res = rfn
-        self.aux_data.jac = opts['jacfn']
+        jac = opts['jacfn']
+        if not isinstance(jac , JacFunction):
+            tmpfun = WrapJacFunction()
+            tmpfun.set_jacfn(jac)
+            jac = tmpfun
+            opts['jacfn'] = tmpfun
+        self.aux_data.jac = jac
         self.aux_data.user_data = opts['user_data']
 
         if not np.isscalar(opts['rtol']) :

@@ -153,8 +153,6 @@ class Doublependulum():
             self.algvar = array([1, 1, 1, 1, 1, 1, 1, 1, -1, -1])
             self.exclalg_err = False
 
-        self.fres_ddaspk = np.empty(self.neq, float)
-
     def set_res(self, resfunction):
         """Function to set the resisual function as required by IDA
            needed for the ddaspk simulation"""
@@ -165,10 +163,9 @@ class Doublependulum():
            needed for the ddaspk simulation"""
         self.jac = jacfunction
 
-    def ddaspk_res(self, tres, yy, yp):
+    def ddaspk_res(self, tres, yy, yp, res):
         """the residual function as required by ddaspk"""
-        self.res.evaluate(tres, yy, yp, self.fres_ddaspk, None)
-        return self.fres_ddaspk
+        self.res.evaluate(tres, yy, yp, res, None)
 
     def ddaspk_jac(self, tres, yy, yp, cj, jac):
         """the jacobian function as required by ddaspk"""
@@ -412,7 +409,7 @@ def main():
         for time in problem.stop_t[1:]:
             #print 'at time', time
             #print (ddaspkz[i])
-            flag, tout = ig.step(time-ig._integrator.t, ddaspkz[i],  ddaspkzprime[i])
+            flag, tout = ig.step(time, ddaspkz[i],  ddaspkzprime[i])
             #print (i, ddaspkz[i])
             i += 1
             #print 'sol at ', time, z[i]

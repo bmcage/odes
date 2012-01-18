@@ -64,5 +64,4 @@ Tests
 =====
 To run the tests do in the python shell:
 
->>> import scikits.odes as od
->>> od.test()
+>>> import scikits.odes as od; od.test()

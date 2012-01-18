@@ -482,6 +482,8 @@ class ddaspk(DaeBase):
         self.t = None
         self.y = None
         self.yp = None
+        self.tmp_res = None
+        self.tmp_jac = None
         self.options = default_values
         self.set_options(rfn=resfn, **options)
         self.initialized = False
@@ -549,12 +551,12 @@ class ddaspk(DaeBase):
                 first_step = self.first_step
             self.y, self.yp, t = self.__run([3, 4], y0, yp0, t0, t0 + first_step)
             t0_init = t
-            if not y_ic0_retn is None: y_ic0_retn[:] = self.y[:]
-            if not yp_ic0_retn is None: yp_ic0_retn[:] = self.yp[:]
         else:
             self.y = copy(y0)
             self.yp = copy(yp0)
             t0_init = t0
+        if not y_ic0_retn is None: y_ic0_retn[:] = self.y[:]
+        if not yp_ic0_retn is None: yp_ic0_retn[:] = self.yp[:]
 
         self.initialized = True
         return t0_init
@@ -644,19 +646,28 @@ class ddaspk(DaeBase):
 
         self.iwork = iwork
         
-        self.call_args = [self.info,self.rtol,self.atol,self.rwork,self.iwork]
+        self.call_args = [self.info,self.rtol,self.atol,self.rwork,self.iwork]        #create storage
+        self.tmp_res = empty(self.neq, float)
+        if (self.ml is None or self.mu is None) :
+            self.tmp_jac = zeros((self.neq, self.neq), float)
+        else:
+            self.tmp_jac = zeros((self.ml + self.mu + 1, self.neq), float)
+
         self.success = 1
+
+    def _resFn(self, t, y, yp):
+        """Wrapper around the residual as defined by user, to create
+         the residual needed by ddaspk
+        """
+        self.res(t, y, yp, self.tmp_res)
+        return self.tmp_res
 
     def _jacFn(self, t, y, yp, cj):
         """Wrapper around the jacobian as defined by user, to create
          the jacobian needed by ddaspk
         """
-        if (self.ml is None or self.mu is None) :
-            jc = zeros((self.neq, self.neq), float)
-        else:
-            jc = zeros((self.ml + self.mu + 1, self.neq), float)
-        self.jac(t, y, yp, cj, jc)
-        return jc
+        self.jac(t, y, yp, cj, self.tmp_jac)
+        return self.tmp_jac
 
     def solve(self, tspan, y0,  yp0, hook_fn = None):
         
@@ -683,7 +694,7 @@ class ddaspk(DaeBase):
 
     def __run(self, states, *args):
         # args are: y0,yprime0,t0,t1,res_params,jac_params
-        y1, y1prime, t, self.flag = self._runner(*( (self.res, self._jacFn) \
+        y1, y1prime, t, self.flag = self._runner(*( (self._resFn, self._jacFn) \
                                            + args[:4] + tuple(self.call_args)))
         if self.flag < 0:
             print('ddaspk:',self.messages.get(self.flag,
@@ -702,10 +713,10 @@ class ddaspk(DaeBase):
                     'first call of ''step'' method, or after changing options')
 
         if t > 0.0:
-            self.y, self.yp, self.t = self.__run([2, 3], self.y, self.yp, self.t, self.t+t)
+            self.y, self.yp, self.t = self.__run([2, 3], self.y, self.yp, self.t, t)
         else:
             self.info[2] = 1
-            self.y, self.yp, self.t = self.__run([1, 2], self.y, self.yp, self.t, self.t-t)
+            self.y, self.yp, self.t = self.__run([1, 2], self.y, self.yp, self.t, -t)
             self.info[2] = 0
         y_retn[:] = self.y[:]
         if yp_retn is not None:
@@ -767,6 +778,8 @@ class lsodi(DaeBase):
         self.t = None
         self.y = None
         self.yp = None
+        self.tmp_res = None
+        self.tmp_jac = None
         self.options = default_values
         self.set_options(rfn=resfn, **options)
         self.initialized = False
@@ -821,13 +834,13 @@ class lsodi(DaeBase):
                 first_step = self.first_step
             self.y, self.yp, t = self.__run(y0, yp0, t0, t0 + first_step)
             t0_init = t
-            if not y_ic0_retn is None: y_ic0_retn[:] = self.y[:]
-            if not yp_ic0_retn is None: yp_ic0_retn[:] = self.yp[:]
         else:
             self.y = copy(y0)
             self.yp = copy(yp0)
             t0_init = t0
 
+        if not y_ic0_retn is None: y_ic0_retn[:] = self.y[:]
+        if not yp_ic0_retn is None: yp_ic0_retn[:] = self.yp[:]
         self.initialized = True
         return t0_init
 
@@ -889,18 +902,27 @@ class lsodi(DaeBase):
         iopt=1
         self.call_args = [itol,self.rtol,self.atol,itask,istate,iopt,
                             self.rwork,self.iwork,mf]
+        #create storage
+        self.tmp_res = empty(self.neq, float)
+        if (self.ml is None or self.mu is None) :
+            self.tmp_jac = zeros((self.neq, self.neq), float)
+        else:
+            self.tmp_jac = zeros((self.ml + self.mu + 1, self.neq), float)
         self.success = 1
+
+    def _resFn(self, t, y, yp):
+        """Wrapper around the residual as defined by user, to create
+         the residual needed by ddaspk
+        """
+        self.res(t, y, yp, self.tmp_res)
+        return self.tmp_res
 
     def _jacFn(self, t, y, yp, cj):
         """Wrapper around the jacobian as defined by user, to create
          the jacobian needed by lsodi
         """
-        if (self.ml is None or self.mu is None) :
-            jc = zeros((self.neq, self.neq), float)
-        else:
-            jc = zeros((self.ml + self.mu + 1, self.neq), float)
-        self.jac( t, y, yp, cj, jc)
-        return jc
+        self.jac( t, y, yp, cj, self.tmp_jac)
+        return self.tmp_jac
 
     def solve(self, tspan, y0, yp0, hook_fn = None):
         
@@ -932,7 +954,7 @@ class lsodi(DaeBase):
         return self.success, t_retn, y_retn, yp_retn, None, None, None
 
     def __run(self, *args):
-        y1, y1prime_tmp, t, istate = self.runner(*((self.res, self.adda,
+        y1, y1prime_tmp, t, istate = self.runner(*((self._resFn, self.adda,
                                                  self._jacFn) + args[0:]
                                                  + tuple(self.call_args)) 
                                              )
@@ -967,8 +989,7 @@ class lsodi(DaeBase):
             else:
                 itask = self.call_args[3]
                 self.call_args[3] = 4
-            self.y, self.yp, self.t = self.__run(self.y, self.yp, self.t, 
-                                                 self.t+t)
+            self.y, self.yp, self.t = self.__run(self.y, self.yp, self.t, t)
             self.call_args[3] = itask
         else:
             itask = self.call_args[3]
@@ -976,7 +997,7 @@ class lsodi(DaeBase):
                 self.call_args[3] = 2
             else:
                 self.call_args[3] = 5
-            self.y, self.yp, self.t  = self.__run(self.y, self.yp, self.t, self.t-t)
+            self.y, self.yp, self.t  = self.__run(self.y, self.yp, self.t, -t)
             self.call_args[3] = itask
         y_retn[:] = self.y[:]
         if yp_retn is not None:

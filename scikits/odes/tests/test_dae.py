@@ -6,12 +6,12 @@ Tests for differential algebraic equation solvers.
 """
 import numpy
 
-from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose)
+from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
+                    empty, alen)
 
 from numpy.testing import TestCase, run_module_suite
 from scipy.integrate import ode
 from scikits.odes import dae
-
 
 class TestDae(TestCase):
     """
@@ -22,25 +22,24 @@ class TestDae(TestCase):
         if hasattr(problem, 'jac'):
             jac = problem.jac
         res = problem.res
-        ##if hasattr(problem, 'res_'+integrator):
-        ##    if integrator == 'lsodi':
-        ##        res = problem.res_lsodi
 
-        ig = dae(res, jac)
-        ig.set_integrator(integrator,
-                          **integrator_params)
-        ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
-        z = [0]*len(problem.stop_t)
-        zprime = [0]*len(problem.stop_t)
-        i=0
+        ig = dae(integrator, res, jacfn=jac)
+        ig.set_options(**integrator_params)
+        z = empty((1+len(problem.stop_t),alen(problem.z0)), float)
+        zprime = empty((1+len(problem.stop_t),alen(problem.z0)), float)
+        ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
+        i=1
         for time in problem.stop_t:
             print(time)
-            z[i],  zprime[i] = ig.solve(time)
-            print(z[i],zprime[i])
+            flag, rt = ig.step(time, z[i], zprime[i])
+            print(z[i], zprime[i])
             i += 1
-            assert ig.successful(), (problem.info(),)
-        print('t', z, zprime, array(z))
-        assert problem.verify(array(z), array(zprime),  problem.stop_t), \
+            if integrator == 'ida':
+                assert flag==0, (problem.info(), flag)
+            else:
+                assert flag > 0, (problem.info(), flag)
+        print('t', z, zprime)
+        assert problem.verify(array(z), array(zprime),  [0.]+problem.stop_t), \
                     (problem.info(),)
 
     def test_ddaspk(self):
@@ -55,11 +54,11 @@ class TestDae(TestCase):
             problem = problem_cls()
             self._do_problem(problem, 'lsodi', **problem.lsodi_pars)
     
-##    def test_ida(self):
-##        """Check the lsodi solver"""
-##        for problem_cls in PROBLEMS:
-##            problem = problem_cls()
-##            self._do_problem(problem, 'ida', **problem.ida_pars)
+    def test_ida(self):
+        """Check the ida solver"""
+        for problem_cls in PROBLEMS:
+            problem = problem_cls()
+            self._do_problem(problem, 'ida', **problem.ida_pars)
 
 #------------------------------------------------------------------------------
 # Test problems
@@ -111,23 +110,14 @@ class SimpleOscillator(DAE):
         doc = self.__class__.__name__ + ": 2x2 constant mass matrix"
         return doc
 
-    def res(self, t, z, zp):
+    def res(self, t, z, zp, res):
         tmp1 = zeros((2,2), float)
         tmp2 = zeros((2,2), float)
         tmp1[0,0] = self.m
         tmp1[1,1] = 1.
         tmp2[0,1] = self.k
         tmp2[1,0] = -1.
-        return dot(tmp1, zp)+dot(tmp2, z)
-
-    ##def res_lsodi(self, t, z, zp):
-    ##    tmp1 = zeros((2,2), float)
-    ##    tmp2 = zeros((2,2), float)
-    ##    tmp1[0,0] = self.m
-    ##    tmp1[1,1] = 1.
-    ##    tmp2[0,1] = self.k
-    ##    tmp2[1,0] = -1.
-    ##    return -dot(tmp1, zp)-dot(tmp2, z)
+        res[:] = dot(tmp1, zp)[:]+dot(tmp2, z)[:]
 
     def adda(self, t, y, ml, mu, p, nrowp):
         p[0,0] -= self.m
@@ -141,7 +131,7 @@ class SimpleOscillator(DAE):
             u = self.z0[1]*cos(omega*time)+self.z0[0]*sin(omega*time)/omega
             ok = ok and allclose(u, z[1], atol=self.atol, rtol=self.rtol) and \
             allclose(z[0], zp[1], atol=self.atol, rtol=self.rtol)
-            print(time, ok, z, u)
+            print('verify SO', time, ok, z, u)
         return ok
 
 class SimpleOscillatorJac(SimpleOscillator):
@@ -183,18 +173,19 @@ class StiffVODECompare(DAE):
 
     def __init__(self):
         """We obtain the vode solution first"""
-        r = ode(self.f_vode,self.jac_vode).set_integrator('vode',
+        r = ode(self.f_vode, self.jac_vode).set_integrator('vode',
                                   rtol=[1e-4,1e-4,1e-4], 
                                   atol=[1e-8,1e-14,1e-6],
                                   method='bdf',
                                   )
         r.set_initial_value([1.,0.,0.])
         nr = 4
-        self.sol = zeros((nr, 3))
+        self.sol = zeros((nr+1, 3))
         self.stop_t = [0.4]*nr
         for i in range(nr-1):
             self.stop_t[i+1] = 10 * self.stop_t[i]
-        i=0
+        self.sol[0] = r.y
+        i=1
         for time in self.stop_t:
             r.integrate(time)
             self.sol[i] = r.y
@@ -215,11 +206,10 @@ class StiffVODECompare(DAE):
                             'adda_func' : self.adda
                            }
 
-    def res(self, t, y, yp):
-        eq0 = yp[0] + 0.04*y[0] - 1e4*y[1]*y[2]
-        eq2 = yp[2] - 3e7*y[1]*y[1]
-        eq1 = yp[1] +yp[0]+yp[2]
-        return array([eq0,eq1,eq2])
+    def res(self, t, y, yp, res):
+        res[0] = yp[0] + 0.04*y[0] - 1e4*y[1]*y[2]
+        res[2] = yp[2] - 3e7*y[1]*y[1]
+        res[1] = yp[1] +yp[0]+yp[2]
 
     def adda(self, t, y, ml, mu, p, nrowp):
         p[0,0] -= 1.0
@@ -230,7 +220,7 @@ class StiffVODECompare(DAE):
         return p
 
     def verify(self, y, yp, t):
-        print('solution', y)
+        print('verify SOV', y, self.sol)
         return allclose(self.sol, y, atol=self.atol, rtol=self.rtol)
 
 PROBLEMS = [SimpleOscillator, StiffVODECompare,  
@@ -246,4 +236,3 @@ if __name__ == "__main__":
         test.test_ddaspk()
         test.test_lsodi()
         test.test_ida()
-            

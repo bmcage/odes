@@ -20,11 +20,13 @@ cdef class WrapResFunction(ResFunction):
         """
         set some residual equations as a ResFunction executable class
         """
+        self.with_userdata = 0
         nrarg = len(inspect.getargspec(resfn)[0])
-        if nrarg == 5:
+        if nrarg > 5:
+            # hopefully a class method
             self.with_userdata = 1
-        else:
-            self.with_userdata = 0
+        elif nrarg == 5 and inspect.isfunction(resfn):
+            self.with_userdata = 1
         self._resfn = resfn
 
     cpdef int evaluate(self, DTYPE_t t,
@@ -50,11 +52,13 @@ cdef class WrapRhsFunction(RhsFunction):
         """
         set some residual equations as a RhsFunction executable class
         """
+        self.with_userdata = 0
         nrarg = len(inspect.getargspec(rhsfn)[0])
-        if nrarg == 4:
+        if nrarg > 4:
+            #hopefully a class method, self gives 5 arg!
             self.with_userdata = 1
-        else:
-            self.with_userdata = 0
+        elif nrarg == 4 and inspect.isfunction(rhsfn):
+            self.with_userdata = 1
         self._rhsfn = rhsfn
 
     cpdef int evaluate(self, DTYPE_t t,
@@ -68,7 +72,7 @@ cdef class WrapRhsFunction(RhsFunction):
         return 0
 
 cdef class JacFunction:
-    cpdef np.ndarray evaluate(self, DTYPE_t t, 
+    cpdef int evaluate(self, DTYPE_t t, 
                                              np.ndarray[DTYPE_t, ndim=1] y,
                                              np.ndarray[DTYPE_t, ndim=1] ydot,
                                              DTYPE_t cj,
@@ -81,6 +85,41 @@ cdef class JacFunction:
         This is a generic class, you should subclass is for the problem specific
         purposes."
         """
+        return 0
+
+cdef class WrapJacFunction(JacFunction):
+    cpdef set_jacfn(self, object jacfn):
+        """
+        set some jacobian equations as a JacFunction executable class
+        """
+##        self.with_userdata = 0
+##        nrarg = len(inspect.getargspec(jacfn)[0])
+##        if nrarg > 6:
+##            #hopefully a class method, self gives 5 arg!
+##            self.with_userdata = 1
+##        elif nrarg == 6 and inspect.isfunction(jacfn):
+##            self.with_userdata = 1
+        self._jacfn = jacfn
+
+    cpdef int evaluate(self, DTYPE_t t, 
+                                    np.ndarray[DTYPE_t, ndim=1] y,
+                                    np.ndarray[DTYPE_t, ndim=1] ydot,
+                                    DTYPE_t cj,
+                                    np.ndarray J):
+        """
+        Returns the Jacobi matrix (for dense the full matrix, for band only
+        bands. Result has to be stored in the variable J, which is preallocated
+        to the corresponding size.
+            
+        This is a generic class, you should subclass is for the problem specific
+        purposes."
+        """
+##        if self.with_userdata == 1:
+##            self._jacfn(t, y, ydot, cj, J, userdata)
+##        else:
+##            self._jacfn(t, y, ydot, cj, J)
+        print(self._jacfn)
+        self._jacfn(t, y, ydot, cj, J)
         return 0
 
 cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a):

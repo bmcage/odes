@@ -44,7 +44,7 @@ from numpy import (arange, zeros, array, sin, empty, alen)
 from scikits.odes import dae
 import pylab
 
-class SimpleOscillator():
+class PlanarPendulum():
     
     stop_t  = arange(.0,15,1e-4)[1:]
     theta= 3.14/3 #starting angle
@@ -57,9 +57,8 @@ class SimpleOscillator():
     z0 =  array([x0, y0, 0., 0., lambdaval]) 
     zprime0 = array([0., 0., -lambdaval*x0, -lambdaval*y0-g, -g], float)
     
-    def res(self, t, x, xdot):
+    def res(self, t, x, xdot, tmp):
         g=1
-        tmp=zeros(5)
         tmp[0]=x[2]-xdot[0]
         tmp[1]=x[3]-xdot[1]
         tmp[2]=-xdot[2]-x[4]*x[0]
@@ -67,10 +66,9 @@ class SimpleOscillator():
         #tmp[4]=x[0]*x[0]+x[1]*x[1]-1
         #tmp[4]=x[0]*x[2]+x[1]*x[3]
         tmp[4] = x[2]**2 + x[3]**2 \
-                    - (x[0]**2 + x[1]**2)*x[4] - x[1] * SimpleOscillator.g
-        return tmp
+                    - (x[0]**2 + x[1]**2)*x[4] - x[1] * PlanarPendulum.g
 
-problem = SimpleOscillator()
+problem = PlanarPendulum()
 z = empty((1+len(problem.stop_t), alen(problem.z0)), float)
 zprime = empty((1+len(problem.stop_t), alen(problem.z0)), float)
 algvar = -1
@@ -87,7 +85,7 @@ tinit = ig.init_step(.0, problem.z0, problem.zprime0, z[0], zprime[0])
 error = False
 i = 1
 for time in problem.stop_t:
-        flag, tout = ig.step(time-ig._integrator.t, z[i],  zprime[i] )
+        flag, tout = ig.step(time, z[i],  zprime[i] )
         i += 1
         #print 'sol at ', time, z[i]
 
@@ -96,8 +94,9 @@ for time in problem.stop_t:
             break
 
 print('last sol', z[i-1], zprime[i-1])
-print('has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
-                                    zprime[i-1]))
+test = empty(len(z[0]), float)
+problem.res(problem.stop_t[i-2], z[i-1], zprime[i-1], test)
+print('has residual: ', test)
 
 nr = i
 xt = [z[i][0] for i in range(nr)]

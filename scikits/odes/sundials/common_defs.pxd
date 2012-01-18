@@ -26,12 +26,15 @@ cdef class WrapRhsFunction(RhsFunction):
     cpdef set_rhsfn(self, object rhsfn)
 
 cdef class JacFunction:
-    cpdef np.ndarray[DTYPE_t, ndim=2] evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self, DTYPE_t t,
                                              np.ndarray[DTYPE_t, ndim=1] y,
                                              np.ndarray[DTYPE_t, ndim=1] ydot,
                                              DTYPE_t cj,
                                              np.ndarray[DTYPE_t, ndim=2] J)
-
+cdef class WrapJacFunction(JacFunction):
+    cpdef object _jacfn
+    cdef int with_userdata
+    cpdef set_jacfn(self, object jacfn)
 
 cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a)
 cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a)
