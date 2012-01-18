@@ -50,8 +50,6 @@ cdef int _jacdense(int Neq, realtype tt, realtype cj,
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
     cdef np.ndarray jac_tmp
     
-    print ('********** T0 *********')
-    
     aux_data = <IDA_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
     if parallel_implementation:
@@ -66,19 +64,14 @@ cdef int _jacdense(int Neq, realtype tt, realtype cj,
              
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
-    print ('********** T1 *********')
-    print(aux_data.jac)
-    ##print(aux_data.jac.evaluate)
     aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, cj, jac_tmp)
 
     if parallel_implementation:
         raise NotImplemented 
     else:
         #we convert the python jac_tmp array to DslMat of sundials
-        print ('********** T2 *********')
         ndarray2DlsMatd(Jac, jac_tmp)
 
-    print ('********** T3 *********')
     return 0
 
 cdef class IDA_data:
@@ -332,8 +325,6 @@ cdef class IDA:
                 or ((np.alen(yp0) == 0) and (not opts['compute_initcond'] == 'yp0'))):
             raise ValueError('Not passed y0 or ydot0 value has to computed'
                              'by ''init_cond'', but ''init_cond'' not set apropriately !')
- 
-        
 
         #TODO: when implementing parallel, does N_VDestroy be called separately
         #      for parallel version or it's a generic one?
@@ -392,7 +383,7 @@ cdef class IDA:
             opts['rfn'] = tmpfun
         self.aux_data.res = rfn
         jac = opts['jacfn']
-        if not isinstance(jac , JacFunction):
+        if jac is not None and not isinstance(jac , JacFunction):
             tmpfun = WrapJacFunction()
             tmpfun.set_jacfn(jac)
             jac = tmpfun
@@ -782,4 +773,3 @@ cdef class IDA:
         if not self.residual is NULL: N_VDestroy(self.residual)
         if not self.dae_vars_id is NULL: N_VDestroy(self.dae_vars_id)
         if not self.constraints is NULL: N_VDestroy(self.constraints)
-        

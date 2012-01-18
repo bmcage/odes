@@ -50,7 +50,7 @@ cdef class RhsFunction:
 cdef class WrapRhsFunction(RhsFunction):
     cpdef set_rhsfn(self, object rhsfn):
         """
-        set some residual equations as a RhsFunction executable class
+        set some rhs equations as a RhsFunction executable class
         """
         self.with_userdata = 0
         nrarg = len(inspect.getargspec(rhsfn)[0])
@@ -102,10 +102,10 @@ cdef class WrapJacFunction(JacFunction):
         self._jacfn = jacfn
 
     cpdef int evaluate(self, DTYPE_t t, 
-                                    np.ndarray[DTYPE_t, ndim=1] y,
-                                    np.ndarray[DTYPE_t, ndim=1] ydot,
-                                    DTYPE_t cj,
-                                    np.ndarray J):
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       DTYPE_t cj,
+                       np.ndarray J):
         """
         Returns the Jacobi matrix (for dense the full matrix, for band only
         bands. Result has to be stored in the variable J, which is preallocated
@@ -118,7 +118,6 @@ cdef class WrapJacFunction(JacFunction):
 ##            self._jacfn(t, y, ydot, cj, J, userdata)
 ##        else:
 ##            self._jacfn(t, y, ydot, cj, J)
-        print(self._jacfn)
         self._jacfn(t, y, ydot, cj, J)
         return 0
 

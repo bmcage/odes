@@ -51,6 +51,4 @@ cdef class IDA:
                        np.ndarray[DTYPE_t, ndim=1]y0, 
                        np.ndarray[DTYPE_t, ndim=1] yp0,
                        hook_fn = ?)
-    #def run_solver(self, np.ndarray[float, ndim=1] tspan, np.ndarray[float, ndim=1] y0, 
-    #               np.ndarray[float, ndim=1] yp0)
     #def step(self, realtype t)

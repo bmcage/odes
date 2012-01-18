@@ -296,6 +296,7 @@ class jacindex1(JacFunction):
         jac[9][7] = -2*(yy[5]-yy[7])
         jac[9][8] = 1./m1 *(yy[0]*(yy[0]-yy[2]) + yy[1]*(yy[1]-yy[3]) )
         jac[9][9] = (1./m1+1./m2)*((yy[0]-yy[2])**2 + (yy[1]-yy[3])**2)
+        return 0
 
 #Now that all is defined, solve it
 def main():
@@ -327,7 +328,6 @@ def main():
     if jac:
         jac.set_dblpend(problem)
         jfac = JACFAC
-        
 
     solver = ida.IDA(res,
                 compute_initcond='yp0',
@@ -382,7 +382,6 @@ def main():
     initenergy = energy[0]
 
     #solve the same with ddaspk
-    #sys.exit()
     if alsoddaspk:
         ddaspkz = empty((alen(problem.stop_t), problem.neq), float)
         ddaspkzprime = empty((alen(problem.stop_t), problem.neq), float)
@@ -407,12 +406,8 @@ def main():
         i=1
         error = False
         for time in problem.stop_t[1:]:
-            #print 'at time', time
-            #print (ddaspkz[i])
             flag, tout = ig.step(time, ddaspkz[i],  ddaspkzprime[i])
-            #print (i, ddaspkz[i])
             i += 1
-            #print 'sol at ', time, z[i]
 
             if flag < 1:
                 error = True

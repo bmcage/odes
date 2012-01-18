@@ -482,7 +482,3 @@ cdef class CVODE:
         if not self.y0   is NULL: N_VDestroy(self.y0)
         if not self.y    is NULL: N_VDestroy(self.y)
         if not self.atol is NULL: N_VDestroy(self.atol)
-
-           
-            
-            

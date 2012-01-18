@@ -27,10 +27,11 @@ cdef class WrapRhsFunction(RhsFunction):
 
 cdef class JacFunction:
     cpdef int evaluate(self, DTYPE_t t,
-                                             np.ndarray[DTYPE_t, ndim=1] y,
-                                             np.ndarray[DTYPE_t, ndim=1] ydot,
-                                             DTYPE_t cj,
-                                             np.ndarray[DTYPE_t, ndim=2] J)
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       DTYPE_t cj,
+                       np.ndarray[DTYPE_t, ndim=2] J)
+
 cdef class WrapJacFunction(JacFunction):
     cpdef object _jacfn
     cdef int with_userdata

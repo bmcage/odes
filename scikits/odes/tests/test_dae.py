@@ -30,15 +30,12 @@ class TestDae(TestCase):
         ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
         i=1
         for time in problem.stop_t:
-            print(time)
             flag, rt = ig.step(time, z[i], zprime[i])
-            print(z[i], zprime[i])
             i += 1
             if integrator == 'ida':
                 assert flag==0, (problem.info(), flag)
             else:
                 assert flag > 0, (problem.info(), flag)
-        print('t', z, zprime)
         assert problem.verify(array(z), array(zprime),  [0.]+problem.stop_t), \
                     (problem.info(),)
 
@@ -131,7 +128,7 @@ class SimpleOscillator(DAE):
             u = self.z0[1]*cos(omega*time)+self.z0[0]*sin(omega*time)/omega
             ok = ok and allclose(u, z[1], atol=self.atol, rtol=self.rtol) and \
             allclose(z[0], zp[1], atol=self.atol, rtol=self.rtol)
-            print('verify SO', time, ok, z, u)
+            ##print('verify SO', time, ok, z, u)
         return ok
 
 class SimpleOscillatorJac(SimpleOscillator):
@@ -141,7 +138,6 @@ class SimpleOscillatorJac(SimpleOscillator):
         cj_in = cj
         jac[0][0] = self.m*cj_in ;jac[0][1] = self.k
         jac[1][0] = -1       ;jac[1][1] = cj_in;  
-        print('jc at', t, cj,  jac)
 
 class StiffVODECompare(DAE):
     r"""
@@ -220,7 +216,7 @@ class StiffVODECompare(DAE):
         return p
 
     def verify(self, y, yp, t):
-        print('verify SOV', y, self.sol)
+        ##print('verify SOV', y, self.sol)
         return allclose(self.sol, y, atol=self.atol, rtol=self.rtol)
 
 PROBLEMS = [SimpleOscillator, StiffVODECompare,  
