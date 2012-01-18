@@ -154,7 +154,9 @@ dae class:
            tcrit=None|float
            order = int        # <=12 for adams, <=5 for bdf
            compute_initcond = None|'yode0'
-           adda = function, see below
+           adda = function, required, see below
+           rfn = the residual function, required
+           jacfn = None|jacobian function
 
 Details: 
 - compute_initcond: None or 'yode0'
@@ -698,7 +700,7 @@ class ddaspk(DaeBase):
         if not self.initialized:
             raise ValueError('Method ''init_step'' has to be called prior to the'
                     'first call of ''step'' method, or after changing options')
-            yp_retn = empty(alen(y_retn), float)
+
         if t > 0.0:
             self.y, self.yp, self.t = self.__run([2, 3], self.y, self.yp, self.t, self.t+t)
         else:
@@ -715,7 +717,7 @@ if ddaspk._runner:
     DaeBase.integrator_classes.append(ddaspk)
 
 class lsodi(DaeBase):
-    __doc__ += integrator_info_ddaspk
+    __doc__ += integrator_info_lsodi
 
     try:
         import lsodi as _lsodi
@@ -744,55 +746,92 @@ class lsodi(DaeBase):
     supports_run_relax = 1
     supports_step = 1
 
-    def __init__(self,
-                 rtol=1e-6,atol=1e-12,
-                 lband=None,uband=None,
-                 tcrit=None, 
-                 order = 0,
-                 nsteps = 500,
-                 max_step = 0.0, # corresponds to infinite
-                 min_step = 0.0,
-                 first_step = 0.0, # determined by solver
-                 method="adams", 
-                 compute_initcond=None,
-                 adda_func = None
-                 ):
+    def __init__(self, resfn, **options):
+        default_values = {
+                'rtol': 1e-6,
+                'atol': 1e-12,
+                'lband': None,
+                'uband': None,
+                'tcrit': None, 
+                'order': 0,
+                'nsteps': 500,
+                'max_step': 0.0, # corresponds to infinite
+                'min_step': 0.0,
+                'first_step': 0.0, # determined by solver
+                'method': "adams", 
+                'compute_initcond': None,
+                'adda_func': None,
+                'rfn': None,
+                'jacfn': None,
+                 }
+        self.t = None
+        self.y = None
+        self.yp = None
+        self.options = default_values
+        self.set_options(rfn=resfn, **options)
+        self.initialized = False
 
-        self.rtol = rtol
-        self.atol = atol
-        self.mu = uband
-        self.ml = lband
+    def set_options(self, **options):
+        for (key, value) in options.items():
+            self.options[key.lower()] = value
+        self.initialized = False
 
-        self.tcrit = tcrit
-        self.order = order
-        self.nsteps = nsteps
-        self.max_step = max_step
-        self.min_step = min_step
-        self.first_step = first_step
-        if re.match(method,r'adams',re.I): self.meth = 1
-        elif re.match(method,r'bdf',re.I): self.meth = 2
-        else: raise ValueError('Unknown integration method %s'%(method))
-        if compute_initcond is None: self.compute_initcond = 0
-        elif re.match(compute_initcond,r'yode0',re.I): 
+    def _init_data(self):
+        self.rtol = self.options['rtol']
+        self.atol = self.options['atol']
+        self.mu = self.options['uband']
+        self.ml = self.options['lband']
+        self.jac = self.options['jacfn']
+        self.res = self.options['rfn']
+
+        self.tcrit = self.options['tcrit']
+        self.order = self.options['order']
+        self.nsteps = self.options['nsteps']
+        self.max_step = self.options['max_step']
+        self.min_step = self.options['min_step']
+        self.first_step = self.options['first_step']
+        if re.match(self.options['method'], r'adams', re.I): self.meth = 1
+        elif re.match(self.options['method'], r'bdf', re.I): self.meth = 2
+        else: raise ValueError('Unknown integration method %s'%(self.options['method']))
+        if self.options['compute_initcond'] is None:
+            self.compute_initcond = 0
+        elif re.match(self.options['compute_initcond'], r'yode0', re.I):
             self.compute_initcond = 1
-        else: raise ValueError('Unknown init cond calculation method %s' %(
-                                                            compute_initcond))
-        if adda_func is None:
+        else:
+            raise ValueError('Unknown init cond calculation method %s' %(
+                                            self.options['compute_initcond']))
+                                            
+
+        if self.options['adda_func'] is None:
             raise ValueError('adda_func is required for lsodi algorithm!')
-        self.adda = adda_func
+        self.adda = self.options['adda_func']
         self.success = 1
 
-    def set_tcrit(self, tcrit=None):
-        """Change the tcrit value if possible in the solver without 
-            reinitializing the running solver
-        """
-        self.tcrit = tcrit
-        if self.tcrit is not None:
-            self.rwork[0]=self.tcrit
+    def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
+        self._init_data()
+        self.y0 = y0
+        self.yp0 = yp0
+        self.t = t0
+        self._reset(len(y0), self.jac is not None)
+        
+        if self.compute_initcond:
+            if self.first_step <= 0.:
+                first_step = 1e-18
+            else:
+                first_step = self.first_step
+            self.y, self.yp, t = self.__run(y0, yp0, t0, t0 + first_step)
+            t0_init = t
+            if not y_ic0_retn is None: y_ic0_retn[:] = self.y[:]
+            if not yp_ic0_retn is None: yp_ic0_retn[:] = self.yp[:]
         else:
-            self.rwork[0] = 0.
+            self.y = copy(y0)
+            self.yp = copy(yp0)
+            t0_init = t0
 
-    def reset(self,n,has_jac):
+        self.initialized = True
+        return t0_init
+
+    def _reset(self, n, has_jac):
         # Calculate parameters for Fortran subroutine lsodi.
         self.neq = n
         if has_jac:
@@ -863,12 +902,41 @@ class lsodi(DaeBase):
         self.jac( t, y, yp, cj, jc)
         return jc
 
-    def _run(self,*args):
-        y1,y1prime_tmp,t,istate = self.runner(*((self.res, self.adda, \
-                                                 self._jacFn) + args[0:] \
+    def solve(self, tspan, y0, yp0, hook_fn = None):
+        
+        t_retn = empty([alen(tspan), ], float)
+        y_retn = empty([alen(tspan), alen(y0)], float)
+        yp_retn = empty([alen(tspan), alen(y0)], float)
+        
+        y_ic0_retn = empty(alen(y0), float)
+        yp_ic0_retn = empty(alen(y0), float)
+        tinit = self.init_step(tspan[0], y0, yp0, y_ic0_retn, yp_ic0_retn)
+        
+        t_retn[0] = tinit
+        y_retn[0,:] = y0[:]
+        yp_retn[0, :] = yp0[:]
+        if self.tcrit is None:
+            itask = 1
+            self.call_args[3] = 1
+        else:
+            itask = self.call_args[3]
+            self.call_args[3] = 4
+        for ind, time in enumerate(tspan[1:]):
+            result = self.__run(y_retn[ind], yp_retn[0], t_retn[ind], time)
+            if not self.success:
+                break
+            t_retn[ind+1] = result[2]
+            y_retn[ind+1][:] = result[0][:]
+            yp_retn[ind+1][:] = result[1][:]
+        self.t = t_retn[-1]
+        return self.success, t_retn, y_retn, yp_retn, None, None, None
+
+    def __run(self, *args):
+        y1, y1prime_tmp, t, istate = self.runner(*((self.res, self.adda,
+                                                 self._jacFn) + args[0:]
                                                  + tuple(self.call_args)) 
                                              )
-        self.call_args[4]=istate
+        self.call_args[4] = istate
         y1prime = None
         if istate <0:
             print('lsodi:',self.messages.get(istate,'Unexpected istate=%s'%istate))
@@ -877,7 +945,7 @@ class lsodi(DaeBase):
             self.success = 0
             
         if self.success:
-            yh=self.rwork[20:]
+            yh = self.rwork[20:]
             order = 1
             y1prime, iflag = self._intdy(t, order, yh, self.neq)
             if iflag<0:
@@ -886,49 +954,52 @@ class lsodi(DaeBase):
                                                         %order)
                 if iflag==-2: 
                     raise ValueError("t=%s invalid in call to intdy"%t)
-        return y1,y1prime,t
+        return y1, y1prime, t
 
-    def step(self,*args):
-        itask = self.call_args[3]
-        if self.tcrit is None:
-            self.call_args[3] = 2
-        else:
-            self.call_args[3] = 5
-        r = self._run(*args)
-        self.call_args[3] = itask
-        return r
-
-    def run_relax(self,*args):
-        if self.tcrit is not None:
-            print('Warning, relaxed run does not take into accout tcrit %g' \
-                        % self.tcrit)
-        itask = self.call_args[3]
-        self.call_args[3] = 3
-        r = self._run(*args)
-        self.call_args[3] = itask
-        return r
-
-    def run(self,*args):
-        if self.tcrit is None:
-            itask = 1
-            self.call_args[3] = 1
+    def step(self, t, y_retn, yp_retn = None):
+        if not self.initialized:
+            raise ValueError('Method ''init_step'' has to be called prior to the'
+                    'first call of ''step'' method, or after changing options')
+        if t > 0.0:
+            if self.tcrit is None:
+                itask = 1
+                self.call_args[3] = 1
+            else:
+                itask = self.call_args[3]
+                self.call_args[3] = 4
+            self.y, self.yp, self.t = self.__run(self.y, self.yp, self.t, 
+                                                 self.t+t)
+            self.call_args[3] = itask
         else:
             itask = self.call_args[3]
-            self.call_args[3] = 4
-        r = self._run(*args)
-        self.call_args[3] = itask
-        return r
+            if self.tcrit is None:
+                self.call_args[3] = 2
+            else:
+                self.call_args[3] = 5
+            self.y, self.yp, self.t  = self.__run(self.y, self.yp, self.t, self.t-t)
+            self.call_args[3] = itask
+        y_retn[:] = self.y[:]
+        if yp_retn is not None:
+            yp_retn[:] = self.yp[:]
+        return self.call_args[4], self.t
 
 if lsodi.runner:
     DaeBase.integrator_classes.append(lsodi)
 
-##try:
-##    from .odes_ida import odesIDA, integrator_info_ida
-##    DaeIntegratorBase.integrator_classes.append(odesIDA)
-##    __doc__ += integrator_info_ida
-##    integrator_info += integrator_info_ida
-##except ValueError as msg:
-##    print('Could not load odesIDA', msg)
+try:
+    from sundials import ida
+    DaeBase.integrator_classes.append(ida.IDA)
+    integrator_info_ida = """
+    IDA solver from the SUNDIALS package. See info in 
+    scikits.odes.sundials.ida.IDA class
+    """
+    __doc__ += integrator_info_ida
+    integrator_info += integrator_info_ida
+except ValueError as msg:
+    print('Could not load IDA solver', msg)
+except ImportError:
+    print(sys.exc_info()[1])
+    ida = None
 
 #------------------------------------------------------------------------------
 # User interface
