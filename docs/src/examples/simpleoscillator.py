@@ -25,8 +25,8 @@ def reseqn(t, x, xdot, result):
     result[1] = xdot[0] - x[1]
     
 #instantiate the solver
-from scikits.odes.sundials import ida
-solver = ida.IDA(reseqn)
+from scikits.odes import dae
+solver = dae('ida', reseqn)
 #obtain solution at a required time
 result = solver.solve([0., 1., 2.], initx, initxp)
 
