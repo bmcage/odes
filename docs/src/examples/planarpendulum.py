@@ -37,7 +37,8 @@ The algorithm first needs to find initial conditions for the derivatives,
 then it solves the problme at hand. We take g=1, m=1
 
 """
-from __future__ import print_function
+#python 2.7 support
+from __future__ import print_function, division
 
 from numpy import (arange, zeros, array, sin)
 import numpy as np
@@ -76,7 +77,7 @@ class oscres(ResFunction):
 res=oscres()        
 
 class SimpleOscillator():
-    stop_t  = arange(.0,5,0.2,dtype=np.float)
+    stop_t  = arange(.0, 15, 0.2, dtype=np.float)
     theta= 3.14/3 #starting angle
     x0=sin(theta)
     y0=-(1-x0**2)**.5
@@ -94,7 +95,7 @@ problem = SimpleOscillator()
 time = problem.stop_t
 nr = len(time)
 
-# Variant 1: Solving the problem with the 'run_solver' method
+# Variant 1: Solving the problem with the 'solve' method
 solver=ida.IDA(res,
                compute_initcond='yp0',               
                first_step=1e-18,
@@ -103,7 +104,6 @@ solver=ida.IDA(res,
 
 # strip unneeded return values from run_solver
 _flag, t1, y1 = solver.solve(time, problem.z0, problem.zp0)[:3]
-
 
 xt = y1[:, 0]
 yt = y1[:, 1]

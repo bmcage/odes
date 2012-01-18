@@ -494,6 +494,8 @@ class ddaspk(DaeBase):
         self.atol = self.options['atol']
         self.mu = self.options['uband']
         self.ml = self.options['lband']
+        self.jac = self.options['jacfn']
+        self.res = self.options['rfn']
 
         self.tcrit = self.options['tcrit']
         if self.options['order'] > 5 or self.options['order'] < 1:
@@ -651,7 +653,7 @@ class ddaspk(DaeBase):
             jc = zeros((self.neq, self.neq), float)
         else:
             jc = zeros((self.ml + self.mu + 1, self.neq), float)
-        self.jac( t, y, yp, cj, jc)
+        self.jac(t, y, yp, cj, jc)
         return jc
 
     def solve(self, tspan, y0,  yp0, hook_fn = None):
@@ -679,7 +681,7 @@ class ddaspk(DaeBase):
 
     def __run(self, states, *args):
         # args are: y0,yprime0,t0,t1,res_params,jac_params
-        y1, y1prime, t, self.flag = self._runner(*( (self.options['rfn'], self._jacFn) \
+        y1, y1prime, t, self.flag = self._runner(*( (self.res, self._jacFn) \
                                            + args[:4] + tuple(self.call_args)))
         if self.flag < 0:
             print('ddaspk:',self.messages.get(self.flag,

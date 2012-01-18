@@ -32,8 +32,13 @@ theta is the angle with the vertical y axis.
 where the last constraint comes from deriving the equation of the curve on
 which the pendulum slides
 """
-from __future__ import print_function
-
+#python 2.7 support
+from __future__ import print_function, division
+try:
+    input = raw_input
+except:
+    pass
+#imports
 from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi)
 from scikits.odes import dae
 import pylab
@@ -193,18 +198,18 @@ def main():
     """
     The main program: instantiate a problem, then use odes package to solve it
     """
-    input = raw_input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
+    uinput = input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
                 " \n 4 = info\n\n"
                 "Answer (1,2 or 4) : ")
-    if input == '1':
+    if uinput == '1':
         problem = Slidingpendulum(type='index2')
-    elif input == '2':
+    elif uinput == '2':
         problem = Slidingpendulum(type='index1')
     else:
         print(__doc__)
         return
     
-    input1 = raw_input("Solve with\n 1 = ddaspk\n 2 = ida\n\n"
+    input1 = input("Solve with\n 1 = ddaspk\n 2 = ida\n\n"
                        "Answer (1 or 2) : ").strip()
     if input1 not in ["1", "2"]:
         print("Invalid solution method given")
@@ -382,7 +387,7 @@ def main():
         open_file_with_default_application('anislidingpendulum' + os.sep +
                     'slidingpendulum'+ext+'.mpg')
 
-    input2 = raw_input('Create animation of the solution? (y/n): ')
+    input2 = input('Create animation of the solution? (y/n): ')
     print('\n')
     if (input2 == 'y' or input2 == 'yes'):
         create_animation(1.+problem.l, 1+problem.l, '0')

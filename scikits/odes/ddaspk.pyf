@@ -10,7 +10,7 @@ python module ddaspk__user__routines
             double precision intent(in) :: x
             double precision dimension(n),intent(in,c) :: y
             double precision dimension(n),intent(in,c) :: yprime
-            double precision intent(in,cache) :: cj
+            double precision intent(hide) :: cj
             double precision dimension(n),intent(out,c) :: delta
             integer intent(out):: ires
             double precision intent(hide) :: rpar
@@ -22,7 +22,7 @@ python module ddaspk__user__routines
             double precision dimension(n),intent(c,in) :: y
             double precision dimension(n),intent(c,in) :: yprime
             double precision dimension(*),intent(c,out) :: wm
-            double precision,intent(in,cache):: cj
+            double precision,intent(in):: cj
             double precision dimension(*),intent(hide) :: rpar
             integer dimension(*),intent(hide) :: ipar
        end subroutine jac

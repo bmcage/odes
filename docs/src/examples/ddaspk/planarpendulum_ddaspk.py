@@ -37,6 +37,9 @@ The algorithm first needs to find initial conditions for the derivatives,
 then it solves the problme at hand. We take g=1, m=1
 
 """
+#python 2.7 support
+from __future__ import print_function, division
+
 from numpy import (arange, zeros, array, sin, empty, alen)
 from scikits.odes import dae
 import pylab
@@ -78,16 +81,16 @@ ig.set_options(algebraic_var=array([1,1,1,1,algvar]),
                compute_initcond='yode0',
                first_step=1e-9,
                atol=1e-6, rtol=1e-6)
-z[0] = empty(alen(problem.z0), float)
-zprime[0] = empty(alen(problem.z0), float)
 #initialize solver and obtain correct values of initial condition
 tinit = ig.init_step(.0, problem.z0, problem.zprime0, z[0], zprime[0])
-i=1
+
 error = False
+i = 1
 for time in problem.stop_t:
         flag, tout = ig.step(time-ig._integrator.t, z[i],  zprime[i] )
-        #print 'sol at ', time, z[i]
         i += 1
+        #print 'sol at ', time, z[i]
+
         if flag < 1:
             error = True
             break

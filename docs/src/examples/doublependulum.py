@@ -55,23 +55,28 @@ solution (this is slow!). For this you need to have the ffmpeg program
 installed. The animation is stored in the directory anidoublependulum.
 
 """
-
+#python 2.7 support
 from __future__ import print_function, division
+try:
+    input = raw_input
+except:
+    pass
+
+#imports
 import numpy as np
-from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi)
+from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi, empty,
+                    alen)
 from scikits.odes.sundials.common_defs import ResFunction, JacFunction
 from scikits.odes.sundials import ida
 from scikits.odes import dae
 import pylab
 import os
 
-if not input:
-    input = raw_input
-
 #Set following False to not compute solution with ddaspk
 alsoddaspk = True
 ATOL = 1e-9
 RTOL = 1e-7
+JACFAC = 1e-1
 
 #class to hold the problem data
 class Doublependulum():
@@ -91,7 +96,7 @@ class Doublependulum():
     defm2 = 1.0
     defradius1 = 5.
     defradius2 = 2.
-    
+
     def __init__(self, data=None, type='index2'):
         self.tend = Doublependulum.deftend
         self.tstep = Doublependulum.deftstep
@@ -104,11 +109,11 @@ class Doublependulum():
         self.radius1 = Doublependulum.defradius1
         self.radius2 = Doublependulum.defradius2
         self.g = Doublependulum.defg
-        
+
         #res and jac needed for ddaspk run
         self.res = None
         self.jac = None
-        
+
         if data is not None:
             self.tend = data.deftend
             self.tstep = data.deftstep
@@ -121,7 +126,7 @@ class Doublependulum():
             self.radius1 = data.radius1
             self.radius2 = data.radius2
             self.g = data.g
-        
+
         self.stop_t  = arange(.0, self.tend, self.tstep)
         
         lambdaval = 0.0
@@ -148,6 +153,8 @@ class Doublependulum():
             self.algvar = array([1, 1, 1, 1, 1, 1, 1, 1, -1, -1])
             self.exclalg_err = False
 
+        self.fres_ddaspk = np.empty(self.neq, float)
+
     def set_res(self, resfunction):
         """Function to set the resisual function as required by IDA
            needed for the ddaspk simulation"""
@@ -157,17 +164,15 @@ class Doublependulum():
         """Function to set the resisual function as required by IDA
            needed for the ddaspk simulation"""
         self.jac = jacfunction
-        
-    def ddaspk_res(self, tres, yy, yp, idares):
+
+    def ddaspk_res(self, tres, yy, yp):
         """the residual function as required by ddaspk"""
-        fres = np.empty(self.neq, float)
-        self.res.evaluate(tres, yy, yp, fres, None)
-        return fres
+        self.res.evaluate(tres, yy, yp, self.fres_ddaspk, None)
+        return self.fres_ddaspk
 
     def ddaspk_jac(self, tres, yy, yp, cj, jac):
         """the jacobian function as required by ddaspk"""
         self.jac.evaluate(tres, yy, yp, cj, jac)
-        return 0
 
 #classes for the equations, as needed for the chosen solution method
 class resindex2(ResFunction):
@@ -211,7 +216,7 @@ class resindex1(ResFunction):
         m1 = self.dblpend.m1
         m2 = self.dblpend.m2
         g = self.dblpend.g
-        
+
         result[0]= m1*yp[4]        - yy[9]*(yy[0] - yy[2])  - yy[0]*yy[8]
         result[1]= m1*yp[5] + g*m1 - yy[9]*(yy[1] - yy[3])  - yy[1]*yy[8] 
         result[2]= m2*yp[6]        + yy[9]*(yy[0] - yy[2]) 
@@ -246,8 +251,7 @@ class jacindex1(JacFunction):
         m1 = self.dblpend.m1
         m2 = self.dblpend.m2
         g = self.dblpend.g
-        for i in range(10):
-            jac[i][:] = 0.
+        jac[:,:] = 0.
         jac[0][0] = - yy[9]   - yy[8] 
         jac[0][2] =  yy[9]
         jac[0][4] = cj * m1
@@ -322,13 +326,17 @@ def main():
     z = [0]*(1+len(problem.stop_t)); zprime = [0]*(1+len(problem.stop_t))
 
     res.set_dblpend(problem)
+    jfac = 1.
     if jac:
         jac.set_dblpend(problem)
+        jfac = JACFAC
+        
 
     solver = ida.IDA(res,
                 compute_initcond='yp0',
                 first_step=1e-18,
-                atol=ATOL,rtol=RTOL,
+                atol=ATOL*jfac,
+                rtol=RTOL*jfac,
                 jacfn=jac,
                 algebraic_vars_idx=problem.algvar_idx,
                 exclude_algvar_from_error=problem.exclalg_err,
@@ -379,48 +387,39 @@ def main():
     #solve the same with ddaspk
     #sys.exit()
     if alsoddaspk:
-        ddaspkz = [0]*(1+len(problem.stop_t))
-        ddaspkzprime = [0]*(1+len(problem.stop_t))
-        ddaspkz[0] = np.empty(problem.neq, float)
-        ddaspkzprime[0] = np.empty(problem.neq, float)
+        ddaspkz = empty((alen(problem.stop_t), problem.neq), float)
+        ddaspkzprime = empty((alen(problem.stop_t), problem.neq), float)
         
         problem.set_res(res)
+        ig = dae('ddaspk', problem.ddaspk_res)
         if jac:
             problem.set_jac(jac)
-            ig = dae(problem.ddaspk_res, problem.ddaspk_jac)
-        else:
-            ig = dae(problem.ddaspk_res, None)
+            ig.set_options(jacfn=problem.ddaspk_jac)
         #first compute the correct initial condition from the values of z0
-        ig.set_integrator('ddaspk',algebraic_var=problem.algvar,
-                            compute_initcond='yode0',
-                            first_step=1e-18,
-                            atol=ATOL,rtol=RTOL)
-        ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
+        ig.set_options(algebraic_var=problem.algvar,
+                        compute_initcond='yode0',
+                        first_step=1e-18,
+                        exclude_algvar_from_error=problem.exclalg_err,
+                        atol=ATOL, rtol=RTOL, nsteps=1500)
+        tinit = ig.init_step(0., problem.z0, problem.zprime0, ddaspkz[0], ddaspkzprime[0])
 
-        i=0
-        ddaspkz[i],  ddaspkzprime[i] = ig.solve(1e-18);
-        assert ig.successful(), (problem,)
         print('ddaspk started from z0 = ', problem.z0)
-        print('ddaspk initial condition calculated, [z,zprime] = [', z[0], zprime[0], ']')
+        print('ddaspk initial condition calculated, [z,zprime] = [', ddaspkz[0],
+                    ddaspkzprime[0], ']')
 
-        ig.set_integrator('ddaspk',algebraic_var=problem.algvar,
-                            first_step=1e-9,
-                            atol=ATOL, rtol=RTOL, #atol=1e-8,rtol=1e-8,
-                            exclude_algvar_from_error=problem.exclalg_err,
-                            nsteps = 1500)
-        ig.set_initial_value(ddaspkz[0], ddaspkzprime[0], t=0.0)
         i=1
         error = False
         for time in problem.stop_t[1:]:
-                #print 'at time', time
-                ddaspkz[i],  ddaspkzprime[i] = ig.solve(time)
-                #print 'sol at ', time, z[i]
-                
-                i += 1
-                if not ig.successful():
-                    error = True
-                    print('Error in ddaspk solver, breaking solution at time %g' % time)
-                    break
+            #print 'at time', time
+            #print (ddaspkz[i])
+            flag, tout = ig.step(time-ig._integrator.t, ddaspkz[i],  ddaspkzprime[i])
+            #print (i, ddaspkz[i])
+            i += 1
+            #print 'sol at ', time, z[i]
+
+            if flag < 1:
+                error = True
+                break
         dnr = i
         ddaspkx1t = asarray([ddaspkz[i][0] for i in range(dnr)])
         ddaspky1t = asarray([ddaspkz[i][1] for i in range(dnr)])
