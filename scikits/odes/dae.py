@@ -96,22 +96,6 @@ class DaeBase(object):
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
-    
-    def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
-        """
-        Initializes the solver and allocates memory.
-
-        Input:
-            t0     - initial time
-            y0     - initial condition for y (can be list or numpy array)
-            yp0    - initial condition for yp (can be list or numpy array)
-            y_ic0  - (optional) returns the calculated consistent initial condition for y
-                     It MUST be a numpy array.
-            yp_ic0 - (optional) returns the calculated consistent initial
-                     condition for y derivated. It MUST be a numpy array.
-        """
-        raise NotImplementedError('all DAE solvers must implement this')
-
     def solve(self, tspan, y0,  yp0, hook_fn = None):
         """
         Runs the solver.
@@ -141,6 +125,26 @@ class DaeBase(object):
             supplied y0, yp0 values as the starting values the values calculated 
             by the solver (i.e. consistent initial
             conditions. The starting time is then also the precomputed time.
+        """
+        raise NotImplementedError('all DAE solvers must implement this')
+
+    def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
+        """
+        Initializes the solver and allocates memory.
+
+        Input:
+            t0     - initial time
+            y0     - initial condition for y (can be list or numpy array)
+            yp0    - initial condition for yp (can be list or numpy array)
+            y_ic0  - (optional) returns the calculated consistent initial 
+                     condition for y
+                     It MUST be a numpy array.
+            yp_ic0 - (optional) returns the calculated consistent initial
+                     condition for y derivated. It MUST be a numpy array.
+        
+        Return Value:
+            t      - time of solver at end of init_step, from which solver will
+                     continue
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
@@ -207,7 +211,6 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         print('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
 
 """
-
     __doc__ += integrator_info
 
     def __init__(self, integrator_name, eqsres, **options):
@@ -238,7 +241,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             return value: An integer, 0 for success. It is not guaranteed that 
                       a solver takes this status into account
         
-            Some solvers will allos userdata to be passed to eqsres, or optional
+            Some solvers will allow userdata to be passed to eqsres, or optional
             formats that are more performant.
         options :  additional options of the solver, see set_options method of
             the solver for details.
@@ -291,7 +294,6 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             conditions. The starting time is then also the precomputed time.
         """
         return self._integrator.solve(tspan, y0,  yp0, hook_fn)
-
 
     def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
         """

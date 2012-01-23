@@ -16,25 +16,22 @@ where::
     i = 0, ..., len(y0) - 1
     f(t,y) is a vector of size i
 
-class ODEsystem
----------------
+class ode
+---------
 
 A generic interface class to ordinary differential equation solvers. 
 It has the following methods::
 
-    integrator = ODEsystem(rhs,jac=None)
-    integrator = integrator.set_integrator(name, **params)
-    integrator = integrator.set_initial_value(y0, t=0.0)
-    y1 = integrator.integrate(t1,step=0,relax=0)
-    flag = integrator.successful()
-    if not flag:
-        print 'return message', integrator.successmsg
+    integrator = ode(integrator_name, rhsfn, **options)
+    integrator.set_options(options)
+    result = integrator.solve(times, init_val_y, user_data)
 
-rhs and jac need to have the signature as required by the integrator name. If
-you need to pass extra arguments to jac, use eg a python class method : 
-    problem = Myproblem()
-    integrator = ODEsystem(problem.res, problem.jac)
-Allowing the extra parameters to be kept in the Myproblem class
+Alternatively, an init_step, and step method can be used to iterate over a 
+solution.
+
+For ode rhsfn is required, this is the right-hand-side equations evaluator
+function f, which must satisfy a specific signature.
+
 """
 
 from __future__ import print_function
@@ -44,12 +41,22 @@ integrator_info = \
 """
 Available integrators
 ---------------------
+cvode
+
+Note: 
+-----
+Consider also the solvers from scipy.integrate, specifically odeint and 
+scipy.integrate.ode. 
+At the moment of writing, these methods of scipy are based on the original
+lsoda/e and vode fortran solvers. cvode is the successor (and improvement) of 
+those, with a last release in sundials 2.4.0
+
 """ 
 
 __doc__ += integrator_info
 
 __all__ = []
-__version__ = "$Id: odes_cvode bmalengier $"
+__version__ = "$Id: ode bmalengier $"
 __docformat__ = "restructuredtext en"
 
 import re

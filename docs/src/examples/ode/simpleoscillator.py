@@ -24,8 +24,8 @@ def rhseqn(t, x, xdot):
     xdot[1] = - k/m * x[0]
     
 #instantiate the solver
-from scikits.odes.sundials import cvode
-solver = cvode.CVODE(rhseqn)
+from scikits.odes import ode
+solver = ode('cvode', rhseqn)
 #obtain solution at a required time
 result = solver.solve([0., 1., 2.], initx)
 

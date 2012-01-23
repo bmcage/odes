@@ -4,7 +4,7 @@
 from .info import __doc__
 
 from .dae import *
-from .odesystem import *
+from .ode import *
 
 __all__ = ['test'] + [s for s in dir() if not s.startswith('_')]
 
