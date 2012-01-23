@@ -47,7 +47,7 @@ class TestDae(TestCase):
 
     def test_lsodi(self):
         """Check the lsodi solver"""
-        for problem_cls in PROBLEMS:
+        for problem_cls in PROBLEMS_LSODI:
             problem = problem_cls()
             self._do_problem(problem, 'lsodi', **problem.lsodi_pars)
     
@@ -221,7 +221,7 @@ class StiffVODECompare(DAE):
 
 PROBLEMS = [SimpleOscillator, StiffVODECompare,  
             SimpleOscillatorJac ]
-
+PROBLEMS_LSODI = [SimpleOscillator, StiffVODECompare]
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
