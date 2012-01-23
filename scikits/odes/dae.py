@@ -91,6 +91,8 @@ class DaeBase(object):
     def set_options(self, **options):
         """
         Set specific options for the solver.
+        
+        Calling set_options a second time, normally resets the solver.
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
@@ -162,6 +164,7 @@ class DaeBase(object):
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
         """
+        raise NotImplementedError('all DAE solvers must implement this')
 
 #------------------------------------------------------------------------------
 # User interface
@@ -209,6 +212,8 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
 
     def __init__(self, integrator_name, eqsres, **options):
         """
+        Initialize the DAE Solver and it's default values
+
         Define equation res = G(t,y,y') which can eg be G = f(y,t) - A y' when 
         solving A y' = f(y,t), 
         and where (optional) jac is the jacobian matrix of the nonlinear system
@@ -217,24 +222,28 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
 
         Parameters
         ----------
-        res : res(t, y, yprime, *res_args)
-            Residual of the DAE. t is a scalar, y.shape == (n,), 
-            yprime.shape == (n,)
-            res_args is determined by the solver backend, set it as required by
-            the backend you use, assume it to be unneeded
-            res should return delta, status
-            delta should be an array of the residuals, and status: 
-              0 : continue
-              -1: Illigal input, try again
-              -2: Illigal input, stop
-             It is not guaranteed that a solver takes this status into account 
-        jac : jac(t, y, yprime, *jac_args)
-            Jacobian of the rhs, typically 
-                jac[i,j] = d res[i] / d y[j] + scaling *  d res[i] / d yprime[j]
-            jac_args is determined by the solver backend, set it as required by
-            the backend you use
-        """
+        integrator_name : name of the integrator solver to use. Currently you 
+            can choose ida, ddaspk and lsodi, with ida the most recent solver.
+        eqsres : residual function
+            Residual of the DAE. The signature of this function depends on the
+            solver used, see the solver documentation for details.
+            Generally however, you can assume the following signature to work:
+                        eqsres(x, y, yprime, return_residual)
+            with 
+            x       : independent variable, eg the time, float
+            y       : array of n unknowns in x
+            yprime  : dy/dx array of n unknowns in x, dimension = dim(y)
+            return_residual: array that must be updated with the value of the 
+                      residuals, so G(t,y,y').  The dimension is equal to dim(y)
+            return value: An integer, 0 for success. It is not guaranteed that 
+                      a solver takes this status into account
         
+            Some solvers will allos userdata to be passed to eqsres, or optional
+            formats that are more performant.
+        options :  additional options of the solver, see set_options method of
+            the solver for details.
+        """
+
         integrator = find_dae_integrator(integrator_name)
         if integrator is None:
             raise ValueError('No integrator name match with %s or is not available.'\
@@ -243,15 +252,84 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             self._integrator = integrator(eqsres, **options)
 
     def set_options(self, **options):
-        self._integrator.set_options(**options)
-
-    def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
-        return self._integrator.init_step(t0, y0, yp0, y_ic0_retn, yp_ic0_retn)
+        """
+        Set specific options for the solver.
+        See the solver documentation for details.
+        
+        Calling set_options a second time, normally resets the solver.
+        """
+        return self._integrator.set_options(**options)
 
     def solve(self, tspan, y0,  yp0, hook_fn = None):
+        """
+        Runs the solver.
+        
+        Input:
+            tspan - an list/array of times at which the computed value will be
+                    returned. Must contain the start time.
+            y0    - list/numpy array of initial values
+            yp0   - list/numpy array of initial values of derivatives
+            hook_fn  - if set, this function is evaluated after each successive 
+                       internal) step. Input values: t, x, xdot, userdata. 
+                       Output is 0 (success), otherwise computation is stopped 
+                      and a return flag = ? is set. Values are stored in (see) t_err, y_err, yp_err
+            
+        Return values:
+            flag   - indicating return status of the solver
+            t      - numpy array of times at which the computations were successful
+            y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+            yp     - numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])
+            t_err  - float or None - if recoverable error occured (for example reached maximum
+                     number of allowed iterations), this is the time at which it happened
+            y_err  - numpy array of values corresponding to time t_err
+            yp_err - numpy array of derivatives corresponding to time t_err
+            
+        Note:
+            If 'calc_initcond' option set, then solver returns instead of user 
+            supplied y0, yp0 values as the starting values the values calculated 
+            by the solver (i.e. consistent initial
+            conditions. The starting time is then also the precomputed time.
+        """
         return self._integrator.solve(tspan, y0,  yp0, hook_fn)
 
+
+    def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
+        """
+        Initializes the solver and allocates memory. It is not needed to 
+        call this method if solve is used to compute the solution. In the case
+        step is used, init_step must be called first.
+
+        Input:
+            t0     - initial time
+            y0     - initial condition for y (can be list or numpy array)
+            yp0    - initial condition for yp (can be list or numpy array)
+            y_ic0  - (optional) returns the calculated consistent initial condition for y
+                     It MUST be a numpy array.
+            yp_ic0 - (optional) returns the calculated consistent initial
+                     condition for y derivated. It MUST be a numpy array.
+        """
+        return self._integrator.init_step(t0, y0, yp0, y_ic0_retn, yp_ic0_retn)
+
     def step(self, t, y_retn, yp_retn = None):
+        """
+        Method for calling successive next step of the solver to allow
+        more precise control over the solver. The 'init_step' method has to
+        be called before the 'step' method.
+        
+        Input:
+            t - if t>0.0 then integration is performed until this time
+                         and results at this time are returned in y_retn
+              - if t<0.0 only one internal step is perfomed towards time abs(t)
+                         and results after this one time step are returned
+            y_retn - numpy vector (ndim = 1) in which the computed
+                     value will be stored  (needs to be preallocated)
+            yp_retn - numpy vector (ndim = 1) or None. If not None, will be
+                      filled (needs to be preallocated)
+                      with derivatives of y at time t.
+        Return values:
+            flag  - status of the computation (successful or error occured)
+            t_out - time, where the solver stopped (when no error occured, t_out == t)
+        """
         return self._integrator.step(t, y_retn, yp_retn)
 
 #------------------------------------------------------------------------------
