@@ -50,7 +50,7 @@ class Slidingpendulum():
     
     #default values
     deftend = 120.
-    deftstep = 1e-3
+    deftstep = 1e-2
     defg = 9.8
     defm = 1.0
     defM = 1.0
@@ -78,6 +78,8 @@ class Slidingpendulum():
         self.k = Slidingpendulum.defk
         self.g = Slidingpendulum.defg
         self.omega = Slidingpendulum.defomega
+        self.scale1 = 1e10
+        self.scale2 = 1e9
         
         self.res = None
         self.jac = None
@@ -105,7 +107,7 @@ class Slidingpendulum():
                               0., 0., lambdaval, lambdaval])
             self.zprime0 = array([0., 0., 0., 0., -self.g, 0., 0., 0.], float)
             self.res = self.resindex2
-            self.algvaridx = [6,7]
+            self.algvaridx = [6, 7]
             self.exclalg_err = True
         else:
             self.neq = 7
@@ -131,20 +133,20 @@ class Slidingpendulum():
         ## thetadot = yy[5]  = u3
         
         ## it is needed to scale the constraint by blowing up 
-        ## the lagrange multiplier with 1e10
+        ## the lagrange multiplier with 1e10 (self.scale1)
         res[0]= ((M+m)*yp[3] + m*l*cos(yy[2])*yp[5]  \
                 - m*l*sin(yy[2])*yy[5]**2 \
-                + yy[6]*1e10*(-2*yy[0]+omega/3.*sin(omega*yy[0]))\
+                + yy[6]*self.scale1*(-2*yy[0]+omega/3.*sin(omega*yy[0]))\
                 +k*yy[3])
         res[1]= ((M+m)*yp[4] + m*l*sin(yy[2])*yp[5]  \
                 + m*l*cos(yy[2])*yy[5]**2 + (M+m)*g \
-                + yy[6]*1e10\
+                + yy[6]*self.scale1\
                 +k*yy[4] )
         res[2]= m*l*cos(yy[2])*yp[3] + m*l*sin(yy[2])*yp[4] + m*l**2 * yp[5] \
                 + m*g*sin(yy[2])
-        #stabalizing factor
-        res[3]= yp[0] - yy[3] + yy[7]*yy[0]
-        res[4]= yp[1] - yy[4] + yy[7]*yy[1]
+        #stabalizing factor to introduce a new variable yy[7]
+        res[3]= yp[0] - yy[3] + yy[7]*self.scale2*yy[0]
+        res[4]= yp[1] - yy[4] + yy[7]*self.scale2*yy[1]
         res[5]= yp[2] - yy[5]
         #use both constraint and it's derivative
         res[6]= (yy[1]-yy[0]**2-1/3.*cos(omega*yy[0]))/10000.
@@ -168,16 +170,16 @@ class Slidingpendulum():
         ## xdot     = yy[3]
         ## ydot     = yy[4]
         ## thetadot = yy[5]
-        
+
         ## it is needed to scale the constraint by blowing up 
-        ## the lagrange multiplier with 1e10
+        ## the lagrange multiplier with 1e10 (self.scale1)
         res[0]= (M+m)*yp[3] + m*l*cos(yy[2])*yp[5]  \
                 - m*l*sin(yy[2])*yy[5]**2 \
-                + yy[6]*1e10*(-2*yy[0]+omega/3.*sin(omega*yy[0]))\
+                + yy[6]*self.scale1*(-2*yy[0]+omega/3.*sin(omega*yy[0]))\
                 +k*yy[3]
         res[1]= (M+m)*yp[4] + m*l*sin(yy[2])*yp[5]  \
                 + m*l*cos(yy[2])*yy[5]**2 + (M+m)*g \
-                + yy[6]*1e10\
+                + yy[6]*self.scale1\
                 +k*yy[4] 
         res[2]= m*l*cos(yy[2])*yp[3] + m*l*sin(yy[2])*yp[4] + m*l**2 * yp[5] \
                 + m*g*sin(yy[2])
@@ -215,9 +217,11 @@ def main():
         return
 
     if input1 == '1':
-        ig = dae('ida', problem.res, atol=1e-5,rtol=1e-4)
+        ig = dae('ida', problem.res, atol=1e-5,rtol=1e-4, max_conv_fails=100)
     elif input1 == '2':
         ig = dae('ddaspk', problem.res, atol=1e-5,rtol=1e-4)
+        #for ddaspk, scale2 must not be that big
+        problem.scale2 = 1.
     ig.set_options(jacfn=problem.jac,
                 algebraic_vars_idx=problem.algvaridx,
                 compute_initcond='yp0',
@@ -331,7 +335,7 @@ def main():
         secs = 0
         frame = 0
         print('Generating output ...\n')
-        for solnr in range(0,nr,50):
+        for solnr in range(0,nr,5):
             drawonesol(solnr, sizex, sizey, frame)
             frame += 1
             if solnr // 500 != secs :

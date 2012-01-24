@@ -106,7 +106,7 @@ cdef class IDA:
             'max_step_size': 0.,
             'first_step_size': 0.,
             'max_steps': 0,
-            'max_conv_fails': 0,
+            'max_conv_fails': 0,  # sundials default is 10
             'max_nonlin_iters': 0,
             'nonlin_conv_coef': 0.,
             'compute_initcond': None,
