@@ -39,7 +39,7 @@ try:
 except:
     pass
 #imports
-from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi)
+from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi, empty)
 from scikits.odes import dae
 import pylab
 import os
@@ -50,7 +50,7 @@ class Slidingpendulum():
     
     #default values
     deftend = 120.
-    deftstep = 1e-2
+    deftstep = 1e-3
     defg = 9.8
     defm = 1.0
     defM = 1.0
@@ -95,7 +95,7 @@ class Slidingpendulum():
             self.g = data.defg
             self.omega = data.defomega
         
-        self.stop_t  = arange(.0, self.tend, self.tstep)[1:]
+        self.stop_t  = arange(.0, self.tend, self.tstep)
         
         lambdaval = 0.0
 
@@ -105,7 +105,7 @@ class Slidingpendulum():
                               0., 0., lambdaval, lambdaval])
             self.zprime0 = array([0., 0., 0., 0., -self.g, 0., 0., 0.], float)
             self.res = self.resindex2
-            self.algvar = array([1,1,1,1,1,1,-1,-1])
+            self.algvaridx = [6,7]
             self.exclalg_err = True
         else:
             self.neq = 7
@@ -113,17 +113,16 @@ class Slidingpendulum():
                               0., 0., lambdaval])
             self.zprime0 = array([0., 0., 0., 0., -self.g, 0., 0.], float)
             self.res = self.resindex1
-            self.algvar = array([1,1,1,1,1,1,-1])
-            self.exclalg_err = False
+            self.algvaridx = [6]
+            self.exclalg_err = True
 
-    def resindex2(self, tres, yy, yp):
+    def resindex2(self, tres, yy, yp, res):
         m = self.m
         M = self.M
         l = self.l
         omega = self.omega
         g = self.g
         k = self.k
-        tmp = zeros(self.neq)
         ## x        = yy[0]
         ## y        = yy[1]
         ## theta    = yy[2]
@@ -133,36 +132,36 @@ class Slidingpendulum():
         
         ## it is needed to scale the constraint by blowing up 
         ## the lagrange multiplier with 1e10
-        tmp[0]= ((M+m)*yp[3] + m*l*cos(yy[2])*yp[5]  \
+        res[0]= ((M+m)*yp[3] + m*l*cos(yy[2])*yp[5]  \
                 - m*l*sin(yy[2])*yy[5]**2 \
                 + yy[6]*1e10*(-2*yy[0]+omega/3.*sin(omega*yy[0]))\
                 +k*yy[3])
-        tmp[1]= ((M+m)*yp[4] + m*l*sin(yy[2])*yp[5]  \
+        res[1]= ((M+m)*yp[4] + m*l*sin(yy[2])*yp[5]  \
                 + m*l*cos(yy[2])*yy[5]**2 + (M+m)*g \
                 + yy[6]*1e10\
                 +k*yy[4] )
-        tmp[2]= m*l*cos(yy[2])*yp[3] + m*l*sin(yy[2])*yp[4] + m*l**2 * yp[5] \
+        res[2]= m*l*cos(yy[2])*yp[3] + m*l*sin(yy[2])*yp[4] + m*l**2 * yp[5] \
                 + m*g*sin(yy[2])
         #stabalizing factor
-        tmp[3]= yp[0] - yy[3] + yy[7]*yy[0]
-        tmp[4]= yp[1] - yy[4] + yy[7]*yy[1]
-        tmp[5]= yp[2] - yy[5]
+        res[3]= yp[0] - yy[3] + yy[7]*yy[0]
+        res[4]= yp[1] - yy[4] + yy[7]*yy[1]
+        res[5]= yp[2] - yy[5]
         #use both constraint and it's derivative
-        tmp[6]= (yy[1]-yy[0]**2-1/3.*cos(omega*yy[0]))/10000.
-        tmp[7]= (-2*yy[0] + omega/3.*sin(omega*yy[0]))*yy[3] + yy[4]
+        res[6]= (yy[1]-yy[0]**2-1/3.*cos(omega*yy[0]))/10000.
+        res[7]= (-2*yy[0] + omega/3.*sin(omega*yy[0]))*yy[3] + yy[4]
         ##print tres, 'yy', yy
         ##print tres, 'yp', yp
-        ##print tres, 'res', tmp
-        return tmp
+        ##print tres, 'res', res
+        return 0
     
-    def resindex1(self, tres, yy, yp):
+    def resindex1(self, tres, yy, yp, res):
         m = self.m
         M = self.M
         l = self.l
         omega = self.omega
         g = self.g
         k = self.k
-        tmp = zeros(self.neq)
+        res = zeros(self.neq)
         ## x        = yy[0]
         ## y        = yy[1]
         ## theta    = yy[2]
@@ -172,33 +171,33 @@ class Slidingpendulum():
         
         ## it is needed to scale the constraint by blowing up 
         ## the lagrange multiplier with 1e10
-        tmp[0]= (M+m)*yp[3] + m*l*cos(yy[2])*yp[5]  \
+        res[0]= (M+m)*yp[3] + m*l*cos(yy[2])*yp[5]  \
                 - m*l*sin(yy[2])*yy[5]**2 \
                 + yy[6]*1e10*(-2*yy[0]+omega/3.*sin(omega*yy[0]))\
                 +k*yy[3]
-        tmp[1]= (M+m)*yp[4] + m*l*sin(yy[2])*yp[5]  \
+        res[1]= (M+m)*yp[4] + m*l*sin(yy[2])*yp[5]  \
                 + m*l*cos(yy[2])*yy[5]**2 + (M+m)*g \
                 + yy[6]*1e10\
                 +k*yy[4] 
-        tmp[2]= m*l*cos(yy[2])*yp[3] + m*l*sin(yy[2])*yp[4] + m*l**2 * yp[5] \
+        res[2]= m*l*cos(yy[2])*yp[3] + m*l*sin(yy[2])*yp[4] + m*l**2 * yp[5] \
                 + m*g*sin(yy[2])
-        tmp[3]= yp[0] - yy[3]
-        tmp[4]= yp[1] - yy[4]
-        tmp[5]= yp[2] - yy[5]
+        res[3]= yp[0] - yy[3]
+        res[4]= yp[1] - yy[4]
+        res[5]= yp[2] - yy[5]
         #following equation is wrong, we need to derive another time and 
         #eliminate the dot{xdot} and dot{ydot} so that lagrange multiplier appears
-        tmp[6]= (-2*yy[0] + omega/3.*sin(omega*yy[0]))*yy[3] + yy[4]
+        res[6]= (-2*yy[0] + omega/3.*sin(omega*yy[0]))*yy[3] + yy[4]
         ##sys.exit()
         ##print tres, 'yy', yy
         ##print tres, 'yp', yp
-        ##print tres, 'res', tmp
-        return tmp
+        ##print tres, 'res', res
+        return 0
 
 def main():
     """
     The main program: instantiate a problem, then use odes package to solve it
     """
-    uinput = input("Solve as\n 1 = index 2 problem\n 2 = index 1 problem\n"
+    uinput = input("Solve as\n 1 = index 2 problem \n 2 = index 1 problem (Not working!)\n"
                 " \n 4 = info\n\n"
                 "Answer (1,2 or 4) : ")
     if uinput == '1':
@@ -209,80 +208,45 @@ def main():
         print(__doc__)
         return
     
-    input1 = input("Solve with\n 1 = ddaspk\n 2 = ida\n\n"
+    input1 = input("Solve with\n 1 = ida\n 2 = ddaspk\n\n"
                        "Answer (1 or 2) : ").strip()
     if input1 not in ["1", "2"]:
         print("Invalid solution method given")
         return
-    
-    z = [0]*(1+len(problem.stop_t)); zprime = [0]*(1+len(problem.stop_t))
 
-    ig = dae(problem.res, problem.jac)
-    #first compute the correct initial condition from the values of z0
-    if input1 == "2":
-        ig.set_integrator('odesIDA',algebraic_var=problem.algvar,
-                        compute_initcond='yode0',
-                        first_step=1e-9,
-                        atol=1e-5,rtol=1e-5)
-    if input1 == "1":
-        #first compute the correct initial condition from the values of z0
-        ig.set_integrator('ddaspk',algebraic_var=problem.algvar,
-                    compute_initcond='yode0',
-                    first_step=1e-9,
-                    atol=1e-2,rtol=1e-2)
-    ig.set_initial_value(problem.z0, problem.zprime0,  t=0.0)
+    if input1 == '1':
+        ig = dae('ida', problem.res, atol=1e-5,rtol=1e-4)
+    elif input1 == '2':
+        ig = dae('ddaspk', problem.res, atol=1e-5,rtol=1e-4)
+    ig.set_options(jacfn=problem.jac,
+                algebraic_vars_idx=problem.algvaridx,
+                compute_initcond='yp0',
+                exclude_algvar_from_error=problem.exclalg_err,
+                max_steps = 15000,
+                first_step=1e-9)
 
-    i=0
-    z[i],  zprime[i] = ig.solve(1e-9);
-    assert ig.successful(), (problem,)
+    #Solve it
+    result= ig.solve(problem.stop_t, problem.z0, problem.zprime0)
+    time = result[1]
+    z = result[2]
+    zprime = result[3]
+
+    #some user output
     print('started from z0 = ', problem.z0)
     print('initial condition calculated, [z,zprime] = [', z[0], zprime[0], ']')
 
-    if input1 == "2":
-        ig.set_integrator('odesIDA',algebraic_var=problem.algvar,
-                        first_step=1e-9,
-                        atol=1e-5,
-                        rtol=1e-5,
-                        exclude_algvar_from_error=problem.exclalg_err,
-                        nsteps = 1500)
-    if input1 == "1":
-        ig.set_integrator('ddaspk',algebraic_var=problem.algvar,
-                        first_step=1e-9,
-                        atol=1e-2,
-                        rtol=1e-2,
-                        exclude_algvar_from_error=problem.exclalg_err,
-                        nsteps = 1500)
-    ig.set_initial_value(z[0], zprime[0], t=0.0)
+    print('last sol at time', time[-1])
+    print(' has solution ', z[-1], zprime[-1])
+    res = empty(problem.neq, float)
+    problem.res(problem.stop_t[-1], z[-1], zprime[-1], res)
+    print(' has residual: ', res)
 
-    i=1
+    xt = z[:,0]
+    yt = z[:,1]
+    thetat = z[:,2]
+    nr = len(xt)
 
-    error = False
-    for time in problem.stop_t:
-            #print 'at time', time
-            z[i],  zprime[i] = ig.solve(time)
-            #print 'sol at ', time, z[i]
-            i += 1
-            if not ig.successful():
-                error = True
-                print('Error in solver, breaking solution at time %g' % time)
-                break
-
-
-    print('last sol', z[i-1], zprime[i-1])
-    print('has residual: ', problem.res(problem.stop_t[i-2], z[i-1], 
-                                        zprime[i-1]))
-
-    nr = i
-    xt = [z[i][0] for i in range(nr)]
-    yt = [z[i][1] for i in range(nr)]
-    thetat = [z[i][2] for i in range(nr)]
-    time = zeros(nr,float)
-    time[0] = 0.0
-    if error:
-        time[1:]  = problem.stop_t[:nr-1] 
-    else:
-        time[1:]  = problem.stop_t[:nr]
-        
+    pylab.ion()
     pylab.figure(1)
     pylab.subplot(111)
     pylab.scatter(xt, yt)
@@ -367,7 +331,7 @@ def main():
         secs = 0
         frame = 0
         print('Generating output ...\n')
-        for solnr in range(0,nr,5):
+        for solnr in range(0,nr,50):
             drawonesol(solnr, sizex, sizey, frame)
             frame += 1
             if solnr // 500 != secs :

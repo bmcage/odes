@@ -27,11 +27,12 @@ dae class:
 - rband=None|int
 - method='adams'|'bdf'
 - with_jacobian=0|1
-- nsteps = int
+- max_steps = int
+- max_step_size = float
 - (first|min|max)_step = float
 - tcrit=None|float
 - order = int        # <=12 for adams, <=5 for bdf
-- compute_initcond = None|'yode0'
+- compute_initcond = None|'yp0'
 
 Details: 
 
@@ -67,11 +68,12 @@ rfn !
 
 - jacfn is not a supported option for lsodi.
 
-- compute_initcond: None or 'yode0'
+- compute_initcond: None or 'yp0'
   LSODI may be able to compute the initial conditions if you do not know them
   precisely and the problem is not algebraic at t=0. 
-  If yode0, then the differential variables (y of the ode system at time 0) 
-    will be used to solve for the derivatives of the differential variables. 
+  If yp0, then the differential variables (y of the ode system at time 0) 
+    will be used to solve for the derivatives of the differential variables,
+    so yp0 will be calculated. 
 Source: http://www.netlib.org/ode/lsodi.f
 
 """
@@ -125,8 +127,8 @@ class lsodi(DaeBase):
                 'uband': None,
                 'tcrit': None, 
                 'order': 0,
-                'nsteps': 500,
-                'max_step': 0.0, # corresponds to infinite
+                'max_steps': 500,
+                'max_step_size': 0.0, #corresponds to infinite
                 'min_step': 0.0,
                 'first_step': 0.0, # determined by solver
                 'method': "adams", 
@@ -163,8 +165,8 @@ class lsodi(DaeBase):
 
         self.tcrit = self.options['tcrit']
         self.order = self.options['order']
-        self.nsteps = self.options['nsteps']
-        self.max_step = self.options['max_step']
+        self.nsteps = self.options['max_steps']
+        self.max_step = self.options['max_step_size']
         self.min_step = self.options['min_step']
         self.first_step = self.options['first_step']
         if re.match(self.options['method'], r'adams', re.I): self.meth = 1
@@ -172,7 +174,7 @@ class lsodi(DaeBase):
         else: raise ValueError('Unknown integration method %s'%(self.options['method']))
         if self.options['compute_initcond'] is None:
             self.compute_initcond = 0
-        elif re.match(self.options['compute_initcond'], r'yode0', re.I):
+        elif re.match(self.options['compute_initcond'], r'yp0', re.I):
             self.compute_initcond = 1
         else:
             raise ValueError('Unknown init cond calculation method %s' %(
@@ -312,14 +314,21 @@ class lsodi(DaeBase):
         else:
             itask = self.call_args[3]
             self.call_args[3] = 4
+        intbreak = None
         for ind, time in enumerate(tspan[1:]):
-            result = self.__run(y_retn[ind], yp_retn[0], t_retn[ind], time)
+            result = self.__run(y_retn[ind], yp_retn[ind], t_retn[ind], time)
             if not self.success:
+                intbreak = ind+1
                 break
             t_retn[ind+1] = result[2]
             y_retn[ind+1][:] = result[0][:]
             yp_retn[ind+1][:] = result[1][:]
         self.t = t_retn[-1]
+        if indbreak is not None:
+            self.t = t_retn[indbreak-1]
+            return self.success, t_retn[:indbreak], y_retn[:indbreak],\
+                   yp_retn[:indbreak], t_retn[indbreak], y_retn[indbreak],\
+                   yp_retn[indbreak]
         return self.success, t_retn, y_retn, yp_retn, None, None, None
 
     def __run(self, *args):

@@ -334,6 +334,7 @@ def main():
                 first_step=1e-18,
                 atol=ATOL*jfac,
                 rtol=RTOL*jfac,
+                max_steps=1500,
                 jacfn=jac,
                 algebraic_vars_idx=problem.algvar_idx,
                 exclude_algvar_from_error=problem.exclalg_err,
@@ -392,11 +393,12 @@ def main():
             problem.set_jac(jac)
             ig.set_options(jacfn=problem.ddaspk_jac)
         #first compute the correct initial condition from the values of z0
-        ig.set_options(algebraic_var=problem.algvar,
-                        compute_initcond='yode0',
+        ig.set_options(
+                        algebraic_vars_idx=problem.algvar_idx,
+                        compute_initcond='yp0',
                         first_step=1e-18,
                         exclude_algvar_from_error=problem.exclalg_err,
-                        atol=ATOL, rtol=RTOL, nsteps=1500)
+                        atol=ATOL, rtol=RTOL, max_steps=1500)
         tinit = ig.init_step(0., problem.z0, problem.zprime0, ddaspkz[0], ddaspkzprime[0])
 
         print('ddaspk started from z0 = ', problem.z0)

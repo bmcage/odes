@@ -69,13 +69,13 @@ set_options method of the dae class:
   in packed format, jac_packed[i-j+lband, j] = jac[i,j].
 - tcrit : None or float. If given, tcrit is a critical time point
   beyond which no integration occurs
-- nsteps : int
+- max_steps : int
   Maximum number of (internally defined) steps allowed during one
   call to the solver.
 - first_step : float
   Set initial stepsize. DAE solver can suffer on the first step, set this
   to circumvent this.
-- max_step : float
+- max_step_size : float
   Limits for the step sizes used by the integrator. This overrides the
   internal value
 - order : int
@@ -84,11 +84,11 @@ set_options method of the dae class:
 - enforce_nonnegativity: bool
   Enforce the nonnegativity of Y during integration
   Note: best is to run code first with no condition
-- compute_initcond: None or 'yprime0' or 'yode0'
+- compute_initcond: None or 'yp0' or 'y0'
   DDASPK may be able to compute the initial conditions if you do not know them
   precisely. 
-  If yprime0, then y0 will be calculated
-  If yode0, then the differential variables will be used to solve for the 
+  If y0, then y0 will be calculated
+  If yp0, then the differential variables will be used to solve for the 
     algebraic variables and the derivative of the differential variables. 
     Which are the algebraic variables must be indicated with algebraic_var method
 - exclude_algvar_from_error: bool
@@ -105,9 +105,14 @@ set_options method of the dae class:
       -2: y0[i] <  0
        0: y0[i] not constrained
   Alternatively, pass only one integer that then applies to all unknowns
-- algebraic_var: integer array of length the number of unknowns, indicating the 
-  algebraic variables in y. Use -1 to indicate an algebraic variable, and +1 for
-  a differential variable.
+- algebraic_vars_idx: an array or None (= default)
+                Description:
+                    If given problem is of type DAE, some items of the residual
+                    vector returned by the 'resfn' have to be treated as 
+                    algebraic variables. These are denoted by the position 
+                    (index) in the residual vector.
+                    All these indexes have to be specified in the 
+                    'algebraic_vars_idx' array.
 """
 
 __doc__ += integrator_info
@@ -179,24 +184,24 @@ class ddaspk(DaeBase):
     supports_run_relax = 0
     supports_step = 1
 
-    def __init__(self,resfn, **options):
+    def __init__(self, resfn, **options):
         default_values = {
-            'rtol':1e-6,
-            'atol':1e-12,
-            'lband':None,
-            'uband':None,
-            'tcrit':None, 
+            'rtol': 1e-6,
+            'atol': 1e-12,
+            'lband': None,
+            'uband': None,
+            'tcrit': None, 
             'order' : 5,
-            'nsteps' : 500,
-            'max_step' : 0.0, # corresponds to infinite
+            'max_steps' : 500,
+            'max_step_size' : 0.0, # corresponds to infinite
             'first_step' : 0.0, # determined by solver
-            'enforce_nonnegativity':False, 
-            'nonneg_type':None, 
-            'compute_initcond':None,
-            'constraint_init':False, 
-            'constraint_type':None, 
-            'algebraic_var':None, 
-            'exclude_algvar_from_error':False, 
+            'enforce_nonnegativity': False, 
+            'nonneg_type': None, 
+            'compute_initcond': None,
+            'constraint_init': False, 
+            'constraint_type': None, 
+            'algebraic_vars_idx': None,
+            'exclude_algvar_from_error': False, 
             'rfn': None,
             'jacfn': None,
             }
@@ -228,8 +233,8 @@ class ddaspk(DaeBase):
         if self.options['order'] > 5 or self.options['order'] < 1:
             raise ValueError('order should be >=1, <=5')
         self.order = self.options['order']
-        self.nsteps = self.options['nsteps']
-        self.max_step = self.options['max_step']
+        self.nsteps = self.options['max_steps']
+        self.max_step = self.options['max_step_size']
         self.first_step = self.options['first_step']
         self.nonneg =0 
         if self.options['enforce_nonnegativity'] and self.options['constraint_init']: 
@@ -244,18 +249,17 @@ class ddaspk(DaeBase):
         else: self.constraint_type = self.options['constraint_type']
         if self.options['compute_initcond'] is None: 
             self.compute_initcond = 0
-        elif re.match(self.options['compute_initcond'], r'yprime0', re.I): 
+        elif re.match(self.options['compute_initcond'], r'y0', re.I): 
             self.compute_initcond = 2
-        elif re.match(self.options['compute_initcond'], r'yode0', re.I): 
+        elif re.match(self.options['compute_initcond'], r'yp0', re.I): 
             self.compute_initcond = 1
         else: 
             raise ValueError('Unknown init cond calculation method %s' %(
                                             self.options['compute_initcond']))
-        if self.compute_initcond == 1 and self.options['algebraic_var'] is None:
-            raise ValueError('Give integer array indicating which are the '\
-                              'algebraic variables, +1 for diffential var, '\
-                              '-1 for algebraic var')
-        self.algebraic_var = self.options['algebraic_var']
+        if self.compute_initcond == 1 and not self.options['algebraic_vars_idx']:
+            raise ValueError('Give array indicating which are the '\
+                    'algebraic variables with the algebraic_vars_idx option')
+        self.algvaridx = self.options['algebraic_vars_idx']
         self.excl_algvar_err = self.options['exclude_algvar_from_error']
 
         self.success = 1
@@ -289,6 +293,10 @@ class ddaspk(DaeBase):
     def _reset(self, n, has_jac):
         # Calculate parameters for Fortran subroutine ddaspk.
         self.neq = n
+        self.algebraic_var = [1]*self.neq
+        if self.algvaridx is not None:
+            for ind in self.algvaridx:
+                self.algebraic_var[ind] = -1
         self.info = zeros((20,), int32)  # default is all info=0
         self.info[17] = 2  # extra output on init cond computation
         if (isscalar(self.atol) != isscalar(self.rtol)) or (
@@ -397,14 +405,21 @@ class ddaspk(DaeBase):
         t_retn[0] = tinit
         y_retn[0,:] = y0[:]
         yp_retn[0, :] = yp0[:]
+        indbreak = None
         for ind, time in enumerate(tspan[1:]):
             if not self.success:
+                indbreak = ind + 1
                 break
-            result = self.__run([2, 3], y_retn[ind], yp_retn[0], t_retn[ind], time)
+            result = self.__run([2, 3], y_retn[ind], yp_retn[ind], t_retn[ind], time)
             t_retn[ind+1] = result[2]
             y_retn[ind+1][:] = result[0][:]
             yp_retn[ind+1][:] = result[1][:]
         self.t = t_retn[-1]
+        if indbreak is not None:
+            self.t = t_retn[indbreak-1]
+            return self.success, t_retn[:indbreak], y_retn[:indbreak],\
+                   yp_retn[:indbreak], t_retn[indbreak], y_retn[indbreak],\
+                   yp_retn[indbreak]
         return self.success, t_retn, y_retn, yp_retn, None, None, None
 
     def __run(self, states, *args):

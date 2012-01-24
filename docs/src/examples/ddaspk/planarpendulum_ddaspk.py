@@ -75,8 +75,8 @@ algvar = -1
 
 ig = dae('ddaspk', problem.res)
 #first compute the correct initial condition from the values of z0
-ig.set_options(algebraic_var=array([1,1,1,1,algvar]),
-               compute_initcond='yode0',
+ig.set_options(algebraic_vars_idx=[4],
+               compute_initcond='y0',
                first_step=1e-9,
                atol=1e-6, rtol=1e-6)
 #initialize solver and obtain correct values of initial condition
