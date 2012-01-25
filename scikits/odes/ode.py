@@ -182,6 +182,7 @@ As an easy example, consider the simple oscillator,
 
 """
     __doc__ += integrator_info
+    LOADED = False
 
     def __init__(self, integrator_name, eqsrhs, **options):
         """
@@ -289,26 +290,30 @@ As an easy example, consider the simple oscillator,
 # ODE integrators
 #------------------------------------------------------------------------------
 
-## cvode
-try:
-    from sundials import cvode
-    OdeBase.integrator_classes.append(cvode.CVODE)
-    integrator_info_cvode = """
-    CVODE solver from the SUNDIALS package. See info in 
-    scikits.odes.sundials.cvode.CVODE class
-    """
-    __doc__ += integrator_info_cvode
-    integrator_info += integrator_info_cvode
-except ValueError as msg:
-    print('Could not load CVODE solver', msg)
-except ImportError:
-    print(sys.exc_info()[1])
 
+integrator_info_cvode = """
+CVODE solver from the SUNDIALS package. See info in 
+scikits.odes.sundials.cvode.CVODE class
+"""
+__doc__ += integrator_info_cvode
+integrator_info += integrator_info_cvode
 
 def find_ode_integrator(name):
+    if not ode.LOADED:
+        ## cvode
+        try:
+            from sundials import cvode
+            OdeBase.integrator_classes.append(cvode.CVODE)
+        except ValueError as msg:
+            print('Could not load CVODE solver', msg)
+        except ImportError:
+            print(sys.exc_info()[1])
+
+        ode.LOADED = True
+
     for cl in OdeBase.integrator_classes:
         if re.match(name, cl.__name__, re.I):
             return cl
         elif hasattr(cl, name) and re.match(name, cl.name, re.I):
             return cl
-    return
+    raise ValueError('Integrator name %s does not exsist' % name)

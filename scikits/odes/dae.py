@@ -212,6 +212,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
 
 """
     __doc__ += integrator_info
+    LOADED = False
 
     def __init__(self, integrator_name, eqsres, **options):
         """
@@ -338,31 +339,41 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
 # DAE integrators
 #------------------------------------------------------------------------------
 
-## ida
-try:
-    from sundials import ida
-    DaeBase.integrator_classes.append(ida.IDA)
-    integrator_info_ida = """
-    IDA solver from the SUNDIALS package. See info in 
-    scikits.odes.sundials.ida.IDA class
-    """
-    __doc__ += integrator_info_ida
-    integrator_info += integrator_info_ida
-except ValueError as msg:
-    print('Could not load IDA solver', msg)
-except ImportError:
-    print(sys.exc_info()[1])
-
-## ddaspk
-import ddaspkint
-
-## lsodi
-import lsodiint
+integrator_info_ida = """
+            IDA solver from the SUNDIALS package. See info in 
+            scikits.odes.sundials.ida.IDA class
+            """
+__doc__ += integrator_info_ida
+integrator_info += integrator_info_ida
 
 def find_dae_integrator(name):
+    if not dae.LOADED:
+        ## ida
+        try:
+            from sundials import ida
+            DaeBase.integrator_classes.append(ida.IDA)
+        except ValueError as msg:
+            print('Could not load IDA solver', msg)
+        except ImportError:
+            print(sys.exc_info()[1])
+
+        ## ddaspk
+        try:
+            import ddaspkint
+        except ImportError:
+            print(sys.exc_info()[1])
+
+        ## lsodi
+        try:
+            import lsodiint
+        except ImportError:
+            print(sys.exc_info()[1])
+
+        dae.LOADED = True
+        
     for cl in DaeBase.integrator_classes:
         if re.match(name, cl.__name__, re.I):
             return cl
         elif hasattr(cl, name) and re.match(name, cl.name, re.I):
             return cl
-    return
+    raise ValueError('Integrator name %s does not exsist' % name)
