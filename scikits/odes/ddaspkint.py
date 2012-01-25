@@ -123,18 +123,18 @@ __docformat__ = "restructuredtext en"
 
 from numpy import asarray, array, zeros, sin, int32, isscalar, empty, alen
 from copy import copy
-from dae import DaeBase
+from .dae import DaeBase
 import re, sys
 
 class ddaspk(DaeBase):
     __doc__ += integrator_info
     
     try:
-        import ddaspk as _ddaspk
+        from .ddaspk import ddaspk as _runner
     except ImportError:
         print(sys.exc_info()[1])
-        _ddaspk = None
-    _runner = getattr(_ddaspk,'ddaspk',None)
+        _runner = None
+    # _runner = getattr(_ddaspk,'ddaspk',None)
     name = 'ddaspk'
 
     messages = { 1: 'A step was successfully taken in the '

@@ -350,7 +350,7 @@ def find_dae_integrator(name):
     if not dae.LOADED:
         ## ida
         try:
-            from sundials import ida
+            from .sundials import ida
             DaeBase.integrator_classes.append(ida.IDA)
         except ValueError as msg:
             print('Could not load IDA solver', msg)
@@ -359,13 +359,13 @@ def find_dae_integrator(name):
 
         ## ddaspk
         try:
-            import ddaspkint
+            from .ddaspkint import ddaspk
         except ImportError:
             print(sys.exc_info()[1])
 
         ## lsodi
         try:
-            import lsodiint
+            from .lsodiint import lsodi
         except ImportError:
             print(sys.exc_info()[1])
 

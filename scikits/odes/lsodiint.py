@@ -86,19 +86,19 @@ __docformat__ = "restructuredtext en"
 
 from numpy import asarray, array, zeros, sin, int32, isscalar, empty, alen
 from copy import copy
-from dae import DaeBase
+from .dae import DaeBase
 import re, sys
 
 class lsodi(DaeBase):
     __doc__ += integrator_info
 
     try:
-        import lsodi as _lsodi
+        from .lsodi import lsodi as _runner
     except ImportError:
         print(sys.exc_info()[1])
-        _lsodi = None
-    runner = getattr(_lsodi,'lsodi',None)
-    _intdy = getattr(_lsodi,'intdy',None)
+        _runner = None
+    # runner = getattr(_lsodi,'lsodi',None) 
+    _intdy = getattr(_runner, 'intdy', None)
     
     name = 'lsodi'
 
@@ -384,5 +384,5 @@ class lsodi(DaeBase):
             yp_retn[:] = self.yp[:]
         return self.call_args[4], self.t
 
-if lsodi.runner:
+if lsodi._runner:
     DaeBase.integrator_classes.append(lsodi)
