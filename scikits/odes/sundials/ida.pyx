@@ -256,7 +256,10 @@ cdef class IDA:
         """
 
         for (key, value) in options.items():
-            self.options[key.lower()] = value
+            if key.lower() in self.options:
+                self.options[key.lower()] = value
+            else:
+                raise ValueError("Option '%s' is not supported by solver" % key)
         self.initialized = False
 
     def init_step(self, double t0, object y0, object yp0,
