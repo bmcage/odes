@@ -94,12 +94,12 @@ class lsodi(DaeBase):
 
     try:
         from .lsodi import lsodi as _runner
+        from .lsodi import intdy as _intdy
     except ImportError:
         print(sys.exc_info()[1])
         _runner = None
-    # runner = getattr(_lsodi,'lsodi',None) 
-    _intdy = getattr(_runner, 'intdy', None)
-    
+        _intdy = None
+
     name = 'lsodi'
 
     messages = {2 : 'lsodi was successful.',
@@ -332,7 +332,7 @@ class lsodi(DaeBase):
         return self.success, t_retn, y_retn, yp_retn, None, None, None
 
     def __run(self, *args):
-        y1, y1prime_tmp, t, istate = self.runner(*((self._resFn, self.adda,
+        y1, y1prime_tmp, t, istate = self._runner(*((self._resFn, self.adda,
                                                  self._jacFn) + args[0:]
                                                  + tuple(self.call_args)) 
                                              )
