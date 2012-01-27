@@ -17,10 +17,10 @@ LICENSE             = 'new BSD'
 
 DOWNLOAD_URL        = URL
 
-MAJOR = 0
-MINOR = 99
-MICRO = 1
-DEV = True
+MAJOR = 1
+MINOR = 0
+MICRO = 0
+DEV = False
 
 CLASSIFIERS = [
         'Development Status :: 5 - Production/Stable',

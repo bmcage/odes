@@ -58,10 +58,15 @@ This installs the scikit, to use it in your python scripts use eg:
 
 from scikits.odes import dae
 
-For examples, see the tests directory with the tests. 
+For examples, see the docs/src/examples directory and scikits/odes/tests 
+directory. 
 
 Tests
 =====
 To run the tests do in the python shell:
 
 >>> import scikits.odes as od; od.test()
+
+or shorter, in a terminal: 
+
+PYTHONPATH=/path-to-build python -c 'import scikits.odes as od; od.test()'
