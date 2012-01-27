@@ -63,6 +63,8 @@ directory.
 
 Tests
 =====
+You need nose to run the tests. Eg, to install it, run
+easy_install nose
 To run the tests do in the python shell:
 
 >>> import scikits.odes as od; od.test()
@@ -70,3 +72,8 @@ To run the tests do in the python shell:
 or shorter, in a terminal: 
 
 PYTHONPATH=/path-to-build python -c 'import scikits.odes as od; od.test()'
+
+Developer info
+==============
+Release to pypi:
+python setup.py sdist --formats=gztar,zip register upload
