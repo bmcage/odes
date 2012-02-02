@@ -125,6 +125,78 @@ cdef class CVODE:
                     This function takes as input arguments current time t, current value of y, and yp must be used as output numpy array of returned values of \dot{y} at t
                     Optional userdata. Return value is 0 if successfull.
                     This option is mandatory.
+            'rtol':
+                Values: float,  1e-6 = default
+                Description:
+                    Relative tolerancy. 
+            'atol':
+                Values: float or numpy array of floats,  1e-12 = default
+                Description:
+                    Absolute tolerancy
+            'order': 
+                Values: 1, 2, 3, 4, 5 (= default)
+                Description:
+                    Specifies the maximum order of the linear multistep method.
+            'max_steps':
+                Values: positive integer, 0 = default (uses value of 500)
+                Description:
+                    Maximum number of (internally defined) steps allowed during one call to the solver.
+            'max_step_size':
+                Values: non-negative float, 0.0 = default
+                Description:
+                    Restricts the maximal (absolute) internal step value taken by the solver. The value of 0.0 uses
+                    no restriction on the maximal step size.
+            'min_step_size':
+                Values: non-negative float, 0.0 = default
+                Description:
+                    Restricts the minimal (absolute) internal step value taken by the solver. The value of 0.0 uses
+                    no restriction.
+            'first_step_size':
+                Values: float , 0.0 = default
+                Description:
+                    Sets the first step size. DAE solver can suffer on the first step, so set this
+                    to circumvent this. The value of 0.0 uses the solver's internal default value.
+            'linsolver': 
+                Values: 'dense' (= default), 'lapackdense', 'band', 'lapackband', 'spgmr', 'spbcg', 'sptfqmr'
+                Description:
+                    Specifies used linear solver.
+                    Limitations: Linear solvers for dense and band matrices can be used only
+                                 for serial implementation. For parallel implementation use_relaxation
+                                 use lapackdense or lapackband respectively.
+            'lband', 'uband':
+                Values: non-negative integer, 0 = default
+                Description:
+                    Specifies the width of the lower band (below the main diagonal) and/or upper diagonal
+                    (above the main diagonal). So the total band width is lband + 1 + uband, where the 1 
+                    stands for the main diagonal (specially, lband = uband = 0 [that is the default] 
+                    denotes the band width = 1, i.e. the main diagonal only).
+                    Used only if 'linsolver' is band.
+            'maxl':
+                Values: 0 (= default), 1, 2, 3, 4, 5
+                Description:
+                    Dimension of the number of used Krylov subspaces 
+                    (used only by 'spgmr', 'spbcg', 'sptfqmr' linsolvers)
+            'tcrit': 
+                Values: float, 0.0 = default
+                Description:
+                    Maximum time until which we perform the computations.
+                    Unconstrained (i.e. infinite time) is value of 0.0.
+            'user_data':
+                Values: python object, None = default
+                Description:
+                    Additional data that are supplied to each call of the residual function 'Rfn' (see below)
+                    and Jacobi function 'jacfn' (if specified one).
+            'precond_type':
+                default = None
+            'bdf_stability_detection': 
+                default = False, only used if lmm_type == 'bdf
+            'max_conv_fails': 
+                default = 0,
+            'max_nonlin_iters': 
+                default = 0,
+            'nonlin_conv_coef': 
+                default = 0.
+            
         """
 
         for (key, value) in options.items():

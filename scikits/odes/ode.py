@@ -284,7 +284,7 @@ As an easy example, consider the simple oscillator,
             t_out - time, where the solver stopped (when no error occured, t_out == t)
 
         """
-        return self._integrator.step(t, y_retnn)
+        return self._integrator.step(t, y_retn)
 
 #------------------------------------------------------------------------------
 # ODE integrators
