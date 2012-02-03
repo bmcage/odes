@@ -6,7 +6,7 @@ from c_ida cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
                           ndarray2DlsMatd,
                           ResFunction, WrapResFunction,
-                          JacFunction, WrapJacFunction)
+                          JacResFunction, WrapJacResFunction)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
@@ -217,11 +217,14 @@ cdef class IDA:
                     and optional userdata. Return value is 0 if successfull.
                     This option is mandatory.
             'jacfn':
-                Values: function of class JacFunction
+                Values: function of class JacResFunction or python function
                 Description:
-                    Defines the residual function (which has to be a subclass of ResFunction class).
-                    This function takes as input arguments current time t, current value of y, yp, cj, and 2D numpy array of returned jacobian
+                    Defines the jacobian of the residual function as dres/dy + cj dres/dyp, 
+                    and has to be a subclass of JacResFunction class or a python function.
+                    This function takes as input arguments current time t, 
+                    current value of y, yp, cj, and 2D numpy array of returned jacobian
                     and optional userdata. Return value is 0 if successfull.
+                    Jacobian is only used for dense or lapackdense linear solver
             'algebraic_vars_idx': 
                 Values: numpy vector or None (= default)
                 Description:
@@ -389,8 +392,8 @@ cdef class IDA:
             opts['rfn'] = tmpfun
         self.aux_data.res = rfn
         jac = opts['jacfn']
-        if jac is not None and not isinstance(jac , JacFunction):
-            tmpfun = WrapJacFunction()
+        if jac is not None and not isinstance(jac , JacResFunction):
+            tmpfun = WrapJacResFunction()
             tmpfun.set_jacfn(jac)
             jac = tmpfun
             opts['jacfn'] = tmpfun

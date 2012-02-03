@@ -25,14 +25,24 @@ cdef class WrapRhsFunction(RhsFunction):
     cdef int with_userdata
     cpdef set_rhsfn(self, object rhsfn)
 
-cdef class JacFunction:
+cdef class JacResFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        DTYPE_t cj,
                        np.ndarray[DTYPE_t, ndim=2] J)
 
-cdef class WrapJacFunction(JacFunction):
+cdef class WrapJacResFunction(JacResFunction):
+    cpdef object _jacfn
+    cdef int with_userdata
+    cpdef set_jacfn(self, object jacfn)
+
+cdef class JacRhsFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=2] J)
+
+cdef class WrapJacRhsFunction(JacRhsFunction):
     cpdef object _jacfn
     cdef int with_userdata
     cpdef set_jacfn(self, object jacfn)

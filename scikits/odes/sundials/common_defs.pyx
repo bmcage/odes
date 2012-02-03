@@ -71,26 +71,28 @@ cdef class WrapRhsFunction(RhsFunction):
             self._rhsfn(t, y, ydot)
         return 0
 
-cdef class JacFunction:
+cdef class JacResFunction:
     cpdef int evaluate(self, DTYPE_t t, 
-                                             np.ndarray[DTYPE_t, ndim=1] y,
-                                             np.ndarray[DTYPE_t, ndim=1] ydot,
-                                             DTYPE_t cj,
-                                             np.ndarray J):
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       DTYPE_t cj,
+                       np.ndarray J):
         """
-        Returns the Jacobi matrix (for dense the full matrix, for band only
-        bands. Result has to be stored in the variable J, which is preallocated
-        to the corresponding size.
+        Returns the Jacobi matrix of the residual function, as 
+            d(res)/d y + cj d(res)/d ydot
+        (for dense the full matrix, for band only bands). Result has to be 
+        stored in the variable J, which is preallocated to the corresponding 
+        size.
             
         This is a generic class, you should subclass is for the problem specific
         purposes."
         """
         return 0
 
-cdef class WrapJacFunction(JacFunction):
+cdef class WrapJacResFunction(JacResFunction):
     cpdef set_jacfn(self, object jacfn):
         """
-        set some jacobian equations as a JacFunction executable class
+        Set some jacobian equations as a JacResFunction executable class.
         """
 ##        self.with_userdata = 0
 ##        nrarg = len(inspect.getargspec(jacfn)[0])
@@ -110,9 +112,6 @@ cdef class WrapJacFunction(JacFunction):
         Returns the Jacobi matrix (for dense the full matrix, for band only
         bands. Result has to be stored in the variable J, which is preallocated
         to the corresponding size.
-            
-        This is a generic class, you should subclass is for the problem specific
-        purposes."
         """
 ##        if self.with_userdata == 1:
 ##            self._jacfn(t, y, ydot, cj, J, userdata)
@@ -121,6 +120,51 @@ cdef class WrapJacFunction(JacFunction):
         self._jacfn(t, y, ydot, cj, J)
         return 0
 
+cdef class JacRhsFunction:
+    cpdef int evaluate(self, DTYPE_t t, 
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray J):
+        """
+        Returns the Jacobi matrix of the right hand side function, as 
+            d(rhs)/d y
+        (for dense the full matrix, for band only bands). Result has to be 
+        stored in the variable J, which is preallocated to the corresponding 
+        size.
+            
+        This is a generic class, you should subclass is for the problem specific
+        purposes."
+        """
+        return 0
+
+cdef class WrapJacRhsFunction(JacRhsFunction):
+    cpdef set_jacfn(self, object jacfn):
+        """
+        Set some jacobian equations as a JacRhsFunction executable class.
+        """
+##        self.with_userdata = 0
+##        nrarg = len(inspect.getargspec(jacfn)[0])
+##        if nrarg > 6:
+##            #hopefully a class method, self gives 5 arg!
+##            self.with_userdata = 1
+##        elif nrarg == 6 and inspect.isfunction(jacfn):
+##            self.with_userdata = 1
+        self._jacfn = jacfn
+
+    cpdef int evaluate(self, DTYPE_t t, 
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray J):
+        """
+        Returns the Jacobi matrix (for dense the full matrix, for band only
+        bands. Result has to be stored in the variable J, which is preallocated
+        to the corresponding size.
+        """
+##        if self.with_userdata == 1:
+##            self._jacfn(t, y, ydot, cj, J, userdata)
+##        else:
+##            self._jacfn(t, y, ydot, cj, J)
+        self._jacfn(t, y, J)
+        return 0
+    
 cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a):
     """ copy a serial N_Vector v to a nympy array a """
     cdef unsigned int N, i

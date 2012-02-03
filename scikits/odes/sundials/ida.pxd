@@ -1,6 +1,6 @@
 cimport numpy as np
 from c_sundials cimport N_Vector, realtype
-from common_defs cimport ResFunction, JacFunction
+from common_defs cimport ResFunction, JacResFunction
 
 ctypedef np.float_t DTYPE_t
 
@@ -9,7 +9,7 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj
 cdef class IDA_data:
     cdef np.ndarray yy_tmp, yp_tmp, residual_tmp, jac_tmp
     cdef ResFunction res
-    cdef JacFunction jac
+    cdef JacResFunction jac
     cdef bint parallel_implementation
     cdef object user_data
     

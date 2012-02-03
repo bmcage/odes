@@ -5,7 +5,8 @@ from c_sundials cimport realtype, N_Vector
 from c_cvode cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
                           ndarray2DlsMatd,
-                          RhsFunction, WrapRhsFunction)
+                          RhsFunction, WrapRhsFunction,
+                          JacRhsFunction, WrapJacRhsFunction)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
@@ -17,7 +18,7 @@ cdef enum: HOOK_FN_STOP = 128
 
 cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
               void *auxiliary_data):
-    """function with the signature of CVRhsFn"""
+    """function with the signature of CVRhsFn, that calls python Rhs"""
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
     
     aux_data = <CV_data> auxiliary_data
@@ -38,6 +39,35 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
         raise NotImplemented 
     else:
         ndarray2nv_s(yp, yp_tmp)
+
+    return 0
+
+cdef int _jacdense(int Neq, realtype tt, 
+            N_Vector yy, N_Vector ff, DlsMat Jac, 
+            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
+    """function with the signature of CVDlsDenseJacFn that calls python Jac"""
+    cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
+    cdef np.ndarray jac_tmp
+    
+    aux_data = <CV_data> auxiliary_data
+    cdef bint parallel_implementation = aux_data.parallel_implementation
+    if parallel_implementation:
+        raise NotImplemented 
+    else:
+        yy_tmp = aux_data.yy_tmp
+        if aux_data.jac_tmp == None:
+            N = np.alen(yy_tmp)
+            aux_data.jac_tmp = np.empty((N,N), float)
+        jac_tmp = aux_data.jac_tmp
+             
+        nv_s2ndarray(yy, yy_tmp)
+    aux_data.jac.evaluate(tt, yy_tmp, jac_tmp)
+
+    if parallel_implementation:
+        raise NotImplemented 
+    else:
+        #we convert the python jac_tmp array to DslMat of sundials
+        ndarray2DlsMatd(Jac, jac_tmp)
 
     return 0
 
@@ -83,7 +113,7 @@ cdef class CVODE:
             'nonlin_conv_coef': 0.,
             'user_data': None,
             'rfn': None,
-            # 'jacfn': None
+            'jacfn': None
             }
 
         self.options = default_values
@@ -125,6 +155,15 @@ cdef class CVODE:
                     This function takes as input arguments current time t, current value of y, and yp must be used as output numpy array of returned values of \dot{y} at t
                     Optional userdata. Return value is 0 if successfull.
                     This option is mandatory.
+            'jacfn':
+                Values: function of class JacRhsFunction
+                Description:
+                    Defines the jacobian function and has to be a subclass 
+                    of JacRhsFunction class or python function.
+                    This function takes as input arguments current time t, 
+                    current value of y, and a 2D numpy array of returned jacobian
+                    and optional userdata. Return value is 0 if successfull.
+                    Jacobian is only used for dense or lapackdense linear solver
             'rtol':
                 Values: float,  1e-6 = default
                 Description:
@@ -296,6 +335,14 @@ cdef class CVODE:
             rfn = tmpfun
             opts['rfn'] = tmpfun
         self.aux_data.rfn = rfn
+        jac = opts['jacfn']
+        if jac is not None and not isinstance(jac , JacRhsFunction):
+            tmpfun = WrapJacRhsFunction()
+            tmpfun.set_jacfn(jac)
+            jac = tmpfun
+            opts['jacfn'] = tmpfun
+        self.aux_data.jac = jac
+        self.aux_data.user_data = opts['user_data']
         #self.aux_data.jac = opts['jacfn']
         self.aux_data.user_data = opts['user_data']
 
@@ -431,6 +478,8 @@ cdef class CVODE:
                 raise ValueError('LinSolver: Unknown solver type: %s'
                                      % opts['linsolver'])
 
+        if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
+            CVDlsSetDenseJacFn(cv_mem, _jacdense)
         #TODO: Rootfinding
 
         self.initialized = True
