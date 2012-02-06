@@ -335,6 +335,12 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         """
         return self._integrator.step(t, y_retn, yp_retn)
 
+    def __del__(self):
+        """ 
+        Clean up what is needed
+        """
+        del self._integrator
+
 #------------------------------------------------------------------------------
 # DAE integrators
 #------------------------------------------------------------------------------
