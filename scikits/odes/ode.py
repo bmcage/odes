@@ -286,6 +286,9 @@ As an easy example, consider the simple oscillator,
         """
         return self._integrator.step(t, y_retn)
 
+    def set_tcrit(self, tcrit):
+        self._integrator.set_tcrit(tcrit)
+
 #------------------------------------------------------------------------------
 # ODE integrators
 #------------------------------------------------------------------------------

@@ -251,6 +251,11 @@ cdef class CVODE:
 
         return self._init_step(t0, np_y0)
 
+    def set_tcrit(self, double tcrit):
+        cdef void* cv_mem = self._cv_mem
+        # how to unset tcrit??
+        CVodeSetStopTime(cv_mem, <realtype> tcrit)
+
     cpdef _init_step(self, DTYPE_t t0, 
                      np.ndarray[DTYPE_t, ndim=1] y0):
 
