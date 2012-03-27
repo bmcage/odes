@@ -732,7 +732,7 @@ cdef class IDA:
 
         return flag, t_retn, y_retn, yp_retn, None, None, None
 
-    def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn,
+    def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn = None,
                               np.ndarray[DTYPE_t, ndim=1] yp_retn = None):
         """
         Method for calling successive next step of the IDA solver to allow
@@ -764,7 +764,8 @@ cdef class IDA:
             flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp, IDA_NORMAL)
         else:
             flag = IDASolve(self._ida_mem, <realtype> -t, &t_out, y, yp, IDA_ONE_STEP) 
-        nv_s2ndarray(y, y_retn)
+        if not y_retn is None:
+            nv_s2ndarray(y, y_retn)
         if not yp_retn is None:
             nv_s2ndarray(yp, yp_retn)
             
