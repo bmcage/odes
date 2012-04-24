@@ -6,6 +6,7 @@ from c_ida cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
                           ndarray2DlsMatd,
                           ResFunction, WrapResFunction,
+                          RootFunction, WrapRootFunction,
                           JacResFunction, WrapJacResFunction)
 
 # TODO: parallel implementation: N_VectorParallel
@@ -41,6 +42,31 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
         raise NotImplemented
     else:
         ndarray2nv_s(rr, residual_tmp)
+
+    return 0
+
+cdef int _rootfn(realtype t, N_Vector y, N_Vector yp,
+                 realtype *gout, void *auxiliary_data):
+    """ function with the signature of IDARootFn """
+
+    aux_data = <IDA_data> auxiliary_data
+    cdef bint parallel_implementation = aux_data.parallel_implementation
+
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        yy_tmp = aux_data.yy_tmp
+        yp_tmp = aux_data.yp_tmp
+        g_tmp  = aux_data.g_tmp
+
+    aux_data.rootfn.evaluate(t, yy_tmp, yp_tmp, g_tmp, aux_data.user_data)
+
+    cdef int i
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        for i in np.range(np.alen(g_tmp)):
+            gout[i] = <realtype> g_tmp[i]
 
     return 0
 
@@ -118,6 +144,7 @@ cdef class IDA:
             'exclude_algvar_from_error': False,
             'user_data': None,
             'rfn': None,
+            'rootfn': None,
             'jacfn': None
             }
 
@@ -221,7 +248,7 @@ cdef class IDA:
                 Values: python object, None = default
                 Description:
                     Additional data that are supplied to each call of the
-                    residual function 'Rfn' (see below)
+                    residual function 'Rfn' (see below), root function 'rootfn'
                     and Jacobi function 'jacfn' (if specified one).
             'Rfn':
                 Values: function of class ResFunction or a python function with
@@ -234,6 +261,16 @@ cdef class IDA:
                     current value of y, yp, numpy array of returned residual
                     and optional userdata. Return value is 0 if successfull.
                     This option is mandatory.
+            'rootfn':
+                Values: function of class RootFunction or a python function
+                    with signature (t, y, yp, g, user_data)
+                Description:
+                    Defines a function that fills a vector 'g' with values
+                    (g is a vector of size k). Vector 'g represents conditions
+                    which when satisfied, the solver stops. Namely, the solver
+                    stops when condition g[i] is zero for some i.
+                    For 'user_data' argument see 'user_data' option
+                    above.
             'jacfn':
                 Values: function of class JacResFunction or python function
                 Description:
@@ -419,6 +456,32 @@ cdef class IDA:
             rfn = tmpfun
             opts['rfn'] = tmpfun
         self.aux_data.res = rfn
+
+        rootfn = opts['rootfn']
+        if rootfn is not None:
+            nr_rootfns = opts['nr_rootfns']
+            if nr_rootfns is None:
+                raise ValueError('Number of root-ing functions ''nr_rootfns'' '
+                                 'must be specified.')
+            if not isinstance(rootfn, RootFunction):
+                tmpfun = WrapRootFunction()
+                tmpfun.set_rootfn(rootfn)
+                rootfn = tmpfun
+                opts['rootfn'] = tmpfun
+
+            self.aux_data.rootfn = rootfn
+            self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
+
+            flag = IDARootInit(ida_mem, nr_rootfns, _rootfn)
+
+            if flag == IDA_SUCCESS:
+                pass
+            if flag == IDA_ILL_INPUT:
+                raise ValueError('IDARootInit: Function ''rootfn'' is NULL '
+                                 'but ''nr_rootfns'' > 0')
+            elif flag == IDA_MEM_FAIL:
+                raise MemoryError('IDARootInit: Memory allocation error')
+
         jac = opts['jacfn']
         if jac is not None and not isinstance(jac , JacResFunction):
             tmpfun = WrapJacResFunction()
