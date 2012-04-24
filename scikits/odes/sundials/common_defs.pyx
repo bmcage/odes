@@ -15,7 +15,7 @@ cdef class ResFunction:
         return 0
 
 cdef class WrapResFunction(ResFunction):
-    
+
     cpdef set_resfn(self, object resfn):
         """
         set some residual equations as a ResFunction executable class
@@ -72,18 +72,18 @@ cdef class WrapRhsFunction(RhsFunction):
         return 0
 
 cdef class JacResFunction:
-    cpdef int evaluate(self, DTYPE_t t, 
+    cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        DTYPE_t cj,
                        np.ndarray J):
         """
-        Returns the Jacobi matrix of the residual function, as 
+        Returns the Jacobi matrix of the residual function, as
             d(res)/d y + cj d(res)/d ydot
-        (for dense the full matrix, for band only bands). Result has to be 
-        stored in the variable J, which is preallocated to the corresponding 
+        (for dense the full matrix, for band only bands). Result has to be
+        stored in the variable J, which is preallocated to the corresponding
         size.
-            
+
         This is a generic class, you should subclass is for the problem specific
         purposes."
         """
@@ -103,7 +103,7 @@ cdef class WrapJacResFunction(JacResFunction):
 ##            self.with_userdata = 1
         self._jacfn = jacfn
 
-    cpdef int evaluate(self, DTYPE_t t, 
+    cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        DTYPE_t cj,
@@ -121,16 +121,16 @@ cdef class WrapJacResFunction(JacResFunction):
         return 0
 
 cdef class JacRhsFunction:
-    cpdef int evaluate(self, DTYPE_t t, 
+    cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray J):
         """
-        Returns the Jacobi matrix of the right hand side function, as 
+        Returns the Jacobi matrix of the right hand side function, as
             d(rhs)/d y
-        (for dense the full matrix, for band only bands). Result has to be 
-        stored in the variable J, which is preallocated to the corresponding 
+        (for dense the full matrix, for band only bands). Result has to be
+        stored in the variable J, which is preallocated to the corresponding
         size.
-            
+
         This is a generic class, you should subclass is for the problem specific
         purposes."
         """
@@ -150,7 +150,7 @@ cdef class WrapJacRhsFunction(JacRhsFunction):
 ##            self.with_userdata = 1
         self._jacfn = jacfn
 
-    cpdef int evaluate(self, DTYPE_t t, 
+    cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray J):
         """
@@ -164,22 +164,22 @@ cdef class WrapJacRhsFunction(JacRhsFunction):
 ##            self._jacfn(t, y, ydot, cj, J)
         self._jacfn(t, y, J)
         return 0
-    
+
 cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a):
     """ copy a serial N_Vector v to a nympy array a """
     cdef unsigned int N, i
     N = nv_length_s(nv_content_s(v))
     cdef nv_content_data_s v_data = nv_data_s(nv_content_s(v))
-    
+
     for i in range(N):
       a[i] = get_nv_ith_s(v_data, i)
-      
+
 cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a):
     """ copy a numpy array a to a serial N_Vector v t"""
     cdef unsigned int N, i
     N = nv_length_s(nv_content_s(v))
     cdef nv_content_data_s v_data = nv_data_s(nv_content_s(v))
-    
+
     for i in range(N):
       set_nv_ith_s(v_data, i, a[i])
 
@@ -187,9 +187,9 @@ cdef inline int DlsMatd2ndarray(DlsMat m, np.ndarray a):
     """ copy a Dense DlsMat m to a nympy array a """
     cdef unsigned int N, i, j
     cdef nv_content_data_s v_col
-    
+
     N = get_dense_N(m)
-    
+
     for i in range(N):
         v_col = get_dense_col(m, i)
         for j in range(N):
@@ -199,9 +199,9 @@ cdef inline int ndarray2DlsMatd(DlsMat m, np.ndarray a):
     """ copy a nympy array a to a Dense DlsMat m"""
     cdef unsigned int N, i, j
     cdef nv_content_data_s v_col
-    
+
     N = get_dense_N(m)
-    
+
     for i in range(N):
         for j in range(N):
             set_dense_element(m, i, j, a[i,j])
@@ -224,4 +224,3 @@ cdef ensure_numpy_float_array(object value):
             return np.asarray(value, float)
     except:
         raise ValueError('ensure_numpy_float_array: value not a number or sequence of numbers: %s' % value)
-
