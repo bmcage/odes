@@ -223,4 +223,5 @@ cdef ensure_numpy_float_array(object value):
         else:
             return np.asarray(value, float)
     except:
-        raise ValueError('ensure_numpy_float_array: value not a number or sequence of numbers: %s' % value)
+        raise ValueError('ensure_numpy_float_array: value not a number or '
+                         'sequence of numbers: %s' % value)
