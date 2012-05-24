@@ -5,9 +5,9 @@ from c_sundials cimport realtype, N_Vector
 from c_cvode cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
                           ndarray2DlsMatd,
-                          RhsFunction, WrapRhsFunction,
+                          CV_RhsFunction, CV_WrapRhsFunction,
                           CV_RootFunction, CV_WrapRootFunction,
-                          JacRhsFunction, WrapJacRhsFunction)
+                          CV_JacRhsFunction, CV_WrapJacRhsFunction)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
@@ -174,11 +174,11 @@ cdef class CVODE:
                 Description:
                     See 'lmm_type'.
             'rfn':
-                Values: function of class RhsFunction or a python function
+                Values: function of class CV_RhsFunction or a python function
                         with signature (t, y, yp) or (t, y, yp, userdata)
                 Description:
                     Defines the right-hand-side function (which has to be
-                    a subclass of RhsFunction class, or a normal python
+                    a subclass of CV_RhsFunction class, or a normal python
                     function with signature (t, y, yp) or (t, y, yp, userdata)).
                     This function takes as input arguments current time t,
                     current value of y, and yp must be used as output numpy
@@ -201,10 +201,10 @@ cdef class CVODE:
                     The length of the array returned by 'rootfn' (see above),
                     i.e. number of conditions for which we search the value 0.
             'jacfn':
-                Values: function of class JacRhsFunction
+                Values: function of class CV_JacRhsFunction
                 Description:
                     Defines the jacobian function and has to be a subclass
-                    of JacRhsFunction class or python function. This function
+                    of CV_JacRhsFunction class or python function. This function
                     takes as input arguments current time t, current value of y,
                     a 2D numpy array of returned jacobian and optional userdata.
                     Return value is 0 if successfull.
@@ -390,8 +390,8 @@ cdef class CVODE:
         self.aux_data.parallel_implementation = self.parallel_implementation
 
         rfn = opts['rfn']
-        if not isinstance(rfn , RhsFunction):
-            tmpfun = WrapRhsFunction()
+        if not isinstance(rfn , CV_RhsFunction):
+            tmpfun = CV_WrapRhsFunction()
             tmpfun.set_rhsfn(rfn)
             rfn = tmpfun
             opts['rfn'] = tmpfun
@@ -423,8 +423,8 @@ cdef class CVODE:
                 raise MemoryError('CVRootInit: Memory allocation error')
 
         jac = opts['jacfn']
-        if jac is not None and not isinstance(jac , JacRhsFunction):
-            tmpfun = WrapJacRhsFunction()
+        if jac is not None and not isinstance(jac , CV_JacRhsFunction):
+            tmpfun = CV_WrapJacRhsFunction()
             tmpfun.set_jacfn(jac)
             jac = tmpfun
             opts['jacfn'] = tmpfun
@@ -512,8 +512,8 @@ cdef class CVODE:
                 if self.parallel_implementation:
                     raise ValueError('Linear solver for band matrices can be '
                                      'used only for serial implementation. '
-                                     'Use ''lapackband'' instead for parallel
-                                     implementation.')
+                                     'Use ''lapackband'' instead for parallel '
+                                     'implementation.')
                 else:
                     flag = CVBand(cv_mem, N, <int> opts['uband'],
                                              <int> opts['lband'])

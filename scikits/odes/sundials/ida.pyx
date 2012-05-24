@@ -5,9 +5,9 @@ from c_sundials cimport realtype, N_Vector
 from c_ida cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
                           ndarray2DlsMatd,
-                          ResFunction, WrapResFunction,
+                          IDA_RhsFunction, IDA_WrapRhsFunction,
                           IDA_RootFunction, IDA_WrapRootFunction,
-                          JacResFunction, WrapJacResFunction)
+                          IDA_JacRhsFunction, IDA_WrapJacRhsFunction)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
@@ -252,11 +252,11 @@ cdef class IDA:
                     residual function 'Rfn' (see below), root function 'rootfn'
                     and Jacobi function 'jacfn' (if specified one).
             'Rfn':
-                Values: function of class ResFunction or a python function with
-                    signature (t, y, yp, resultout)
+                Values: function of class IDA_RhsFunction or a python function
+                    with a signature (t, y, yp, resultout)
                 Description:
                     Defines the residual function (which has to be a subclass of
-                    ResFunction class, or a normal python function with
+                    IDA_RhsFunction class, or a normal python function with
                     signature (t, y, yp, resultout) ).
                     This function takes as input arguments current time t,
                     current value of y, yp, numpy array of returned residual
@@ -278,12 +278,12 @@ cdef class IDA:
                     The length of the array returned by 'rootfn' (see above),
                     i.e. number of conditions for which we search the value 0.
             'jacfn':
-                Values: function of class JacResFunction or python function
+                Values: function of class IDA_JacRhFunction or python function
                 Description:
                     Defines the jacobian of the residual function as
                                    dres/dy + cj dres/dyp,
-                    and has to be a subclass of JacResFunction class or a python
-                    function.
+                    and has to be a subclass of IDA_JacRhFunction class or
+                    a python function.
                     This function takes as input arguments current time t,
                     current value of y, yp, cj, and 2D numpy array of returned
                     jacobian
@@ -458,8 +458,8 @@ cdef class IDA:
         self.aux_data.parallel_implementation = self.parallel_implementation
 
         rfn = opts['rfn']
-        if not isinstance(rfn , ResFunction):
-            tmpfun = WrapResFunction()
+        if not isinstance(rfn , IDA_RhsFunction):
+            tmpfun = IDA_WrapRhsFunction()
             tmpfun.set_resfn(rfn)
             rfn = tmpfun
             opts['rfn'] = tmpfun
@@ -491,8 +491,8 @@ cdef class IDA:
                 raise MemoryError('IDARootInit: Memory allocation error')
 
         jac = opts['jacfn']
-        if jac is not None and not isinstance(jac , JacResFunction):
-            tmpfun = WrapJacResFunction()
+        if jac is not None and not isinstance(jac , IDA_JacRhsFunction):
+            tmpfun = IDA_WrapJacRhsFunction()
             tmpfun.set_jacfn(jac)
             jac = tmpfun
             opts['jacfn'] = tmpfun
