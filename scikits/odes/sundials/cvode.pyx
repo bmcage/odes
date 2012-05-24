@@ -6,6 +6,7 @@ from c_cvode cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
                           ndarray2DlsMatd,
                           RhsFunction, WrapRhsFunction,
+                          CV_RootFunction, CV_WrapRootFunction,
                           JacRhsFunction, WrapJacRhsFunction)
 
 # TODO: parallel implementation: N_VectorParallel
@@ -40,6 +41,31 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
         raise NotImplemented
     else:
         ndarray2nv_s(yp, yp_tmp)
+
+    return 0
+
+cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data):
+    """ function with the signature of CVRootFn """
+
+    aux_data = <CV_data> auxiliary_data
+    cdef bint parallel_implementation = aux_data.parallel_implementation
+
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        yy_tmp = aux_data.yy_tmp
+        g_tmp  = aux_data.g_tmp
+
+        nv_s2ndarray(y, yy_tmp)
+
+    aux_data.rootfn.evaluate(t, yy_tmp, g_tmp, aux_data.user_data)
+
+    cdef int i
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        for i in np.range(np.alen(g_tmp)):
+            gout[i] = <realtype> g_tmp[i]
 
     return 0
 
@@ -114,6 +140,7 @@ cdef class CVODE:
             'nonlin_conv_coef': 0.,
             'user_data': None,
             'rfn': None,
+            'rootfn': None,
             'jacfn': None
             }
 
@@ -160,6 +187,16 @@ cdef class CVODE:
                     array of returned values of \dot{y} at t.
                     Optional userdata. Return value is 0 if successfull.
                     This option is mandatory.
+            'rootfn':
+                Values: function of class CV_RootFunction or a python function
+                    with signature (t, y, g, user_data)
+                Description:
+                    Defines a function that fills a vector 'g' with values
+                    (g is a vector of size k). Vector 'g represents conditions
+                    which when satisfied, the solver stops. Namely, the solver
+                    stops when condition g[i] is zero for some i.
+                    For 'user_data' argument see 'user_data' option
+                    above.
             'jacfn':
                 Values: function of class JacRhsFunction
                 Description:
@@ -356,6 +393,32 @@ cdef class CVODE:
             rfn = tmpfun
             opts['rfn'] = tmpfun
         self.aux_data.rfn = rfn
+
+        rootfn = opts['rootfn']
+        if rootfn is not None:
+            nr_rootfns = opts['nr_rootfns']
+            if nr_rootfns is None:
+                raise ValueError('Number of root-ing functions ''nr_rootfns'' '
+                                 'must be specified.')
+            if not isinstance(rootfn, CV_RootFunction):
+                tmpfun = CV_WrapRootFunction()
+                tmpfun.set_rootfn(rootfn)
+                rootfn = tmpfun
+                opts['rootfn'] = tmpfun
+
+            self.aux_data.rootfn = rootfn
+            self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
+
+            flag = CVodeRootInit(cv_mem, nr_rootfns, _rootfn)
+
+            if flag == CV_SUCCESS:
+                pass
+            if flag == CV_ILL_INPUT:
+                raise ValueError('CVRootInit: Function ''rootfn'' is NULL '
+                                 'but ''nr_rootfns'' > 0')
+            elif flag == CV_MEM_FAIL:
+                raise MemoryError('CVRootInit: Memory allocation error')
+
         jac = opts['jacfn']
         if jac is not None and not isinstance(jac , JacRhsFunction):
             tmpfun = WrapJacRhsFunction()

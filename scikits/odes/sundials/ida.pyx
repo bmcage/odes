@@ -6,7 +6,7 @@ from c_ida cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
                           ndarray2DlsMatd,
                           ResFunction, WrapResFunction,
-                          RootFunction, WrapRootFunction,
+                          IDA_RootFunction, IDA_WrapRootFunction,
                           JacResFunction, WrapJacResFunction)
 
 # TODO: parallel implementation: N_VectorParallel
@@ -45,7 +45,7 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
 
     return 0
 
-cdef int _rootfn(realtype t, N_Vector y, N_Vector yp,
+cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
                  realtype *gout, void *auxiliary_data):
     """ function with the signature of IDARootFn """
 
@@ -58,6 +58,9 @@ cdef int _rootfn(realtype t, N_Vector y, N_Vector yp,
         yy_tmp = aux_data.yy_tmp
         yp_tmp = aux_data.yp_tmp
         g_tmp  = aux_data.g_tmp
+
+        nv_s2ndarray(yy, yy_tmp)
+        nv_s2ndarray(yp, yp_tmp)
 
     aux_data.rootfn.evaluate(t, yy_tmp, yp_tmp, g_tmp, aux_data.user_data)
 
@@ -262,7 +265,7 @@ cdef class IDA:
                     and optional userdata. Return value is 0 if successfull.
                     This option is mandatory.
             'rootfn':
-                Values: function of class RootFunction or a python function
+                Values: function of class IDA_RootFunction or a python function
                     with signature (t, y, yp, g, user_data)
                 Description:
                     Defines a function that fills a vector 'g' with values
@@ -463,8 +466,8 @@ cdef class IDA:
             if nr_rootfns is None:
                 raise ValueError('Number of root-ing functions ''nr_rootfns'' '
                                  'must be specified.')
-            if not isinstance(rootfn, RootFunction):
-                tmpfun = WrapRootFunction()
+            if not isinstance(rootfn, IDA_RootFunction):
+                tmpfun = IDA_WrapRootFunction()
                 tmpfun.set_rootfn(rootfn)
                 rootfn = tmpfun
                 opts['rootfn'] = tmpfun

@@ -25,13 +25,23 @@ cdef class WrapRhsFunction(RhsFunction):
     cdef int with_userdata
     cpdef set_rhsfn(self, object rhsfn)
 
-cdef class RootFunction:
+cdef class IDA_RootFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] g,
                        object userdata = *)
-cdef class WrapRootFunction(RootFunction):
+cdef class IDA_WrapRootFunction(IDA_RootFunction):
+    cpdef object _rootfn
+    cdef int with_userdata
+    cpdef set_rootfn(self, object rootfn)
+
+cdef class CV_RootFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] g,
+                       object userdata = *)
+cdef class CV_WrapRootFunction(CV_RootFunction):
     cpdef object _rootfn
     cdef int with_userdata
     cpdef set_rootfn(self, object rootfn)

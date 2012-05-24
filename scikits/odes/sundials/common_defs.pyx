@@ -72,7 +72,7 @@ cdef class WrapRhsFunction(RhsFunction):
         return 0
 
 
-cdef class RootFunction:
+cdef class IDA_RootFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
@@ -80,7 +80,7 @@ cdef class RootFunction:
                        object userdata = None):
         return 0
 
-cdef class WrapRootFunction(RootFunction):
+cdef class IDA_WrapRootFunction(IDA_RootFunction):
     cpdef set_rootfn(self, object rootfn):
         """
         set root-ing condition(equations) as a RootFunction executable class
@@ -103,6 +103,37 @@ cdef class WrapRootFunction(RootFunction):
             self._rootfn(t, y, ydot, g, userdata)
         else:
             self._rootfn(t, y, ydot, g)
+        return 0
+
+cdef class CV_RootFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] g,
+                       object userdata = None):
+        return 0
+
+cdef class CV_WrapRootFunction(CV_RootFunction):
+    cpdef set_rootfn(self, object rootfn):
+        """
+        set root-ing condition(equations) as a RootFunction executable class
+        """
+        self.with_userdata = 0
+        nrarg = len(inspect.getargspec(rootfn)[0])
+        if nrarg > 4:
+            #hopefully a class method, self gives 4 arg!
+            self.with_userdata = 1
+        elif nrarg == 4 and inspect.isfunction(rootfn):
+            self.with_userdata = 1
+        self._rootfn = rootfn
+
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] g,
+                       object userdata = None):
+        if self.with_userdata == 1:
+            self._rootfn(t, y, g, userdata)
+        else:
+            self._rootfn(t, y, g)
         return 0
 
 cdef class JacResFunction:
