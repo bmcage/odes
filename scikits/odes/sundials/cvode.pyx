@@ -492,8 +492,8 @@ cdef class CVODE:
             if linsolver == 'dense':
                 if self.parallel_implementation:
                     raise ValueError('Linear solver for dense matrices can be'
-                                     'used only for serial implementation. Use'
-                                     ' ''lapackdense'' for parallel implementation.')
+                                     'used only for serial implementation. For '
+                                     'parallel implementation use ''lapackdense''.')
                 else:
                     flag = CVDense(cv_mem, N)
                     if flag == CVDLS_ILL_INPUT:
