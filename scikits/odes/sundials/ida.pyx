@@ -11,8 +11,6 @@ from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
-# TODO: flag for indicating the resfn (in set_options) whether is a c-function
-#       or a python function
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
 
@@ -20,7 +18,7 @@ cdef enum: HOOK_FN_STOP = 128
 
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *auxiliary_data):
-    """function with the signature of IDAResFn"""
+    """ function with the signature of IDAResFn """
     cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
 
     aux_data = <IDA_data> auxiliary_data
@@ -274,6 +272,11 @@ cdef class IDA:
                     stops when condition g[i] is zero for some i.
                     For 'user_data' argument see 'user_data' option
                     above.
+            'nr_rootfns':
+                Value: integer
+                Description:
+                    The length of the array returned by 'rootfn' (see above),
+                    i.e. number of conditions for which we search the value 0.
             'jacfn':
                 Values: function of class JacResFunction or python function
                 Description:
@@ -396,12 +399,13 @@ cdef class IDA:
                               'during ''set_options'' call !')
 
         if not np.alen(y0) == np.alen(yp0):
-            raise ValueError('Arrays inconsistency: y0 and ydot0 have to be of the'
-                             'same length !')
+            raise ValueError('Arrays inconsistency: y0 and ydot0 have to be of '
+                             'the same length !')
         if (((np.alen(y0) == 0) and (not opts['compute_initcond'] == 'y0'))
                 or ((np.alen(yp0) == 0) and (not opts['compute_initcond'] == 'yp0'))):
-            raise ValueError('Not passed y0 or ydot0 value has to computed'
-                             'by ''init_cond'', but ''init_cond'' not set apropriately !')
+            raise ValueError('Value of y0 not set or the value of ydot0 not '
+                             'flagged to be computed (see ''init_cond'' for '
+                             'documentation.')
 
         #TODO: when implementing parallel, does N_VDestroy be called separately
         #      for parallel version or it's a generic one?
@@ -429,7 +433,8 @@ cdef class IDA:
                 IDAFree(&ida_mem)
             ida_mem = IDACreate()
             if ida_mem is NULL:
-                raise MemoryError('IDACreate:MemoryError: Could not create ida_mem object')
+                raise MemoryError('IDACreate:MemoryError: Could not allocate '
+                                  'ida_mem object')
 
             self._ida_mem = ida_mem
             flag = IDAInit(ida_mem, _res, <realtype> t0, self.y0, self.yp0)
@@ -530,7 +535,8 @@ cdef class IDA:
         if opts['max_step_size'] > 0.:
             flag = IDASetMaxStep(ida_mem, <realtype> opts['max_step_size'])
             if flag == IDA_ILL_INPUT:
-                raise ValueError('IDASetMaxStep: max_step_size is negative or smaller than allowed.')
+                raise ValueError('IDASetMaxStep: max_step_size is negative or '
+                                 'smaller than allowed.')
         if opts['tcrit'] > 0.:
             IDASetStopTime(ida_mem, <realtype> opts['tcrit'])
         if opts['max_nonlin_iters'] > 0:
@@ -545,9 +551,9 @@ cdef class IDA:
 
         if linsolver == 'dense':
             if self.parallel_implementation:
-                raise ValueError('Linear solver for dense matrices can be used'
-                                  'only for serial implementation. Use ''lapackdense''' 
-                                  'instead for parallel implementation.')
+                raise ValueError('Linear solver for dense matrices can be used '
+                                  'only for serial implementation. For parallel'
+                                  ' implementation use ''lapackdense'' instead.')
             else:
                  flag = IDADense(ida_mem, N)
                  if flag == IDADLS_ILL_INPUT:
@@ -565,8 +571,8 @@ cdef class IDA:
         elif linsolver == 'band':
             if self.parallel_implementation:
                 raise ValueError('Linear solver for band matrices can be used'
-                                 'only for serial implementation. Use ''lapackband'' '
-                                 'instead for parallel implementation.')
+                                 'only for serial implementation. For parallel'
+                                 ' implementation use ''lapackband'' instead.')
             else:
                 flag = IDABand(ida_mem, N, <int> opts['uband'],
                                            <int> opts['lband'])
@@ -710,7 +716,7 @@ cdef class IDA:
 
         #TODO: implement the rest of IDA*Set* functions for linear solvers
 
-        #TODO: Rootfinding
+        #TODO: Reinitialization of the rooting function
 
         self.initialized = True
 
