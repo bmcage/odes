@@ -3,24 +3,24 @@ from c_sundials cimport N_Vector, DlsMat
 
 ctypedef np.float_t DTYPE_t
 
-cdef class ResFunction:
+cdef class IDA_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] result,
                        object userdata = *)
 
-cdef class WrapResFunction(ResFunction):
+cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
     cdef object _resfn
     cdef int with_userdata
     cpdef set_resfn(self, object resfn)
 
-cdef class RhsFunction:
+cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        object userdata = *)
-cdef class WrapRhsFunction(RhsFunction):
+cdef class CV_WrapRhsFunction(CV_RhsFunction):
     cpdef object _rhsfn
     cdef int with_userdata
     cpdef set_rhsfn(self, object rhsfn)
@@ -46,24 +46,24 @@ cdef class CV_WrapRootFunction(CV_RootFunction):
     cdef int with_userdata
     cpdef set_rootfn(self, object rootfn)
 
-cdef class JacResFunction:
+cdef class IDA_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        DTYPE_t cj,
                        np.ndarray[DTYPE_t, ndim=2] J)
 
-cdef class WrapJacResFunction(JacResFunction):
+cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
     cpdef object _jacfn
     cdef int with_userdata
     cpdef set_jacfn(self, object jacfn)
 
-cdef class JacRhsFunction:
+cdef class CV_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=2] J)
 
-cdef class WrapJacRhsFunction(JacRhsFunction):
+cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
     cpdef object _jacfn
     cdef int with_userdata
     cpdef set_jacfn(self, object jacfn)

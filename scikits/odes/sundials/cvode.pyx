@@ -5,14 +5,12 @@ from c_sundials cimport realtype, N_Vector
 from c_cvode cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
                           ndarray2DlsMatd,
-                          RhsFunction, WrapRhsFunction,
+                          CV_RhsFunction, CV_WrapRhsFunction,
                           CV_RootFunction, CV_WrapRootFunction,
-                          JacRhsFunction, WrapJacRhsFunction)
+                          CV_JacRhsFunction, CV_WrapJacRhsFunction)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
-# TODO: flag for indicating the rhsfn (in set_options) whether is
-#       a c-function or python function
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
 
@@ -20,7 +18,7 @@ cdef enum: HOOK_FN_STOP = 128
 
 cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
               void *auxiliary_data):
-    """function with the signature of CVRhsFn, that calls python Rhs"""
+    """ function with the signature of CVRhsFn, that calls python Rhs """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
 
     aux_data = <CV_data> auxiliary_data
@@ -102,7 +100,7 @@ cdef class CV_data:
     def __cinit__(self, N):
         self.parallel_implementation = False
         self.user_data = None
-        
+
         self.yy_tmp = np.empty(N, float)
         self.yp_tmp = np.empty(N, float)
         self.jac_tmp = None
@@ -176,11 +174,11 @@ cdef class CVODE:
                 Description:
                     See 'lmm_type'.
             'rfn':
-                Values: function of class RhsFunction or a python function
+                Values: function of class CV_RhsFunction or a python function
                         with signature (t, y, yp) or (t, y, yp, userdata)
                 Description:
                     Defines the right-hand-side function (which has to be
-                    a subclass of RhsFunction class, or a normal python
+                    a subclass of CV_RhsFunction class, or a normal python
                     function with signature (t, y, yp) or (t, y, yp, userdata)).
                     This function takes as input arguments current time t,
                     current value of y, and yp must be used as output numpy
@@ -197,14 +195,19 @@ cdef class CVODE:
                     stops when condition g[i] is zero for some i.
                     For 'user_data' argument see 'user_data' option
                     above.
+            'nr_rootfns':
+                Value: integer
+                Description:
+                    The length of the array returned by 'rootfn' (see above),
+                    i.e. number of conditions for which we search the value 0.
             'jacfn':
-                Values: function of class JacRhsFunction
+                Values: function of class CV_JacRhsFunction
                 Description:
                     Defines the jacobian function and has to be a subclass
-                    of JacRhsFunction class or python function.
-                    This function takes as input arguments current time t,
-                    current value of y, and a 2D numpy array of returned jacobian
-                    and optional userdata. Return value is 0 if successfull.
+                    of CV_JacRhsFunction class or python function. This function
+                    takes as input arguments current time t, current value of y,
+                    a 2D numpy array of returned jacobian and optional userdata.
+                    Return value is 0 if successfull.
                     Jacobian is only used for dense or lapackdense linear solver
             'rtol':
                 Values: float,  1e-6 = default
@@ -387,8 +390,8 @@ cdef class CVODE:
         self.aux_data.parallel_implementation = self.parallel_implementation
 
         rfn = opts['rfn']
-        if not isinstance(rfn , RhsFunction):
-            tmpfun = WrapRhsFunction()
+        if not isinstance(rfn , CV_RhsFunction):
+            tmpfun = CV_WrapRhsFunction()
             tmpfun.set_rhsfn(rfn)
             rfn = tmpfun
             opts['rfn'] = tmpfun
@@ -420,8 +423,8 @@ cdef class CVODE:
                 raise MemoryError('CVRootInit: Memory allocation error')
 
         jac = opts['jacfn']
-        if jac is not None and not isinstance(jac , JacRhsFunction):
-            tmpfun = WrapJacRhsFunction()
+        if jac is not None and not isinstance(jac , CV_JacRhsFunction):
+            tmpfun = CV_WrapJacRhsFunction()
             tmpfun.set_jacfn(jac)
             jac = tmpfun
             opts['jacfn'] = tmpfun
@@ -489,8 +492,8 @@ cdef class CVODE:
             if linsolver == 'dense':
                 if self.parallel_implementation:
                     raise ValueError('Linear solver for dense matrices can be'
-                                     'used only for serial implementation. Use'
-                                     ' ''lapackdense'' for parallel implementation.')
+                                     'used only for serial implementation. For '
+                                     'parallel implementation use ''lapackdense''.')
                 else:
                     flag = CVDense(cv_mem, N)
                     if flag == CVDLS_ILL_INPUT:
@@ -501,22 +504,23 @@ cdef class CVODE:
             elif linsolver == 'lapackdense':
                 flag = CVLapackDense(cv_mem, N)
                 if flag == CVDLS_ILL_INPUT:
-                    raise ValueError('CVLapackDense solver is not compatible with'
-                                         ' the current nvector implementation.')
+                    raise ValueError('CVLapackDense solver is not compatible '
+                                     'with the current nvector implementation.')
                 elif flag == CVDLS_MEM_FAIL:
                     raise MemoryError('CVLapackDense memory allocation error.')
             elif linsolver == 'band':
                 if self.parallel_implementation:
-                    raise ValueError('Linear solver for band matrices can be used'
-                                     'only for serial implementation. Use ''lapackband'' '
-                                     'instead for parallel implementation.')
+                    raise ValueError('Linear solver for band matrices can be '
+                                     'used only for serial implementation. '
+                                     'Use ''lapackband'' instead for parallel '
+                                     'implementation.')
                 else:
                     flag = CVBand(cv_mem, N, <int> opts['uband'],
                                              <int> opts['lband'])
                     if flag == CVDLS_ILL_INPUT:
-                        raise ValueError('CVBand solver is not compatible'
-                                         ' with the current nvector implementation'
-                                         ' or bandwith outside range.')
+                        raise ValueError('CVBand solver is not compatible with '
+                                         'the current nvector implementation '
+                                         'or bandwith outside range.')
                     elif flag == CVDLS_MEM_FAIL:
                         raise MemoryError('CVBand memory allocation error.')
             elif linsolver == 'lapackband':
@@ -558,14 +562,15 @@ cdef class CVODE:
                     flag = CVSptfqmr(cv_mem, pretype, <int> opts['maxl'])
 
                 if flag == CVSPILS_MEM_FAIL:
-                        raise MemoryError('LinSolver:CVSpils memory allocation error.')
+                        raise MemoryError('LinSolver:CVSpils memory allocation '
+                                          'error.')
             else:
                 raise ValueError('LinSolver: Unknown solver type: %s'
                                      % opts['linsolver'])
 
         if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
             CVDlsSetDenseJacFn(cv_mem, _jacdense)
-        #TODO: Rootfinding
+        #TODO: Reinitialization of the rooting function
 
         self.initialized = True
 

@@ -5,14 +5,12 @@ from c_sundials cimport realtype, N_Vector
 from c_ida cimport *
 from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
                           ndarray2DlsMatd,
-                          ResFunction, WrapResFunction,
+                          IDA_RhsFunction, IDA_WrapRhsFunction,
                           IDA_RootFunction, IDA_WrapRootFunction,
-                          JacResFunction, WrapJacResFunction)
+                          IDA_JacRhsFunction, IDA_WrapJacRhsFunction)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
-# TODO: flag for indicating the resfn (in set_options) whether is a c-function
-#       or a python function
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
 
@@ -20,7 +18,7 @@ cdef enum: HOOK_FN_STOP = 128
 
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *auxiliary_data):
-    """function with the signature of IDAResFn"""
+    """ function with the signature of IDAResFn """
     cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
 
     aux_data = <IDA_data> auxiliary_data
@@ -254,11 +252,11 @@ cdef class IDA:
                     residual function 'Rfn' (see below), root function 'rootfn'
                     and Jacobi function 'jacfn' (if specified one).
             'Rfn':
-                Values: function of class ResFunction or a python function with
-                    signature (t, y, yp, resultout)
+                Values: function of class IDA_RhsFunction or a python function
+                    with a signature (t, y, yp, resultout)
                 Description:
                     Defines the residual function (which has to be a subclass of
-                    ResFunction class, or a normal python function with
+                    IDA_RhsFunction class, or a normal python function with
                     signature (t, y, yp, resultout) ).
                     This function takes as input arguments current time t,
                     current value of y, yp, numpy array of returned residual
@@ -274,13 +272,18 @@ cdef class IDA:
                     stops when condition g[i] is zero for some i.
                     For 'user_data' argument see 'user_data' option
                     above.
+            'nr_rootfns':
+                Value: integer
+                Description:
+                    The length of the array returned by 'rootfn' (see above),
+                    i.e. number of conditions for which we search the value 0.
             'jacfn':
-                Values: function of class JacResFunction or python function
+                Values: function of class IDA_JacRhFunction or python function
                 Description:
                     Defines the jacobian of the residual function as
                                    dres/dy + cj dres/dyp,
-                    and has to be a subclass of JacResFunction class or a python
-                    function.
+                    and has to be a subclass of IDA_JacRhFunction class or
+                    a python function.
                     This function takes as input arguments current time t,
                     current value of y, yp, cj, and 2D numpy array of returned
                     jacobian
@@ -396,12 +399,13 @@ cdef class IDA:
                               'during ''set_options'' call !')
 
         if not np.alen(y0) == np.alen(yp0):
-            raise ValueError('Arrays inconsistency: y0 and ydot0 have to be of the'
-                             'same length !')
+            raise ValueError('Arrays inconsistency: y0 and ydot0 have to be of '
+                             'the same length !')
         if (((np.alen(y0) == 0) and (not opts['compute_initcond'] == 'y0'))
                 or ((np.alen(yp0) == 0) and (not opts['compute_initcond'] == 'yp0'))):
-            raise ValueError('Not passed y0 or ydot0 value has to computed'
-                             'by ''init_cond'', but ''init_cond'' not set apropriately !')
+            raise ValueError('Value of y0 not set or the value of ydot0 not '
+                             'flagged to be computed (see ''init_cond'' for '
+                             'documentation.')
 
         #TODO: when implementing parallel, does N_VDestroy be called separately
         #      for parallel version or it's a generic one?
@@ -429,7 +433,8 @@ cdef class IDA:
                 IDAFree(&ida_mem)
             ida_mem = IDACreate()
             if ida_mem is NULL:
-                raise MemoryError('IDACreate:MemoryError: Could not create ida_mem object')
+                raise MemoryError('IDACreate:MemoryError: Could not allocate '
+                                  'ida_mem object')
 
             self._ida_mem = ida_mem
             flag = IDAInit(ida_mem, _res, <realtype> t0, self.y0, self.yp0)
@@ -453,8 +458,8 @@ cdef class IDA:
         self.aux_data.parallel_implementation = self.parallel_implementation
 
         rfn = opts['rfn']
-        if not isinstance(rfn , ResFunction):
-            tmpfun = WrapResFunction()
+        if not isinstance(rfn , IDA_RhsFunction):
+            tmpfun = IDA_WrapRhsFunction()
             tmpfun.set_resfn(rfn)
             rfn = tmpfun
             opts['rfn'] = tmpfun
@@ -486,8 +491,8 @@ cdef class IDA:
                 raise MemoryError('IDARootInit: Memory allocation error')
 
         jac = opts['jacfn']
-        if jac is not None and not isinstance(jac , JacResFunction):
-            tmpfun = WrapJacResFunction()
+        if jac is not None and not isinstance(jac , IDA_JacRhsFunction):
+            tmpfun = IDA_WrapJacRhsFunction()
             tmpfun.set_jacfn(jac)
             jac = tmpfun
             opts['jacfn'] = tmpfun
@@ -530,7 +535,8 @@ cdef class IDA:
         if opts['max_step_size'] > 0.:
             flag = IDASetMaxStep(ida_mem, <realtype> opts['max_step_size'])
             if flag == IDA_ILL_INPUT:
-                raise ValueError('IDASetMaxStep: max_step_size is negative or smaller than allowed.')
+                raise ValueError('IDASetMaxStep: max_step_size is negative or '
+                                 'smaller than allowed.')
         if opts['tcrit'] > 0.:
             IDASetStopTime(ida_mem, <realtype> opts['tcrit'])
         if opts['max_nonlin_iters'] > 0:
@@ -545,9 +551,9 @@ cdef class IDA:
 
         if linsolver == 'dense':
             if self.parallel_implementation:
-                raise ValueError('Linear solver for dense matrices can be used'
-                                  'only for serial implementation. Use ''lapackdense''' 
-                                  'instead for parallel implementation.')
+                raise ValueError('Linear solver for dense matrices can be used '
+                                  'only for serial implementation. For parallel'
+                                  ' implementation use ''lapackdense'' instead.')
             else:
                  flag = IDADense(ida_mem, N)
                  if flag == IDADLS_ILL_INPUT:
@@ -565,8 +571,8 @@ cdef class IDA:
         elif linsolver == 'band':
             if self.parallel_implementation:
                 raise ValueError('Linear solver for band matrices can be used'
-                                 'only for serial implementation. Use ''lapackband'' '
-                                 'instead for parallel implementation.')
+                                 'only for serial implementation. For parallel'
+                                 ' implementation use ''lapackband'' instead.')
             else:
                 flag = IDABand(ida_mem, N, <int> opts['uband'],
                                            <int> opts['lband'])
@@ -710,7 +716,7 @@ cdef class IDA:
 
         #TODO: implement the rest of IDA*Set* functions for linear solvers
 
-        #TODO: Rootfinding
+        #TODO: Reinitialization of the rooting function
 
         self.initialized = True
 

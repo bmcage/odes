@@ -6,7 +6,7 @@ from c_sundials cimport (N_Vector, nv_content_data_s, nv_content_s, nv_length_s,
                         get_dense_N, set_dense_element,
                         DlsMat)
 
-cdef class ResFunction:
+cdef class IDA_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
@@ -14,7 +14,7 @@ cdef class ResFunction:
                        object userdata = None):
         return 0
 
-cdef class WrapResFunction(ResFunction):
+cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
 
     cpdef set_resfn(self, object resfn):
         """
@@ -40,14 +40,14 @@ cdef class WrapResFunction(ResFunction):
             self._resfn(t, y, ydot, result)
         return 0
 
-cdef class RhsFunction:
+cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        object userdata = None):
         return 0
 
-cdef class WrapRhsFunction(RhsFunction):
+cdef class CV_WrapRhsFunction(CV_RhsFunction):
     cpdef set_rhsfn(self, object rhsfn):
         """
         set some rhs equations as a RhsFunction executable class
@@ -136,7 +136,7 @@ cdef class CV_WrapRootFunction(CV_RootFunction):
             self._rootfn(t, y, g)
         return 0
 
-cdef class JacResFunction:
+cdef class IDA_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
@@ -154,7 +154,7 @@ cdef class JacResFunction:
         """
         return 0
 
-cdef class WrapJacResFunction(JacResFunction):
+cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
     cpdef set_jacfn(self, object jacfn):
         """
         Set some jacobian equations as a JacResFunction executable class.
@@ -185,7 +185,7 @@ cdef class WrapJacResFunction(JacResFunction):
         self._jacfn(t, y, ydot, cj, J)
         return 0
 
-cdef class JacRhsFunction:
+cdef class CV_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray J):
@@ -201,7 +201,7 @@ cdef class JacRhsFunction:
         """
         return 0
 
-cdef class WrapJacRhsFunction(JacRhsFunction):
+cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
     cpdef set_jacfn(self, object jacfn):
         """
         Set some jacobian equations as a JacRhsFunction executable class.
