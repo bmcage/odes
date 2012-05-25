@@ -314,11 +314,11 @@ class lsodi(DaeBase):
         else:
             itask = self.call_args[3]
             self.call_args[3] = 4
-        intbreak = None
+        indbreak = None
         for ind, time in enumerate(tspan[1:]):
             result = self.__run(y_retn[ind], yp_retn[ind], t_retn[ind], time)
             if not self.success:
-                intbreak = ind+1
+                indbreak = ind+1
                 break
             t_retn[ind+1] = result[2]
             y_retn[ind+1][:] = result[0][:]
