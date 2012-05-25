@@ -1,9 +1,9 @@
-# Authors: B. Malengier 
+# Authors: B. Malengier
 """
 This example shows how to solve the sliding pendulum in full coordinate space.
 This results in a dae system.
 
-The problem is easily stated: 
+The problem is easily stated:
 A pendulum can slide with friction along a curve in a plane. We take the
 curve
 
@@ -12,7 +12,7 @@ curve
 There is a mass M on the top part (on the curve), and a mass m at the lower
 part, which is distance l away from M.
 The Lagrange equations can be written with constraint for the upper end of the
-pendulum (must be on the curve, \lambda as Lagrange multiplier), and 
+pendulum (must be on the curve, \lambda as Lagrange multiplier), and
 adding also friction with constant k.
 
 The equations contain (x, y, \theta, xdot, ydot, thetadot, \lambda) as unknowns, where
@@ -21,11 +21,11 @@ theta is the angle with the vertical y axis.
  \dot{x} = xdot
  \dot{y} = ydot
  \dot{\theta} = thetadot
- (M+m)*\dot{xdot} + m*l*cos(\theta)*\dot{thetadot} = m*l*sin(theta)*thetadot^2 
+ (M+m)*\dot{xdot} + m*l*cos(\theta)*\dot{thetadot} = m*l*sin(theta)*thetadot^2
         - \lambda * (-2*x + \omega/3*sin(\omega*x))-k*xdot
- (M+m)*\dot{ydot} + m*l*sin(\theta)*\dot{thetadot} = -m*l*cos(theta)*thetadot^2 
+ (M+m)*\dot{ydot} + m*l*sin(\theta)*\dot{thetadot} = -m*l*cos(theta)*thetadot^2
         -(M+m)*g- \lambda - k*ydot
- m*l*\cos(\theta)*\dot{xdot}+m*l*\sin(\theta)\dot{\ydot}+m*l^2 * \dot{thetadot} 
+ m*l*\cos(\theta)*\dot{xdot}+m*l*\sin(\theta)\dot{\ydot}+m*l^2 * \dot{thetadot}
         = -m*g*\sin(\theta)
  0 = (-2*x+\omega/3*\sin(\omega*x))*xdot + ydot
 
@@ -47,7 +47,7 @@ import os
 class Slidingpendulum():
     """ The problem class with the residual function and the constants defined
     """
-    
+
     #default values
     deftend = 120.
     deftstep = 1e-2
@@ -57,7 +57,7 @@ class Slidingpendulum():
     defl = 1.
     defk = 0.5
     defomega = 3.3
-    
+
     #init values
     defx0 = 1.
     defy0 = 1.+cos(defomega)/3.
@@ -65,7 +65,7 @@ class Slidingpendulum():
     defdotx0 = 0.
     defdoty0 = -defg
     defdottheta0 = 0.
-    
+
     def __init__(self, data=None, type='index2'):
         self.tend = Slidingpendulum.deftend
         self.tstep = Slidingpendulum.deftstep
@@ -80,10 +80,10 @@ class Slidingpendulum():
         self.omega = Slidingpendulum.defomega
         self.scale1 = 1e5#1e10
         self.scale2 = 1e5#1e9
-        
+
         self.res = None
         self.jac = None
-        
+
         if data is not None:
             self.tend = data.deftend
             self.tstep = data.deftstep
@@ -96,14 +96,14 @@ class Slidingpendulum():
             self.k = data.defk
             self.g = data.defg
             self.omega = data.defomega
-        
+
         self.stop_t  = arange(.0, self.tend, self.tstep)
-        
+
         lambdaval = 0.0
 
         if type == 'index2':
             self.neq = 8
-            self.z0 =  array([self.x0, self.y0, self.theta0, 0., 
+            self.z0 =  array([self.x0, self.y0, self.theta0, 0.,
                               0., 0., lambdaval, lambdaval])
             self.zprime0 = array([0., 0., 0., 0., -self.g, 0., 0., 0.], float)
             self.res = self.resindex2
@@ -111,7 +111,7 @@ class Slidingpendulum():
             self.exclalg_err = True
         else:
             self.neq = 7
-            self.z0 =  array([self.x0, self.y0, self.theta0, 0., 
+            self.z0 =  array([self.x0, self.y0, self.theta0, 0.,
                               0., 0., lambdaval])
             self.zprime0 = array([0., 0., 0., 0., -self.g, 0., 0.], float)
             self.res = self.resindex1
@@ -131,8 +131,8 @@ class Slidingpendulum():
         ## xdot     = yy[3]  = u1
         ## ydot     = yy[4]  = u2
         ## thetadot = yy[5]  = u3
-        
-        ## it is needed to scale the constraint by blowing up 
+
+        ## it is needed to scale the constraint by blowing up
         ## the lagrange multiplier with 1e10 (self.scale1)
         res[0]= ((M+m)*yp[3] + m*l*cos(yy[2])*yp[5]  \
                 - m*l*sin(yy[2])*yy[5]**2 \
@@ -155,7 +155,7 @@ class Slidingpendulum():
         ##print tres, 'yp', yp
         ##print tres, 'res', res
         return 0
-    
+
     def resindex1(self, tres, yy, yp, res):
         m = self.m
         M = self.M
@@ -180,13 +180,13 @@ class Slidingpendulum():
         res[1]= (M+m)*yp[4] + m*l*sin(yy[2])*yp[5]  \
                 + m*l*cos(yy[2])*yy[5]**2 + (M+m)*g \
                 + yy[6]*self.scale1\
-                +k*yy[4] 
+                +k*yy[4]
         res[2]= m*l*cos(yy[2])*yp[3] + m*l*sin(yy[2])*yp[4] + m*l**2 * yp[5] \
                 + m*g*sin(yy[2])
         res[3]= yp[0] - yy[3]
         res[4]= yp[1] - yy[4]
         res[5]= yp[2] - yy[5]
-        #following equation is wrong, we need to derive another time and 
+        #following equation is wrong, we need to derive another time and
         #eliminate the dot{xdot} and dot{ydot} so that lagrange multiplier appears
         res[6]= (-2*yy[0] + omega/3.*sin(omega*yy[0]))*yy[3] + yy[4]
         ##sys.exit()
@@ -209,7 +209,7 @@ def main():
     else:
         print(__doc__)
         return
-    
+
     input1 = input("Solve with\n 1 = ida\n 2 = ddaspk\n\n"
                        "Answer (1 or 2) : ").strip()
     if input1 not in ["1", "2"]:
@@ -297,13 +297,13 @@ def main():
         whatever program is configured on the host as the default program for that 
         type of file.
         """
-        
+
         norm_path = os.path.normpath( file_path )
-        
+
         if not os.path.exists(norm_path):
             print("%s does not exist" % file_path)
             return
-            
+
         if os.sys.platform == 'win32':
             try:
                 os.startfile(norm_path)
@@ -323,14 +323,14 @@ def main():
         a frame rate of 20 frames per second
         """
         import shutil
-        
+
         fps = 20
         if os.path.isdir('figsslidingpendulum'):
             shutil.rmtree('figsslidingpendulum')
         os.mkdir('figsslidingpendulum')
         if not os.path.isdir('anislidingpendulum'):
             os.mkdir('anislidingpendulum')
-        
+
         pylab.figure(2)
         secs = 0
         frame = 0
@@ -340,13 +340,13 @@ def main():
             frame += 1
             if solnr // 500 != secs :
                 secs = solnr // 500
-                print('     ... at %i seconds ' % (secs * 5 )) 
+                print('     ... at %i seconds ' % (secs * 5 ))
 
         print('Creating movie using ffmpeg with output ... \n')
         import subprocess
         subprocess.call(['ffmpeg', '-r', '20', '-i', 'figsslidingpendulum' + os.sep + 
-                        'outsol%8d.png',  '-f',  'avi', '-y', 
-                        'anislidingpendulum' + os.sep + 
+                        'outsol%8d.png',  '-f',  'avi', '-y',
+                        'anislidingpendulum' + os.sep +
                                             'slidingpendulum'+ext+'.mpg'])
         #remove unused pictures
         shutil.rmtree('figsslidingpendulum')

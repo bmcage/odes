@@ -1,14 +1,14 @@
-# Authors: B. Malengier 
+# Authors: B. Malengier
 """
 This example shows how to solve the planar pendulum in full coordinate space.
-This results in a dae system with one algebraic equation. 
+This results in a dae system with one algebraic equation.
 
-The problem is easily stated: a pendulum must move on a circle with radius 1, 
-it has a mass m, and gravitational accelleration is g. 
+The problem is easily stated: a pendulum must move on a circle with radius 1,
+it has a mass m, and gravitational accelleration is g.
 The Lagragian is L = 1/2 m (u^2 + v^2) - m g y,
-with constraint: x^2+y^2 = 1. 
+with constraint: x^2+y^2 = 1.
 
-Adding a Lagrange multiplier \lambda, we arrive at the Euler Lagrange 
+Adding a Lagrange multiplier \lambda, we arrive at the Euler Lagrange
 differential equations for the problem:
 
 \dot{x} = u
@@ -20,7 +20,7 @@ and \lambda must be such that the constraint is satisfied:
 x^2+y^2 = 1
 
 DASPK cannot solve the above. Hence we derive a different constraint that
-contains more of the unknowns, as well as \lambda. 
+contains more of the unknowns, as well as \lambda.
 
 Derivation to time of the constraint gives a new constraint:
 x u + y v =0
@@ -30,8 +30,8 @@ u^2 + v^2 + x \dot{u} + y \dot{v} = 0
 which can be written with the known form of \dot{u}, \dot{v} as
 u^2 + v^2 + \labmda l^2/m - g y = 0
 
-This last expression will be used to find the solution to the planar 
-pendulum problem. 
+This last expression will be used to find the solution to the planar
+pendulum problem.
 
 The algorithm first needs to find initial conditions for the derivatives,
 then it solves the problme at hand. We take g=1, m=1
@@ -39,6 +39,10 @@ then it solves the problme at hand. We take g=1, m=1
 """
 #python 2.7 support
 from __future__ import print_function, division
+try:
+    input = raw_input
+except:
+    pass
 
 from numpy import (arange, zeros, array, sin)
 import numpy as np
@@ -61,7 +65,7 @@ def draw_graphs(fignum, t, x, y):
     plt.ylabel('Coordinate')
     plt.xlabel('Time')
     plt.show()
-    
+
 class oscres(IDA_RhsFunction):
     def evaluate(self, t, x, xdot, result, userdata):
         g=1
@@ -74,8 +78,8 @@ class oscres(IDA_RhsFunction):
         result[4] = x[2]**2 + x[3]**2 \
                     - (x[0]**2 + x[1]**2)*x[4] - x[1] * g
         return 0
-        
-res=oscres()        
+
+res=oscres()
 
 class SimpleOscillator():
     stop_t  = arange(.0, 15, 0.2, dtype=np.float)
@@ -86,11 +90,11 @@ class SimpleOscillator():
     g=1
 
     lambdaval = 0.1
-    #z0  =  array([x0, y0, 0., 0., lambdaval], np.float) 
+    #z0  =  array([x0, y0, 0., 0., lambdaval], np.float)
     #zp0 = array([0., 0., -lambdaval*x0, -lambdaval*y0-g, -g], np.float)
     z0  = [x0, y0, 0., 0., lambdaval]
     zp0 = [0., 0., -lambdaval*x0, -lambdaval*y0-g, -g]
-    
+
 
 problem = SimpleOscillator()
 time = problem.stop_t
@@ -98,7 +102,7 @@ nr = len(time)
 
 # Variant 1: Solving the problem with the 'solve' method
 solver=ida.IDA(res,
-               compute_initcond='yp0',               
+               compute_initcond='yp0',
                first_step_size=1e-18,
                atol=1e-6,rtol=1e-6,
                algebraic_vars_idx=[4])
@@ -167,4 +171,4 @@ xt = y4[:, 0]
 yt = y4[:, 1]
 
 draw_graphs(4, t4, xt, yt)
-raw_input("Press a button to finish.")
+input("Press a button to finish.")

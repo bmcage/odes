@@ -1,57 +1,57 @@
-# Authors: B. Malengier 
+# Authors: B. Malengier
 """
-Example to show the use of stepwise solving, using the ida or the ddaspk 
+Example to show the use of stepwise solving, using the ida or the ddaspk
 solver. It also shows how a class is used to hold the problem data.
 
 This example shows how to solve the double pendulum in full coordinate space.
 This results in a dae system.
 
-The problem is easily stated: a first pendulum must move on a circle with 
-radius 5 and has mass m1, a second one is attached and must move on a circle 
-with radius 2, it has a mass m2, and the gravitational accelleration is g. 
-The Lagragian is 
+The problem is easily stated: a first pendulum must move on a circle with
+radius 5 and has mass m1, a second one is attached and must move on a circle
+with radius 2, it has a mass m2, and the gravitational accelleration is g.
+The Lagragian is
 
     L = 1/2 m1 (u1^2 + v1^2) - m1 g y1 + 1/2 m2 (u2^2 + v2^2) - m2 g y2
             + lambda1/2 (x1^2+y1^2 - 25) + lambda2/2 ((x2-x1)^2+(y2-y1)^2 - 4)
-            
-The last two terms are Lagrange multipliers following from the two constraints:
-x1^2+y1^2 - 25 = 0 and (x2-x1)^2+(y2-y1)^2 - 4 = 0. 
 
-We arrive at the Euler-Lagrange differential equations for the problem, which 
+The last two terms are Lagrange multipliers following from the two constraints:
+x1^2+y1^2 - 25 = 0 and (x2-x1)^2+(y2-y1)^2 - 4 = 0.
+
+We arrive at the Euler-Lagrange differential equations for the problem, which
 will have 8 DE and 2 constraints.
-We add however two more constraints to the problem, following from deriving to 
-time the two known constraints: 
+We add however two more constraints to the problem, following from deriving to
+time the two known constraints:
 
 x1*u1+y1*v1 = 0 and (x2-x1)*(u2-u1)^2+(y2-y1)*(v2-v1)=0.
 
 These equations do not change the derived equations if their lagrange multiplier
 is supposed independent of time, as the terms they contribute
-annihilate each other. 
-We introduce the lagrange multipliers back into the residual by adding them 
-to the velocity terms as 
+annihilate each other.
+We introduce the lagrange multipliers back into the residual by adding them
+to the velocity terms as
    dx1/dt = u1 - lambda3 * x1, ...
 We arrive at the stablized index 2 double pendulum model
 
-An alternative is to use an index 1 model, which does not need the stabilizing 
-terms. This leads to 8 DE, and 2 algebraic equations. These 2 follow from 
+An alternative is to use an index 1 model, which does not need the stabilizing
+terms. This leads to 8 DE, and 2 algebraic equations. These 2 follow from
 deriving the two contraints twice to time, and replacing the second derivatives
 by their definitions.
 
 The solver used approximates the Jacobian. As the Jacobian of the resulting
 system is easily computed analytically, we can aid the solver by providing the
-Jacobian. This results in the third option: the index 1 problem with Jacobian 
+Jacobian. This results in the third option: the index 1 problem with Jacobian
 prescribed.
 
 The algorithm first needs to find initial conditions for the derivatives,
-then it solves the problem at hand. We take g=9.8, m1=2, m2=1, r1=5, r2=2, 
+then it solves the problem at hand. We take g=9.8, m1=2, m2=1, r1=5, r2=2,
 where the initial position is at rest horizontally.
-The solver index 2 problem becomes unstable around 109 seconds. All solvers 
+The solver index 2 problem becomes unstable around 109 seconds. All solvers
 show an increased deviation of the energy invariant from this time onwards.
 
 The algorithm computes the solution over 125 seconds, and plots the orbits of
 the pendula, as well as the energy of the system (should be conserved at the
 beginning value E=0). Next you can optionally have an animation created of the
-solution (this is slow!). For this you need to have the ffmpeg program 
+solution (this is slow!). For this you need to have the ffmpeg program
 installed. The animation is stored in the directory anidoublependulum.
 
 """
@@ -82,7 +82,7 @@ JACFAC = 1e-1
 class Doublependulum():
     """ The problem class with the residual function and the constants defined
     """
-    
+
     #default values
     deftend = 125.
     deftstep = 1e-2
@@ -128,12 +128,12 @@ class Doublependulum():
             self.g = data.g
 
         self.stop_t  = arange(.0, self.tend, self.tstep)
-        
+
         lambdaval = 0.0
         if type == 'index2':
             self.neq = 12
-            self.z0 =  array([self.x0, self.y0, self.x1, self.y1, 0., 0., 0., 
-                              0., lambdaval, lambdaval, lambdaval, lambdaval]) 
+            self.z0 =  array([self.x0, self.y0, self.x1, self.y1, 0., 0., 0.,
+                              0., lambdaval, lambdaval, lambdaval, lambdaval])
             self.zprime0 = array([0., 0., 0., 0., -lambdaval*self.x0,
                                   -lambdaval*self.y0-self.g, -lambdaval*self.x1,
                                   -lambdaval*self.y1-self.g, 0., 0., 0., 0.],
@@ -144,10 +144,10 @@ class Doublependulum():
         elif type == 'index1' or type == 'index1_jac':
             self.neq = 10
             self.z0 =  array([self.x0, self.y0, self.x1, self.y1, 0., 0., 0.,
-                              0., lambdaval, lambdaval]) 
-            self.zprime0 = array([0., 0., 0., 0., -lambdaval*self.x0, 
-                                  -lambdaval*self.y0-self.g, 
-                                  -lambdaval*self.x1, 
+                              0., lambdaval, lambdaval])
+            self.zprime0 = array([0., 0., 0., 0., -lambdaval*self.x0,
+                                  -lambdaval*self.y0-self.g,
+                                  -lambdaval*self.x1,
                                   -lambdaval*self.y1-self.g, 0., 0.], float)
             self.algvar_idx = [8, 9]
             self.algvar = array([1, 1, 1, 1, 1, 1, 1, 1, -1, -1])
@@ -174,7 +174,7 @@ class Doublependulum():
 #classes for the equations, as needed for the chosen solution method
 class resindex2(IDA_RhsFunction):
     """ Residual function class as needed by the IDA DAE solver"""
-    
+
     def set_dblpend(self, dblpend):
         """ Set the double pendulum problem to solve to have access to
             the data """
@@ -203,7 +203,7 @@ class resindex2(IDA_RhsFunction):
 
 class resindex1(IDA_RhsFunction):
     """ Residual function class as needed by the IDA DAE solver"""
-    
+
     def set_dblpend(self, dblpend):
         """ Set the double pendulum problem to solve to have access to
             the data """
@@ -215,9 +215,9 @@ class resindex1(IDA_RhsFunction):
         g = self.dblpend.g
 
         result[0]= m1*yp[4]        - yy[9]*(yy[0] - yy[2])  - yy[0]*yy[8]
-        result[1]= m1*yp[5] + g*m1 - yy[9]*(yy[1] - yy[3])  - yy[1]*yy[8] 
-        result[2]= m2*yp[6]        + yy[9]*(yy[0] - yy[2]) 
-        result[3]= m2*yp[7] + g*m2 + yy[9]*(yy[1] - yy[3]) 
+        result[1]= m1*yp[5] + g*m1 - yy[9]*(yy[1] - yy[3])  - yy[1]*yy[8]
+        result[2]= m2*yp[6]        + yy[9]*(yy[0] - yy[2])
+        result[3]= m2*yp[7] + g*m2 + yy[9]*(yy[1] - yy[3])
         result[4]= yp[0] - yy[4] #+ yy[10]*yy[0]
         result[5]= yp[1] - yy[5] #+ yy[10]*yy[1]
         result[6]= yp[2] - yy[6] #+ yy[11]*yy[2]
@@ -237,19 +237,19 @@ class resindex1(IDA_RhsFunction):
         return 0
 
 class jacindex1(IDA_JacRhsFunction):
-    
+
     def set_dblpend(self, dblpend):
         """ Set the double pendulum problem to solve to have access to
             the data """
         self.dblpend = dblpend
 
     def evaluate(self, tres, yy, yp, cj, jac):
-        
+
         m1 = self.dblpend.m1
         m2 = self.dblpend.m2
         g = self.dblpend.g
         jac[:,:] = 0.
-        jac[0][0] = - yy[9]   - yy[8] 
+        jac[0][0] = - yy[9]   - yy[8]
         jac[0][2] =  yy[9]
         jac[0][4] = cj * m1
         jac[0][8] = - yy[0]
@@ -275,23 +275,23 @@ class jacindex1(IDA_JacRhsFunction):
         jac[6][6] = -1
         jac[7][3] = cj
         jac[7][7] = -1
-        jac[8][0] = (yy[8]+yy[9])/m1*2*yy[0] - yy[9]/m1 * yy[2] 
+        jac[8][0] = (yy[8]+yy[9])/m1*2*yy[0] - yy[9]/m1 * yy[2]
         jac[8][1] = (yy[8]+yy[9])/m1*2*yy[1] - yy[9]/m1 * yy[3] - g
         jac[8][2] = - yy[9]/m1 * yy[0]
         jac[8][3] = - yy[9]/m1 * yy[1]
-        jac[8][4] = 2*yy[4] 
-        jac[8][5] = 2*yy[5] 
+        jac[8][4] = 2*yy[4]
+        jac[8][5] = 2*yy[5]
         jac[8][8] = 1./m1*(yy[0]**2 + yy[1]**2)
         jac[8][9] = 1./m1 *(yy[0]*(yy[0]-yy[2]) + yy[1]*(yy[1]-yy[3]) )
         jac[9][0] = yy[9]*(1./m1+1./m2)*2*(yy[0]-yy[2]) + \
-                    yy[8]/m1 *(2*yy[0] - yy[2]) 
+                    yy[8]/m1 *(2*yy[0] - yy[2])
         jac[9][1] = yy[9]*(1./m1+1./m2)*2*(yy[1]-yy[3]) + \
-                    yy[8]/m1 *(2*yy[1] - yy[3]) 
+                    yy[8]/m1 *(2*yy[1] - yy[3])
         jac[9][2] = - yy[9]*(1./m1+1./m2)*2*(yy[0]-yy[2]) - \
                     yy[8]/m1 * yy[0]
-        jac[9][3] = - yy[9]*(1./m1+1./m2)*2*(yy[1]-yy[3]) 
-        jac[9][4] = 2*(yy[4]-yy[6]) 
-        jac[9][5] = 2*(yy[5]-yy[7]) 
+        jac[9][3] = - yy[9]*(1./m1+1./m2)*2*(yy[1]-yy[3])
+        jac[9][4] = 2*(yy[4]-yy[6])
+        jac[9][5] = 2*(yy[5]-yy[7])
         jac[9][6] = -2*(yy[4]-yy[6])
         jac[9][7] = -2*(yy[5]-yy[7])
         jac[9][8] = 1./m1 *(yy[0]*(yy[0]-yy[2]) + yy[1]*(yy[1]-yy[3]) )
@@ -320,7 +320,7 @@ def main():
     else:
         print(__doc__)
         return
-    
+
     z = [0]*(1+len(problem.stop_t)); zprime = [0]*(1+len(problem.stop_t))
 
     res.set_dblpend(problem)
@@ -356,7 +356,7 @@ def main():
             flag, rt = solver.step(time, z[i], zprime[i])
             realtime += [rt]
             #print 'sol at ', time, z[i]
-            
+
             i += 1
             if flag != 0:
                 error = True
@@ -378,7 +378,7 @@ def main():
     yp2t = asarray([z[i][7] for i in range(nr)])
     energy = problem.m1*problem.g*y1t + \
                 problem.m2*problem.g*y2t + \
-                .5 *(problem.m1 * (xp1t**2 + yp1t**2) 
+                .5 *(problem.m1 * (xp1t**2 + yp1t**2)
                      + problem.m2 * (xp2t**2 + yp2t**2) )
     initenergy = energy[0]
 
@@ -386,7 +386,7 @@ def main():
     if alsoddaspk:
         ddaspkz = empty((alen(problem.stop_t), problem.neq), float)
         ddaspkzprime = empty((alen(problem.stop_t), problem.neq), float)
-        
+
         problem.set_res(res)
         ig = dae('ddaspk', problem.ddaspk_res)
         if jac:
@@ -425,7 +425,7 @@ def main():
         ddaspkyp2t = asarray([ddaspkzprime[i][3] for i in range(dnr)])
         ddaspkenergy = problem.m1*problem.g*ddaspky1t + \
                     problem.m2*problem.g*ddaspky2t + \
-                    .5 *(problem.m1 * (ddaspkxp1t**2 + ddaspkyp1t**2) 
+                    .5 *(problem.m1 * (ddaspkxp1t**2 + ddaspkyp1t**2)
                          + problem.m2 * (ddaspkxp2t**2 + ddaspkyp2t**2) )
         ddaspkrealtime = problem.stop_t[:dnr]
     pylab.ion()
@@ -500,13 +500,13 @@ def main():
         whatever program is configured on the host as the default program for that 
         type of file.
         """
-        
+
         norm_path = os.path.normpath( file_path )
-        
+
         if not os.path.exists(norm_path):
             print("%s does not exist" % file_path)
             return
-            
+
         if os.sys.platform == 'win32':
             try:
                 os.startfile(norm_path)
@@ -526,14 +526,14 @@ def main():
         a frame rate of 20 frames per second
         """
         import shutil
-        
+
         fps = 20
         if os.path.isdir('figsdoublependulum'):
             shutil.rmtree('figsdoublependulum')
         os.mkdir('figsdoublependulum')
         if not os.path.isdir('anidoublependulum'):
             os.mkdir('anidoublependulum')
-        
+
         pylab.figure(2)
         secs = 0
         frame = 0
@@ -543,13 +543,13 @@ def main():
             frame += 1
             if solnr // 500 != secs :
                 secs = solnr // 500
-                print('     ... at %i seconds ' % (secs * 5 )) 
-        
+                print('     ... at %i seconds ' % (secs * 5 ))
+
         print('Creating movie using ffmpeg with output ... \n')
         import subprocess
         subprocess.call(['ffmpeg', '-r', '20', '-i', 'figsdoublependulum' + os.sep + 
                         'outsol%8d.png',  '-f',  'avi', '-vcodec', 'mpeg2video', '-y', 
-                        'anidoublependulum' + os.sep + 
+                        'anidoublependulum' + os.sep +
                                             'doublependulum'+ext+'.mpg'])
         #remove unused pictures
         shutil.rmtree('figsdoublependulum')
