@@ -111,6 +111,7 @@ cdef class IDA_data:
         self.yp_tmp = np.empty(N, float)
         self.residual_tmp = np.empty(N, float)
         self.jac_tmp = None
+        self.g_tmp = None
 
 cdef class IDA:
 
@@ -146,6 +147,7 @@ cdef class IDA:
             'user_data': None,
             'rfn': None,
             'rootfn': None,
+            'nr_rootfns': 0,
             'jacfn': None
             }
 

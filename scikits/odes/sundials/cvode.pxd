@@ -1,13 +1,14 @@
 cimport numpy as np
 from c_sundials cimport N_Vector, realtype
-from common_defs cimport CV_RhsFunction, CV_JacRhsFunction
+from common_defs cimport CV_RhsFunction, CV_JacRhsFunction, CV_RootFunction
 
 ctypedef np.float_t DTYPE_t
 
 cdef class CV_data:
-    cdef np.ndarray yy_tmp, yp_tmp, jac_tmp
+    cdef np.ndarray yy_tmp, yp_tmp, jac_tmp, g_tmp
     cdef CV_RhsFunction rfn
     cdef CV_JacRhsFunction jac
+    cdef CV_RootFunction rootfn
     cdef bint parallel_implementation
     cdef object user_data
 

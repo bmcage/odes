@@ -42,7 +42,7 @@ from __future__ import print_function, division
 
 from numpy import (arange, zeros, array, sin)
 import numpy as np
-from scikits.odes.sundials.common_defs import ResFunction
+from scikits.odes.sundials.common_defs import IDA_RhsFunction, IDA_RootFunction
 from scikits.odes.sundials import ida
 import matplotlib.pyplot as plt
 
@@ -61,7 +61,7 @@ def draw_graphs(fignum, t, x, y):
     plt.xlabel('Time')
     plt.show()
     
-class oscres(ResFunction):
+class oscres(IDA_RhsFunction):
     def evaluate(self, t, x, xdot, result, userdata):
         g=1
         result[0]=x[2]-xdot[0]
@@ -98,7 +98,7 @@ nr = len(time)
 # Variant 1: Solving the problem with the 'solve' method
 solver=ida.IDA(res,
                compute_initcond='yp0',               
-               first_step=1e-18,
+               first_step_size=1e-18,
                atol=1e-6,rtol=1e-6,
                algebraic_vars_idx=[4])
 
@@ -131,17 +131,38 @@ yt = y2[:, 1]
 draw_graphs(2, time, xt, yt)
 
 # Variant 3: The same as variant 1 (intial value as in variant 2), but adding
-#            a HOOK_FN - in this case we simply output the current values
+#            a rootfn - in this case we simply output the current values
+#            and stop when t == 100
 
-def hook_fn(t, x, xdot, userdata):
-    print('t = ', t, ', x = ', x[0], ', y = ', x[1],
-          ', xdot = ', xdot[0], ', ydot = ', xdot[1])
+class RootFn(IDA_RootFunction):
+    def evaluate(self, t, x, xdot, out, userdata):
+        print('t = ', t, ', x = ', x[0], ', y = ', x[1],
+                ', xdot = ', xdot[0], ', ydot = ', xdot[1])
+        print ('out', out)
+        out[0] = 10.-t
+        return 0
 
-    return 0
+solver.set_options(nr_rootfns = 1, rootfn=RootFn())
 
-_flag, t3, y3 = solver.solve(time, problem.z0, problem.zp0, hook_fn)[:3]
+print ('test', isinstance(RootFn, IDA_RootFunction))
+
+_flag, t3, y3 = solver.solve(time, problem.z0, problem.zp0)[:3]
 
 xt = y3[:, 0]
 yt = y3[:, 1]
 
 draw_graphs(3, t3, xt, yt)
+
+# Variant 4: The same as variant 3 but a python function as root function
+def root_fn(t, x, xdot, out):
+    print('t = ', t, ', x = ', x[0], ', y = ', x[1],
+          ', xdot = ', xdot[0], ', ydot = ', xdot[1])
+    out[0] = 10.-t
+    return 0
+solver.set_options(nr_rootfns = 1, rootfn=root_fn)
+_flag, t4, y4 = solver.solve(time, problem.z0, problem.zp0)[:3]
+
+xt = y4[:, 0]
+yt = y4[:, 1]
+
+draw_graphs(3, t4, xt, yt)

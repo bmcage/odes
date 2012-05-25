@@ -66,7 +66,7 @@ except:
 import numpy as np
 from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi, empty,
                     alen)
-from scikits.odes.sundials.common_defs import ResFunction, JacFunction
+from scikits.odes.sundials.common_defs import IDA_RhsFunction, IDA_JacRhsFunction
 from scikits.odes.sundials import ida
 from scikits.odes import dae
 import pylab
@@ -172,7 +172,7 @@ class Doublependulum():
         self.jac.evaluate(tres, yy, yp, cj, jac)
 
 #classes for the equations, as needed for the chosen solution method
-class resindex2(ResFunction):
+class resindex2(IDA_RhsFunction):
     """ Residual function class as needed by the IDA DAE solver"""
     
     def set_dblpend(self, dblpend):
@@ -201,7 +201,7 @@ class resindex2(ResFunction):
         result[11]=(x[4] - x[6])*(x[2] - x[0]) - (x[1] - x[3])*(x[5] - x[7])
         return 0
 
-class resindex1(ResFunction):
+class resindex1(IDA_RhsFunction):
     """ Residual function class as needed by the IDA DAE solver"""
     
     def set_dblpend(self, dblpend):
@@ -236,7 +236,7 @@ class resindex1(ResFunction):
                   + yy[8]/m1 *(yy[0]*(yy[0]-yy[2]) + yy[1]*(yy[1]-yy[3]) )
         return 0
 
-class jacindex1(JacFunction):
+class jacindex1(IDA_JacRhsFunction):
     
     def set_dblpend(self, dblpend):
         """ Set the double pendulum problem to solve to have access to
@@ -331,7 +331,7 @@ def main():
 
     solver = ida.IDA(res,
                 compute_initcond='yp0',
-                first_step=1e-18,
+                first_step_size=1e-18,
                 atol=ATOL*jfac,
                 rtol=RTOL*jfac,
                 max_steps=1500,

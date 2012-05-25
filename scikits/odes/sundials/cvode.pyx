@@ -104,6 +104,7 @@ cdef class CV_data:
         self.yy_tmp = np.empty(N, float)
         self.yp_tmp = np.empty(N, float)
         self.jac_tmp = None
+        self.g_tmp = None
 
 cdef class CVODE:
 
@@ -139,6 +140,7 @@ cdef class CVODE:
             'user_data': None,
             'rfn': None,
             'rootfn': None,
+            'nr_rootfns': 0,
             'jacfn': None
             }
 
