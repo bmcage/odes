@@ -47,6 +47,7 @@ from scikits.odes.sundials import ida
 import matplotlib.pyplot as plt
 
 def draw_graphs(fignum, t, x, y):
+    plt.ion()
     plt.figure(fignum)
     plt.subplot(211)
     plt.scatter(x, y)
@@ -166,3 +167,4 @@ xt = y4[:, 0]
 yt = y4[:, 1]
 
 draw_graphs(4, t4, xt, yt)
+raw_input("Press a button to finish.")

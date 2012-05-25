@@ -78,8 +78,8 @@ class Slidingpendulum():
         self.k = Slidingpendulum.defk
         self.g = Slidingpendulum.defg
         self.omega = Slidingpendulum.defomega
-        self.scale1 = 1e10
-        self.scale2 = 1e9
+        self.scale1 = 1e5#1e10
+        self.scale2 = 1e5#1e9
         
         self.res = None
         self.jac = None
@@ -217,7 +217,7 @@ def main():
         return
 
     if input1 == '1':
-        ig = dae('ida', problem.res, atol=1e-5,rtol=1e-4, max_conv_fails=100)
+        ig = dae('ida', problem.res, atol=1e-5,rtol=1e-4, max_conv_fails=200)
     elif input1 == '2':
         ig = dae('ddaspk', problem.res, atol=1e-5,rtol=1e-4)
         #for ddaspk, scale2 must not be that big
@@ -227,7 +227,7 @@ def main():
                 compute_initcond='yp0',
                 exclude_algvar_from_error=problem.exclalg_err,
                 max_steps = 15000,
-                first_step=1e-9)
+                first_step_size=1e-9)
 
     #Solve it
     result= ig.solve(problem.stop_t, problem.z0, problem.zprime0)

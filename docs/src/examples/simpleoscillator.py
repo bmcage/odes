@@ -38,8 +38,10 @@ for t, u in zip(result[1], result[2]):
 #continue the solver
 result = solver.solve([result[1][-1], result[1][-1]+1], result[2][-1], 
                       result[3][-1])
-print ('Continuation of the solution')
-print ('t - Solution - Exact')
+
+print('------------------------------------')
+print('  ...continuation of the solution')
+print('------------------------------------')
 for t, u in zip(result[1], result[2]):
     print ('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
 
