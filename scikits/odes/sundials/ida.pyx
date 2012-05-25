@@ -838,9 +838,18 @@ cdef class IDA:
                 nv_s2ndarray(y,  y_last)
                 nv_s2ndarray(yp,  yp_last)
 
-                if flag < 0:
-                    print('Error occured. See returned flag '
-                          'variable and IDA documentation.')
+                if flag != IDA_SUCCESS:
+                    if flag == IDA_TSTOP_RETURN:
+                        print('Stop time reached... stopping computation...')
+                    elif flag == IDA_ROOT_RETURN:
+                        print('Found root... stopping computation...')
+                    elif flag < 0:
+                        print('Error occured. See returned flag '
+                              'variable and IDA documentation.')
+                    else:
+                        print('Unhandled flag:', flag,
+                              '\nComputation stopped... ')
+
                     t_retn   = t_retn[0:idx]
                     y_retn   = y_retn[0:idx, :]
                     yp_retn  = yp_retn[0:idx, :]

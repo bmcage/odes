@@ -644,9 +644,18 @@ cdef class CVODE:
 
                 nv_s2ndarray(y,  y_last)
 
-                if flag < 0:
-                    print('Error occured. See returned flag '
-                          'variable and CVode documentation.')
+                if flag != CV_SUCCESS:
+                    if flag == CV_TSTOP_RETURN:
+                        print('Stop time reached... stopping computation...')
+                    elif flag == CV_ROOT_RETURN:
+                        print('Found root... stopping computation...')
+                    elif flag < 0:
+                        print('Error occured. See returned flag '
+                              'variable and CVode documentation.')
+                    else:
+                        print('Unhandled flag:', flag,
+                              '\nComputation stopped... ')
+
                     t_retn  = t_retn[0:idx]
                     y_retn  = y_retn[0:idx, :]
 
