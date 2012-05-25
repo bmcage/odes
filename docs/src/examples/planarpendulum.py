@@ -165,4 +165,4 @@ _flag, t4, y4 = solver.solve(time, problem.z0, problem.zp0)[:3]
 xt = y4[:, 0]
 yt = y4[:, 1]
 
-draw_graphs(3, t4, xt, yt)
+draw_graphs(4, t4, xt, yt)

@@ -62,7 +62,7 @@ cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data):
     if parallel_implementation:
         raise NotImplemented
     else:
-        for i in np.range(np.alen(g_tmp)):
+        for i in np.arange(np.alen(g_tmp)):
             gout[i] = <realtype> g_tmp[i]
 
     return 0
