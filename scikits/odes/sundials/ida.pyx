@@ -697,7 +697,7 @@ cdef class IDA:
 
             if not (flag == IDA_SUCCESS):
                 raise ValueError('IDAInitCond: Error occured during computation'
-                                 'of initial condition')
+                                 ' of initial condition, flag', flag)
 
             t0_init = ic_t0
         else:
