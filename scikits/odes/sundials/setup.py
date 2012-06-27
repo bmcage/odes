@@ -8,28 +8,42 @@ from scikits.odes._build import cython
 
 base_path = os.path.abspath(os.path.dirname(__file__))
 
-lapack_opt = None
-try:
-    lapack_opt = get_info('lapack_opt',notfound_action=2)
-except:
-    print('LAPACK not found, no sundials solvers')
-
+# Edit following paths if programs are installed differently!
+# paths for LAPACK
 INCL_DIRS_LAPACK = []
-LIB_DIRS_LAPACK = []
-LIBS_LAPACK = []
-if lapack_opt:
-    INCL_DIRS_LAPACK = lapack_opt.get('include_dirs',[])
-    LIB_DIRS_LAPACK = lapack_opt.get('library_dirs',[])
-    LIBS_LAPACK = lapack_opt.get('libraries',[])
+LIB_DIRS_LAPACK  = []
+LIBS_LAPACK      = []
 
-# Edit following lines if sundials is installed differently!
-INCL_DIRS_SUNDIALS = [os.path.abspath(os.path.dirname(__file__))]
-LIB_DIRS_SUNDIALS  = [os.path.abspath(os.path.dirname(__file__)),
-                      '/usr/lib', '/usr/local/lib/',
-                    ]
+# paths for SUNDIALS
+INCL_DIRS_SUNDIALS = [base_path]
+LIB_DIRS_SUNDIALS  = [base_path, '/usr/lib', '/usr/local/lib/']
+
 LIBS_SUNDIALS = ['sundials_nvecserial']
-LIBS_IDA   = ['sundials_ida']
-LIBS_CVODE = ['sundials_cvode']
+LIBS_IDA      = ['sundials_ida']
+LIBS_CVODE    = ['sundials_cvode']
+
+# paths for FORTRAN
+LIB_DIRS_FORTRAN = []
+LIBS_FORTRAN     = []
+
+use_lapack = False
+try:
+    if INCL_DIRS_LAPACK and LIB_DIRS_LAPACK and LIBS_LAPACK:
+        print('Using user provided LAPACK paths...')
+        use_lapack = True
+    else:
+        lapack_opt = get_info('lapack_opt', notfound_action=2)
+
+        if lapack_opt:
+            INCL_DIRS_LAPACK = lapack_opt.get('include_dirs',[])
+            LIB_DIRS_LAPACK  = lapack_opt.get('library_dirs',[])
+            LIBS_LAPACK      = lapack_opt.get('libraries',[])
+            use_lapack = True
+        else:
+            raise ValueError
+except:
+    print('LAPACK was not detected, disabling sundials solvers')
+
 
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
@@ -39,7 +53,7 @@ def configuration(parent_package='',top_path=None):
     print("=============================================")
     config = Configuration('sundials', parent_package, top_path)
 
-    if lapack_opt:
+    if use_lapack:
         # sundials library
         ## assume installed globally at the moment
         ##config.add_library('sundials_ida',
@@ -57,16 +71,16 @@ def configuration(parent_package='',top_path=None):
                              sources=['ida.c'],
                              depends=['common_defs.c'], 
                              include_dirs=INCL_DIRS_SUNDIALS+INCL_DIRS_LAPACK,
-                             library_dirs=LIB_DIRS_SUNDIALS+LIB_DIRS_LAPACK,
-                             libraries=LIBS_IDA+LIBS_SUNDIALS+LIBS_LAPACK)
+                             library_dirs=LIB_DIRS_SUNDIALS+LIB_DIRS_LAPACK+LIB_DIRS_FORTRAN,
+                             libraries=LIBS_IDA+LIBS_SUNDIALS+LIBS_LAPACK+LIBS_FORTRAN)
 
         cython(['cvode.pyx'], working_path=base_path)
         config.add_extension("cvode",
                              sources=['cvode.c'],
                              depends=['common_defs.c'],
                              include_dirs=INCL_DIRS_SUNDIALS+INCL_DIRS_LAPACK,
-                             library_dirs=LIB_DIRS_SUNDIALS+LIB_DIRS_LAPACK,
-                             libraries=LIBS_CVODE+LIBS_SUNDIALS+LIBS_LAPACK)
+                             library_dirs=LIB_DIRS_SUNDIALS+LIB_DIRS_LAPACK+LIB_DIRS_FORTRAN,
+                             libraries=LIBS_CVODE+LIBS_SUNDIALS+LIBS_LAPACK+LIBS_FORTRAN)
     return config
 
 if __name__ == '__main__':
