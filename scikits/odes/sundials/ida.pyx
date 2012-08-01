@@ -14,8 +14,6 @@ from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
 
-cdef enum: HOOK_FN_STOP = 128
-
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *auxiliary_data):
     """ function with the signature of IDAResFn """
@@ -770,7 +768,7 @@ cdef class IDA:
 
         return t0_init
 
-    def solve(self, object tspan, object y0,  object yp0, hook_fn = None):
+    def solve(self, object tspan, object y0,  object yp0):
         """
         Runs the solver.
 
@@ -779,11 +777,6 @@ cdef class IDA:
                     returned
             y0    - numpy array of initial values
             yp0   - numpy array of initial values of derivatives
-            hook  - if set, this function is evaluated after each succestive
-                    (internal) step. Input values: t, x, xdot, userdata. Output
-                    is 0 (success), otherwise computation is stopped and a
-                   return flag = ? is set. Values are stored in (see)
-                   t_err, y_err, yp_err
 
         Return values:
             flag   - indicating return status of the solver
@@ -811,14 +804,12 @@ cdef class IDA:
         np_tspan = np.asarray(tspan)
         np_y0    = np.asarray(y0)
         np_yp0   = np.asarray(yp0)
-         #TODO: determine hook_fn type
 
-        return self._solve(np_tspan, np_y0, np_yp0, hook_fn)
+        return self._solve(np_tspan, np_y0, np_yp0)
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                        np.ndarray[DTYPE_t, ndim=1] y0,
-                       np.ndarray[DTYPE_t, ndim=1] yp0,
-                       hook_fn = None):
+                       np.ndarray[DTYPE_t, ndim=1] yp0):
 
 
         cdef np.ndarray[DTYPE_t, ndim=1] t_retn
@@ -842,69 +833,36 @@ cdef class IDA:
         y_last   = np.empty(np.shape(y0), float)
         yp_last  = np.empty(np.shape(y0), float)
 
-        if hook_fn:
-            for idx in np.arange(np.alen(tspan))[1:]:
-                t = tspan[idx]
+        for idx in np.arange(np.alen(tspan))[1:]:
+            t = tspan[idx]
 
-                while True:
-                    flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
-                                    IDA_ONE_STEP)
+            flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+                            IDA_NORMAL)
 
-                    nv_s2ndarray(y,  y_last)
-                    nv_s2ndarray(y,  yp_last)
+            nv_s2ndarray(y,  y_last)
+            nv_s2ndarray(yp,  yp_last)
 
-                    if ((flag < 0) or
-                        (hook_fn(t_out, y_last, yp_last,
-                                 self.aux_data.user_data) != 0)):
-                        if flag < 0:
-                             print('Error occured. See returned flag '
-                                  'variable and IDA documentation.')
-                        else:
-                            flag = HOOK_FN_STOP
+            if flag != IDA_SUCCESS:
+                if flag == IDA_TSTOP_RETURN:
+                    print('Stop time reached... stopping computation...')
+                elif flag == IDA_ROOT_RETURN:
+                    print('Found root... stopping computation...')
+                elif flag < 0:
+                    print('Error occured. See returned flag '
+                          'variable and IDA documentation.')
+                else:
+                    print('Unhandled flag:', flag,
+                          '\nComputation stopped... ')
 
-                        t_retn  = t_retn[0:idx]
-                        y_retn  = y_retn[0:idx, :]
-                        yp_retn = yp_retn[0:idx, :]
+                t_retn   = t_retn[0:idx]
+                y_retn   = y_retn[0:idx, :]
+                yp_retn  = yp_retn[0:idx, :]
 
-                        return (flag, t_retn, y_retn, yp_retn,
-                                t_out, y_last, yp_last)
+                return flag, t_retn, y_retn, yp_retn, t_out, y_last, yp_last
 
-                    if t_out >= t: break
-
-                t_retn[idx]     = t_out
-                y_retn[idx, :]  = y_last
-                yp_retn[idx, :] = yp_last
-        else:
-            for idx in np.arange(np.alen(tspan))[1:]:
-                t = tspan[idx]
-
-                flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
-                                IDA_NORMAL)
-
-                nv_s2ndarray(y,  y_last)
-                nv_s2ndarray(yp,  yp_last)
-
-                if flag != IDA_SUCCESS:
-                    if flag == IDA_TSTOP_RETURN:
-                        print('Stop time reached... stopping computation...')
-                    elif flag == IDA_ROOT_RETURN:
-                        print('Found root... stopping computation...')
-                    elif flag < 0:
-                        print('Error occured. See returned flag '
-                              'variable and IDA documentation.')
-                    else:
-                        print('Unhandled flag:', flag,
-                              '\nComputation stopped... ')
-
-                    t_retn   = t_retn[0:idx]
-                    y_retn   = y_retn[0:idx, :]
-                    yp_retn  = yp_retn[0:idx, :]
-
-                    return flag, t_retn, y_retn, yp_retn, t_out, y_last, yp_last
-
-                t_retn[idx]     = t_out
-                y_retn[idx, :]  = y_last
-                yp_retn[idx, :] = yp_last
+            t_retn[idx]     = t_out
+            y_retn[idx, :]  = y_last
+            yp_retn[idx, :] = yp_last
 
         return flag, t_retn, y_retn, yp_retn, None, None, None
 

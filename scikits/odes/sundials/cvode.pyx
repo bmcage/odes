@@ -14,8 +14,6 @@ from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
 
-cdef enum: HOOK_FN_STOP = 128
-
 cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
               void *auxiliary_data):
     """ function with the signature of CVRhsFn, that calls python Rhs """
@@ -614,17 +612,16 @@ cdef class CVODE:
 
         return t0
 
-    def solve(self, object tspan, object y0, object hook_fn = None):
+    def solve(self, object tspan, object y0):
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0
         np_tspan = np.asarray(tspan)
         np_y0    = np.asarray(y0)
-        #TODO: determine hook_fn type
 
-        return self._solve(np_tspan, np_y0, hook_fn)
+        return self._solve(np_tspan, np_y0)
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
-                 np.ndarray[DTYPE_t, ndim=1] y0, hook_fn = None):
+                 np.ndarray[DTYPE_t, ndim=1] y0):
 
         cdef np.ndarray[DTYPE_t, ndim=1] t_retn
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn
@@ -645,60 +642,32 @@ cdef class CVODE:
 
         y_last   = np.empty(np.shape(y0), float)
 
-        if hook_fn:
-            for idx in np.arange(np.alen(tspan))[1:]:
-                t = tspan[idx]
+        for idx in np.arange(np.alen(tspan))[1:]:
+            t = tspan[idx]
 
-                while True:
-                    flag = CVode(cv_mem, <realtype> t,  y, &t_out,
-                                 CV_ONE_STEP)
+            flag = CVode(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
 
-                    nv_s2ndarray(y,  y_last)
+            nv_s2ndarray(y,  y_last)
 
-                    if ((flag < 0) or
-                        hook_fn(t_out, y_last, self.aux_data.user_data) != 0):
-                        if flag < 0:
-                            print('Error occured. See returned flag '
-                                  'variable and CVode documentation.')
-                        else:
-                            flag = HOOK_FN_STOP
+            if flag != CV_SUCCESS:
+                if flag == CV_TSTOP_RETURN:
+                    print('Stop time reached... stopping computation...')
+                elif flag == CV_ROOT_RETURN:
+                    print('Found root... stopping computation...')
+                elif flag < 0:
+                    print('Error occured. See returned flag '
+                          'variable and CVode documentation.')
+                else:
+                    print('Unhandled flag:', flag,
+                          '\nComputation stopped... ')
 
-                        t_retn  = t_retn[0:idx]
-                        y_retn  = y_retn[0:idx, :]
+                t_retn  = t_retn[0:idx]
+                y_retn  = y_retn[0:idx, :]
 
-                        return flag, t_retn, y_retn, t_out, y_last
+                return flag, t_retn, y_retn, t_out, y_last
 
-                    if t_out > t: break
-
-                t_retn[idx]    = t_out
-                y_retn[idx, :] = y_last
-        else:
-            for idx in np.arange(np.alen(tspan))[1:]:
-                t = tspan[idx]
-
-                flag = CVode(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
-
-                nv_s2ndarray(y,  y_last)
-
-                if flag != CV_SUCCESS:
-                    if flag == CV_TSTOP_RETURN:
-                        print('Stop time reached... stopping computation...')
-                    elif flag == CV_ROOT_RETURN:
-                        print('Found root... stopping computation...')
-                    elif flag < 0:
-                        print('Error occured. See returned flag '
-                              'variable and CVode documentation.')
-                    else:
-                        print('Unhandled flag:', flag,
-                              '\nComputation stopped... ')
-
-                    t_retn  = t_retn[0:idx]
-                    y_retn  = y_retn[0:idx, :]
-
-                    return flag, t_retn, y_retn, t_out, y_last
-
-                t_retn[idx]    = t_out
-                y_retn[idx, :] = y_last
+            t_retn[idx]    = t_out
+            y_retn[idx, :] = y_last
 
         return flag, t_retn, y_retn, None, None
 

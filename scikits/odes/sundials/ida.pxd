@@ -50,8 +50,7 @@ cdef class IDA:
                     np.ndarray yp_ic0_retn = ?)
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                        np.ndarray[DTYPE_t, ndim=1]y0,
-                       np.ndarray[DTYPE_t, ndim=1] yp0,
-                       hook_fn = ?)
+                       np.ndarray[DTYPE_t, ndim=1] yp0)
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=*)
     #def step(self, realtype t)
