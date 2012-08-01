@@ -336,6 +336,74 @@ cdef class IDA:
                 raise ValueError("Option '%s' is not supported by solver" % key)
         self.initialized = False
 
+        self._set_runtime_changeable_options(options)
+
+    cpdef _set_runtime_changeable_options(self, object options,
+                                          bint supress_supported_check=False):
+        """
+          (Re)Set options that can change after IDA_MEM object was allocated -
+          mostly useful for values that need to be changed at run-time.
+        """
+        cdef int flag
+        cdef void* ida_mem = self._ida_mem
+
+        if ida_mem is NULL:
+            return 0
+
+        # Check whether options are all only supported - this check can
+        # be supressed by 'supress_supported_check = True'
+        if not supress_supported_check:
+            for opt in options.keys():
+                if not opt in ['atol', 'rtol', 'tcrit']:
+                    raise ValueError("Option '%s' can''t be set runtime." % opt)
+
+        # Set tolerances
+        cdef N_Vector atol
+        cdef np.ndarray[DTYPE_t, ndim=1] np_atol
+
+        opts_atol = options['atol']
+        opts_rtol = options['rtol']
+        if not ((opts_rtol is None) and (opts_atol is None)):
+            if opts_rtol is None:
+                opts_rtol = self.options['rtol']
+            else:
+                if not np.isscalar(options['rtol']) :
+                    raise ValueError("For IDA solver 'rtol' must be a scalar")
+
+            if opts_atol is None:
+                opts_atol = self.options['atol']
+            else:
+                if not (self.atol is NULL):
+                    N_VDestroy(self.atol)
+                    self.atol = NULL
+
+            if np.isscalar(opts_atol):
+                flag = IDASStolerances(ida_mem, <realtype> opts_rtol,
+                                                <realtype> opts_atol)
+            else:
+                np_atol = np.asarray(opts_atol)
+                if np.alen(np_atol) != self.N:
+                    raise ValueError("Array length inconsistency: 'atol' "
+                                     "lenght (%i) differs from problem size "
+                                     "(%i)." % (np.alen(np_atol), self.N))
+
+                if self.parallel_implementation:
+                    raise NotImplemented
+                else:
+                    atol = N_VMake_Serial(self.N, <realtype *> np_atol.data)
+                    flag = IDASVtolerances(ida_mem, <realtype> opts_rtol, atol)
+
+                    self.atol = atol
+
+            if flag == IDA_ILL_INPUT:
+                raise ValueError("IDATolerances: negative 'atol' or 'rtol' value.")
+        #TODO: implement IDAFWtolerances(ida_mem, efun)
+
+        # Set tcrit
+        opts_tcrit = options['tcrit']
+        if (not opts_tcrit is None) and (opts_tcrit >= 0.):
+            IDASetStopTime(ida_mem, <realtype> opts_tcrit)
+
     def init_step(self, double t0, object y0, object yp0,
                    np.ndarray y_ic0_retn = None,
                    np.ndarray yp_ic0_retn = None):
@@ -501,27 +569,7 @@ cdef class IDA:
         self.aux_data.jac = jac
         self.aux_data.user_data = opts['user_data']
 
-        if not np.isscalar(opts['rtol']) :
-            raise ValueError('rtol (%s) must be a scalar for IDA'
-                                % (opts['rtol']))
-
-        cdef N_Vector atol
-        cdef np.ndarray[DTYPE_t, ndim=1] np_atol
-
-        if not (self.atol is NULL):
-            N_VDestroy(self.atol)
-            self.atol = NULL
-        if np.isscalar(opts['atol']):
-            flag = IDASStolerances(ida_mem, <realtype> opts['rtol'],
-                                            <realtype> opts['atol'])
-        else:
-            np_atol = np.asarray(opts['atol'])
-            if self.parallel_implementation:
-                raise NotImplemented
-            else:
-                atol = N_VMake_Serial(N, <realtype *> np_atol.data)
-            flag = IDASVtolerances(ida_mem, <realtype> opts['rtol'], atol)
-        #TODO: implement IDAFWtolerances(ida_mem, efun)
+        self._set_runtime_changeable_options(opts, supress_supported_check=True)
 
         if flag == IDA_ILL_INPUT:
             raise ValueError('IDAStolerances: negative atol or rtol value.')
@@ -539,8 +587,6 @@ cdef class IDA:
             if flag == IDA_ILL_INPUT:
                 raise ValueError('IDASetMaxStep: max_step_size is negative or '
                                  'smaller than allowed.')
-        if opts['tcrit'] > 0.:
-            IDASetStopTime(ida_mem, <realtype> opts['tcrit'])
         if opts['max_nonlin_iters'] > 0:
             IDASetMaxNonlinIters(ida_mem, <int> opts['max_nonlin_iters'])
         if opts['max_conv_fails'] > 0:

@@ -300,16 +300,77 @@ cdef class CVODE:
                 raise ValueError("Option '%s' is not supported by solver" % key)
         self.initialized = False
 
+    cpdef _set_runtime_changeable_options(self, object options,
+                                          bint supress_supported_check=False):
+        """
+          (Re)Set options that can change after CV_MEM object was allocated -
+          mostly useful for values that need to be changed at run-time.
+        """
+        cdef int flag
+        cdef void* cv_mem = self._cv_mem
+
+        if cv_mem is NULL:
+            return 0
+
+        # Check whether options are all only supported - this check can
+        # be supressed by 'supress_supported_check = True'
+        if not supress_supported_check:
+            for opt in options.keys():
+                if not opt in ['atol', 'rtol', 'tcrit']:
+                    raise ValueError("Option '%s' can''t be set runtime." % opt)
+
+        # Set tolerances
+        cdef N_Vector atol
+        cdef np.ndarray[DTYPE_t, ndim=1] np_atol
+
+        opts_atol = options['atol']
+        opts_rtol = options['rtol']
+        if not ((opts_rtol is None) and (opts_atol is None)):
+            if opts_rtol is None:
+                opts_rtol = self.options['rtol']
+            else:
+                if not np.isscalar(options['rtol']) :
+                    raise ValueError("For IDA solver 'rtol' must be a scalar")
+
+            if opts_atol is None:
+                opts_atol = self.options['atol']
+            else:
+                if not (self.atol is NULL):
+                    N_VDestroy(self.atol)
+                    self.atol = NULL
+
+            if np.isscalar(opts_atol):
+                flag = CVodeSStolerances(cv_mem, <realtype> opts_rtol,
+                                                 <realtype> opts_atol)
+            else:
+                np_atol = np.asarray(opts_atol)
+                if np.alen(np_atol) != self.N:
+                    raise ValueError("Array length inconsistency: 'atol' "
+                                     "lenght (%i) differs from problem size "
+                                     "(%i)." % (np.alen(np_atol), self.N))
+
+                if self.parallel_implementation:
+                    raise NotImplemented
+                else:
+                    atol = N_VMake_Serial(self.N, <realtype *> np_atol.data)
+                    flag = CVodeSVtolerances(cv_mem, <realtype> opts_rtol, atol)
+
+                    self.atol = atol
+
+                if flag == CV_ILL_INPUT:
+                    raise ValueError("CVodeStolerances: negative 'atol' or 'rtol' value.")
+            #TODO: implement CVFWtolerances(cv_mem, efun)
+
+        # Set tcrit
+        opts_tcrit = options['tcrit']
+        if (not opts_tcrit is None) and (opts_tcrit >= 0.):
+            CVodeSetStopTime(cv_mem, <realtype> opts_tcrit)
+
     def init_step(self, double t0, object y0):
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         np_y0 = np.asarray(y0)
 
         return self._init_step(t0, np_y0)
-
-    def set_tcrit(self, double tcrit):
-        cdef void* cv_mem = self._cv_mem
-        # how to unset tcrit??
-        CVodeSetStopTime(cv_mem, <realtype> tcrit)
 
     cpdef _init_step(self, DTYPE_t t0,
                      np.ndarray[DTYPE_t, ndim=1] y0):
@@ -435,30 +496,7 @@ cdef class CVODE:
         #self.aux_data.jac = opts['jacfn']
         self.aux_data.user_data = opts['user_data']
 
-        if not np.isscalar(opts['rtol']) :
-            raise ValueError('rtol (%s) must be a scalar for CVode'
-                                % (opts['rtol']))
-
-        cdef N_Vector atol
-        cdef np.ndarray[DTYPE_t, ndim=1] np_atol
-
-        if not (self.atol is NULL):
-            N_VDestroy(self.atol)
-            self.atol = NULL
-        if np.isscalar(opts['atol']):
-            flag = CVodeSStolerances(cv_mem, <realtype> opts['rtol'],
-                                             <realtype> opts['atol'])
-        else:
-            np_atol = np.asarray(opts['atol'])
-            if self.parallel_implementation:
-                raise NotImplemented
-            else:
-                atol = N_VMake_Serial(N, <realtype *> np_atol.data)
-                flag = CVodeSVtolerances(cv_mem, <realtype> opts['rtol'], atol)
-        #TODO: implement CVFWtolerances(cv_mem, efun)
-
-        if flag == CV_ILL_INPUT:
-            raise ValueError('CVodeStolerances: negative atol or rtol value.')
+        self._set_runtime_changeable_options(opts, supress_supported_check=True)
 
         # As user data we pass the CV_data object
         CVodeSetUserData(cv_mem, <void*> self.aux_data)
@@ -477,8 +515,6 @@ cdef class CVODE:
             if flag == CV_ILL_INPUT:
                 raise ValueError('CVodeSetMaxStep: max_step_size is negative '
                                  'or smaller than min_step_size.')
-        if opts['tcrit'] > 0.:
-            CVodeSetStopTime(cv_mem, <realtype> opts['tcrit'])
         if opts['max_nonlin_iters'] > 0:
             CVodeSetMaxNonlinIters(cv_mem, <int> opts['max_nonlin_iters'])
         if opts['max_conv_fails'] > 0:

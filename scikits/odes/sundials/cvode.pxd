@@ -27,3 +27,5 @@ cdef class CVODE:
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                        np.ndarray[DTYPE_t, ndim=1] y0, hook_fn = *)
+    cpdef _set_runtime_changeable_options(self, object options,
+                                          bint supress_supported_check=*)

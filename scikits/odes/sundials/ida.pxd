@@ -52,4 +52,6 @@ cdef class IDA:
                        np.ndarray[DTYPE_t, ndim=1]y0,
                        np.ndarray[DTYPE_t, ndim=1] yp0,
                        hook_fn = ?)
+    cpdef _set_runtime_changeable_options(self, object options,
+                                          bint supress_supported_check=*)
     #def step(self, realtype t)
