@@ -296,7 +296,6 @@ cdef class CVODE:
                 self.options[key.lower()] = value
             else:
                 raise ValueError("Option '%s' is not supported by solver" % key)
-        self.initialized = False
 
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=False):
@@ -321,8 +320,16 @@ cdef class CVODE:
         cdef N_Vector atol
         cdef np.ndarray[DTYPE_t, ndim=1] np_atol
 
-        opts_atol = options['atol']
-        opts_rtol = options['rtol']
+        if 'atol' in options:
+            opts_atol = options['atol']
+        else:
+            opts_atol = None
+
+        if 'rtol' in options:
+            opts_rtol = options['rtol']
+        else:
+            opts_rtol = None
+
         if not ((opts_rtol is None) and (opts_atol is None)):
             if opts_rtol is None:
                 opts_rtol = self.options['rtol']
@@ -360,9 +367,13 @@ cdef class CVODE:
             #TODO: implement CVFWtolerances(cv_mem, efun)
 
         # Set tcrit
-        opts_tcrit = options['tcrit']
-        if (not opts_tcrit is None) and (opts_tcrit >= 0.):
-            CVodeSetStopTime(cv_mem, <realtype> opts_tcrit)
+         if ('tcrit' in options):
+            opts_tcrit = options['tcrit']
+            if (not opts_tcrit is None) and (opts_tcrit >= 0.):
+                flag = CVodeSetStopTime(cv_mem, <realtype> opts_tcrit)
+                if flag == CV_ILL_INPUT:
+                    raise ValueError('IDASetStopTime::Stop value is beyond '
+                                     'current value.')
 
     def init_step(self, double t0, object y0):
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0

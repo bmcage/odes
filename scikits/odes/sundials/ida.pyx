@@ -332,7 +332,6 @@ cdef class IDA:
                 self.options[key.lower()] = value
             else:
                 raise ValueError("Option '%s' is not supported by solver" % key)
-        self.initialized = False
 
         self._set_runtime_changeable_options(options)
 
@@ -359,8 +358,16 @@ cdef class IDA:
         cdef N_Vector atol
         cdef np.ndarray[DTYPE_t, ndim=1] np_atol
 
-        opts_atol = options['atol']
-        opts_rtol = options['rtol']
+        if 'atol' in options:
+            opts_atol = options['atol']
+        else:
+            opts_atol = None
+
+        if 'rtol' in options:
+            opts_rtol = options['rtol']
+        else:
+            opts_rtol = None
+
         if not ((opts_rtol is None) and (opts_atol is None)):
             if opts_rtol is None:
                 opts_rtol = self.options['rtol']
@@ -398,9 +405,13 @@ cdef class IDA:
         #TODO: implement IDAFWtolerances(ida_mem, efun)
 
         # Set tcrit
-        opts_tcrit = options['tcrit']
-        if (not opts_tcrit is None) and (opts_tcrit >= 0.):
-            IDASetStopTime(ida_mem, <realtype> opts_tcrit)
+        if ('tcrit' in options):
+            opts_tcrit = options['tcrit']
+            if (not opts_tcrit is None) and (opts_tcrit >= 0.):
+               flag = IDASetStopTime(ida_mem, <realtype> opts_tcrit)
+               if flag == IDA_ILL_INPUT:
+                   raise ValueError('IDASetStopTime::Stop value is beyond '
+                                    'current value.')
 
     def init_step(self, double t0, object y0, object yp0,
                    np.ndarray y_ic0_retn = None,
