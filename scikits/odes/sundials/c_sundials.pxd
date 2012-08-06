@@ -123,13 +123,13 @@ cdef extern from "sundials/sundials_lapack.h":
     #             int *lda, double *x, int *inc_x, double *beta, double *y,
     #             int *inc_y, int len_trans)
     # void dtrsv_(char *uplo, char *trans, char *diag, int *n,
-    #     	      double *a, int *lda, double *x, int *inc_x,
-    #     	      int len_uplo, int len_trans, int len_diag)
+    #             double *a, int *lda, double *x, int *inc_x,
+    #             int len_uplo, int len_trans, int len_diag)
 
     # # Level-3 BLAS
     # void dsyrk_(char *uplo, char *trans, int *n, int *k,
-    #     	      double *alpha, double *a, int *lda, double *beta,
-    #     	      double *c, int *ldc, int len_uplo, int len_trans)
+    #             double *alpha, double *a, int *lda, double *beta,
+    #             double *c, int *ldc, int len_uplo, int len_trans)
 
     # # LAPACK
     # void dgbtrf_(int *m, int *n, int *kl, int *ku,
@@ -138,9 +138,9 @@ cdef extern from "sundials/sundials_lapack.h":
     #              double *ab, int *ldab, int *ipiv, double *b, int *ldb,
     #              int *info, int len_trans)
     # void dgeqp3_(int *m, int *n, double *a, int *lda, int *jpvt, double *tau,
-    #     	       double *work, int *lwork, int *info)
+    #              double *work, int *lwork, int *info)
     # void dgeqrf_(int *m, int *n, double *a, int *lda, double *tau, double *work,
-    #     	       int *lwork, int *info)
+    #              int *lwork, int *info)
     # void dgetrf_(int *m, int *n, double *a, int *lda, int *ipiv, int *info)
     # void dgetrs_(char *trans, int *n, int *nrhs, double *a, int *lda,
     #              int *ipiv, double *b, int *ldb, int *info, int len_trans)
@@ -300,7 +300,7 @@ cdef extern from "sundials/sundials_spgmr.h":
 
     enum: SPGMR_SUCCESS            #0  /* Converged                     */
     enum: SPGMR_RES_REDUCED        #1  /* Did not converge, but reduced
-                                    #   /* norm of residual              */
+                                   #   /* norm of residual              */
     enum: SPGMR_CONV_FAIL          #2  /* Failed to converge            */
     enum: SPGMR_QRFACT_FAIL        #3  /* QRfact found singular matrix  */
     enum: SPGMR_PSOLVE_FAIL_REC    #4  /* psolve failed recoverably     */
@@ -370,16 +370,16 @@ cdef extern from "sundials/sundials_sptfqmr.h":
                      N_Vector sb, ATimesFn atimes, PSolveFn psolve,
                      realtype *res_norm, int *nli, int *nps)
 
-    enum: SPTFQMR_SUCCESS              #/* SPTFQMR algorithm converged          */
-    enum: SPTFQMR_RES_REDUCED          #/* SPTFQMR did NOT converge, but the
-    enum: SPTFQMR_CONV_FAIL            #/* SPTFQMR algorithm failed to converge */
-    enum: SPTFQMR_PSOLVE_FAIL_REC      #/* psolve failed recoverably            */
-    enum: SPTFQMR_ATIMES_FAIL_REC      #/* atimes failed recoverably            */
-    enum: SPTFQMR_PSET_FAIL_REC        #/* pset faild recoverably               */
+    enum: SPTFQMR_SUCCESS            #/* SPTFQMR algorithm converged          */
+    enum: SPTFQMR_RES_REDUCED        #/* SPTFQMR did NOT converge, but the    */
+    enum: SPTFQMR_CONV_FAIL          #/* SPTFQMR algorithm failed to converge */
+    enum: SPTFQMR_PSOLVE_FAIL_REC    #/* psolve failed recoverably            */
+    enum: SPTFQMR_ATIMES_FAIL_REC    #/* atimes failed recoverably            */
+    enum: SPTFQMR_PSET_FAIL_REC      #/* pset faild recoverably               */
 
-    enum: SPTFQMR_MEM_NULL             #/* mem argument is NULL                 */
-    enum: SPTFQMR_ATIMES_FAIL_UNREC    #/* atimes returned failure flag         */
-    enum: SPTFQMR_PSOLVE_FAIL_UNREC    #/* psolve failed unrecoverably          */
-    enum: SPTFQMR_PSET_FAIL_UNREC      #/* pset failed unrecoverably            */
+    enum: SPTFQMR_MEM_NULL           #/* mem argument is NULL                 */
+    enum: SPTFQMR_ATIMES_FAIL_UNREC  #/* atimes returned failure flag         */
+    enum: SPTFQMR_PSOLVE_FAIL_UNREC  #/* psolve failed unrecoverably          */
+    enum: SPTFQMR_PSET_FAIL_UNREC    #/* pset failed unrecoverably            */
 
     void SptfqmrFree(SptfqmrMem mem)

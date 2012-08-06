@@ -124,8 +124,8 @@ cdef extern from "ida/ida.h":
     int IDAGetIntegratorStats(void *ida_mem, long int *nsteps,
                               long int *nrevals, long int *nlinsetups,
                               long int *netfails, int *qlast, int *qcur,
-                              realtype *hinused, realtype *hlast, realtype *hcur,
-                              realtype *tcur)
+                              realtype *hinused, realtype *hlast,
+                              realtype *hcur, realtype *tcur)
 
     int IDAGetNumNonlinSolvIters(void *ida_mem, long int *nniters)
     int IDAGetNumNonlinSolvConvFails(void *ida_mem, long int *nncfails)
@@ -147,8 +147,8 @@ cdef extern from "ida/ida_direct.h":
 
     ctypedef int (*IDADlsDenseJacFn)(long int N, realtype t, realtype c_j,
                                      N_Vector y, N_Vector yp, N_Vector r,
-                                     DlsMat Jac, void *user_data,
-                                     N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+                                     DlsMat Jac, void *user_data, N_Vector tmp1,
+                                     N_Vector tmp2, N_Vector tmp3)
 
     ctypedef int (*IDADlsBandJacFn)(long int N, long int mupper, long int mlower,
                                     realtype t, realtype c_j,
@@ -189,25 +189,25 @@ cdef extern from "ida/ida_spils.h":
     enum: IDASPILS_PMEM_NULL # -5
 
     ctypedef int (*IDASpilsPrecSetupFn)(realtype tt,
-                                         N_Vector yy, N_Vector yp, N_Vector rr,
-                                         realtype c_j, void *user_data,
-                                         N_Vector tmp1, N_Vector tmp2,
-                                         N_Vector tmp3)
+                                        N_Vector yy, N_Vector yp, N_Vector rr,
+                                        realtype c_j, void *user_data,
+                                        N_Vector tmp1, N_Vector tmp2,
+                                        N_Vector tmp3)
     ctypedef int (*IDASpilsPrecSolveFn)(realtype tt,
                                         N_Vector yy, N_Vector yp, N_Vector rr,
                                         N_Vector rvec, N_Vector zvec,
                                         realtype c_j, realtype delta, void *user_data,
                                         N_Vector tmp)
     ctypedef int (*IDASpilsJacTimesVecFn)(realtype tt,
-                                         N_Vector yy, N_Vector yp, N_Vector rr,
-                                         N_Vector v, N_Vector Jv,
-                                         realtype c_j, void *user_data,
-                                         N_Vector tmp1, N_Vector tmp2)
+                                          N_Vector yy, N_Vector yp, N_Vector rr,
+                                          N_Vector v, N_Vector Jv,
+                                          realtype c_j, void *user_data,
+                                          N_Vector tmp1, N_Vector tmp2)
     int IDASpilsSetPreconditioner(void *ida_mem,
-                                              IDASpilsPrecSetupFn pset,
-                                              IDASpilsPrecSolveFn psolve)
+                                  IDASpilsPrecSetupFn pset,
+                                  IDASpilsPrecSolveFn psolve)
     int IDASpilsSetJacTimesVecFn(void *ida_mem,
-                                             IDASpilsJacTimesVecFn jtv)
+                                 IDASpilsJacTimesVecFn jtv)
 
     int IDASpilsSetGSType(void *ida_mem, int gstype)
     int IDASpilsSetMaxRestarts(void *ida_mem, int maxrs)

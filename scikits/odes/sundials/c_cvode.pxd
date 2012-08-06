@@ -10,10 +10,10 @@ cdef extern from "cvode/cvode.h":
     enum: CV_FUNCTIONAL # 1
     enum: CV_NEWTON     # 2
 
-    # itask 
+    # itask
     enum: CV_NORMAL     # 1
     enum: CV_ONE_STEP   # 2
-    
+
     # CVODE return flags
     enum: CV_SUCCESS           #    0
     enum: CV_TSTOP_RETURN      #    1
@@ -43,13 +43,13 @@ cdef extern from "cvode/cvode.h":
     enum: CV_BAD_T             #   -25
     enum: CV_BAD_DKY           #   -26
     enum: CV_TOO_CLOSE         #   -27
-    
+
     ctypedef int (*CVRhsFn)(realtype t, N_Vector y,
                     N_Vector ydot, void *user_data)
     ctypedef int (*CVRootFn)(realtype t, N_Vector y, realtype *gout, void *user_data)
     ctypedef int (*CVEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
-    ctypedef void (*CVErrHandlerFn)(int error_code, 
-                               char *module, char *function, 
+    ctypedef void (*CVErrHandlerFn)(int error_code,
+                               char *module, char *function,
                                char *msg, void *user_data)
 
     void *CVodeCreate(int lmm, int iter)
@@ -117,14 +117,14 @@ cdef extern from "cvode/cvode.h":
     void CVodeFree(void **cvode_mem)
 
 cdef extern from "cvode/cvode_direct.h":
-    #CVDLS return values 
+    #CVDLS return values
     enum: CVDLS_SUCCESS         #  0
     enum: CVDLS_MEM_NULL        # -1
     enum: CVDLS_LMEM_NULL       # -2
     enum: CVDLS_ILL_INPUT       # -3
     enum: CVDLS_MEM_FAIL        # -4
 
-    # Additional last_flag values 
+    # Additional last_flag values
 
     enum: CVDLS_JACFUNC_UNRECVR # -5
     enum: CVDLS_JACFUNC_RECVR   # -6
@@ -196,7 +196,7 @@ cdef extern from "cvode/cvode_lapack.h":
     int CVLapackBand(void *cvode_mem, int N, int mupper, int mlower)
 
 cdef extern from "cvode/cvode_spils.h":
-    # CVSPILS return values 
+    # CVSPILS return values
     enum: CVSPILS_SUCCESS        #  0
     enum: CVSPILS_MEM_NULL       # -1
     enum: CVSPILS_LMEM_NULL      # -2
@@ -226,10 +226,10 @@ cdef extern from "cvode/cvode_spils.h":
     int CVSpilsSetGSType(void *cvode_mem, int gstype)
     int CVSpilsSetMaxl(void *cvode_mem, int maxl)
     int CVSpilsSetEpsLin(void *cvode_mem, realtype eplifac)
-    int CVSpilsSetPreconditioner(void *cvode_mem, 
+    int CVSpilsSetPreconditioner(void *cvode_mem,
                                              CVSpilsPrecSetupFn pset,
                                              CVSpilsPrecSolveFn psolve)
-    int CVSpilsSetJacTimesVecFn(void *cvode_mem, 
+    int CVSpilsSetJacTimesVecFn(void *cvode_mem,
                                             CVSpilsJacTimesVecFn jtv)
 
     int CVSpilsGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
@@ -238,7 +238,7 @@ cdef extern from "cvode/cvode_spils.h":
     int CVSpilsGetNumLinIters(void *cvode_mem, long int *nliters)
     int CVSpilsGetNumConvFails(void *cvode_mem, long int *nlcfails)
     int CVSpilsGetNumJtimesEvals(void *cvode_mem, long int *njvevals)
-    int CVSpilsGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS) 
+    int CVSpilsGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
     int CVSpilsGetLastFlag(void *cvode_mem, long int *flag)
     char *CVSpilsGetReturnFlagName(long int flag)
 
