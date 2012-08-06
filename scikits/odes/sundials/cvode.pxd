@@ -1,8 +1,36 @@
 cimport numpy as np
 from c_sundials cimport N_Vector, realtype
-from common_defs cimport CV_RhsFunction, CV_JacRhsFunction, CV_RootFunction
 
 ctypedef np.float_t DTYPE_t
+
+cdef class CV_RhsFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       object userdata = *)
+cdef class CV_WrapRhsFunction(CV_RhsFunction):
+    cpdef object _rhsfn
+    cdef int with_userdata
+    cpdef set_rhsfn(self, object rhsfn)
+
+cdef class CV_RootFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] g,
+                       object userdata = *)
+cdef class CV_WrapRootFunction(CV_RootFunction):
+    cpdef object _rootfn
+    cdef int with_userdata
+    cpdef set_rootfn(self, object rootfn)
+
+cdef class CV_JacRhsFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=2] J)
+cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
+    cpdef object _jacfn
+    cdef int with_userdata
+    cpdef set_jacfn(self, object jacfn)
 
 cdef class CV_data:
     cdef np.ndarray yy_tmp, yp_tmp, jac_tmp, g_tmp

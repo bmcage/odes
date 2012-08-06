@@ -1,18 +1,48 @@
+import inspect
+
 import numpy as np
 cimport numpy as np
 
 from c_sundials cimport realtype, N_Vector
 from c_cvode cimport *
-from common_defs cimport (nv_s2ndarray, ndarray2nv_s,
-                          ndarray2DlsMatd,
-                          CV_RhsFunction, CV_WrapRhsFunction,
-                          CV_RootFunction, CV_WrapRootFunction,
-                          CV_JacRhsFunction, CV_WrapJacRhsFunction)
+from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
+
+# Right-hand side function
+cdef class CV_RhsFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       object userdata = None):
+        return 0
+
+cdef class CV_WrapRhsFunction(CV_RhsFunction):
+    cpdef set_rhsfn(self, object rhsfn):
+        """
+        set some rhs equations as a RhsFunction executable class
+        """
+        self.with_userdata = 0
+        nrarg = len(inspect.getargspec(rhsfn)[0])
+        if nrarg > 4:
+            #hopefully a class method, self gives 5 arg!
+            self.with_userdata = 1
+        elif nrarg == 4 and inspect.isfunction(rhsfn):
+            self.with_userdata = 1
+        self._rhsfn = rhsfn
+
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       object userdata = None):
+        if self.with_userdata == 1:
+            self._rhsfn(t, y, ydot, userdata)
+        else:
+            self._rhsfn(t, y, ydot)
+        return 0
 
 cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
               void *auxiliary_data):
@@ -40,6 +70,38 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
 
     return 0
 
+# Root function
+cdef class CV_RootFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] g,
+                       object userdata = None):
+        return 0
+
+cdef class CV_WrapRootFunction(CV_RootFunction):
+    cpdef set_rootfn(self, object rootfn):
+        """
+        set root-ing condition(equations) as a RootFunction executable class
+        """
+        self.with_userdata = 0
+        nrarg = len(inspect.getargspec(rootfn)[0])
+        if nrarg > 4:
+            #hopefully a class method, self gives 4 arg!
+            self.with_userdata = 1
+        elif nrarg == 4 and inspect.isfunction(rootfn):
+            self.with_userdata = 1
+        self._rootfn = rootfn
+
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] g,
+                       object userdata = None):
+        if self.with_userdata == 1:
+            self._rootfn(t, y, g, userdata)
+        else:
+            self._rootfn(t, y, g)
+        return 0
+
 cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data):
     """ function with the signature of CVRootFn """
 
@@ -64,6 +126,45 @@ cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data):
             gout[i] = <realtype> g_tmp[i]
 
     return 0
+
+# Jacobian function
+cdef class CV_JacRhsFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray J):
+        """
+        Returns the Jacobi matrix of the right hand side function, as
+            d(rhs)/d y
+        (for dense the full matrix, for band only bands). Result has to be
+        stored in the variable J, which is preallocated to the corresponding
+        size.
+
+        This is a generic class, you should subclass is for the problem specific
+        purposes."
+        """
+        return 0
+
+cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
+    cpdef set_jacfn(self, object jacfn):
+        """
+        Set some jacobian equations as a JacRhsFunction executable class.
+        """
+        self._jacfn = jacfn
+
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray J):
+        """
+        Returns the Jacobi matrix (for dense the full matrix, for band only
+        bands. Result has to be stored in the variable J, which is preallocated
+        to the corresponding size.
+        """
+##        if self.with_userdata == 1:
+##            self._jacfn(t, y, ydot, cj, J, userdata)
+##        else:
+##            self._jacfn(t, y, ydot, cj, J)
+        self._jacfn(t, y, J)
+        return 0
 
 cdef int _jacdense(long int Neq, realtype tt,
             N_Vector yy, N_Vector ff, DlsMat Jac,

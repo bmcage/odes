@@ -1,18 +1,50 @@
+import inspect
+
 import numpy as np
 cimport numpy as np
 
 from c_sundials cimport realtype, N_Vector
 from c_ida cimport *
-from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ensure_numpy_float_array,
-                          ndarray2DlsMatd,
-                          IDA_RhsFunction, IDA_WrapRhsFunction,
-                          IDA_RootFunction, IDA_WrapRootFunction,
-                          IDA_JacRhsFunction, IDA_WrapJacRhsFunction)
+from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
+
+# Right-hand side function
+cdef class IDA_RhsFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       np.ndarray[DTYPE_t, ndim=1] result,
+                       object userdata = None):
+        return 0
+
+cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
+    cpdef set_resfn(self, object resfn):
+        """
+        set some residual equations as a ResFunction executable class
+        """
+        self.with_userdata = 0
+        nrarg = len(inspect.getargspec(resfn)[0])
+        if nrarg > 5:
+            # hopefully a class method
+            self.with_userdata = 1
+        elif nrarg == 5 and inspect.isfunction(resfn):
+            self.with_userdata = 1
+        self._resfn = resfn
+
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       np.ndarray[DTYPE_t, ndim=1] result,
+                       object userdata = None):
+        if self.with_userdata == 1:
+            self._resfn(t, y, ydot, result, userdata)
+        else:
+            self._resfn(t, y, ydot, result)
+        return 0
 
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *auxiliary_data):
@@ -41,6 +73,40 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
 
     return 0
 
+# Root function
+cdef class IDA_RootFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       np.ndarray[DTYPE_t, ndim=1] g,
+                       object userdata = None):
+        return 0
+
+cdef class IDA_WrapRootFunction(IDA_RootFunction):
+    cpdef set_rootfn(self, object rootfn):
+        """
+        set root-ing condition(equations) as a RootFunction executable class
+        """
+        self.with_userdata = 0
+        nrarg = len(inspect.getargspec(rootfn)[0])
+        if nrarg > 5:
+            #hopefully a class method, self gives 5 arg!
+            self.with_userdata = 1
+        elif nrarg == 5 and inspect.isfunction(rootfn):
+            self.with_userdata = 1
+        self._rootfn = rootfn
+
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       np.ndarray[DTYPE_t, ndim=1] g,
+                       object userdata = None):
+        if self.with_userdata == 1:
+            self._rootfn(t, y, ydot, g, userdata)
+        else:
+            self._rootfn(t, y, ydot, g)
+        return 0
+
 cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
                  realtype *gout, void *auxiliary_data):
     """ function with the signature of IDARootFn """
@@ -68,6 +134,49 @@ cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
             gout[i] = <realtype> g_tmp[i]
 
     return 0
+
+# Jacobian function
+cdef class IDA_JacRhsFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       DTYPE_t cj,
+                       np.ndarray J):
+        """
+        Returns the Jacobi matrix of the residual function, as
+            d(res)/d y + cj d(res)/d ydot
+        (for dense the full matrix, for band only bands). Result has to be
+        stored in the variable J, which is preallocated to the corresponding
+        size.
+
+        This is a generic class, you should subclass is for the problem specific
+        purposes."
+        """
+        return 0
+
+cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
+    cpdef set_jacfn(self, object jacfn):
+        """
+        Set some jacobian equations as a JacResFunction executable class.
+        """
+        self._jacfn = jacfn
+
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       DTYPE_t cj,
+                       np.ndarray J):
+        """
+        Returns the Jacobi matrix (for dense the full matrix, for band only
+        bands. Result has to be stored in the variable J, which is preallocated
+        to the corresponding size.
+        """
+##        if self.with_userdata == 1:
+##            self._jacfn(t, y, ydot, cj, J, userdata)
+##        else:
+##            self._jacfn(t, y, ydot, cj, J)
+        self._jacfn(t, y, ydot, cj, J)
+        return 0
 
 cdef int _jacdense(long int Neq, realtype tt, realtype cj,
             N_Vector yy, N_Vector yp, N_Vector rr, DlsMat Jac,
