@@ -26,7 +26,7 @@ cdef class IDA:
     cdef exclude_algvar_from_error, out
     cdef int compute_initcond
     cdef double compute_initcond_t0
-    cdef int mupper, mlower
+    cdef long int mupper, mlower
     # ??? lband, uband, tcrit
     # ??? constraint_type, algebraic_var
     cdef bint initialized
