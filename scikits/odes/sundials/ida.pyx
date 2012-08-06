@@ -69,7 +69,7 @@ cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
 
     return 0
 
-cdef int _jacdense(int Neq, realtype tt, realtype cj,
+cdef int _jacdense(long int Neq, realtype tt, realtype cj,
             N_Vector yy, N_Vector yp, N_Vector rr, DlsMat Jac,
             void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
     """function with the signature of IDADlsDenseJacFn """

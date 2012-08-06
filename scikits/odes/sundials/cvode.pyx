@@ -65,7 +65,7 @@ cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data):
 
     return 0
 
-cdef int _jacdense(int Neq, realtype tt,
+cdef int _jacdense(long int Neq, realtype tt,
             N_Vector yy, N_Vector ff, DlsMat Jac,
             void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
     """function with the signature of CVDlsDenseJacFn that calls python Jac"""
@@ -367,7 +367,7 @@ cdef class CVODE:
             #TODO: implement CVFWtolerances(cv_mem, efun)
 
         # Set tcrit
-         if ('tcrit' in options):
+        if ('tcrit' in options):
             opts_tcrit = options['tcrit']
             if (not opts_tcrit is None) and (opts_tcrit >= 0.):
                 flag = CVodeSetStopTime(cv_mem, <realtype> opts_tcrit)

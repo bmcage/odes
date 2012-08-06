@@ -7,7 +7,7 @@ cdef extern from "sundials/sundials_nvector.h":
         pass
     struct _generic_N_Vector:
         pass
-    ctypedef _generic_N_Vector *N_Vector	
+    ctypedef _generic_N_Vector *N_Vector
     ctypedef _generic_N_Vector_Ops *N_Vector_Ops
 
     struct _generic_N_Vector_Ops:
@@ -36,7 +36,7 @@ cdef extern from "sundials/sundials_nvector.h":
         booleantype (*nvinvtest)(N_Vector, N_Vector)
         booleantype (*nvconstrmask)(N_Vector, N_Vector, N_Vector)
         realtype    (*nvminquotient)(N_Vector, N_Vector)
-        
+
     struct _generic_N_Vector:
         void *content
         _generic_N_Vector_Ops *ops
@@ -118,38 +118,38 @@ cdef extern from "sundials/sundials_lapack.h":
     # void dcopy_(int *n, double *x, int *inc_x, double *y, int *inc_y)
     # void dscal_(int *n, double *alpha, double *x, int *inc_x)
 
-    # # Level-2 BLAS 
-    # void dgemv_(char *trans, int *m, int *n, double *alpha, double *a, 
-    #             int *lda, double *x, int *inc_x, double *beta, double *y, 
+    # # Level-2 BLAS
+    # void dgemv_(char *trans, int *m, int *n, double *alpha, double *a,
+    #             int *lda, double *x, int *inc_x, double *beta, double *y,
     #             int *inc_y, int len_trans)
-    # void dtrsv_(char *uplo, char *trans, char *diag, int *n, 
-    #     	      double *a, int *lda, double *x, int *inc_x, 
+    # void dtrsv_(char *uplo, char *trans, char *diag, int *n,
+    #     	      double *a, int *lda, double *x, int *inc_x,
     #     	      int len_uplo, int len_trans, int len_diag)
 
-    # # Level-3 BLAS 
-    # void dsyrk_(char *uplo, char *trans, int *n, int *k, 
-    #     	      double *alpha, double *a, int *lda, double *beta, 
+    # # Level-3 BLAS
+    # void dsyrk_(char *uplo, char *trans, int *n, int *k,
+    #     	      double *alpha, double *a, int *lda, double *beta,
     #     	      double *c, int *ldc, int len_uplo, int len_trans)
-  
-    # # LAPACK 
-    # void dgbtrf_(int *m, int *n, int *kl, int *ku, 
+
+    # # LAPACK
+    # void dgbtrf_(int *m, int *n, int *kl, int *ku,
     #              double *ab, int *ldab, int *ipiv, int *info)
-    # void dgbtrs_(char *trans, int *n, int *kl, int *ku, int *nrhs, 
-    #              double *ab, int *ldab, int *ipiv, double *b, int *ldb, 
+    # void dgbtrs_(char *trans, int *n, int *kl, int *ku, int *nrhs,
+    #              double *ab, int *ldab, int *ipiv, double *b, int *ldb,
     #              int *info, int len_trans)
-    # void dgeqp3_(int *m, int *n, double *a, int *lda, int *jpvt, double *tau, 
+    # void dgeqp3_(int *m, int *n, double *a, int *lda, int *jpvt, double *tau,
     #     	       double *work, int *lwork, int *info)
-    # void dgeqrf_(int *m, int *n, double *a, int *lda, double *tau, double *work, 
+    # void dgeqrf_(int *m, int *n, double *a, int *lda, double *tau, double *work,
     #     	       int *lwork, int *info)
     # void dgetrf_(int *m, int *n, double *a, int *lda, int *ipiv, int *info)
-    # void dgetrs_(char *trans, int *n, int *nrhs, double *a, int *lda, 
+    # void dgetrs_(char *trans, int *n, int *nrhs, double *a, int *lda,
     #              int *ipiv, double *b, int *ldb, int *info, int len_trans)
 
-    # void dormqr_(char *side, char *trans, int *m, int *n, int *k, double *a, 
-    #              int *lda, double *tau, double *c, int *ldc, double *work, 
+    # void dormqr_(char *side, char *trans, int *m, int *n, int *k, double *a,
+    #              int *lda, double *tau, double *c, int *ldc, double *work,
     #              int *lwork, int *info, int len_side, int len_trans)
     # void dpotrf_(char *uplo, int *n, double *a, int *lda, int *info, int len_uplo)
-    # void dpotrs_(char *uplo, int *n, int *nrhs, double *a, int *lda, 
+    # void dpotrs_(char *uplo, int *n, int *nrhs, double *a, int *lda,
     #              double *b, int *ldb, int * info, int len_uplo)
 
 
@@ -159,36 +159,36 @@ cdef extern from "sundials/sundials_direct.h":
 
     cdef struct _DlsMat:
         int type
-        int M
-        int N
-        int ldim
-        int mu
-        int ml
-        int s_mu
+        long int M
+        long int N
+        long int ldim
+        long int mu
+        long int ml
+        long int s_mu
         realtype *data
-        int ldata
+        long int ldata
         realtype **cols
 
     ctypedef _DlsMat *DlsMat
 
-    DlsMat NewDenseMat(int M, int N)
-    DlsMat NewBandMat(int N, int mu, int ml, int smu)
+    DlsMat NewDenseMat(long int M, long int N)
+    DlsMat NewBandMat(long int N, long int mu, long int ml, long int smu)
     void DestroyMat(DlsMat A)
     int *NewIntArray(int N)
-    realtype *NewRealArray(int N)
+    long int *NewLintArray(long int N)
+    realtype *NewRealArray(long int N)
     void DestroyArray(void *p)
     void AddIdentity(DlsMat A)
     void SetToZero(DlsMat A)
     void PrintMat(DlsMat A)
 
-    
-
     # * Exported function prototypes (functions working on realtype**)
-    realtype **newDenseMat(int m, int n)
-    realtype **newBandMat(int n, int smu, int ml)
+    realtype **newDenseMat(long int m, long int n)
+    realtype **newBandMat(long int n, long int smu, long int ml)
     void destroyMat(realtype **a)
     int *newIntArray(int n)
-    realtype *newRealArray(int m)
+    long int *newLintArray(long int n)
+    realtype *newRealArray(long int m)
     void destroyArray(void *v)
 
 # functions for accessing DlsMat data fields
@@ -219,44 +219,48 @@ cdef extern from "sundials_auxiliary/sundials_auxiliary.c":
     cdef inline void set_band_element(DlsMat A, int i, int j, realtype aij)
 
 cdef extern from "sundials/sundials_band.h":
-    int BandGBTRF(DlsMat A, int *p)
-    int bandGBTRF(realtype **a, int n, int mu, int ml, int smu, int *p)
-    void BandGBTRS(DlsMat A, int *p, realtype *b)
-    void bandGBTRS(realtype **a, int n, int smu, int ml, int *p, realtype *b)
-    void BandCopy(DlsMat A, DlsMat B, int copymu, int copyml)
-    void bandCopy(realtype **a, realtype **b, int n, int a_smu, int b_smu,
-                  int copymu, int copyml)
+    long int BandGBTRF(DlsMat A, long int *p)
+    long int bandGBTRF(realtype **a, long int n, long int mu, long int ml,
+                       long int smu, long int *p)
+    void BandGBTRS(DlsMat A, long int *p, realtype *b)
+    void bandGBTRS(realtype **a, long int n, long int smu, long int ml,
+                   long int *p, realtype *b)
+    void BandCopy(DlsMat A, DlsMat B, long int copymu, long int copyml)
+    void bandCopy(realtype **a, realtype **b, long int n, long int a_smu,
+                  long int b_smu, long int copymu, long int copyml)
     void BandScale(realtype c, DlsMat A)
-    void bandScale(realtype c, realtype **a, int n, int mu, int ml, int smu)
-    void bandAddIdentity(realtype **a, int n, int smu)
+    void bandScale(realtype c, realtype **a, long int n, long int mu,
+                   long int ml, long int smu)
+    void bandAddIdentity(realtype **a, long int n, long int smu)
 
 cdef extern from "sundials/sundials_dense.h":
-    int DenseGETRF(DlsMat A, int *p)
-    void DenseGETRS(DlsMat A, int *p, realtype *b)
+    long int DenseGETRF(DlsMat A, long int *p)
+    void DenseGETRS(DlsMat A, long int *p, realtype *b)
 
-    int denseGETRF(realtype **a, int m, int n, int *p)
-    void denseGETRS(realtype **a, int n, int *p, realtype *b)
+    long int denseGETRF(realtype **a, long int m, long int n, long int *p)
+    void denseGETRS(realtype **a, long int n, long int *p, realtype *b)
 
-    int DensePOTRF(DlsMat A)
+    long int DensePOTRF(DlsMat A)
     void DensePOTRS(DlsMat A, realtype *b)
 
-    int densePOTRF(realtype **a, int m)
-    void densePOTRS(realtype **a, int m, realtype *b)
+    long int densePOTRF(realtype **a, long int m)
+    void densePOTRS(realtype **a, long int m, realtype *b)
+
     int DenseGEQRF(DlsMat A, realtype *beta, realtype *wrk)
-    int DenseORMQR(DlsMat A, realtype *beta, realtype *vn, realtype *vm, 
+    int DenseORMQR(DlsMat A, realtype *beta, realtype *vn, realtype *vm,
                    realtype *wrk)
 
-    int denseGEQRF(realtype **a, int m, int n, realtype *beta, realtype *v)
-    int denseORMQR(realtype **a, int m, int n, realtype *beta,
+    int denseGEQRF(realtype **a, long int m, long int n, realtype *beta, realtype *v)
+    int denseORMQR(realtype **a, long int m, long int n, realtype *beta,
                    realtype *v, realtype *w, realtype *wrk)
     void DenseCopy(DlsMat A, DlsMat B)
-    void denseCopy(realtype **a, realtype **b, int m, int n)
+    void denseCopy(realtype **a, realtype **b, long int m, long int n)
     void DenseScale(realtype c, DlsMat A)
-    void denseScale(realtype c, realtype **a, int m, int n)
-    void denseAddIdentity(realtype **a, int n)
+    void denseScale(realtype c, realtype **a, long int m, long int n)
+    void denseAddIdentity(realtype **a, long int n)
 
 cdef extern from "sundials/sundials_iterative.h":
-    enum: 
+    enum:
         PREC_NONE
         PREC_LEFT
         PREC_RIGHT
@@ -267,9 +271,9 @@ cdef extern from "sundials/sundials_iterative.h":
     ctypedef int (*ATimesFn)(void *A_data, N_Vector v, N_Vector z)
     ctypedef int (*PSolveFn)(void *P_data, N_Vector r, N_Vector z, int lr)
 
-    int ModifiedGS(N_Vector *v, realtype **h, int k, int p, 
+    int ModifiedGS(N_Vector *v, realtype **h, int k, int p,
                    realtype *new_vk_norm)
-    int ClassicalGS(N_Vector *v, realtype **h, int k, int p, 
+    int ClassicalGS(N_Vector *v, realtype **h, int k, int p,
                     realtype *new_vk_norm, N_Vector temp, realtype *s)
     int QRfact(int n, realtype **h, realtype *q, int job)
     int QRsol(int n, realtype **h, realtype *q, realtype *b)
@@ -284,14 +288,14 @@ cdef extern from "sundials/sundials_spgmr.h":
         N_Vector xcor
         realtype *yg
         N_Vector vtemp
-    ctypedef _SpgmrMemRec SpgmrMemRec 
+    ctypedef _SpgmrMemRec SpgmrMemRec
     ctypedef _SpgmrMemRec *SpgmrMem
 
     SpgmrMem SpgmrMalloc(int l_max, N_Vector vec_tmpl)
     int SpgmrSolve(SpgmrMem mem, void *A_data, N_Vector x, N_Vector b,
-                   int pretype, int gstype, realtype delta, 
-                   int max_restarts, void *P_data, N_Vector s1, 
-                   N_Vector s2, ATimesFn atimes, PSolveFn psolve, 
+                   int pretype, int gstype, realtype delta,
+                   int max_restarts, void *P_data, N_Vector s1,
+                   N_Vector s2, ATimesFn atimes, PSolveFn psolve,
                    realtype *res_norm, int *nli, int *nps)
 
     enum: SPGMR_SUCCESS            #0  /* Converged                     */
@@ -306,7 +310,7 @@ cdef extern from "sundials/sundials_spgmr.h":
     enum: SPGMR_MEM_NULL          #-1  /* mem argument is NULL          */
     enum: SPGMR_ATIMES_FAIL_UNREC #-2  /* atimes returned failure flag  */
     enum: SPGMR_PSOLVE_FAIL_UNREC #-3  /* psolve failed unrecoverably   */
-    enum: SPGMR_GS_FAIL           #-4  /* Gram-Schmidt routine faiuled  */        
+    enum: SPGMR_GS_FAIL           #-4  /* Gram-Schmidt routine faiuled  */
     enum: SPGMR_QRSOL_FAIL        #-5  /* QRsol found singular R        */
     enum: SPGMR_PSET_FAIL_UNREC   #-6  /* pset failed unrecoverably     */
 
@@ -343,7 +347,7 @@ cdef extern from "sundials/sundials_spbcgs.h":
     enum: SPBCG_PSET_FAIL_UNREC   #-4  /* pset failed unrecoverably          */
 
     void SpbcgFree(SpbcgMem mem)
-    
+
 cdef extern from "sundials/sundials_sptfqmr.h":
     cdef struct SptfqmrMemRec:
         int l_max
@@ -379,4 +383,3 @@ cdef extern from "sundials/sundials_sptfqmr.h":
     enum: SPTFQMR_PSET_FAIL_UNREC      #/* pset failed unrecoverably            */
 
     void SptfqmrFree(SptfqmrMem mem)
-

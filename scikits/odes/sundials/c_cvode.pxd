@@ -113,7 +113,7 @@ cdef extern from "cvode/cvode.h":
     int CVodeGetNumNonlinSolvConvFails(void *cvode_mem, long int *nncfails)
     int CVodeGetNonlinSolvStats(void *cvode_mem, long int *nniters,
                                             long int *nncfails)
-    char *CVodeGetReturnFlagName(int flag)
+    char *CVodeGetReturnFlagName(long int flag)
     void CVodeFree(void **cvode_mem)
 
 cdef extern from "cvode/cvode_direct.h":
@@ -129,28 +129,28 @@ cdef extern from "cvode/cvode_direct.h":
     enum: CVDLS_JACFUNC_UNRECVR # -5
     enum: CVDLS_JACFUNC_RECVR   # -6
 
-    ctypedef int (*CVDlsDenseJacFn)(int N, realtype t,
-                                    N_Vector y, N_Vector fy, 
+    ctypedef int (*CVDlsDenseJacFn)(long int N, realtype t,
+                                    N_Vector y, N_Vector fy,
                                     DlsMat Jac, void *user_data,
                                     N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-    ctypedef int (*CVDlsBandJacFn)(int N, int mupper, int mlower,
-                              realtype t, N_Vector y, N_Vector fy, 
-                              DlsMat Jac, void *user_data,
-                              N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+    ctypedef int (*CVDlsBandJacFn)(long int N, long int mupper, long int mlower,
+                                   realtype t, N_Vector y, N_Vector fy,
+                                   DlsMat Jac, void *user_data,
+                                   N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 
     int CVDlsSetDenseJacFn(void *cvode_mem, CVDlsDenseJacFn jac)
     int CVDlsSetBandJacFn(void *cvode_mem, CVDlsBandJacFn jac)
     int CVDlsGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
     int CVDlsGetNumJacEvals(void *cvode_mem, long int *njevals)
     int CVDlsGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
-    int CVDlsGetLastFlag(void *cvode_mem, int *flag)
-    char *CVDlsGetReturnFlagName(int flag)
+    int CVDlsGetLastFlag(void *cvode_mem, long int *flag)
+    char *CVDlsGetReturnFlagName(long int flag)
 
 cdef extern from "cvode/cvode_band.h":
-    int CVBand(void *cvode_mem, int N, int mupper, int mlower)
+    int CVBand(void *cvode_mem, long int N, long int mupper, long int mlower)
 
 cdef extern from "cvode/cvode_bandpre.h":
-    int CVBandPrecInit(void *cvode_mem, int N, int mu, int ml)
+    int CVBandPrecInit(void *cvode_mem, long int N, long int mu, long int ml)
     int CVBandPrecGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
     int CVBandPrecGetNumRhsEvals(void *cvode_mem, long int *nfevalsBP)
 
@@ -158,8 +158,8 @@ cdef extern from "cvode/cvode_diag.h":
     int CVDiag(void *cvode_mem)
     int CVDiagGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
     int CVDiagGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
-    int CVDiagGetLastFlag(void *cvode_mem, int *flag)
-    char *CVDiagGetReturnFlagName(int flag)
+    int CVDiagGetLastFlag(void *cvode_mem, long int *flag)
+    char *CVDiagGetReturnFlagName(long int flag)
 
     # CVDIAG return values
     enum: CVDIAG_SUCCESS         #  0
@@ -173,23 +173,23 @@ cdef extern from "cvode/cvode_diag.h":
     enum: CVDIAG_RHSFUNC_RECVR   # -7
 
 cdef extern from "cvode/cvode_bbdpre.h":
-    ctypedef int (*CVLocalFn)(int Nlocal, realtype t, N_Vector y,
+    ctypedef int (*CVLocalFn)(long int Nlocal, realtype t, N_Vector y,
                          N_Vector g, void *user_data)
-    ctypedef int (*CVCommFn)(int Nlocal, realtype t, N_Vector y,
+    ctypedef int (*CVCommFn)(long int Nlocal, realtype t, N_Vector y,
                         void *user_data)
 
-    int CVBBDPrecInit(void *cvode_mem, int Nlocal, 
-                                  int mudq, int mldq, 
-                                  int mukeep, int mlkeep, 
+    int CVBBDPrecInit(void *cvode_mem, long int Nlocal,
+                                  long int mudq, long int mldq,
+                                  long int mukeep, long int mlkeep,
                                   realtype dqrely,
                                   CVLocalFn gloc, CVCommFn cfn)
-    int CVBBDPrecReInit(void *cvode_mem, int mudq, int mldq,
+    int CVBBDPrecReInit(void *cvode_mem, long int mudq, long int mldq,
                                     realtype dqrely)
     int CVBBDPrecGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
     int CVBBDPrecGetNumGfnEvals(void *cvode_mem, long int *ngevalsBBDP)
 
 cdef extern from "cvode/cvode_dense.h":
-    int CVDense(void *cvode_mem, int N)
+    int CVDense(void *cvode_mem, long int N)
 
 cdef extern from "cvode/cvode_lapack.h":
     int CVLapackDense(void *cvode_mem, int N)
@@ -239,8 +239,8 @@ cdef extern from "cvode/cvode_spils.h":
     int CVSpilsGetNumConvFails(void *cvode_mem, long int *nlcfails)
     int CVSpilsGetNumJtimesEvals(void *cvode_mem, long int *njvevals)
     int CVSpilsGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS) 
-    int CVSpilsGetLastFlag(void *cvode_mem, int *flag)
-    char *CVSpilsGetReturnFlagName(int flag)
+    int CVSpilsGetLastFlag(void *cvode_mem, long int *flag)
+    char *CVSpilsGetReturnFlagName(long int flag)
 
 cdef extern from "cvode/cvode_spgmr.h":
     int CVSpgmr(void *cvode_mem, int pretype, int maxl)
@@ -250,6 +250,3 @@ cdef extern from "cvode/cvode_spbcgs.h":
 
 cdef extern from "cvode/cvode_sptfqmr.h":
     int CVSptfqmr(void *cvode_mem, int pretype, int maxl)
-
-#cdef extern from "cvode/cvode_impl.h":
-
