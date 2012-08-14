@@ -418,8 +418,37 @@ cdef class CVODE:
         # be supressed by 'supress_supported_check = True'
         if not supress_supported_check:
             for opt in options.keys():
-                if not opt in ['atol', 'rtol', 'tcrit']:
+                if not opt in ['atol', 'rtol', 'tcrit', 'rootfn', 'nr_rootfns']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
+
+        # Root function
+        rootfn = options['rootfn']
+        if rootfn is not None:
+            self.options['rootfn'] = rootfn
+
+            nr_rootfns = options['nr_rootfns']
+            self.options['nr_rootfns'] = nr_rootfns
+            if nr_rootfns is None:
+                raise ValueError('Number of root-ing functions ''nr_rootfns'' '
+                                 'must be specified.')
+            if not isinstance(rootfn, CV_RootFunction):
+                tmpfun = CV_WrapRootFunction()
+                tmpfun.set_rootfn(rootfn)
+                rootfn = tmpfun
+                self.opts['rootfn'] = tmpfun
+
+            self.aux_data.rootfn = rootfn
+            self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
+
+            flag = CVodeRootInit(cv_mem, nr_rootfns, _rootfn)
+
+            if flag == CV_SUCCESS:
+                pass
+            if flag == CV_ILL_INPUT:
+                raise ValueError('CVRootInit: Function ''rootfn'' is NULL '
+                                 'but ''nr_rootfns'' > 0')
+            elif flag == CV_MEM_FAIL:
+                raise MemoryError('CVRootInit: Memory allocation error')
 
         # Set tolerances
         cdef N_Vector atol
@@ -427,11 +456,13 @@ cdef class CVODE:
 
         if 'atol' in options:
             opts_atol = options['atol']
+            self.options['atol'] = opts_atol
         else:
             opts_atol = None
 
         if 'rtol' in options:
             opts_rtol = options['rtol']
+            self.options['rtol'] = opts_rtol
         else:
             opts_rtol = None
 
@@ -474,6 +505,7 @@ cdef class CVODE:
         # Set tcrit
         if ('tcrit' in options):
             opts_tcrit = options['tcrit']
+            self.options['tcrit'] = opts_tcrit
             if (not opts_tcrit is None) and (opts_tcrit > 0.):
                 flag = CVodeSetStopTime(cv_mem, <realtype> opts_tcrit)
                 if flag == CV_ILL_INPUT:
@@ -573,31 +605,6 @@ cdef class CVODE:
             rfn = tmpfun
             opts['rfn'] = tmpfun
         self.aux_data.rfn = rfn
-
-        rootfn = opts['rootfn']
-        if rootfn is not None:
-            nr_rootfns = opts['nr_rootfns']
-            if nr_rootfns is None:
-                raise ValueError('Number of root-ing functions ''nr_rootfns'' '
-                                 'must be specified.')
-            if not isinstance(rootfn, CV_RootFunction):
-                tmpfun = CV_WrapRootFunction()
-                tmpfun.set_rootfn(rootfn)
-                rootfn = tmpfun
-                opts['rootfn'] = tmpfun
-
-            self.aux_data.rootfn = rootfn
-            self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
-
-            flag = CVodeRootInit(cv_mem, nr_rootfns, _rootfn)
-
-            if flag == CV_SUCCESS:
-                pass
-            if flag == CV_ILL_INPUT:
-                raise ValueError('CVRootInit: Function ''rootfn'' is NULL '
-                                 'but ''nr_rootfns'' > 0')
-            elif flag == CV_MEM_FAIL:
-                raise MemoryError('CVRootInit: Memory allocation error')
 
         jac = opts['jacfn']
         if jac is not None and not isinstance(jac , CV_JacRhsFunction):
@@ -731,8 +738,8 @@ cdef class CVODE:
     def solve(self, object tspan, object y0):
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0
-        np_tspan = np.asarray(tspan)
-        np_y0    = np.asarray(y0)
+        np_tspan = np.asarray(tspan, dtype=float)
+        np_y0    = np.asarray(y0, dtype=float)
 
         return self._solve(np_tspan, np_y0)
 

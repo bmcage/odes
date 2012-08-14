@@ -462,8 +462,38 @@ cdef class IDA:
         # be supressed by 'supress_supported_check = True'
         if not supress_supported_check:
             for opt in options.keys():
-                if not opt in ['atol', 'rtol', 'tcrit']:
+                if not opt in ['atol', 'rtol', 'tcrit', 'rootfn', 'nr_rootfns']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
+
+        # Root function
+        rootfn = options['rootfn']
+        if rootfn is not None:
+            self.options['rootfn'] = rootfn
+
+            nr_rootfns = options['nr_rootfns']
+            self.options['nr_rootfns'] = nr_rootfns
+            if nr_rootfns is None:
+                raise ValueError('Number of root-ing functions ''nr_rootfns'' '
+                                 'must be specified.')
+            if not isinstance(rootfn, IDA_RootFunction):
+                tmpfun = IDA_WrapRootFunction()
+                tmpfun.set_rootfn(rootfn)
+                rootfn = tmpfun
+                self.options['rootfn'] = tmpfun
+
+            self.aux_data.rootfn = rootfn
+            self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
+
+            flag = IDARootInit(ida_mem, nr_rootfns, _rootfn)
+
+            if flag == IDA_SUCCESS:
+                pass
+            if flag == IDA_ILL_INPUT:
+                raise ValueError('IDARootInit: Function ''rootfn'' is NULL '
+                                 'but ''nr_rootfns'' > 0')
+            elif flag == IDA_MEM_FAIL:
+                raise MemoryError('IDARootInit: Memory allocation error')
+
 
         # Set tolerances
         cdef N_Vector atol
@@ -471,11 +501,13 @@ cdef class IDA:
 
         if 'atol' in options:
             opts_atol = options['atol']
+            self.options['atol'] = opts_atol
         else:
             opts_atol = None
 
         if 'rtol' in options:
             opts_rtol = options['rtol']
+            self.options['rtol'] = opts_rtol
         else:
             opts_rtol = None
 
@@ -518,6 +550,7 @@ cdef class IDA:
         # Set tcrit
         if ('tcrit' in options):
             opts_tcrit = options['tcrit']
+            self.options['tcrit'] = opts_tcrit
             if (not opts_tcrit is None) and (opts_tcrit > 0.):
                flag = IDASetStopTime(ida_mem, <realtype> opts_tcrit)
                if flag == IDA_ILL_INPUT:
@@ -543,8 +576,8 @@ cdef class IDA:
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         cdef np.ndarray[DTYPE_t, ndim=1] np_yp0
-        np_y0  = np.asarray(y0)
-        np_yp0 = np.asarray(yp0)
+        np_y0  = np.asarray(y0, dtype=float)
+        np_yp0 = np.asarray(yp0, dtype=float)
 
         return self._init_step(t0, np_y0, np_yp0, y_ic0_retn, yp_ic0_retn)
 
@@ -654,31 +687,6 @@ cdef class IDA:
             rfn = tmpfun
             opts['rfn'] = tmpfun
         self.aux_data.res = rfn
-
-        rootfn = opts['rootfn']
-        if rootfn is not None:
-            nr_rootfns = opts['nr_rootfns']
-            if nr_rootfns is None:
-                raise ValueError('Number of root-ing functions ''nr_rootfns'' '
-                                 'must be specified.')
-            if not isinstance(rootfn, IDA_RootFunction):
-                tmpfun = IDA_WrapRootFunction()
-                tmpfun.set_rootfn(rootfn)
-                rootfn = tmpfun
-                opts['rootfn'] = tmpfun
-
-            self.aux_data.rootfn = rootfn
-            self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
-
-            flag = IDARootInit(ida_mem, nr_rootfns, _rootfn)
-
-            if flag == IDA_SUCCESS:
-                pass
-            if flag == IDA_ILL_INPUT:
-                raise ValueError('IDARootInit: Function ''rootfn'' is NULL '
-                                 'but ''nr_rootfns'' > 0')
-            elif flag == IDA_MEM_FAIL:
-                raise MemoryError('IDARootInit: Memory allocation error')
 
         jac = opts['jacfn']
         if jac is not None and not isinstance(jac , IDA_JacRhsFunction):
