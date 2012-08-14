@@ -247,7 +247,9 @@ As an easy example, consider the simple oscillator,
 
     def init_step(self, t0, y0):
         """
-        Initializes the solver and allocates memory.
+        Initializes the solver and allocates memory. It is not needed to 
+        call this method if solve is used to compute the solution. In the case
+        step is used, init_step must be called first.
 
         Input:
             t0     - initial time
@@ -279,7 +281,10 @@ As an easy example, consider the simple oscillator,
         return self._integrator.step(t, y_retn)
 
     def set_tcrit(self, tcrit):
-        self._integrator.set_tcrit(tcrit)
+        if hasattr(self._integrator, 'set_tcrit'):
+            self._integrator.set_tcrit(tcrit)
+        else:
+            self._integrator.set_options(tcrit=tcrit)
 
 #------------------------------------------------------------------------------
 # ODE integrators
