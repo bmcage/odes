@@ -66,7 +66,6 @@ except:
 import numpy as np
 from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi, empty,
                     alen)
-from scikits.odes.sundials.common_defs import IDA_RhsFunction, IDA_JacRhsFunction
 from scikits.odes.sundials import ida
 from scikits.odes import dae
 import pylab
@@ -172,7 +171,7 @@ class Doublependulum():
         self.jac.evaluate(tres, yy, yp, cj, jac)
 
 #classes for the equations, as needed for the chosen solution method
-class resindex2(IDA_RhsFunction):
+class resindex2(ida.IDA_RhsFunction):
     """ Residual function class as needed by the IDA DAE solver"""
 
     def set_dblpend(self, dblpend):
@@ -201,7 +200,7 @@ class resindex2(IDA_RhsFunction):
         result[11]=(x[4] - x[6])*(x[2] - x[0]) - (x[1] - x[3])*(x[5] - x[7])
         return 0
 
-class resindex1(IDA_RhsFunction):
+class resindex1(ida.IDA_RhsFunction):
     """ Residual function class as needed by the IDA DAE solver"""
 
     def set_dblpend(self, dblpend):
@@ -236,7 +235,7 @@ class resindex1(IDA_RhsFunction):
                   + yy[8]/m1 *(yy[0]*(yy[0]-yy[2]) + yy[1]*(yy[1]-yy[3]) )
         return 0
 
-class jacindex1(IDA_JacRhsFunction):
+class jacindex1(ida.IDA_JacRhsFunction):
 
     def set_dblpend(self, dblpend):
         """ Set the double pendulum problem to solve to have access to
@@ -496,8 +495,8 @@ def main():
 
     def open_file_with_default_application( file_path ):
         """
-        Launch a program to open an arbitrary file. The file will be opened using 
-        whatever program is configured on the host as the default program for that 
+        Launch a program to open an arbitrary file. The file will be opened using
+        whatever program is configured on the host as the default program for that
         type of file.
         """
 
@@ -522,7 +521,7 @@ def main():
 
     def create_animation(sizex, sizey, ext):
         """
-        The calculation step is 1e-2, so output every 5 solutions or 0.05, means 
+        The calculation step is 1e-2, so output every 5 solutions or 0.05, means
         a frame rate of 20 frames per second
         """
         import shutil
@@ -547,8 +546,8 @@ def main():
 
         print('Creating movie using ffmpeg with output ... \n')
         import subprocess
-        subprocess.call(['ffmpeg', '-r', '20', '-i', 'figsdoublependulum' + os.sep + 
-                        'outsol%8d.png',  '-f',  'avi', '-vcodec', 'mpeg2video', '-y', 
+        subprocess.call(['ffmpeg', '-r', '20', '-i', 'figsdoublependulum' + os.sep +
+                        'outsol%8d.png',  '-f',  'avi', '-vcodec', 'mpeg2video', '-y',
                         'anidoublependulum' + os.sep +
                                             'doublependulum'+ext+'.mpg'])
         #remove unused pictures

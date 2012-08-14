@@ -46,7 +46,6 @@ except:
 
 from numpy import (arange, zeros, array, sin)
 import numpy as np
-from scikits.odes.sundials.ida import IDA_RhsFunction, IDA_RootFunction
 from scikits.odes.sundials import ida
 import matplotlib.pyplot as plt
 
@@ -66,7 +65,7 @@ def draw_graphs(fignum, t, x, y):
     plt.xlabel('Time')
     plt.show()
 
-class oscres(IDA_RhsFunction):
+class oscres(ida.IDA_RhsFunction):
     def evaluate(self, t, x, xdot, result, userdata):
         g=1
         result[0]=x[2]-xdot[0]
@@ -139,7 +138,7 @@ draw_graphs(2, time, xt, yt)
 #            a rootfn - in this case we simply output the current values
 #            and stop when t == 100
 
-class RootFn(IDA_RootFunction):
+class RootFn(ida.IDA_RootFunction):
     def evaluate(self, t, x, xdot, out, userdata):
         print('t = ', t, ', x = ', x[0], ', y = ', x[1],
                 ', xdot = ', xdot[0], ', ydot = ', xdot[1])
@@ -149,7 +148,7 @@ class RootFn(IDA_RootFunction):
 
 solver.set_options(nr_rootfns = 1, rootfn=RootFn())
 
-print ('test', isinstance(RootFn, IDA_RootFunction))
+print ('test', isinstance(RootFn, ida.IDA_RootFunction))
 
 _flag, t3, y3 = solver.solve(time, problem.z0, problem.zp0)[:3]
 
