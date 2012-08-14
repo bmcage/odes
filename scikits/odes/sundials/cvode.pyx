@@ -398,6 +398,8 @@ cdef class CVODE:
             else:
                 raise ValueError("Option '%s' is not supported by solver" % key)
 
+        self._set_runtime_changeable_options(options)
+
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=False):
         """
