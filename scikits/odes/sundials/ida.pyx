@@ -313,7 +313,9 @@ cdef class IDA:
                 Values: float, 0.0 = default
                 Description:
                     Maximum time until which we perform the computations.
-                    Unconstrained (i.e. infinite time) is value of 0.0.
+                    Default is 0.0. Once the value is set 0.0, it cannot be
+                    disable (but it will be automatically disable when tcrit
+                    is reached and has to be reset again in next run).
             'order':
                 Values: 1, 2, 3, 4, 5 (= default)
                 Description:
@@ -516,7 +518,7 @@ cdef class IDA:
         # Set tcrit
         if ('tcrit' in options):
             opts_tcrit = options['tcrit']
-            if (not opts_tcrit is None) and (opts_tcrit >= 0.):
+            if (not opts_tcrit is None) and (opts_tcrit > 0.):
                flag = IDASetStopTime(ida_mem, <realtype> opts_tcrit)
                if flag == IDA_ILL_INPUT:
                    raise ValueError('IDASetStopTime::Stop value is beyond '

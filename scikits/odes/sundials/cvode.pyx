@@ -373,7 +373,9 @@ cdef class CVODE:
                 Values: float, 0.0 = default
                 Description:
                     Maximum time until which we perform the computations.
-                    Unconstrained (i.e. infinite time) is value of 0.0.
+                    Default is 0.0. Once the value is set 0.0, it cannot be
+                    disable (but it will be automatically disable when tcrit
+                    is reached and has to be reset again in next run).
             'user_data':
                 Values: python object, None = default
                 Description:
@@ -472,7 +474,7 @@ cdef class CVODE:
         # Set tcrit
         if ('tcrit' in options):
             opts_tcrit = options['tcrit']
-            if (not opts_tcrit is None) and (opts_tcrit >= 0.):
+            if (not opts_tcrit is None) and (opts_tcrit > 0.):
                 flag = CVodeSetStopTime(cv_mem, <realtype> opts_tcrit)
                 if flag == CV_ILL_INPUT:
                     raise ValueError('IDASetStopTime::Stop value is beyond '
