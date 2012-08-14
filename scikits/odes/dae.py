@@ -96,7 +96,7 @@ class DaeBase(object):
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
-    def solve(self, tspan, y0,  yp0, hook_fn = None):
+    def solve(self, tspan, y0,  yp0):
         """
         Runs the solver.
         
@@ -105,10 +105,6 @@ class DaeBase(object):
                     returned. Must contain the start time.
             y0    - list/numpy array of initial values
             yp0   - list/numpy array of initial values of derivatives
-            hook_fn  - if set, this function is evaluated after each successive 
-                       internal) step. Input values: t, x, xdot, userdata. 
-                       Output is 0 (success), otherwise computation is stopped 
-                      and a return flag = ? is set. Values are stored in (see) t_err, y_err, yp_err
             
         Return values:
             flag   - indicating return status of the solver
@@ -264,7 +260,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         """
         return self._integrator.set_options(**options)
 
-    def solve(self, tspan, y0,  yp0, hook_fn = None):
+    def solve(self, tspan, y0,  yp0):
         """
         Runs the solver.
         
@@ -273,10 +269,6 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
                     returned. Must contain the start time.
             y0    - list/numpy array of initial values
             yp0   - list/numpy array of initial values of derivatives
-            hook_fn  - if set, this function is evaluated after each successive 
-                       internal) step. Input values: t, x, xdot, userdata. 
-                       Output is 0 (success), otherwise computation is stopped 
-                      and a return flag = ? is set. Values are stored in (see) t_err, y_err, yp_err
             
         Return values:
             flag   - indicating return status of the solver
@@ -294,7 +286,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             by the solver (i.e. consistent initial
             conditions. The starting time is then also the precomputed time.
         """
-        return self._integrator.solve(tspan, y0,  yp0, hook_fn)
+        return self._integrator.solve(tspan, y0,  yp0)
 
     def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
         """

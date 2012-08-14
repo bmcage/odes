@@ -86,7 +86,7 @@ class OdeBase(object):
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
-    def solve(self, tspan, y0, hook_fn = None):
+    def solve(self, tspan, y0):
         """
         Runs the solver.
         
@@ -94,10 +94,6 @@ class OdeBase(object):
             tspan - an list/array of times at which the computed value will be
                     returned. Must contain the start time.
             y0    - list/numpy array of initial values
-            hook_fn  - if set, this function is evaluated after each successive 
-                       internal) step. Input values: t, x, xdot, userdata. 
-                       Output is 0 (success), otherwise computation is stopped 
-                      and a return flag = ? is set. Values are stored in (see) t_err, y_err, yp_err
             
         Return values:
             flag   - indicating return status of the solver
@@ -230,7 +226,7 @@ As an easy example, consider the simple oscillator,
         """
         return self._integrator.set_options(**options)
 
-    def solve(self, tspan, y0, hook_fn = None):
+    def solve(self, tspan, y0):
         """
         Runs the solver.
         
@@ -238,10 +234,6 @@ As an easy example, consider the simple oscillator,
             tspan - an list/array of times at which the computed value will be
                     returned. Must contain the start time.
             y0    - list/numpy array of initial values
-            hook_fn  - if set, this function is evaluated after each successive 
-                       internal) step. Input values: t, x, xdot, userdata. 
-                       Output is 0 (success), otherwise computation is stopped 
-                      and a return flag = ? is set. Values are stored in (see) t_err, y_err, yp_err
             
         Return values:
             flag   - indicating return status of the solver
@@ -251,7 +243,7 @@ As an easy example, consider the simple oscillator,
                      number of allowed iterations), this is the time at which it happened
             y_err  - numpy array of values corresponding to time t_err
         """
-        return self._integrator.solve(tspan, y0, hook_fn)
+        return self._integrator.solve(tspan, y0)
 
     def init_step(self, t0, y0):
         """

@@ -46,7 +46,7 @@ except:
 
 from numpy import (arange, zeros, array, sin)
 import numpy as np
-from scikits.odes.sundials.common_defs import IDA_RhsFunction, IDA_RootFunction
+from scikits.odes.sundials.ida import IDA_RhsFunction, IDA_RootFunction
 from scikits.odes.sundials import ida
 import matplotlib.pyplot as plt
 
