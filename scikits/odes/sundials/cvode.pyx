@@ -422,12 +422,14 @@ cdef class CVODE:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
 
         # Root function
-        rootfn = options['rootfn']
-        if rootfn is not None:
-            self.options['rootfn'] = rootfn
+        if ('rootfn' in options) and (options['rootfn'] is not None):
+            # TODO: Unsetting the rootfn?
+            rootfn = options['rootfn']
+            if rootfn is not None:
+                self.options['rootfn'] = rootfn
 
-            nr_rootfns = options['nr_rootfns']
-            self.options['nr_rootfns'] = nr_rootfns
+                nr_rootfns = options['nr_rootfns']
+                self.options['nr_rootfns'] = nr_rootfns
             if nr_rootfns is None:
                 raise ValueError('Number of root-ing functions ''nr_rootfns'' '
                                  'must be specified.')
@@ -503,7 +505,7 @@ cdef class CVODE:
             #TODO: implement CVFWtolerances(cv_mem, efun)
 
         # Set tcrit
-        if ('tcrit' in options):
+        if ('tcrit' in options) and (options['tcrit'] is not None):
             opts_tcrit = options['tcrit']
             self.options['tcrit'] = opts_tcrit
             if (not opts_tcrit is None) and (opts_tcrit > 0.):

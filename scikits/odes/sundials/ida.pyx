@@ -466,8 +466,9 @@ cdef class IDA:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
 
         # Root function
-        rootfn = options['rootfn']
-        if rootfn is not None:
+        if ('rootfn' in options) and (options['rootfn'] is not None):
+            # TODO: Unsetting the rootfn?
+            rootfn = options['rootfn']
             self.options['rootfn'] = rootfn
 
             nr_rootfns = options['nr_rootfns']
@@ -548,7 +549,7 @@ cdef class IDA:
         #TODO: implement IDAFWtolerances(ida_mem, efun)
 
         # Set tcrit
-        if ('tcrit' in options):
+        if ('tcrit' in options) and (options['tcrit'] is not None):
             opts_tcrit = options['tcrit']
             self.options['tcrit'] = opts_tcrit
             if (not opts_tcrit is None) and (opts_tcrit > 0.):
