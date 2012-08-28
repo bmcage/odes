@@ -35,6 +35,10 @@ Eg, on linux that would be gfortran, so:
 Installation from sources
 =========================
 
+You can copy the git repository locally in directory odes with:
+
+git clone git://github.com/bmcage/odes.git odes
+
 In the top directory (the same as the file you are reading now), just do as root:
 
 python setup.py build
