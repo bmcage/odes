@@ -226,7 +226,7 @@ cdef class CVODE:
             'lband': 0,'uband': 0,
             'maxl': 0,
             'precond_type': 'NONE',
-            'tcrit': 0.,
+            'tstop': 0.,
             'order': 0,
             'max_step_size': 0.,
             'min_step_size': 0.,
@@ -369,12 +369,12 @@ cdef class CVODE:
                 Description:
                     Dimension of the number of used Krylov subspaces
                     (used only by 'spgmr', 'spbcg', 'sptfqmr' linsolvers)
-            'tcrit':
+            'tstop':
                 Values: float, 0.0 = default
                 Description:
                     Maximum time until which we perform the computations.
                     Default is 0.0. Once the value is set 0.0, it cannot be
-                    disable (but it will be automatically disable when tcrit
+                    disable (but it will be automatically disable when tstop
                     is reached and has to be reset again in next run).
             'user_data':
                 Values: python object, None = default
@@ -418,7 +418,7 @@ cdef class CVODE:
         # be supressed by 'supress_supported_check = True'
         if not supress_supported_check:
             for opt in options.keys():
-                if not opt in ['atol', 'rtol', 'tcrit', 'rootfn', 'nr_rootfns']:
+                if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
 
         # Root function
@@ -504,12 +504,12 @@ cdef class CVODE:
                     raise ValueError("CVodeStolerances: negative 'atol' or 'rtol' value.")
             #TODO: implement CVFWtolerances(cv_mem, efun)
 
-        # Set tcrit
-        if ('tcrit' in options) and (options['tcrit'] is not None):
-            opts_tcrit = options['tcrit']
-            self.options['tcrit'] = opts_tcrit
-            if (not opts_tcrit is None) and (opts_tcrit > 0.):
-                flag = CVodeSetStopTime(cv_mem, <realtype> opts_tcrit)
+        # Set tstop
+        if ('tstop' in options) and (options['tstop'] is not None):
+            opts_tstop = options['tstop']
+            self.options['tstop'] = opts_tstop
+            if (not opts_tstop is None) and (opts_tstop > 0.):
+                flag = CVodeSetStopTime(cv_mem, <realtype> opts_tstop)
                 if flag == CV_ILL_INPUT:
                     raise ValueError('IDASetStopTime::Stop value is beyond '
                                      'current value.')
