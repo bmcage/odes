@@ -871,8 +871,9 @@ cdef class IDA:
                 flag = IDACalcIC(ida_mem, IDA_Y_INIT, ic_t0)
 
             if not (flag == IDA_SUCCESS):
-                raise ValueError('IDAInitCond: Error occured during computation'
-                                 ' of initial condition, flag', flag)
+                print('IDAInitCond: Error occured during computation'
+                      ' of initial condition, flag', flag)
+                return (False, t0)
 
             t0_init = ic_t0
         else:
@@ -897,7 +898,7 @@ cdef class IDA:
 
         self.initialized = True
 
-        return t0_init
+        return (True, t0_init)
 
     def solve(self, object tspan, object y0,  object yp0):
         """
@@ -949,13 +950,16 @@ cdef class IDA:
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
         yp_retn = np.empty([np.alen(tspan), np.alen(y0)], float)
 
-        t_retn[0] = self.init_step(tspan[0], y0, yp0,
-                                   y_retn[0, :], yp_retn[0, :])
+        cdef int flag
+
+        (flag, t_retn[0]) = self.init_step(tspan[0], y0, yp0,
+                                           y_retn[0, :], yp_retn[0, :])
+        if not flag:
+            return (False, t_retn[0], y0, None, None, None, None)
         #TODO: Parallel version
         cdef np.ndarray[DTYPE_t, ndim=1] y_last, yp_last
         cdef unsigned int idx
         cdef DTYPE_t t
-        cdef int flag
         cdef void *ida_mem = self._ida_mem
         cdef realtype t_out
         cdef N_Vector y  = self.y

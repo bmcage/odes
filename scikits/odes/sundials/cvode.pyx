@@ -735,7 +735,7 @@ cdef class CVODE:
 
         self.initialized = True
 
-        return t0
+        return (True, t0)
 
     def solve(self, object tspan, object y0):
 
