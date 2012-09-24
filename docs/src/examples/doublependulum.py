@@ -341,7 +341,7 @@ def main():
 
     z[0] = np.empty(problem.neq, float)
     zprime[0] = np.empty(problem.neq, float)
-    t0_init = solver.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
+    (flag, t0_init) = solver.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
     print ('init time', t0_init)
     realtime = [t0_init]
     #flag, rt = solver.step(t0_init, z[0], zprime[0])
