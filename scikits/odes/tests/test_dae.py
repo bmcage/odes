@@ -188,7 +188,7 @@ class StiffVODECompare(DAE):
             i +=1
 
         #we need to activate some extra parameters in the solver
-        #order par is rtol,atol,lband,uband,tcrit,order,nsteps,
+        #order par is rtol,atol,lband,uband,tstop,order,nsteps,
         #         max_step,first_step,enforce_nonnegativity,nonneg_type, 
         #         compute_initcond,constraint_init,constraint_type,algebraic_var
         self.ddaspk_pars = {'rtol' : [1e-4,1e-4,1e-4], 

@@ -67,7 +67,7 @@ set_options method of the dae class:
   Jacobian band width, jac[i,j] != 0 for i-lband <= j <= i+uband.
   Setting these requires your jac routine to return the jacobian
   in packed format, jac_packed[i-j+lband, j] = jac[i,j].
-- tcrit : None or float. If given, tcrit is a critical time point
+- tstop : None or float. If given, tstop is a critical time point
   beyond which no integration occurs
 - max_steps : int
   Maximum number of (internally defined) steps allowed during one
@@ -190,7 +190,7 @@ class ddaspk(DaeBase):
             'atol': 1e-12,
             'lband': None,
             'uband': None,
-            'tcrit': None, 
+            'tstop': None, 
             'order' : 5,
             'max_steps' : 500,
             'max_step_size' : 0.0, # corresponds to infinite
@@ -229,7 +229,7 @@ class ddaspk(DaeBase):
         self.jac = self.options['jacfn']
         self.res = self.options['rfn']
 
-        self.tcrit = self.options['tcrit']
+        self.tstop = self.options['tstop']
         if self.options['order'] > 5 or self.options['order'] < 1:
             raise ValueError('order should be >=1, <=5')
         self.order = self.options['order']
@@ -324,9 +324,9 @@ class ddaspk(DaeBase):
         if self.nonneg in [1, 3]: liw += n
         if self.compute_initcond or self.excl_algvar_err: liw += n
         iwork = zeros((liw,), int32)
-        if self.tcrit is not None:
+        if self.tstop is not None:
             self.info[3] = 1
-            rwork[0] = self.tcrit
+            rwork[0] = self.tstop
         if self.max_step > 0.0 :
             self.info[6] = 1
             rwork[1] = self.max_step
@@ -358,9 +358,9 @@ class ddaspk(DaeBase):
         ## some overrides that one might want
         # self.info[17] = 1  # minimal printing inside init cond calc
         # self.info[17] = 2  # full printing inside init cond calc
-        if self.tcrit is not None:
+        if self.tstop is not None:
             self.info[3] = 1
-            self.rwork[0] = self.tcrit
+            self.rwork[0] = self.tstop
         else:
             self.info[3] = 0
             self.rwork[0] = 0.

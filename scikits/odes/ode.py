@@ -280,11 +280,11 @@ As an easy example, consider the simple oscillator,
         """
         return self._integrator.step(t, y_retn)
 
-    def set_tcrit(self, tcrit):
-        if hasattr(self._integrator, 'set_tcrit'):
-            self._integrator.set_tcrit(tcrit)
+    def set_tstop(self, tstop):
+        if hasattr(self._integrator, 'set_tstop'):
+            self._integrator.set_tstop(tcrit)
         else:
-            self._integrator.set_options(tcrit=tcrit)
+            self._integrator.set_options(tstop=tstop)
 
 #------------------------------------------------------------------------------
 # ODE integrators

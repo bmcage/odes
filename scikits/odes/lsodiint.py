@@ -30,7 +30,7 @@ dae class:
 - max_steps = int
 - max_step_size = float
 - (first|min|max)_step = float
-- tcrit=None|float
+- tstop = None|float
 - order = int        # <=12 for adams, <=5 for bdf
 - compute_initcond = None|'yp0'
 
@@ -125,7 +125,7 @@ class lsodi(DaeBase):
                 'atol': 1e-12,
                 'lband': None,
                 'uband': None,
-                'tcrit': None, 
+                'tstop': None, 
                 'order': 0,
                 'max_steps': 500,
                 'max_step_size': 0.0, #corresponds to infinite
@@ -163,7 +163,7 @@ class lsodi(DaeBase):
             raise ValueError('Using provided Jacobian is not supported by lsodi')
         self.res = self.options['rfn']
 
-        self.tcrit = self.options['tcrit']
+        self.tstop = self.options['tstop']
         self.order = self.options['order']
         self.nsteps = self.options['max_steps']
         self.max_step = self.options['max_step_size']
@@ -265,8 +265,8 @@ class lsodi(DaeBase):
             istate=1
         else:
             istate=0
-        if self.tcrit is not None:
-            self.rwork[0]=self.tcrit
+        if self.tstop is not None:
+            self.rwork[0]=self.tstop
         iopt=1
         self.call_args = [itol,self.rtol,self.atol,itask,istate,iopt,
                             self.rwork,self.iwork,mf]
@@ -308,7 +308,7 @@ class lsodi(DaeBase):
         t_retn[0] = tinit
         y_retn[0,:] = y0[:]
         yp_retn[0, :] = yp0[:]
-        if self.tcrit is None:
+        if self.tstop is None:
             itask = 1
             self.call_args[3] = 1
         else:
@@ -363,7 +363,7 @@ class lsodi(DaeBase):
             raise ValueError('Method ''init_step'' has to be called prior to the'
                     'first call of ''step'' method, or after changing options')
         if t > 0.0:
-            if self.tcrit is None:
+            if self.tstop is None:
                 itask = 1
                 self.call_args[3] = 1
             else:
@@ -373,7 +373,7 @@ class lsodi(DaeBase):
             self.call_args[3] = itask
         else:
             itask = self.call_args[3]
-            if self.tcrit is None:
+            if self.tstop is None:
                 self.call_args[3] = 2
             else:
                 self.call_args[3] = 5
