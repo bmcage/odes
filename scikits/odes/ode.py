@@ -302,7 +302,7 @@ def find_ode_integrator(name):
     if not ode.LOADED:
         ## cvode
         try:
-            from sundials import cvode
+            from .sundials import cvode
             OdeBase.integrator_classes.append(cvode.CVODE)
         except ValueError as msg:
             print('Could not load CVODE solver', msg)
