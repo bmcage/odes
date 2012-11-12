@@ -47,14 +47,16 @@ def cython(pyx_files, working_path='', include_dirs=None):
     if sys.argv[1] == 'clean':
         return
 
-    try:
-        import Cython
-    except ImportError:
-        # If cython is not found, we do nothing -- the build will make use of
-        # the distributed .c files
-        print("Cython not found; falling back to pre-built %s" \
-              % " ".join([f.replace('.pyx', '.c') for f in pyx_files]))
-    else:
+##    try:
+##        import Cython
+##    except ImportError:
+##        # If cython is not found, we do nothing -- the build will make use of
+##        # the distributed .c files
+##        print("ERROR: Cython not found; falling back to pre-built %s" \
+##              % " ".join([f.replace('.pyx', '.c') for f in pyx_files]))
+##        sys.exit(1)
+##    else:
+    if True:
         for pyxfile in [os.path.join(working_path, f) for f in pyx_files]:
             # make a backup of the good c files
             c_file = pyxfile[:-4] + '.c'

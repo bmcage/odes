@@ -11,6 +11,7 @@ Requirements before install
 ===========================
 1. You need numpy and scipy installed
 2. You need to have cython installed and executable
+3. You need python development files available (python-dev package)
 3. You need to have the sundials package version 2.5.0 installed from 
 https://computation.llnl.gov/casc/sundials/download/download.html
 
