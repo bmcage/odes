@@ -17,7 +17,7 @@ LICENSE             = 'new BSD'
 
 DOWNLOAD_URL        = URL
 
-MAJOR = 1
+MAJOR = 2
 MINOR = 0
 MICRO = 0
 DEV = False
