@@ -19,7 +19,7 @@ DOWNLOAD_URL        = URL
 
 MAJOR = 2
 MINOR = 0
-MICRO = 0
+MICRO = 1
 DEV = False
 
 CLASSIFIERS = [
