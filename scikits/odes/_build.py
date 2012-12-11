@@ -63,7 +63,10 @@ def cython(pyx_files, working_path='', include_dirs=None):
             c_file_new = c_file + '.new'
 
             # run cython compiler
-            cmd = 'cython -o %s %s' % (c_file_new, pyxfile)
+            if sys.version_info[0] < 3:
+                cmd = 'cython -2 -o %s %s' % (c_file_new, pyxfile)
+            else:
+                cmd = 'cython -3 -o %s %s' % (c_file_new, pyxfile)
             if include_dirs:
                 for dir in include_dirs:
                     cmd += ' -I ' + dir
@@ -78,7 +81,10 @@ def cython(pyx_files, working_path='', include_dirs=None):
                      '-o', c_file_new, pyxfile],
                     shell=True)
             else:
-                status = subprocess.call(['cython', '-o', c_file_new, pyxfile])
+                if sys.version_info[0] < 3:
+                    status = subprocess.call(['cython', '-2', '-o', c_file_new, pyxfile])
+                else:
+                    status = subprocess.call(['cython', '-3', '-o', c_file_new, pyxfile])
 
             # if the resulting file is small, cython compilation failed
             if status != 0 or os.path.getsize(c_file_new) < 100:
