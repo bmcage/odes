@@ -50,6 +50,8 @@ cdef class CVODE:
     cdef long int N #problem size, i.e. len(y0) = N
     cdef N_Vector y0, y, yp # for 'step' method
 
+    cdef int verbosity
+
     # Functions
     cpdef _init_step(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
 

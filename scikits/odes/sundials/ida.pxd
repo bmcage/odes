@@ -71,6 +71,8 @@ cdef class IDA:
 
     cdef IDA_data aux_data
 
+    cdef int verbosity
+
     #cdef realtype *y0, *yprime0
 
     # Functions

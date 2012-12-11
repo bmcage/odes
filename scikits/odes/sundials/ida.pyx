@@ -232,6 +232,7 @@ cdef class IDA:
         """
 
         default_values = {
+            'verbosity': 1,
             'implementation': 'serial',
             'rtol': 1e-6, 'atol': 1e-12,
             'linsolver': 'dense',
@@ -258,6 +259,7 @@ cdef class IDA:
             'jacfn': None
             }
 
+        self.verbosity = 1
         self.options = default_values
         self.N       = -1
         self.set_options(rfn=Rfn, **options)
@@ -269,6 +271,11 @@ cdef class IDA:
         Reads the options list and assigns values for the solver.
 
         All options list:
+            'verbosity':
+                Values: 0,1,2,...
+                Description:
+                    Set the level of verbosity. The higher number user, the
+                    more verbose the output will be. Default is 1.
             'implementation':
                 Values: 'serial' (= default), 'parallel'
                 Description:
@@ -464,6 +471,12 @@ cdef class IDA:
             for opt in options.keys():
                 if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
+
+        # Verbosity level
+        if ('verbosity' in options) and (options['verbosity'] is not None):
+            verbosity = options['verbosity']
+            self.options['verbosity'] = verbosity
+            self.verbosity = verbosity
 
         # Root function
         if ('rootfn' in options) and (options['rootfn'] is not None):
@@ -979,9 +992,11 @@ cdef class IDA:
 
             if flag != IDA_SUCCESS:
                 if flag == IDA_TSTOP_RETURN:
-                    print('Stop time reached... stopping computation...')
+                    if self.verbosity > 1:
+                        print('Stop time reached... stopping computation...')
                 elif flag == IDA_ROOT_RETURN:
-                    print('Found root... stopping computation...')
+                    if self.verbosity > 1:
+                        print('Found root... stopping computation...')
                 elif flag < 0:
                     print('Error occured. See returned flag '
                           'variable and IDA documentation.')

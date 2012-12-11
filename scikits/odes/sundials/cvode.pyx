@@ -218,6 +218,7 @@ cdef class CVODE:
         """
 
         default_values = {
+            'verbosity': 1,
             'implementation': 'serial',
             'lmm_type': 'BDF',
             'iter_type': 'NEWTON',
@@ -243,6 +244,7 @@ cdef class CVODE:
             'jacfn': None
             }
 
+        self.verbosity = 1
         self.options = default_values
         self.N       = -1
         self.set_options(rfn=Rfn, **options)
@@ -254,6 +256,11 @@ cdef class CVODE:
         Reads the options list and assigns values for the solver.
 
         All options list:
+            'verbosity':
+                Values: 0,1,2,...
+                Description:
+                    Set the level of verbosity. The higher number user, the
+                    more verbose the output will be. Default is 1.
             'implementation':
                 Values: 'serial' (= default), 'parallel'
                 Description:
@@ -420,6 +427,12 @@ cdef class CVODE:
             for opt in options.keys():
                 if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
+
+        # Verbosity level
+        if ('verbosity' in options) and (options['verbosity'] is not None):
+            verbosity = options['verbosity']
+            self.options['verbosity'] = verbosity
+            self.verbosity = verbosity
 
         # Root function
         if ('rootfn' in options) and (options['rootfn'] is not None):
@@ -776,9 +789,11 @@ cdef class CVODE:
 
             if flag != CV_SUCCESS:
                 if flag == CV_TSTOP_RETURN:
-                    print('Stop time reached... stopping computation...')
+                    if self.verbosity > 1:
+                        print('Stop time reached... stopping computation...')
                 elif flag == CV_ROOT_RETURN:
-                    print('Found root... stopping computation...')
+                    if self.verbosity > 1:
+                        print('Found root... stopping computation...')
                 elif flag < 0:
                     print('Error occured. See returned flag '
                           'variable and CVode documentation.')
