@@ -97,6 +97,7 @@ cdef class CVODE:
 
     # Functions
     cpdef _init_step(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
+    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0)
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                        np.ndarray[DTYPE_t, ndim=1] y0)

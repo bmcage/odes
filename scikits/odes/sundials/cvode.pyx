@@ -1064,6 +1064,43 @@ cdef class CVODE:
 
         return (True, t0)
 
+    def reinit_IC(self, double t0, object y0):
+        """
+        Re-initialize (only) the initial condition IC without re-setting also
+        all the remaining solver options. See also 'init_step()' funtion.
+        """
+
+        cdef np.ndarray[DTYPE_t, ndim=1] np_y0
+        np_y0 = np.asarray(y0)
+
+        return self._reinit_IC(t0, np_y0)
+
+    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0):
+        # If not yet initialized, run full initialization
+        if self.y0 is NULL:
+            self._init_step(t0, y0)
+            return
+
+        cdef long int N
+        N = <long int> np.alen(y0)
+        if N == self.N:
+            self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
+        else:
+            raise ValueError("Cannot re-init IC with array of unequal lenght.")
+
+        flag = CVodeReInit(self._cv_mem, <realtype> t0, self.y0)
+
+        if flag == CV_ILL_INPUT:
+            raise ValueError('CVodeReInit: Ill input')
+        elif flag == CV_MEM_FAIL:
+            raise MemoryError('CVReInit: Memory allocation error')
+        elif flag == CV_MEM_NULL:
+            raise MemoryError('CVodeReCreate: Memory allocation error')
+        elif flag == CV_NO_MALLOC:
+            raise MemoryError('CVodeReInit: No memory allocated in CVInit.')
+
+        return (True, t0)
+
     def solve(self, object tspan, object y0):
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0
