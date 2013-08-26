@@ -8,7 +8,7 @@
 *swp
 *.egg
 scikits.odes.egg-info/*
-build/*
+build*
 .emacs.desktop*
 docs/src/examples/scikits
 
