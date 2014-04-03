@@ -11,4 +11,5 @@ scikits.odes.egg-info/*
 build*
 .emacs.desktop*
 docs/src/examples/scikits
+dist
 
