@@ -1,5 +1,5 @@
 cimport numpy as np
-from c_sundials cimport N_Vector, DlsMat
+from .c_sundials cimport N_Vector, DlsMat
 
 ctypedef np.float_t DTYPE_t
 

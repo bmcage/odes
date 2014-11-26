@@ -1,4 +1,4 @@
-from c_sundials cimport *
+from .c_sundials cimport *
 from libc.stdio cimport FILE
 
 cdef extern from "cvode/cvode.h":

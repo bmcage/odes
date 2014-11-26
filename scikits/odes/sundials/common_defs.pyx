@@ -1,7 +1,7 @@
 import numpy as np
 cimport numpy as np
 import inspect
-from c_sundials cimport (N_Vector, nv_content_data_s, nv_content_s, nv_length_s,
+from .c_sundials cimport (N_Vector, nv_content_data_s, nv_content_s, nv_length_s,
                         nv_data_s, get_nv_ith_s, set_nv_ith_s, get_dense_col,
                         get_dense_N, set_dense_element,
                         DlsMat)
