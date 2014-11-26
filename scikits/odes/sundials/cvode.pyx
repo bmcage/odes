@@ -3,9 +3,9 @@ import inspect
 import numpy as np
 cimport numpy as np
 
-from c_sundials cimport realtype, N_Vector
-from c_cvode cimport *
-from common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
+from .c_sundials cimport realtype, N_Vector
+from .c_cvode cimport *
+from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
