@@ -8,5 +8,6 @@ include pyproject.toml
 
 prune ci_support
 prune docs
+prune apidocs
 prune paper
-prune sphinxdoc
+prune ipython_examples
