@@ -195,6 +195,83 @@ cdef int _jacdense(long int Neq, realtype tt,
 
     return 0
 
+# Precondioner solve funtion
+cdef class CV_PrecSolveFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] r,
+                       np.ndarray[DTYPE_t, ndim=1] z,
+                       DTYPE_t gamma,
+                       DTYPE_t delta,
+                       int lr,
+                       object userdata = None):
+        return 0
+
+cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
+    cpdef set_prec_solvefn(self, object prec_solvefn):
+        """
+        set some rhs equations as a RhsFunction executable class
+        """
+        self.with_userdata = 0
+        nrarg = len(inspect.getargspec(prec_solvefn)[0])
+        if nrarg > 8:
+            #hopefully a class method, self gives 10 arg!
+            self.with_userdata = 1
+        elif nrarg == 8 and inspect.isfunction(prec_solvefn):
+            self.with_userdata = 1
+        self._prec_solvefn = prec_solvefn
+
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] r,
+                       np.ndarray[DTYPE_t, ndim=1] z,
+                       DTYPE_t gamma,
+                       DTYPE_t delta,
+                       int lr,
+                       object userdata = None):
+        if self.with_userdata == 1:
+            self._prec_solvefn(t, y, r, z, gamma, delta, lr, userdata)
+        else:
+            self._prec_solvefn(t, y, r, z, gamma, delta, lr)
+        return 0
+
+cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vector z,
+         realtype gamma, realtype delta, int lr, void *auxiliary_data, N_Vector tmp):
+    """ function with the signature of CVSpilsPrecSolveFn, that calls python function """
+    cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
+
+    aux_data = <CV_data> auxiliary_data
+    cdef bint parallel_implementation = aux_data.parallel_implementation
+
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        yy_tmp = aux_data.yy_tmp
+
+        if aux_data.r_tmp == None:
+            N = np.alen(yy_tmp)
+            aux_data.r_tmp = np.empty(N, float)
+
+        if aux_data.z_tmp == None:
+            N = np.alen(yy_tmp)
+            aux_data.z_tmp = np.empty(N, float)
+
+        r_tmp = aux_data.r_tmp
+        z_tmp = aux_data.z_tmp
+
+        nv_s2ndarray(yy, yy_tmp)
+        nv_s2ndarray(r, r_tmp)
+
+    aux_data.prec_solvefn.evaluate(tt, yy_tmp, r_tmp, z_tmp, gamma, delta, lr, aux_data.user_data)
+
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        ndarray2nv_s(z, z_tmp)
+
+    return 0
+
+
 cdef class CV_data:
     def __cinit__(self, N):
         self.parallel_implementation = False
@@ -204,6 +281,8 @@ cdef class CV_data:
         self.yp_tmp = np.empty(N, float)
         self.jac_tmp = None
         self.g_tmp = None
+        self.r_tmp = None
+        self.z_tmp = None
 
 cdef class CVODE:
 
@@ -241,7 +320,8 @@ cdef class CVODE:
             'rfn': None,
             'rootfn': None,
             'nr_rootfns': 0,
-            'jacfn': None
+            'jacfn': None,
+            'prec_solvefn': None
             }
 
         self.verbosity = 1
@@ -391,6 +471,16 @@ cdef class CVODE:
                     'jacfn' (if specified one).
             'precond_type':
                 default = None
+            'prec_solvefn':
+                Values: function of class CV_PrecSolveFunction
+                Description:
+                    Defines a function that solves the preconditioning problem
+                    P*z = r where P may be a left or right preconditioner
+                    matrix. This function takes as input arguments current time
+                    t, current value of y, right-hand side r, result vector z,
+                    parameters gamma and delta, input flag lr that determines
+                    the flavour of the preconditioner (left = 1, right = 2) and
+                    optional userdata.
             'bdf_stability_detection':
                 default = False, only used if lmm_type == 'bdf
             'max_conv_fails':
@@ -628,8 +718,15 @@ cdef class CVODE:
             jac = tmpfun
             opts['jacfn'] = tmpfun
         self.aux_data.jac = jac
-        self.aux_data.user_data = opts['user_data']
-        #self.aux_data.jac = opts['jacfn']
+
+        prec_solvefn = opts['prec_solvefn']
+        if prec_solvefn is not None and not isinstance(prec_solvefn, CV_PrecSolveFunction):
+            tmpfun = CV_WrapPrecSolveFunction()
+            tmpfun.set_prec_solvefn(prec_solvefn)
+            prec_solvefn = tmpfun
+            opts['prec_solvefn'] = tmpfun
+        self.aux_data.prec_solvefn = prec_solvefn
+
         self.aux_data.user_data = opts['user_data']
 
         self._set_runtime_changeable_options(opts, supress_supported_check=True)
@@ -738,6 +835,10 @@ cdef class CVODE:
                 if flag == CVSPILS_MEM_FAIL:
                         raise MemoryError('LinSolver:CVSpils memory allocation '
                                           'error.')
+
+                if self.aux_data.prec_solvefn:
+                    flag = CVSpilsSetPreconditioner(cv_mem, NULL, _prec_solvefn)
+
             else:
                 raise ValueError('LinSolver: Unknown solver type: %s'
                                      % opts['linsolver'])
