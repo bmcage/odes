@@ -195,6 +195,65 @@ cdef int _jacdense(long int Neq, realtype tt,
 
     return 0
 
+# Precondioner setup funtion
+cdef class CV_PrecSetupFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       bint jok,
+                       object jcurPtr,
+                       DTYPE_t gamma,
+                       object userdata = None):
+        return 0
+
+cdef class CV_WrapPrecSetupFunction(CV_PrecSetupFunction):
+    cpdef set_prec_setupfn(self, object prec_setupfn):
+        """
+        set some rhs equations as a CV_PrecSetupFunction executable class
+        """
+        self.with_userdata = 0
+        nrarg = len(inspect.getargspec(prec_setupfn)[0])
+        if nrarg > 6:
+            #hopefully a class method, self gives 7 arg!
+            self.with_userdata = 1
+        elif nrarg == 6 and inspect.isfunction(prec_setupfn):
+            self.with_userdata = 1
+        self._prec_setupfn = prec_setupfn
+
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       bint jok,
+                       object jcurPtr,
+                       DTYPE_t gamma,
+                       object userdata = None):
+        if self.with_userdata == 1:
+            self._prec_setupfn(t, y, jok, jcurPtr, gamma, userdata)
+        else:
+            self._prec_setupfn(t, y, jok, jcurPtr, gamma)
+        return 0
+
+class MutableBool(object):
+    def __init__(self, value):
+        self.value = value
+
+cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, booleantype *jcurPtr,
+         realtype gamma, void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
+    """ function with the signature of CVSpilsPrecSetupFn, that calls python function """
+    cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
+
+    aux_data = <CV_data> auxiliary_data
+    cdef bint parallel_implementation = aux_data.parallel_implementation
+
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        yy_tmp = aux_data.yy_tmp
+        nv_s2ndarray(yy, yy_tmp)
+
+    jcurPtr_tmp = MutableBool(jcurPtr[0])
+    aux_data.prec_setupfn.evaluate(tt, yy_tmp, jok, jcurPtr_tmp, gamma, aux_data.user_data)
+    jcurPtr[0] = jcurPtr_tmp.value
+    return 0
+
 # Precondioner solve funtion
 cdef class CV_PrecSolveFunction:
     cpdef int evaluate(self, DTYPE_t t,
@@ -210,12 +269,12 @@ cdef class CV_PrecSolveFunction:
 cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
     cpdef set_prec_solvefn(self, object prec_solvefn):
         """
-        set some rhs equations as a RhsFunction executable class
+        set some rhs equations as a CV_PrecSolveFunction executable class
         """
         self.with_userdata = 0
         nrarg = len(inspect.getargspec(prec_solvefn)[0])
         if nrarg > 8:
-            #hopefully a class method, self gives 10 arg!
+            #hopefully a class method, self gives 9 arg!
             self.with_userdata = 1
         elif nrarg == 8 and inspect.isfunction(prec_solvefn):
             self.with_userdata = 1
@@ -321,6 +380,7 @@ cdef class CVODE:
             'rootfn': None,
             'nr_rootfns': 0,
             'jacfn': None,
+            'prec_setupfn': None,
             'prec_solvefn': None
             }
 
@@ -471,6 +531,10 @@ cdef class CVODE:
                     'jacfn' (if specified one).
             'precond_type':
                 default = None
+            'prec_setupfn':
+                Values: function of class CV_PrecSetupFunction
+                Description:
+                    TODO: write docs
             'prec_solvefn':
                 Values: function of class CV_PrecSolveFunction
                 Description:
@@ -719,6 +783,14 @@ cdef class CVODE:
             opts['jacfn'] = tmpfun
         self.aux_data.jac = jac
 
+        prec_setupfn = opts['prec_setupfn']
+        if prec_setupfn is not None and not isinstance(prec_setupfn, CV_PrecSetupFunction):
+            tmpfun = CV_WrapPrecSetupFunction()
+            tmpfun.set_prec_setupfn(prec_setupfn)
+            prec_setupfn = tmpfun
+            opts['prec_setupfn'] = tmpfun
+        self.aux_data.prec_setupfn = prec_setupfn
+
         prec_solvefn = opts['prec_solvefn']
         if prec_solvefn is not None and not isinstance(prec_solvefn, CV_PrecSolveFunction):
             tmpfun = CV_WrapPrecSolveFunction()
@@ -837,7 +909,11 @@ cdef class CVODE:
                                           'error.')
 
                 if self.aux_data.prec_solvefn:
-                    flag = CVSpilsSetPreconditioner(cv_mem, NULL, _prec_solvefn)
+                    if self.aux_data.prec_setupfn:
+                        flag = CVSpilsSetPreconditioner(cv_mem, _prec_setupfn, _prec_solvefn)
+                    else:
+                        flag = CVSpilsSetPreconditioner(cv_mem, NULL, _prec_solvefn)
+                    #TODO check flag
 
             else:
                 raise ValueError('LinSolver: Unknown solver type: %s'
