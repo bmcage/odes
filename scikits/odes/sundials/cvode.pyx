@@ -828,10 +828,9 @@ cdef class CVODE:
             CVodeSetNonlinConvCoef(cv_mem, <int> opts['nonlin_conv_coef'])
 
         # Linsolver
+        linsolver = opts['linsolver'].lower()
+
         if iter_type == 'newton':
-
-            linsolver = opts['linsolver'].lower()
-
             if linsolver == 'dense':
                 if self.parallel_implementation:
                     raise ValueError('Linear solver for dense matrices can be'
