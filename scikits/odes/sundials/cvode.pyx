@@ -535,6 +535,12 @@ cdef class CVODE:
                 Values: function of class CV_PrecSetupFunction
                 Description:
                     TODO: write docs
+                    Defines a function that setups the preconditioner on change
+                    of the Jacobian. This function takes as input arguments
+                    current time t, current value of y, flag jok that indicates
+                    whether Jacobian-related data has to be updated, flag jcurPtr
+                    that should be set to True (jcurPtr.value = True) if Jacobian
+                    data was recomputed, parameter gamma and optional userdata.
             'prec_solvefn':
                 Values: function of class CV_PrecSolveFunction
                 Description:
