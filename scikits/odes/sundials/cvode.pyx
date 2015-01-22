@@ -203,12 +203,21 @@ cdef class CV_PrecSetupFunction:
                        object jcurPtr,
                        DTYPE_t gamma,
                        object userdata = None):
+        """
+        This function preprocesses and/or evaluates Jacobian-related data
+        needed by the preconditioner. Use the userdata object to expose
+        the preprocessed data to the solve function.
+
+        This is a generic class, you should subclass it for the problem specific
+        purposes.
+        """
         return 0
 
 cdef class CV_WrapPrecSetupFunction(CV_PrecSetupFunction):
     cpdef set_prec_setupfn(self, object prec_setupfn):
         """
-        set some rhs equations as a CV_PrecSetupFunction executable class
+        set a precondititioning setup method as a CV_PrecSetupFunction
+        executable class
         """
         self.with_userdata = 0
         nrarg = len(inspect.getargspec(prec_setupfn)[0])
@@ -264,12 +273,23 @@ cdef class CV_PrecSolveFunction:
                        DTYPE_t delta,
                        int lr,
                        object userdata = None):
+        """
+        This function solves the preconditioned system P*z = r, where P may be
+        either a left or right preconditioner matrix. Here P should approximate
+        (at least crudely) the Newton matrix M = I − gamma*J, where J is the
+        Jacobian of the system. If preconditioning is done on both sides,
+        the product of the two preconditioner matrices should approximate M.
+
+        This is a generic class, you should subclass it for the problem specific
+        purposes.
+        """
         return 0
 
 cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
     cpdef set_prec_solvefn(self, object prec_solvefn):
         """
-        set some rhs equations as a CV_PrecSolveFunction executable class
+        set a precondititioning solve method as a CV_PrecSolveFunction
+        executable class
         """
         self.with_userdata = 0
         nrarg = len(inspect.getargspec(prec_solvefn)[0])
@@ -534,7 +554,6 @@ cdef class CVODE:
             'prec_setupfn':
                 Values: function of class CV_PrecSetupFunction
                 Description:
-                    TODO: write docs
                     Defines a function that setups the preconditioner on change
                     of the Jacobian. This function takes as input arguments
                     current time t, current value of y, flag jok that indicates
@@ -918,7 +937,11 @@ cdef class CVODE:
                         flag = CVSpilsSetPreconditioner(cv_mem, _prec_setupfn, _prec_solvefn)
                     else:
                         flag = CVSpilsSetPreconditioner(cv_mem, NULL, _prec_solvefn)
-                    #TODO check flag
+                if flag == CVSPILS_MEM_NULL:
+                    raise ValueError('LinSolver: The cvode mem pointer is NULL.')
+                elif flag == CVSPILS_LMEM_NULL:
+                    raise ValueError('LinSolver: The cvspils linear solver has '
+                                     'not been initialized.')
 
             else:
                 raise ValueError('LinSolver: Unknown solver type: %s'
