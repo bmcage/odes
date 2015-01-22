@@ -39,7 +39,6 @@ cdef class CV_PrecSetupFunction:
                        object jcurPtr,
                        DTYPE_t gamma,
                        object userdata = *)
-
 cdef class CV_WrapPrecSetupFunction(CV_PrecSetupFunction):
     cpdef object _prec_setupfn
     cdef int with_userdata
@@ -54,11 +53,24 @@ cdef class CV_PrecSolveFunction:
                        DTYPE_t delta,
                        int lr,
                        object userdata = *)
-
 cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
     cpdef object _prec_solvefn
     cdef int with_userdata
     cpdef set_prec_solvefn(self, object prec_solvefn)
+
+
+cdef class CV_JacTimesVecFunction:
+    cpdef int evaluate(self,
+                       np.ndarray[DTYPE_t, ndim=1] v,
+                       np.ndarray[DTYPE_t, ndim=1] Jv,
+                       DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       object userdata = *)
+cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
+    cpdef object _jac_times_vecfn
+    cdef int with_userdata
+    cpdef set_jac_times_vecfn(self, object jac_times_vecfn)
+
 
 cdef class CV_data:
     cdef np.ndarray yy_tmp, yp_tmp, jac_tmp, g_tmp, r_tmp, z_tmp
@@ -67,6 +79,7 @@ cdef class CV_data:
     cdef CV_RootFunction rootfn
     cdef CV_PrecSolveFunction prec_solvefn
     cdef CV_PrecSetupFunction prec_setupfn
+    cdef CV_JacTimesVecFunction jac_times_vecfn
     cdef bint parallel_implementation
     cdef object user_data
 

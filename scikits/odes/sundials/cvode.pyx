@@ -330,6 +330,78 @@ cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vect
 
     return 0
 
+# JacTimesVec function
+cdef class CV_JacTimesVecFunction:
+    cpdef int evaluate(self,
+                       np.ndarray[DTYPE_t, ndim=1] v,
+                       np.ndarray[DTYPE_t, ndim=1] Jv,
+                       DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       object userdata = None):
+        return 0
+
+cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
+    cpdef set_jac_times_vecfn(self, object jac_times_vecfn):
+        """
+        Set some CV_JacTimesVecFn executable class.
+        """
+        self.with_userdata = 0
+        nrarg = len(inspect.getargspec(jac_times_vecfn)[0])
+        if nrarg > 5:
+            #hopefully a class method, self gives 6 arg!
+            self.with_userdata = 1
+        elif nrarg == 5 and inspect.isfunction(jac_times_vecfn):
+            self.with_userdata = 1
+        self._jac_times_vecfn = jac_times_vecfn
+
+    cpdef int evaluate(self,
+                       np.ndarray[DTYPE_t, ndim=1] v,
+                       np.ndarray[DTYPE_t, ndim=1] Jv,
+                       DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       object userdata = None):
+        if self.with_userdata == 1:
+            self._jac_times_vecfn(v, Jv, t, y, userdata)
+        else:
+            self._jac_times_vecfn(v, Jv, t, y)
+        return 0
+
+cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y, N_Vector fy,
+		void *user_data, N_Vector tmp):
+    """ function with the signature of CVSpilsJacTimesVecFn, that calls python function """
+    cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, v_tmp, Jv_tmp
+
+    aux_data = <CV_data> user_data
+    cdef bint parallel_implementation = aux_data.parallel_implementation
+
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        y_tmp = aux_data.yy_tmp
+
+        if aux_data.r_tmp == None:
+            N = np.alen(y_tmp)
+            aux_data.r_tmp = np.empty(N, float)
+
+        if aux_data.z_tmp == None:
+            N = np.alen(y_tmp)
+            aux_data.z_tmp = np.empty(N, float)
+
+        v_tmp = aux_data.r_tmp
+        Jv_tmp = aux_data.z_tmp
+
+        nv_s2ndarray(y, y_tmp)
+        nv_s2ndarray(v, v_tmp)
+
+    aux_data.jac_times_vecfn.evaluate(v_tmp, Jv_tmp, t, y_tmp, aux_data.user_data)
+
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        ndarray2nv_s(Jv, Jv_tmp)
+
+    return 0
+
 
 cdef class CV_data:
     def __cinit__(self, N):
@@ -381,7 +453,8 @@ cdef class CVODE:
             'nr_rootfns': 0,
             'jacfn': None,
             'prec_setupfn': None,
-            'prec_solvefn': None
+            'prec_solvefn': None,
+            'jac_times_vecfn': None
             }
 
         self.verbosity = 1
@@ -551,6 +624,14 @@ cdef class CVODE:
                     parameters gamma and delta, input flag lr that determines
                     the flavour of the preconditioner (left = 1, right = 2) and
                     optional userdata.
+            'jac_times_vecfn':
+                Values: function of class CV_JacTimesVecFunction
+                Description:
+                    Defines a function that solves the product of vector v
+                    with an (approximate) Jacobian of the system J.
+                    This function takes as input arguments the vector v,
+                    result vector Jv, current time t, current value of y,
+                    and optional userdata.
             'bdf_stability_detection':
                 default = False, only used if lmm_type == 'bdf
             'max_conv_fails':
@@ -805,6 +886,14 @@ cdef class CVODE:
             opts['prec_solvefn'] = tmpfun
         self.aux_data.prec_solvefn = prec_solvefn
 
+        jac_times_vecfn = opts['jac_times_vecfn']
+        if jac_times_vecfn is not None and not isinstance(jac_times_vecfn, CV_JacTimesVecFunction):
+            tmpfun = CV_WrapJacTimesVecFunction()
+            tmpfun.set_jac_times_vecfn(jac_times_vecfn)
+            jac_times_vecfn = tmpfun
+            opts['jac_times_vecfn'] = tmpfun
+        self.aux_data.jac_times_vecfn = jac_times_vecfn
+
         self.aux_data.user_data = opts['user_data']
 
         self._set_runtime_changeable_options(opts, supress_supported_check=True)
@@ -919,6 +1008,9 @@ cdef class CVODE:
                     else:
                         flag = CVSpilsSetPreconditioner(cv_mem, NULL, _prec_solvefn)
                     #TODO check flag
+
+                if self.aux_data.jac_times_vecfn:
+                    flag = CVSpilsSetJacTimesVecFn(cv_mem, _jac_times_vecfn)
 
             else:
                 raise ValueError('LinSolver: Unknown solver type: %s'
