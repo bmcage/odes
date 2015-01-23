@@ -32,11 +32,41 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
     cdef int with_userdata
     cpdef set_jacfn(self, object jacfn)
 
+cdef class CV_PrecSetupFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       bint jok,
+                       object jcurPtr,
+                       DTYPE_t gamma,
+                       object userdata = *)
+
+cdef class CV_WrapPrecSetupFunction(CV_PrecSetupFunction):
+    cpdef object _prec_setupfn
+    cdef int with_userdata
+    cpdef set_prec_setupfn(self, object prec_setupfn)
+
+cdef class CV_PrecSolveFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] r,
+                       np.ndarray[DTYPE_t, ndim=1] z,
+                       DTYPE_t gamma,
+                       DTYPE_t delta,
+                       int lr,
+                       object userdata = *)
+
+cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
+    cpdef object _prec_solvefn
+    cdef int with_userdata
+    cpdef set_prec_solvefn(self, object prec_solvefn)
+
 cdef class CV_data:
-    cdef np.ndarray yy_tmp, yp_tmp, jac_tmp, g_tmp
+    cdef np.ndarray yy_tmp, yp_tmp, jac_tmp, g_tmp, r_tmp, z_tmp
     cdef CV_RhsFunction rfn
     cdef CV_JacRhsFunction jac
     cdef CV_RootFunction rootfn
+    cdef CV_PrecSolveFunction prec_solvefn
+    cdef CV_PrecSetupFunction prec_setupfn
     cdef bint parallel_implementation
     cdef object user_data
 
