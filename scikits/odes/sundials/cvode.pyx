@@ -358,12 +358,23 @@ cdef class CV_JacTimesVecFunction:
                        DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        object userdata = None):
+        """
+        This function calculates the product of the Jacobian with a given vector v.
+        Use the userdata object to expose Jacobian related data to the solve function.
+
+        This is a generic class, you should subclass it for the problem specific
+        purposes.
+        """
         return 0
 
 cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
     cpdef set_jac_times_vecfn(self, object jac_times_vecfn):
         """
         Set some CV_JacTimesVecFn executable class.
+        """
+        """
+        set a jacobian-times-vector method as a CV_JacTimesVecFunction
+        executable class
         """
         self.with_userdata = 0
         nrarg = len(inspect.getargspec(jac_times_vecfn)[0])
@@ -1034,6 +1045,11 @@ cdef class CVODE:
 
                 if self.aux_data.jac_times_vecfn:
                     flag = CVSpilsSetJacTimesVecFn(cv_mem, _jac_times_vecfn)
+                if flag == CVSPILS_MEM_NULL:
+                    raise ValueError('LinSolver: The cvode mem pointer is NULL.')
+                elif flag == CVSPILS_LMEM_NULL:
+                    raise ValueError('LinSolver: The cvspils linear solver has '
+                                     'not been initialized.')
 
             else:
                 raise ValueError('LinSolver: Unknown solver type: %s'

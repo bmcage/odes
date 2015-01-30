@@ -1,4 +1,4 @@
-# Authors: B. Malengier, C. Abert
+# Authors: B. Malengier, C. Abert, F. Bruckner
 """
 This example shows how a preconditioned iterative linear solver
 is used to solve the Newton iterations arising from the solution
@@ -7,6 +7,8 @@ of the free vibration of a simple oscillator::
 using the CVODE solver. The rhs function is given by \dot{u}. The
 preconditioning is implemented in prec_solvefn which solves the
 system P = I - gamma * J, where J is the Jacobian of the rhs.
+The jac_times_vecfn calculates the Jacobian times vector product 
+using the analytic Jacobian. 
 Solution::
         u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
     
@@ -28,6 +30,7 @@ def prec_solvefn(t, y, r, z, gamma, delta, lr):
     z[1] = - gamma*k/m * r[0] +         r[1]
 
 def jac_times_vecfn(v, Jv, t, y, user_data):
+    """ Calculate Jacobian times vector product Jv = J*v"""
     Jv[0] = v[1]
     Jv[1] = -k/m * v[0] 
 
