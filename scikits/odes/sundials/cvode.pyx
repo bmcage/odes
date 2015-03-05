@@ -1,4 +1,5 @@
 import inspect
+from warnings import warn
 
 import numpy as np
 cimport numpy as np
@@ -11,6 +12,9 @@ from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
 # TODO: linsolvers: check the output value for errors
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
+
+WARNING_STR = "Solver succeeded with flag {} and finished at {} with values {}"
+ERROR_STR = "Solver failed with flag {} and finished at {} with values {}"
 
 # Right-hand side function
 cdef class CV_RhsFunction:
@@ -448,7 +452,37 @@ cdef class CV_data:
 
 cdef class CVODE:
 
-    def __cinit__(self, Rfn, **options):
+    RETURN_FLAGS = {
+        0 :  "SUCCESS",
+        1 :  "TSTOP_RETURN",        # Reached specified stopping point
+        2 :  "ROOT_RETURN",         # Found one or more roots
+        99 : "WARNING",             # Succeeded but something unusual happened
+        -1 : "TOO_MUCH_WORK",       # Could not reach endpoint
+        -2 : "TOO_MUCH_ACC",        # Could not satisfy accuracy
+        -3 : "ERR_FAILURE",         # Error test failures occurred too many times during one internal time step or minimum step size was reached.
+        -4 : "CONV_FAILURE",        # Convergence test failures occurred too many times during one internal time step or minimum step size was reached.
+        -5 : "LINIT_FAIL",          # The linear solver’s initialization function failed.
+        -6 : "LSETUP_FAIL",         # The linear solver’s setup function failed in an unrecoverable manner.
+        -7 : "LSOLVE_FAIL",         # The linear solver’s solve function failed in an unrecoverable manner.
+        -8 : "RHSFUNC_FAIL",        # The right-hand side function failed in an unrecoverable manner.
+        -9 : "FIRST_RHSFUNC_ERR",   # The right-hand side function failed at the first call.
+        -10 : "REPTD_RHSFUNC_ERR",  # The right-hand side function had repeated recoverable errors.
+        -11 : "UNREC_RHSFUNC_ERR",  # The right-hand side function had a recoverable error, but no recovery is possible.
+        -12 : "RTFUNC_FAIL",        # The rootfinding function failed in an unrecoverable manner.
+        -20 : "MEM_FAIL",           # A memory allocation failed.
+        -21 : "MEM_NULL",           # The cvode_mem argument was NULL.
+        -22 : "ILL_INPUT",          # One of the function inputs is illegal.
+        -23 : "NO_MALLOC",          # The cvode memory block was not allocated by a call to CVodeMalloc.
+        -24 : "BAD_K",              # The derivative order k is larger than the order used.
+        -25 : "BAD_T",              # The time t is outside the last step taken.
+        -26 : "BAD_DKY",            # The output derivative vector is NULL.
+        -27 : "TOO_CLOSE",          # The output and initial times are too close to each other.
+    }
+
+    UNKNOWN_FLAG_MESSAGE = "Unknown CVODE flag returned with value {}"
+
+
+    def __cinit__(self, Rfn, validate_flags=False, **options):
         """
         Initialize the CVODE Solver and it's default values
 
@@ -494,6 +528,7 @@ cdef class CVODE:
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
         self.initialized = False
+        self._validate_flags = validate_flags
 
     def set_options(self, **options):
         """
@@ -1069,7 +1104,10 @@ cdef class CVODE:
         np_tspan = np.asarray(tspan, dtype=float)
         np_y0    = np.asarray(y0, dtype=float)
 
-        return self._solve(np_tspan, np_y0)
+        soln = self._solve(np_tspan, np_y0)
+        if self._validate_flags:
+            return self.validate_flags(*soln)
+        return soln
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                  np.ndarray[DTYPE_t, ndim=1] y0):
@@ -1166,3 +1204,22 @@ cdef class CVODE:
         if not self.y0   is NULL: N_VDestroy(self.y0)
         if not self.y    is NULL: N_VDestroy(self.y)
         if not self.atol is NULL: N_VDestroy(self.atol)
+
+    def validate_flags(self, flag, t_vals, y_vals, t_err, y_err):
+        if flag not in self.RETURN_FLAGS:
+            raise NotImplementedError(self.UNKNOWN_FLAG_MESSAGE.format(flag))
+        elif self.RETURN_FLAGS[flag] == "SUCCESS":
+            return t_vals, y_vals
+        else:
+            error_name = self.RETURN_FLAGS[flag]
+            if flag < 0:
+                error = RuntimeError(ERROR_STR.format(error_name, t_err, y_err))
+                error.error_name = error_name
+                error.t_vals = t_vals
+                error.y_vals = y_vals
+                error.t_err = t_err
+                error.y_err = y_err
+                raise error
+            else:
+                warn(WARNING_STR.format(error_name, t_err, y_err))
+                return t_vals, y_vals
