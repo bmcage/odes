@@ -1,3 +1,4 @@
+from cpython.exc cimport PyErr_CheckSignals
 import inspect
 
 import numpy as np
@@ -1080,6 +1081,7 @@ cdef class CVODE:
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
 
         self._init_step(tspan[0], y0)
+        PyErr_CheckSignals()
         t_retn[0] = tspan[0]
         y_retn[0, :] = y0
 
@@ -1121,6 +1123,8 @@ cdef class CVODE:
 
             t_retn[idx]    = t_out
             y_retn[idx, :] = y_last
+
+            PyErr_CheckSignals()
 
         return flag, t_retn, y_retn, None, None
 
