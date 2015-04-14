@@ -1,5 +1,6 @@
 from cpython.exc cimport PyErr_CheckSignals
 import inspect
+from warnings import warn
 
 import numpy as np
 cimport numpy as np
@@ -12,6 +13,31 @@ from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
 # TODO: linsolvers: check the output value for errors
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
+
+WARNING_STR = "Solver succeeded with flag {} and finished at {} with values {}"
+
+class CVODESolveException(Exception):
+    """Base class for exceptions raised by `CVODE.validate_flags`."""
+    def __init__(self, flag, t_vals, y_vals, t_err, y_err):
+            self.args = (self._message.format(flag, t_val, y_val, t_err, y_err),)
+            self.flag = flag
+            self.y_val = y_val
+            self.t_val = t_val
+            self.y_err = y_err
+            self.t_err = t_err
+
+class CVODESolveFailed(CVODESolveException):
+    """`CVODE.solve` failed to reach endpoint"""
+    _message = "Solver failed with flag {0} and finished at {3} with values {4}."
+
+class CVODESolveFoundRoot(CVODESolveException):
+    """`CVODE.solve` found a root"""
+    _message = "Solver found a root at {3}."
+
+class CVODESolveReachedTSTOP(CVODESolveException):
+    """`CVODE.solve` reached the endpoint specified by tstop."""
+    _message = "Solver reached tstop at {3}."
+
 
 # Right-hand side function
 cdef class CV_RhsFunction:
@@ -449,6 +475,36 @@ cdef class CV_data:
 
 cdef class CVODE:
 
+    RETURN_FLAGS = {
+        0 :  "SUCCESS",
+        1 :  "TSTOP_RETURN",        # Reached specified stopping point
+        2 :  "ROOT_RETURN",         # Found one or more roots
+        99 : "WARNING",             # Succeeded but something unusual happened
+        -1 : "TOO_MUCH_WORK",       # Could not reach endpoint
+        -2 : "TOO_MUCH_ACC",        # Could not satisfy accuracy
+        -3 : "ERR_FAILURE",         # Error test failures occurred too many times during one internal time step or minimum step size was reached.
+        -4 : "CONV_FAILURE",        # Convergence test failures occurred too many times during one internal time step or minimum step size was reached.
+        -5 : "LINIT_FAIL",          # The linear solver’s initialization function failed.
+        -6 : "LSETUP_FAIL",         # The linear solver’s setup function failed in an unrecoverable manner.
+        -7 : "LSOLVE_FAIL",         # The linear solver’s solve function failed in an unrecoverable manner.
+        -8 : "RHSFUNC_FAIL",        # The right-hand side function failed in an unrecoverable manner.
+        -9 : "FIRST_RHSFUNC_ERR",   # The right-hand side function failed at the first call.
+        -10 : "REPTD_RHSFUNC_ERR",  # The right-hand side function had repeated recoverable errors.
+        -11 : "UNREC_RHSFUNC_ERR",  # The right-hand side function had a recoverable error, but no recovery is possible.
+        -12 : "RTFUNC_FAIL",        # The rootfinding function failed in an unrecoverable manner.
+        -20 : "MEM_FAIL",           # A memory allocation failed.
+        -21 : "MEM_NULL",           # The cvode_mem argument was NULL.
+        -22 : "ILL_INPUT",          # One of the function inputs is illegal.
+        -23 : "NO_MALLOC",          # The cvode memory block was not allocated by a call to CVodeMalloc.
+        -24 : "BAD_K",              # The derivative order k is larger than the order used.
+        -25 : "BAD_T",              # The time t is outside the last step taken.
+        -26 : "BAD_DKY",            # The output derivative vector is NULL.
+        -27 : "TOO_CLOSE",          # The output and initial times are too close to each other.
+    }
+
+    UNKNOWN_FLAG_MESSAGE = "Unknown CVODE flag returned with value {}"
+
+
     def __cinit__(self, Rfn, **options):
         """
         Initialize the CVODE Solver and it's default values
@@ -486,7 +542,8 @@ cdef class CVODE:
             'jacfn': None,
             'prec_setupfn': None,
             'prec_solvefn': None,
-            'jac_times_vecfn': None
+            'jac_times_vecfn': None,
+            'validate_flags': False
             }
 
         self.verbosity = 1
@@ -670,7 +727,13 @@ cdef class CVODE:
             'max_nonlin_iters':
                 default = 0,
             'nonlin_conv_coef':
-                default = 0.
+                default = 0,
+            'validate_flags':
+                Values: True, False (=default)
+                Description:
+                    Controls whether to validate flags as a result of calling
+                    `solve`. See the `validate_flags` function for how this
+                    affects `solve`.
         """
 
         for (key, value) in options.items():
@@ -1070,7 +1133,10 @@ cdef class CVODE:
         np_tspan = np.asarray(tspan, dtype=float)
         np_y0    = np.asarray(y0, dtype=float)
 
-        return self._solve(np_tspan, np_y0)
+        soln = self._solve(np_tspan, np_y0)
+        if self._validate_flags:
+            return self.validate_flags(*soln)
+        return soln
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                  np.ndarray[DTYPE_t, ndim=1] y0):
@@ -1103,22 +1169,8 @@ cdef class CVODE:
             nv_s2ndarray(y,  y_last)
 
             if flag != CV_SUCCESS:
-                if flag == CV_TSTOP_RETURN:
-                    if self.verbosity > 1:
-                        print('Stop time reached... stopping computation...')
-                elif flag == CV_ROOT_RETURN:
-                    if self.verbosity > 1:
-                        print('Found root... stopping computation...')
-                elif flag < 0:
-                    print('Error occured. See returned flag '
-                          'variable and CVode documentation.')
-                else:
-                    print('Unhandled flag:', flag,
-                          '\nComputation stopped... ')
-
                 t_retn  = t_retn[0:idx]
                 y_retn  = y_retn[0:idx, :]
-
                 return flag, t_retn, y_retn, t_out, y_last
 
             t_retn[idx]    = t_out
@@ -1170,3 +1222,31 @@ cdef class CVODE:
         if not self.y0   is NULL: N_VDestroy(self.y0)
         if not self.y    is NULL: N_VDestroy(self.y)
         if not self.atol is NULL: N_VDestroy(self.atol)
+
+    def validate_flags(self, flag, t_vals, y_vals, t_err, y_err):
+        """
+        Validates the flag returned by `CVODE.solve`.
+
+        Validation happens using the following scheme: failures (flag < 0) raise
+        `CVODESolveFailed` or a subclass of it; finding a root raises
+        `CVODESolveFoundRoot`; reaching tstop raises `CVODESolveReachedTSTOP`;
+        and success without finding a root or reaching tstop returns the vectors
+        t_vals and y_vals.
+        """
+        if flag not in self.RETURN_FLAGS:
+            raise NotImplementedError(self.UNKNOWN_FLAG_MESSAGE.format(flag))
+        elif self.RETURN_FLAGS[flag] == "SUCCESS":
+            return t_vals, y_vals
+        else:
+            error_name = self.RETURN_FLAGS[flag]
+            if flag < 0:
+                raise CVODESolveFailed(error_name, t_vals, y_vals, t_err, y_err)
+            elif error_name == "TSTOP_RETURN":
+                raise CVODESolveReachedTSTOP(
+                    error_name, t_vals, y_vals, t_err, y_err)
+            elif error_name == "ROOT_RETURN":
+                raise CVODESolveFoundRoot(
+                    error_name, t_vals, y_vals, t_err, y_err)
+            else:
+                warn(WARNING_STR.format(error_name, t_err, y_err))
+                return t_vals, y_vals
