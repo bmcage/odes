@@ -18,8 +18,8 @@ LICENSE             = 'new BSD'
 DOWNLOAD_URL        = URL
 
 MAJOR = 2
-MINOR = 0
-MICRO = 2
+MINOR = 1
+MICRO = 0
 DEV = False
 
 CLASSIFIERS = [
