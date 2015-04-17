@@ -12,7 +12,7 @@ DESCRIPTION         = 'A python module for ordinary differential equation and'+\
 LONG_DESCRIPTION    = descr
 MAINTAINER          = 'maintainer of odes is B. Malengier'
 MAINTAINER_EMAIL    = 'benny.malengier@gmail.org'
-URL                 = 'http://cage.ugent.be/~bm/progs.html'
+URL                 = 'https://github.com/bmcage/odes'
 LICENSE             = 'new BSD'
 
 DOWNLOAD_URL        = URL
