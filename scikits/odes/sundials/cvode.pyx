@@ -435,6 +435,7 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
     return 0
 
 
+# Auxiliary data carrying runtime vales for the CVODE solver
 cdef class CV_data:
     def __cinit__(self, N):
         self.parallel_implementation = False
@@ -455,7 +456,8 @@ cdef class CVODE:
 
         Input:
             Rfn     - right-hand-side function
-            options - additional options for initialization
+            options - additional options for initialization, for the list
+                      of supported options and their values see set_options()
 
         """
 
@@ -506,6 +508,7 @@ cdef class CVODE:
                 Description:
                     Set the level of verbosity. The higher number user, the
                     more verbose the output will be. Default is 1.
+                Note: Changeable at runtime.
             'implementation':
                 Values: 'serial' (= default), 'parallel'
                 Description:
@@ -548,11 +551,13 @@ cdef class CVODE:
                     stops when condition g[i] is zero for some i.
                     For 'user_data' argument see 'user_data' option
                     above.
+                Note: Changeable at runtime.
             'nr_rootfns':
                 Value: integer
                 Description:
                     The length of the array returned by 'rootfn' (see above),
                     i.e. number of conditions for which we search the value 0.
+                Note: Changeable at runtime.
             'jacfn':
                 Values: function of class CV_JacRhsFunction
                 Description:
@@ -566,10 +571,12 @@ cdef class CVODE:
                 Values: float,  1e-6 = default
                 Description:
                     Relative tolerancy.
+                Note: Changeable at runtime.
             'atol':
                 Values: float or numpy array of floats,  1e-12 = default
                 Description:
                     Absolute tolerancy
+                Note: Changeable at runtime.
             'order':
                 Values: 1, 2, 3, 4, 5 (= default)
                 Description:
@@ -626,8 +633,9 @@ cdef class CVODE:
                 Description:
                     Maximum time until which we perform the computations.
                     Default is 0.0. Once the value is set 0.0, it cannot be
-                    disable (but it will be automatically disable when tstop
+                    disabled (but it will be automatically disabled when tstop
                     is reached and has to be reset again in next run).
+                Note: Changeable at runtime.
             'user_data':
                 Values: python object, None = default
                 Description:
@@ -673,12 +681,15 @@ cdef class CVODE:
                 default = 0.
         """
 
+        # Update values of all supplied options
         for (key, value) in options.items():
             if key.lower() in self.options:
                 self.options[key.lower()] = value
             else:
                 raise ValueError("Option '%s' is not supported by solver" % key)
 
+        # If the solver is running, this re-sets runtime changeable options,
+        # otherwise it does nothing
         self._set_runtime_changeable_options(options)
 
     cpdef _set_runtime_changeable_options(self, object options,
@@ -690,6 +701,7 @@ cdef class CVODE:
         cdef int flag
         cdef void* cv_mem = self._cv_mem
 
+        # Don't do anything if we are not at runtime
         if cv_mem is NULL:
             return 0
 
@@ -707,10 +719,10 @@ cdef class CVODE:
             self.options['verbosity'] = verbosity
             self.verbosity = verbosity
 
-        # Root function
+        # Root function (rootfn and nr_rootfns)
         if ('rootfn' in options) and (options['rootfn'] is not None):
-            # TODO: Unsetting the rootfn?
 
+            # Set root function to internal options...
             rootfn     = options['rootfn']
             nr_rootfns = options['nr_rootfns']
 
@@ -726,9 +738,11 @@ cdef class CVODE:
             self.options['rootfn'] = rootfn
             self.options['nr_rootfns'] = nr_rootfns
 
+            # ...and to the auxiliary data object (holding runtime data)
             self.aux_data.rootfn = rootfn
             self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
 
+            # TODO: Shouldn't be the rootn in the cvode obj unset first?
             flag = CVodeRootInit(cv_mem, nr_rootfns, _rootfn)
 
             if flag == CV_SUCCESS:
@@ -739,7 +753,7 @@ cdef class CVODE:
             elif flag == CV_MEM_FAIL:
                 raise MemoryError('CVRootInit: Memory allocation error')
 
-        # Set tolerances
+        # Set atol and rtol tolerances
         cdef N_Vector atol
         cdef np.ndarray[DTYPE_t, ndim=1] np_atol
 
@@ -802,6 +816,12 @@ cdef class CVODE:
                                      'current value.')
 
     def init_step(self, double t0, object y0):
+        """
+        Initialize the solver and all the internal variables. This assumes
+        the call to 'set_options()' to be done and hence all the information
+        for correct solver initialization to be available.
+        Note: some options can be re-set also at runtime. See 'reinit_IC()'
+        """
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         np_y0 = np.asarray(y0)
 
@@ -848,6 +868,7 @@ cdef class CVODE:
             N_VDestroy(self.y)
             N_VDestroy(self.yp)
 
+        # Initialize y0, y, yp
         if self.parallel_implementation:
             raise NotImplemented
         else:
@@ -883,7 +904,7 @@ cdef class CVODE:
 
         self.N = N
 
-        # auxiliary variables
+        # Initialize auxiliary variables
         self.aux_data = CV_data(N)
         self.aux_data.parallel_implementation = self.parallel_implementation
 
@@ -929,6 +950,7 @@ cdef class CVODE:
 
         self.aux_data.user_data = opts['user_data']
 
+        # As cv_mem is now initialized, set also options changeable at runtime
         self._set_runtime_changeable_options(opts, supress_supported_check=True)
 
         # As user data we pass the CV_data object
@@ -1155,6 +1177,7 @@ cdef class CVODE:
                     print('Unhandled flag:', flag,
                           '\nComputation stopped... ')
 
+                # return values computed so far
                 t_retn  = t_retn[0:idx]
                 y_retn  = y_retn[0:idx, :]
 
