@@ -71,6 +71,12 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
     cdef int with_userdata
     cpdef set_jac_times_vecfn(self, object jac_times_vecfn)
 
+cdef class CV_InterruptFunction:
+    cpdef object _fn
+    cpdef set_externalfn(self, object fn)
+    cpdef int evaluate(self, int flag, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y,
+                       object userdata = *)
+
 
 cdef class CV_data:
     cdef np.ndarray yy_tmp, yp_tmp, jac_tmp, g_tmp, r_tmp, z_tmp

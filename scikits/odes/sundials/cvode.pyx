@@ -434,6 +434,29 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
 
     return 0
 
+def CV_defaultfn(*arg):
+    return 0
+
+# Interrupt function - handles Root and TStop events
+cdef class CV_InterruptFunction:
+    """
+    Handles TStop and/or TRoot events. This class must either be subclassed
+    (redefined the evaluate() method) or the set_externalfn() method must be
+    called.
+    """
+    def __cinit__(self, fn=CV_defaultfn):
+        self.set_externalfn(fn)
+    cpdef set_externalfn(self, object fn):
+        """ Set external handler of this function. """
+        self._fn = fn
+    cpdef int evaluate(self, int flag,
+                       DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       object userdata = None):
+        """
+        By default we call the internal fn. Otherwise it should be redefined.
+        """
+        return self._fn(flag, t, y, userdata)
 
 # Auxiliary data carrying runtime vales for the CVODE solver
 cdef class CV_data:
@@ -488,7 +511,8 @@ cdef class CVODE:
             'jacfn': None,
             'prec_setupfn': None,
             'prec_solvefn': None,
-            'jac_times_vecfn': None
+            'jac_times_vecfn': None,
+            'interruptfn': None
             }
 
         self.verbosity = 1
@@ -671,6 +695,21 @@ cdef class CVODE:
                     This function takes as input arguments the vector v,
                     result vector Jv, current time t, current value of y,
                     and optional userdata.
+            'interruptfn':
+                Values: function with signature:
+                    (outflag) = interrupt_fn(inflag, t, y, user_data)
+                Description:
+                    If this function is supplied, it handles TStop and Root
+                    events. Depending on the 'outflag' it may either stop
+                    or continue further computation.
+
+                    Input values: inflag: 1 = TStop event
+                                          2 = Root event
+                                  t:      Time at which event occured
+                                  y:      Value at the time of the event
+                    Output values: outflag: 0 - Continue computation
+                                            1 - Stop computation and return
+                                                computed values.
             'bdf_stability_detection':
                 default = False, only used if lmm_type == 'bdf
             'max_conv_fails':
@@ -814,6 +853,16 @@ cdef class CVODE:
                 if flag == CV_ILL_INPUT:
                     raise ValueError('IDASetStopTime::Stop value is beyond '
                                      'current value.')
+
+        # Set TStop/Root interrupt handler
+        if ('interruptfn' in options) and (options['interruptfn'] is not None):
+
+            fn     = options['interruptfn']
+
+            if not isinstance(fn, CV_InterruptFunction):
+                fn = CV_InterruptFunction(fn)
+
+            self.options['interruptfn'] = fn
 
     def init_step(self, double t0, object y0):
         """
@@ -1136,8 +1185,8 @@ cdef class CVODE:
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                  np.ndarray[DTYPE_t, ndim=1] y0):
 
-        cdef np.ndarray[DTYPE_t, ndim=1] t_retn
-        cdef np.ndarray[DTYPE_t, ndim=2] y_retn
+        cdef np.ndarray[DTYPE_t, ndim=1] t_retn, t_interr
+        cdef np.ndarray[DTYPE_t, ndim=2] y_retn, y_interr
         t_retn  = np.empty(np.shape(tspan), float)
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
 
@@ -1147,35 +1196,93 @@ cdef class CVODE:
         y_retn[0, :] = y0
 
         cdef np.ndarray[DTYPE_t, ndim=1] y_last
-        cdef unsigned int idx
         cdef DTYPE_t t
         cdef int flag
         cdef void *cv_mem = self._cv_mem
         cdef realtype t_out
         cdef N_Vector y  = self.y
+        cdef CV_InterruptFunction interruptfn = self.options['interruptfn']
+        cdef dict user_data = self.options['user_data']
 
         y_last   = np.empty(np.shape(y0), float)
 
-        for idx in np.arange(np.alen(tspan))[1:]:
-            t = tspan[idx]
+        cdef int last_idx = np.alen(tspan)
+        cdef unsigned int idx = 1 # idx=0 == IC
+        cdef unsigned int idx_interr = 0, len_interr = last_idx
+
+        t_interr = np.empty((len_interr, ), float)
+        y_interr = np.empty((len_interr, np.alen(y0)), float)
+
+        t = tspan[idx]
+
+        while True:
 
             flag = CVode(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
 
             nv_s2ndarray(y,  y_last)
 
-            if flag != CV_SUCCESS:
-                # return values computed so far
-                t_retn  = t_retn[0:idx]
-                y_retn  = y_retn[0:idx, :]
+            if (flag == CV_TSTOP_RETURN) or (flag == CV_ROOT_RETURN):
 
-                return flag, t_retn, y_retn, t_out, y_last
+                # If the handler is not defined...
+                if interruptfn is None:
+                    # ...print info and stop
+                    if self.verbosity > 1:
+                        if flag == CV_TSTOP_RETURN:
+                            print('Stop time reached. Stopping computation...')
+                        else:
+                            print('Found root. Stopping computation...')
+                else:
+                        # Resize the interr(uption) arrays if needed...
+                    if (idx_interr == len_interr):
+                        len_interr += 10
+                        t_interr.resize((len_interr, 1))
+                        y_interr.resize((len_interr, np.alen(y0)))
 
-            t_retn[idx]    = t_out
-            y_retn[idx, :] = y_last
+                    # ...store the current interruption point...
+                    t_interr[idx_interr]    = t_out
+                    y_interr[idx_interr, :] = y_last
+                    idx_interr += 1
+
+                    # ...and continue computation if interruptfn returns 0
+                    if not interruptfn.evaluate(flag, t_out, y_last, user_data):
+                        continue
+
+            elif flag == CV_SUCCESS:
+                t_retn[idx]    = t_out
+                y_retn[idx, :] = y_last
+
+                idx = idx + 1
+
+                # Iterate until we reach the end of tspan
+                if idx < last_idx:
+                    t = tspan[idx]
+
+                    continue
+
+            elif flag < 0:
+                print('Error occured. See returned flag '
+                      'variable and CVode documentation.')
+            else:
+                print('Unhandled flag:', flag,
+                      '\nComputation stopped... ')
+
+            # Return values computed so far
+            t_retn  = t_retn[0:idx]
+            y_retn  = y_retn[0:idx, :]
+
+            # Return the correct interruption points
+            if idx_interr == 0:
+                y_interr = None
+                t_interr = None
+            elif idx_interr == 1:
+                return flag, t_retn, y_retn, t_interr[0], y_interr[0, :]
+            else:
+                t_interr = t_interr[:idx_interr]
+                y_interr = y_interr[:idx_interr, :]
 
             PyErr_CheckSignals()
 
-        return flag, t_retn, y_retn, None, None
+            return (flag, t_retn, y_retn, t_interr, y_interr)
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
         """
