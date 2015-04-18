@@ -710,20 +710,21 @@ cdef class CVODE:
         # Root function
         if ('rootfn' in options) and (options['rootfn'] is not None):
             # TODO: Unsetting the rootfn?
-            rootfn = options['rootfn']
-            if rootfn is not None:
-                self.options['rootfn'] = rootfn
 
-                nr_rootfns = options['nr_rootfns']
-                self.options['nr_rootfns'] = nr_rootfns
+            rootfn     = options['rootfn']
+            nr_rootfns = options['nr_rootfns']
+
             if nr_rootfns is None:
                 raise ValueError('Number of root-ing functions ''nr_rootfns'' '
                                  'must be specified.')
+
             if not isinstance(rootfn, CV_RootFunction):
                 tmpfun = CV_WrapRootFunction()
                 tmpfun.set_rootfn(rootfn)
                 rootfn = tmpfun
-                self.opts['rootfn'] = tmpfun
+
+            self.options['rootfn'] = rootfn
+            self.options['nr_rootfns'] = nr_rootfns
 
             self.aux_data.rootfn = rootfn
             self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
