@@ -19,14 +19,14 @@ where::
 class ode
 ---------
 
-A generic interface class to ordinary differential equation solvers. 
+A generic interface class to ordinary differential equation solvers.
 It has the following methods::
 
     integrator = ode(integrator_name, rhsfn, **options)
     integrator.set_options(options)
     result = integrator.solve(times, init_val_y, user_data)
 
-Alternatively, an init_step, and step method can be used to iterate over a 
+Alternatively, an init_step, and step method can be used to iterate over a
 solution.
 
 For ode rhsfn is required, this is the right-hand-side equations evaluator
@@ -43,15 +43,15 @@ Available integrators
 ---------------------
 cvode
 
-Note: 
+Note:
 -----
-Consider also the solvers from scipy.integrate, specifically odeint and 
-scipy.integrate.ode. 
+Consider also the solvers from scipy.integrate, specifically odeint and
+scipy.integrate.ode.
 At the moment of writing, these methods of scipy are based on the original
-lsoda/e and vode fortran solvers. cvode is the successor (and improvement) of 
+lsoda/e and vode fortran solvers. cvode is the successor (and improvement) of
 those, with a last release in sundials 2.4.0
 
-""" 
+"""
 
 __doc__ += integrator_info
 
@@ -65,12 +65,12 @@ from numpy import isscalar, array, asarray
 
 class OdeBase(object):
     """ the interface which ODE solvers must implement"""
-    
+
     integrator_classes = []
 
     def __init__(self, Rfn, **options):
-        """ 
-        Initialize the ODE Solver and it's default values 
+        """
+        Initialize the ODE Solver and it's default values
 
         Input:
             Rfn     - right-hand-side function
@@ -81,7 +81,7 @@ class OdeBase(object):
     def set_options(self, **options):
         """
         Set specific options for the solver.
-        
+
         Calling set_options a second time, normally resets the solver.
         """
         raise NotImplementedError('all ODE solvers must implement this')
@@ -89,12 +89,12 @@ class OdeBase(object):
     def solve(self, tspan, y0):
         """
         Runs the solver.
-        
+
         Input:
             tspan - an list/array of times at which the computed value will be
                     returned. Must contain the start time.
             y0    - list/numpy array of initial values
-            
+
         Return values:
             flag   - indicating return status of the solver
             t      - numpy array of times at which the computations were successful
@@ -104,7 +104,7 @@ class OdeBase(object):
             y_err  - numpy array of values corresponding to time t_err
         """
         raise NotImplementedError('all ODE solvers must implement this')
-    
+
     def init_step(self, t0, y0):
         """
         Initializes the solver and allocates memory.
@@ -112,7 +112,7 @@ class OdeBase(object):
         Input:
             t0     - initial time
             y0     - initial condition for y (can be list or numpy array)
-        
+
         Return value:
             t      - initial time at which solver will start.
         """
@@ -123,7 +123,7 @@ class OdeBase(object):
         Method for calling successive next step of the ODE solver to allow
         more precise control over the solver. The 'init_step' method has to
         be called before the 'step' method.
-        
+
         Input:
             t - if t>0.0 then integration is performed until this time
                          and results at this time are returned in y_retn
@@ -153,10 +153,10 @@ scipy.integrate.ode : class around vode ODE integrator
 
 Examples
 --------
-ODE arise in many applications of dynamical systems, as well as in 
-discritisations of PDE (eg moving mesh combined with method of 
-lines). 
-As an easy example, consider the simple oscillator, 
+ODE arise in many applications of dynamical systems, as well as in
+discritisations of PDE (eg moving mesh combined with method of
+lines).
+As an easy example, consider the simple oscillator,
 
 >>> from __future__ import print_function
 >>> from numpy import cos, sin, sqrt
@@ -167,7 +167,7 @@ As an easy example, consider the simple oscillator,
     # we create rhs equations for the problem
       result[0] = - k/m*x[0]
       result[1] = x[1]
-    
+
 >>> from scikits.odes import ode
 >>> solver = ode('cvode', rhseqn)
 >>> result = solver.solve([0., 1., 2.], initx)
@@ -187,23 +187,23 @@ As an easy example, consider the simple oscillator,
 
         Parameters
         ----------
-        integrator_name : name of the integrator solver to use. Currently you 
+        integrator_name : name of the integrator solver to use. Currently you
             can choose cvode.
         eqsrhs : right-hand-side function
             right-hand-side of a first order ode. The signature of this
-            function depends on the solver used, see the solver documentation 
+            function depends on the solver used, see the solver documentation
             for details.
             Generally however, you can assume the following signature to work:
                         eqsrhs(x, y, return_rhs)
-            with 
+            with
             x       : independent variable, eg the time, float
             y       : array of n unknowns in x
-            return_rhs: array that must be updated with the value of the 
-                      right-hand-side, so f(t,y).  The dimension is equal to 
+            return_rhs: array that must be updated with the value of the
+                      right-hand-side, so f(t,y).  The dimension is equal to
                       dim(y)
-            return value: An integer, 0 for success. It is not guaranteed that 
+            return value: An integer, 0 for success. It is not guaranteed that
                       a solver takes this status into account
-        
+
             Some solvers will allow userdata to be passed to eqsrhs, or optional
             formats that are more performant.
         options :  additional options of the solver, see set_options method of
@@ -221,7 +221,7 @@ As an easy example, consider the simple oscillator,
         """
         Set specific options for the solver.
         See the solver documentation for details.
-        
+
         Calling set_options a second time, normally resets the solver.
         """
         return self._integrator.set_options(**options)
@@ -229,12 +229,12 @@ As an easy example, consider the simple oscillator,
     def solve(self, tspan, y0):
         """
         Runs the solver.
-        
+
         Input:
             tspan - an list/array of times at which the computed value will be
                     returned. Must contain the start time.
             y0    - list/numpy array of initial values
-            
+
         Return values:
             flag   - indicating return status of the solver
             t      - numpy array of times at which the computations were successful
@@ -247,14 +247,14 @@ As an easy example, consider the simple oscillator,
 
     def init_step(self, t0, y0):
         """
-        Initializes the solver and allocates memory. It is not needed to 
+        Initializes the solver and allocates memory. It is not needed to
         call this method if solve is used to compute the solution. In the case
         step is used, init_step must be called first.
 
         Input:
             t0     - initial time
             y0     - initial condition for y (can be list or numpy array)
-        
+
         Return value:
             t      - initial time at which solver will start.
         """
@@ -265,7 +265,7 @@ As an easy example, consider the simple oscillator,
         Method for calling successive next step of the ODE solver to allow
         more precise control over the solver. The 'init_step' method has to
         be called before the 'step' method.
-        
+
         Input:
             t - if t>0.0 then integration is performed until this time
                          and results at this time are returned in y_retn
@@ -292,7 +292,7 @@ As an easy example, consider the simple oscillator,
 
 
 integrator_info_cvode = """
-CVODE solver from the SUNDIALS package. See info in 
+CVODE solver from the SUNDIALS package. See info in
 scikits.odes.sundials.cvode.CVODE class
 """
 __doc__ += integrator_info_cvode

@@ -398,8 +398,8 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
             self._jac_times_vecfn(v, Jv, t, y)
         return 0
 
-cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y, N_Vector fy,
-		void *user_data, N_Vector tmp):
+cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
+                          N_Vector fy, void *user_data, N_Vector tmp):
     """ function with the signature of CVSpilsJacTimesVecFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, v_tmp, Jv_tmp
 
@@ -851,8 +851,8 @@ cdef class CVODE:
         if self.parallel_implementation:
             raise NotImplemented
         else:
-            self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
-            self.y   = N_VClone(self.y0)
+            self.y0 = N_VMake_Serial(N, <realtype *>y0.data)
+            self.y  = N_VClone(self.y0)
             self.yp = N_VNew_Serial(N)
 
         cdef int flag
