@@ -697,7 +697,8 @@ cdef class CVODE:
         # be supressed by 'supress_supported_check = True'
         if not supress_supported_check:
             for opt in options.keys():
-                if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns']:
+                if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns',
+                               'verbosity']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
 
         # Verbosity level
