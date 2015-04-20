@@ -1224,15 +1224,8 @@ cdef class CVODE:
             if (flag == CV_TSTOP_RETURN) or (flag == CV_ROOT_RETURN):
 
                 # If the handler is not defined...
-                if interruptfn is None:
-                    # ...print info and stop
-                    if self.verbosity > 1:
-                        if flag == CV_TSTOP_RETURN:
-                            print('Stop time reached. Stopping computation...')
-                        else:
-                            print('Found root. Stopping computation...')
-                else:
-                        # Resize the interr(uption) arrays if needed...
+                if interruptfn is not None:
+                    # Resize the interr(uption) arrays if needed...
                     if (idx_interr == len_interr):
                         len_interr += 10
                         t_interr.resize((len_interr, 1))
@@ -1258,13 +1251,6 @@ cdef class CVODE:
                     t = tspan[idx]
 
                     continue
-
-            elif flag < 0:
-                print('Error occured. See returned flag '
-                      'variable and CVode documentation.')
-            else:
-                print('Unhandled flag:', flag,
-                      '\nComputation stopped... ')
 
             # Return values computed so far
             t_retn  = t_retn[0:idx]
