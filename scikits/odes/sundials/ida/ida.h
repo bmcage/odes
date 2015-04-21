@@ -1,15 +1,20 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.14 $
- * $Date: 2010/12/01 22:14:08 $
+ * $Revision: 4378 $
+ * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Allan G. Taylor, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California  
- * Produced at the Lawrence Livermore National Laboratory
- * All rights reserved
- * For details, see the LICENSE file
+ * LLNS Copyright Start
+ * Copyright (c) 2014, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
+ * Produced at the Lawrence Livermore National Laboratory.
+ * All rights reserved.
+ * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the header (include) file for the main IDA solver.
  * -----------------------------------------------------------------
@@ -27,13 +32,12 @@
 #ifndef _IDA_H
 #define _IDA_H
 
+#include <stdio.h>
+#include <sundials/sundials_nvector.h>
+
 #ifdef __cplusplus     /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-
-#include <stdio.h>
-
-#include <sundials/sundials_nvector.h>
 
 /*
  * =================================================================
@@ -107,7 +111,7 @@ extern "C" {
  * respect to t) of the yy vector, yp.  It stores the result of   
  * F(t,y,y') in the vector rr. The yy, yp, and rr arguments are of 
  * type N_Vector. The user_data parameter is the pointer user_data 
- * passed by the user to the IDASetRdata routine. This user-supplied 
+ * passed by the user to the IDASetUserData routine. This user-supplied 
  * pointer is passed to the user's res function every time it is called, 
  * to provide access in res to user data.                                    
  *                                                                
@@ -133,7 +137,7 @@ typedef int (*IDAResFn)(realtype tt, N_Vector yy, N_Vector yp,
  * It stores the nrtfn values g_i(t,y,y') in the realtype array gout.
  * (Allocation of memory for gout is handled within IDA.)
  * The user_data parameter is the same as that passed by the user
- * to the IDASetRdata routine.  This user-supplied pointer is
+ * to the IDASetUserData routine.  This user-supplied pointer is
  * passed to the user's g function every time it is called.
  *
  * An IDARootFn should return 0 if successful or a non-zero value
@@ -160,7 +164,7 @@ typedef int (*IDARootFn)(realtype t, N_Vector y, N_Vector yp,
  *   ewt_i = 1 / (reltol * |y_i| + abstol_i)
  *
  * The user_data parameter is the same as that passed by the user
- * to the IDASetRdata routine.  This user-supplied pointer is
+ * to the IDASetUserData routine.  This user-supplied pointer is
  * passed to the user's e function every time it is called.
  * An IDAEwtFn e must return 0 if the error weight vector has been
  * successfuly set and a non-zero value otherwise.
@@ -177,7 +181,7 @@ typedef int (*IDAEwtFn)(N_Vector y, N_Vector ewt, void *user_data);
  * IDAErrHandlerFn.
  * The function eh takes as input the error code, the name of the
  * module reporting the error, the error message, and a pointer to
- * user data, the same as that passed to IDASetRdata.
+ * user data, the same as that passed to IDASetUserData.
  * 
  * All error codes are negative, except IDA_WARNING which indicates 
  * a warning (the solver continues).

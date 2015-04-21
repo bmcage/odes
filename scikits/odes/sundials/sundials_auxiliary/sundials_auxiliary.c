@@ -1,6 +1,7 @@
 #include <sundials/sundials_types.h>
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_nvector.h>
+#include <sundials/sundials_spfgmr.h>
 #include <nvector/nvector_serial.h>
 
 /* N_Vector content access functions */
@@ -52,15 +53,15 @@ inline int get_band_ml(DlsMat A) {
 inline realtype* get_dense_col(DlsMat A, int j) {
     return (A->cols)[j];
 }
-    
+
 inline void set_dense_col(DlsMat A, int j, realtype *data) {
     (A->cols)[j] = data;
 }
-    
+
 inline realtype get_dense_element(DlsMat A, int i, int j) {
     return (A->cols)[j][i];
 }
-    
+
 inline void set_dense_element(DlsMat A, int i, int j, realtype aij) {
     (A->cols)[j][i] = aij;
 }
@@ -69,7 +70,7 @@ inline void set_dense_element(DlsMat A, int i, int j, realtype aij) {
 inline DlsMat_col get_band_col(DlsMat A, int j) {
     return ((A->cols)[j] + (A->s_mu));
 }
-    
+
 inline void set_band_col(DlsMat A, int j, realtype *data) {
     ((A->cols)[j]) = data;
 }
@@ -77,15 +78,17 @@ inline void set_band_col(DlsMat A, int j, realtype *data) {
 inline realtype get_band_col_elem(DlsMat_col col_j, int i, int j) {
     return col_j[(i)-(j)];
 }
-    
+
 inline void set_band_col_elem(DlsMat_col col_j, int i, int j, realtype aij) {
     col_j[(i)-(j)] = aij;
 }
 inline realtype get_band_element(DlsMat A, int i, int j) {
     return ((A->cols)[j][(i)-(j)+(A->s_mu)]);
 }
-    
+
 inline void set_band_element(DlsMat A, int i, int j, realtype aij) {
     (A->cols)[j][(i)-(j)+(A->s_mu)] = aij;
 }
 
+/* Spfgmr accessor */
+inline N_Vector spfgmr_vtemp(SpfgmrMem mem) { return mem->vtemp; }

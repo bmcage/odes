@@ -1,14 +1,19 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2010/12/01 22:10:38 $
+ * $Revision: 4378 $
+ * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2014, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the header file for the CVBANDPRE module, which
  * provides a banded difference quotient Jacobian-based
@@ -32,7 +37,7 @@
  *
  * Usage:
  *   The following is a summary of the usage of this module.
- *   Details of the calls to CVodeCreate, CVodeMalloc, CVSp*,
+ *   Details of the calls to CVodeCreate, CVodeInit, CVSp*,
  *   and CVode are available in the User Guide.
  *   To use these routines, the sequence of calls in the user
  *   main program should be as follows:
@@ -43,7 +48,7 @@
  *   Set y0
  *   ...
  *   cvode_mem = CVodeCreate(...);
- *   ier = CVodeMalloc(...);
+ *   ier = CVodeInit(...);
  *   ...
  *   flag = CVSptfqmr(cvode_mem, pretype, maxl);
  *     -or-
@@ -71,11 +76,11 @@
 #ifndef _CVBANDPRE_H
 #define _CVBANDPRE_H
 
+#include <sundials/sundials_nvector.h>
+
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-
-#include <sundials/sundials_nvector.h>
 
 
 /*

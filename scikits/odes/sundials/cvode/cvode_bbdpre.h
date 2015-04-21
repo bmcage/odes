@@ -1,15 +1,20 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2010/12/01 22:10:38 $
+ * $Revision: 4378 $
+ * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Michael Wittman, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2014, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the header file for the CVBBDPRE module, for a
  * band-block-diagonal preconditioner, i.e. a block-diagonal
@@ -40,7 +45,7 @@
  *   Set y0
  *   ...
  *   cvode_mem = CVodeCreate(...);
- *   ier = CVodeMalloc(...);
+ *   ier = CVodeInit(...);
  *   ...
  *   flag = CVSpgmr(cvode_mem, pretype, maxl);
  *      -or-
@@ -102,11 +107,11 @@
 #ifndef _CVBBDPRE_H
 #define _CVBBDPRE_H
 
+#include <sundials/sundials_nvector.h>
+
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-
-#include <sundials/sundials_nvector.h>
 
 /*
  * -----------------------------------------------------------------

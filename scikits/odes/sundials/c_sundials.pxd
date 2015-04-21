@@ -232,6 +232,9 @@ cdef extern from "sundials/sundials_band.h":
     void bandScale(realtype c, realtype **a, long int n, long int mu,
                    long int ml, long int smu)
     void bandAddIdentity(realtype **a, long int n, long int smu)
+    void BandMatvec(DlsMat A, realtype *x, realtype *y)
+    void bandMatvec(realtype **a, realtype *x, realtype *y, long int n,
+                    long int mu, long int ml, long int smu)
 
 cdef extern from "sundials/sundials_dense.h":
     long int DenseGETRF(DlsMat A, long int *p)
@@ -258,6 +261,8 @@ cdef extern from "sundials/sundials_dense.h":
     void DenseScale(realtype c, DlsMat A)
     void denseScale(realtype c, realtype **a, long int m, long int n)
     void denseAddIdentity(realtype **a, long int n)
+    void DenseMatvec(DlsMat A, realtype *x, realtype *y)
+    void denseMatvec(realtype **a, realtype *x, realtype *y, long int m, long int n)
 
 cdef extern from "sundials/sundials_iterative.h":
     enum:
@@ -277,6 +282,66 @@ cdef extern from "sundials/sundials_iterative.h":
                     realtype *new_vk_norm, N_Vector temp, realtype *s)
     int QRfact(int n, realtype **h, realtype *q, int job)
     int QRsol(int n, realtype **h, realtype *q, realtype *b)
+
+# We don't support KLU for now
+#cdef extern from "sundials/sundials_klu_impl.h":
+#    cdef struct KLUDataRec:
+#        klu_symbolic *s_Symbolic;
+#        klu_numeric  *s_Numeric;
+#        klu_common    s_Common;
+#        int           s_ordering;
+#    ctypedef KLUDataRec *KLUData
+
+cdef extern from "sundials/sundials_pcg.h":
+    ctypedef struct _PcgMemRec:
+        int l_max
+        N_Vector r
+        N_Vector p
+        N_Vector z
+        N_Vector Ap
+    ctypedef _PcgMemRec PcgMemRec
+    ctypedef _PcgMemRec *PcgMem
+
+    PcgMem PcgMalloc(int l_max, N_Vector vec_tmpl)
+    int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b, int pretype,
+                 realtype delta, void *P_data, N_Vector w, ATimesFn atimes,
+                 PSolveFn psolve, realtype *res_norm, int *nli, int *nps);
+    void PcgFree(PcgMem mem)
+
+    enum: PCG_SUCCESS           #  0  /* PCG algorithm converged          */
+    enum: PCG_RES_REDUCED       #  1  /* PCG did NOT converge, but the
+                                #        residual was reduced             */
+    enum: PCG_CONV_FAIL         #  2  /* PCG algorithm failed to converge */
+    enum: PCG_PSOLVE_FAIL_REC   #  3  /* psolve failed recoverably        */
+    enum: PCG_ATIMES_FAIL_REC   #  4  /* atimes failed recoverably        */
+    enum: PCG_PSET_FAIL_REC     #  5  /* pset faild recoverably           */
+
+    enum: PCG_MEM_NULL          # -1  /* mem argument is NULL             */
+    enum: PCG_ATIMES_FAIL_UNREC # -2  /* atimes returned failure flag     */
+    enum: PCG_PSOLVE_FAIL_UNREC # -3  /* psolve failed unrecoverably      */
+    enum: PCG_PSET_FAIL_UNREC   # -4  /* pset failed unrecoverably        */
+
+cdef extern from "sundials/sundials_sparse.h":
+   ctypedef struct _SlsMat:
+       int M
+       int N
+       int NNZ
+       realtype *data
+       int *rowvals
+       int *colptrs
+   ctypedef _SlsMat *SlsMat
+
+   SlsMat NewSparseMat(int M, int N, int NNZ)
+   SlsMat SlsConvertDls(DlsMat A)
+   void DestroySparseMat(SlsMat A)
+   void SlsSetToZero(SlsMat A)
+   void CopySparseMat(SlsMat A, SlsMat B)
+   void ScaleSparseMat(realtype b, SlsMat A)
+   void AddIdentitySparseMat(SlsMat A)
+   int SlsAddMat(SlsMat A, SlsMat B)
+   void ReallocSparseMat(SlsMat A)
+   int SlsMatvec(SlsMat A, realtype *x, realtype *y)
+   void PrintSparseMat(SlsMat A)
 
 cdef extern from "sundials/sundials_spgmr.h":
     cdef struct _SpgmrMemRec:
@@ -348,6 +413,43 @@ cdef extern from "sundials/sundials_spbcgs.h":
 
     void SpbcgFree(SpbcgMem mem)
 
+cdef extern from "sundials/sundials_spfgmr.h":
+    ctypedef struct _SpfgmrMemRec:
+        int l_max
+        N_Vector *V
+        N_Vector *Z
+        realtype **Hes
+        realtype *givens
+        N_Vector xcor
+        realtype *yg
+        N_Vector vtemp
+    ctypedef _SpfgmrMemRec SpfgmrMemRec
+    ctypedef _SpfgmrMemRec *SpfgmrMem
+
+    SpfgmrMem SpfgmrMalloc(int l_max, N_Vector vec_tmpl)
+    int SpfgmrSolve(SpfgmrMem mem, void *A_data, N_Vector x, N_Vector b,
+                    int pretype, int gstype, realtype delta, int max_restarts,
+                    int maxit, void *P_data, N_Vector s1, N_Vector s2,
+                    ATimesFn atimes, PSolveFn psolve, realtype *res_norm,
+                    int *nli, int *nps);
+    void SpfgmrFree(SpfgmrMem mem);
+
+    enum: SPFGMR_SUCCESS           #  0  /* Converged                     */
+    enum: SPFGMR_RES_REDUCED       #  1  /* Did not converge, but reduced
+                                   #        norm of residual              */
+    enum: SPFGMR_CONV_FAIL         # 2  /* Failed to converge            */
+    enum: SPFGMR_QRFACT_FAIL       # 3  /* QRfact found singular matrix  */
+    enum: SPFGMR_PSOLVE_FAIL_REC   # 4  /* psolve failed recoverably     */
+    enum: SPFGMR_ATIMES_FAIL_REC   # 5  /* atimes failed recoverably     */
+    enum: SPFGMR_PSET_FAIL_REC     # 6  /* pset faild recoverably        */
+
+    enum: SPFGMR_MEM_NULL          # -1  /* mem argument is NULL          */
+    enum: SPFGMR_ATIMES_FAIL_UNREC # -2  /* atimes returned failure flag  */
+    enum: SPFGMR_PSOLVE_FAIL_UNREC # -3  /* psolve failed unrecoverably   */
+    enum: SPFGMR_GS_FAIL           # -4  /* Gram-Schmidt routine faiuled  */
+    enum: SPFGMR_QRSOL_FAIL        # -5  /* QRsol found singular R        */
+    enum: SPFGMR_PSET_FAIL_UNREC   # -6  /* pset failed unrecoverably     */
+
 cdef extern from "sundials/sundials_sptfqmr.h":
     cdef struct SptfqmrMemRec:
         int l_max
@@ -383,3 +485,17 @@ cdef extern from "sundials/sundials_sptfqmr.h":
     enum: SPTFQMR_PSET_FAIL_UNREC    #/* pset failed unrecoverably            */
 
     void SptfqmrFree(SptfqmrMem mem)
+
+# We don't use SuperLUMT
+#cdef extern from "sundials/sundials_superlumt_impl.h":
+#    ctypedef struct SLUMTDataRec:
+#        SuperMatrix *s_A, *s_AC, *s_L, *s_U, *s_B
+#        Gstat_t *Gstat
+#        int *perm_r, *perm_c
+#        int num_threads
+#        double diag_pivot_thresh
+#        superlumt_options_t *superlumt_options
+#
+#        int s_ordering
+#
+#    ctypedef SLUMTDataRec *SLUMTData
