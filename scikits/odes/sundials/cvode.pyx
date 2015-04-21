@@ -1164,19 +1164,6 @@ cdef class CVODE:
             nv_s2ndarray(y,  y_last)
 
             if flag != CV_SUCCESS:
-                if flag == CV_TSTOP_RETURN:
-                    if self.verbosity > 1:
-                        print('Stop time reached... stopping computation...')
-                elif flag == CV_ROOT_RETURN:
-                    if self.verbosity > 1:
-                        print('Found root... stopping computation...')
-                elif flag < 0:
-                    print('Error occured. See returned flag '
-                          'variable and CVode documentation.')
-                else:
-                    print('Unhandled flag:', flag,
-                          '\nComputation stopped... ')
-
                 # return values computed so far
                 t_retn  = t_retn[0:idx]
                 y_retn  = y_retn[0:idx, :]
