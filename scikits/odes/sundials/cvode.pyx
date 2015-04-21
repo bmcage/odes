@@ -180,7 +180,7 @@ cdef int _jacdense(long int Neq, realtype tt,
         raise NotImplemented
     else:
         yy_tmp = aux_data.yy_tmp
-        if aux_data.jac_tmp == None:
+        if aux_data.jac_tmp is None:
             N = np.alen(yy_tmp)
             aux_data.jac_tmp = np.empty((N,N), float)
         jac_tmp = aux_data.jac_tmp
@@ -328,11 +328,11 @@ cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vect
     else:
         yy_tmp = aux_data.yy_tmp
 
-        if aux_data.r_tmp == None:
+        if aux_data.r_tmp is None:
             N = np.alen(yy_tmp)
             aux_data.r_tmp = np.empty(N, float)
 
-        if aux_data.z_tmp == None:
+        if aux_data.z_tmp is None:
             N = np.alen(yy_tmp)
             aux_data.z_tmp = np.empty(N, float)
 
@@ -411,11 +411,11 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
     else:
         y_tmp = aux_data.yy_tmp
 
-        if aux_data.r_tmp == None:
+        if aux_data.r_tmp is None:
             N = np.alen(y_tmp)
             aux_data.r_tmp = np.empty(N, float)
 
-        if aux_data.z_tmp == None:
+        if aux_data.z_tmp is None:
             N = np.alen(y_tmp)
             aux_data.z_tmp = np.empty(N, float)
 
@@ -857,7 +857,7 @@ cdef class CVODE:
         cdef long int N
         N = <long int> np.alen(y0)
 
-        if opts['rfn'] == None:
+        if opts['rfn'] is None:
             raise ValueError('The right-hand-side function rfn not assigned '
                               'during ''set_options'' call !')
 
