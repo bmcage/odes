@@ -1221,26 +1221,7 @@ cdef class CVODE:
 
             nv_s2ndarray(y,  y_last)
 
-            if (flag == CV_TSTOP_RETURN) or (flag == CV_ROOT_RETURN):
-
-                # If the handler is not defined...
-                if interruptfn is not None:
-                    # Resize the interr(uption) arrays if needed...
-                    if (idx_interr == len_interr):
-                        len_interr += 10
-                        t_interr.resize((len_interr, 1))
-                        y_interr.resize((len_interr, np.alen(y0)))
-
-                    # ...store the current interruption point...
-                    t_interr[idx_interr]    = t_out
-                    y_interr[idx_interr, :] = y_last
-                    idx_interr += 1
-
-                    # ...and continue computation if interruptfn returns 0
-                    if not interruptfn.evaluate(flag, t_out, y_last, user_data):
-                        continue
-
-            elif flag == CV_SUCCESS:
+            if flag == CV_SUCCESS:
                 t_retn[idx]    = t_out
                 y_retn[idx, :] = y_last
 
@@ -1250,6 +1231,24 @@ cdef class CVODE:
                 if idx < last_idx:
                     t = tspan[idx]
 
+                    continue
+
+            elif ((flag == CV_TSTOP_RETURN) or (flag == CV_ROOT_RETURN)
+                  and interruptfn is not None):
+
+                # Resize the interr(uption) arrays if needed...
+                if (idx_interr == len_interr):
+                    len_interr += 10
+                    t_interr.resize((len_interr, 1))
+                    y_interr.resize((len_interr, np.alen(y0)))
+
+                # ...store the current interruption point...
+                t_interr[idx_interr]    = t_out
+                y_interr[idx_interr, :] = y_last
+                idx_interr += 1
+
+                # ...and continue computation if interruptfn returns 0
+                if not interruptfn.evaluate(flag, t_out, y_last, user_data):
                     continue
 
             # Return values computed so far
