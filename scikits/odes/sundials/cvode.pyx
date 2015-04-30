@@ -434,6 +434,52 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y, N_Vec
 
     return 0
 
+cdef class CV_ErrHandler:
+    cpdef evaluate(
+        self, int error_code, bytes module, bytes function, bytes msg,
+        object user_data = None
+    ):
+        """ format that error handling functions must match """
+        pass
+
+cdef class CV_WrapErrHandler(CV_ErrHandler):
+    cpdef set_err_handler(self, object err_handler):
+        """
+        set some (c/p)ython function as the error handler
+        """
+        self.with_userdata = 0
+        nrarg = len(inspect.getargspec(err_handler)[0])
+        if nrarg > 5:
+            #hopefully a class method, self gives 6 arg!
+            self.with_userdata = 1
+        elif nrarg == 5 and inspect.isfunction(err_handler):
+            self.with_userdata = 1
+        self._err_handler = err_handler
+
+    cpdef evaluate(
+        self, int error_code, bytes module, bytes function, bytes msg,
+        object user_data = None
+    ):
+        if self.with_userdata == 1:
+            self._err_handler(error_code, module, function, msg, user_data)
+        else:
+            self._err_handler(error_code, module, function, msg)
+
+cdef void _cv_err_handler_fn(
+    int error_code, const char *module, const char *function, char *msg,
+    void *eh_data
+):
+    """
+    function with the signature of CVErrHandlerFn, that calls python error
+    handler
+    """
+    err_data = <CV_ErrData> eh_data
+    err_data.err_handler.evaluate(
+        error_code, module, function, msg, err_data.user_data)
+
+cdef class CV_ErrData:
+    def __cinit__(self):
+        self.user_data = None
 
 cdef class CV_data:
     def __cinit__(self, N):
@@ -486,7 +532,8 @@ cdef class CVODE:
             'jacfn': None,
             'prec_setupfn': None,
             'prec_solvefn': None,
-            'jac_times_vecfn': None
+            'jac_times_vecfn': None,
+            'err_handler': None,
             }
 
         self.verbosity = 1
@@ -879,6 +926,26 @@ cdef class CVODE:
         elif flag == CV_NO_MALLOC:
             raise MemoryError('CVodeReInit: No memory allocated in CVInit.')
 
+        # Set err_handler
+        err_handler = opts.get('err_handler', None)
+        self.err_data = CV_ErrData()
+        if err_handler is not None:
+            if not isinstance(err_handler, CV_ErrHandler):
+                tmpfun = CV_WrapErrHandler()
+                tmpfun.set_err_handler(err_handler)
+                err_handler = tmpfun
+
+            self.err_data.err_handler = err_handler
+
+            flag = CVodeSetErrHandlerFn(
+                cv_mem, _cv_err_handler_fn, <void*> self.err_data)
+
+            if flag == CV_SUCCESS:
+                pass
+            elif flag == CV_MEM_FAIL:
+                raise MemoryError(
+                    'CVodeSetErrHandlerFn: Memory allocation error')
+
         self.N = N
 
         # auxiliary variables
@@ -926,6 +993,7 @@ cdef class CVODE:
         self.aux_data.jac_times_vecfn = jac_times_vecfn
 
         self.aux_data.user_data = opts['user_data']
+        self.err_data.user_data = opts['user_data']
 
         self._set_runtime_changeable_options(opts, supress_supported_check=True)
 
