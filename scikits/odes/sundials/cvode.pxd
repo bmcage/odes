@@ -71,6 +71,22 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
     cdef int with_userdata
     cpdef set_jac_times_vecfn(self, object jac_times_vecfn)
 
+cdef class CV_ErrHandler:
+    cpdef evaluate(self,
+                   int error_code,
+                   bytes module,
+                   bytes function,
+                   bytes msg,
+                   object user_data = *)
+
+cdef class CV_WrapErrHandler(CV_ErrHandler):
+    cpdef object _err_handler
+    cdef int with_userdata
+    cpdef set_err_handler(self, object err_handler)
+
+cdef class CV_ErrData:
+    cdef CV_ErrHandler err_handler
+    cdef object user_data
 
 cdef class CV_data:
     cdef np.ndarray yy_tmp, yp_tmp, jac_tmp, g_tmp, r_tmp, z_tmp
@@ -89,6 +105,7 @@ cdef class CVODE:
     cdef dict options
     cdef bint parallel_implementation, initialized
     cdef CV_data aux_data
+    cdef CV_ErrData err_data
 
     cdef long int N #problem size, i.e. len(y0) = N
     cdef N_Vector y0, y, yp # for 'step' method
