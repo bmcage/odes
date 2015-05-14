@@ -1,3 +1,4 @@
+from collections import namedtuple
 from cpython.exc cimport PyErr_CheckSignals
 import inspect
 
@@ -12,6 +13,13 @@ from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
 # TODO: linsolvers: check the output value for errors
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
+
+CVODE_Return = namedtuple(
+    "CVODE_Return", [
+        "flag", "flag_no", "values", "err_values", "root_values",
+        "tstop_values"
+    ]
+)
 
 # Right-hand side function
 cdef class CV_RhsFunction:
@@ -473,6 +481,34 @@ cdef class CV_data:
 
 cdef class CVODE:
 
+    RETURN_FLAGS = {
+        0 :  "SUCCESS",
+        1 :  "TSTOP_RETURN",        # Reached specified stopping point
+        2 :  "ROOT_RETURN",         # Found one or more roots
+        99 : "WARNING",             # Succeeded but something unusual happened
+        -1 : "TOO_MUCH_WORK",       # Could not reach endpoint
+        -2 : "TOO_MUCH_ACC",        # Could not satisfy accuracy
+        -3 : "ERR_FAILURE",         # Error test failures occurred too many times during one internal time step or minimum step size was reached.
+        -4 : "CONV_FAILURE",        # Convergence test failures occurred too many times during one internal time step or minimum step size was reached.
+        -5 : "LINIT_FAIL",          # The linear solver’s initialization function failed.
+        -6 : "LSETUP_FAIL",         # The linear solver’s setup function failed in an unrecoverable manner.
+        -7 : "LSOLVE_FAIL",         # The linear solver’s solve function failed in an unrecoverable manner.
+        -8 : "RHSFUNC_FAIL",        # The right-hand side function failed in an unrecoverable manner.
+        -9 : "FIRST_RHSFUNC_ERR",   # The right-hand side function failed at the first call.
+        -10 : "REPTD_RHSFUNC_ERR",  # The right-hand side function had repeated recoverable errors.
+        -11 : "UNREC_RHSFUNC_ERR",  # The right-hand side function had a recoverable error, but no recovery is possible.
+        -12 : "RTFUNC_FAIL",        # The rootfinding function failed in an unrecoverable manner.
+        -20 : "MEM_FAIL",           # A memory allocation failed.
+        -21 : "MEM_NULL",           # The cvode_mem argument was NULL.
+        -22 : "ILL_INPUT",          # One of the function inputs is illegal.
+        -23 : "NO_MALLOC",          # The cvode memory block was not allocated by a call to CVodeMalloc.
+        -24 : "BAD_K",              # The derivative order k is larger than the order used.
+        -25 : "BAD_T",              # The time t is outside the last step taken.
+        -26 : "BAD_DKY",            # The output derivative vector is NULL.
+        -27 : "TOO_CLOSE",          # The output and initial times are too close to each other.
+    }
+
+
     def __cinit__(self, Rfn, **options):
         """
         Initialize the CVODE Solver and it's default values
@@ -485,7 +521,6 @@ cdef class CVODE:
         """
 
         default_values = {
-            'verbosity': 1,
             'implementation': 'serial',
             'lmm_type': 'BDF',
             'iter_type': 'NEWTON',
@@ -515,24 +550,18 @@ cdef class CVODE:
             'interruptfn': None
             }
 
-        self.verbosity = 1
         self.options = default_values
         self.N       = -1
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
         self.initialized = False
+        self._old_api = True
 
     def set_options(self, **options):
         """
         Reads the options list and assigns values for the solver.
 
         All options list:
-            'verbosity':
-                Values: 0,1,2,...
-                Description:
-                    Set the level of verbosity. The higher number user, the
-                    more verbose the output will be. Default is 1.
-                Note: Changeable at runtime.
             'implementation':
                 Values: 'serial' (= default), 'parallel'
                 Description:
@@ -752,12 +781,6 @@ cdef class CVODE:
                                'verbosity']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
 
-        # Verbosity level
-        if ('verbosity' in options) and (options['verbosity'] is not None):
-            verbosity = options['verbosity']
-            self.options['verbosity'] = verbosity
-            self.verbosity = verbosity
-
         # Root function (rootfn and nr_rootfns)
         if ('rootfn' in options) and (options['rootfn'] is not None):
 
@@ -863,6 +886,8 @@ cdef class CVODE:
                 fn = CV_InterruptFunction(fn)
 
             self.options['interruptfn'] = fn
+
+            self._old_api = False
 
     def init_step(self, double t0, object y0):
         """
@@ -1180,15 +1205,57 @@ cdef class CVODE:
         np_tspan = np.asarray(tspan, dtype=float)
         np_y0    = np.asarray(y0, dtype=float)
 
-        return self._solve(np_tspan, np_y0)
+        soln = self._solve(np_tspan, np_y0)
+
+        flag_no, t, y, t_err, y_err = soln[:5]
+
+        if soln[5]:
+            t_roots = np.array(soln[5])
+        else:
+            t_roots = None
+
+        if soln[6]:
+            y_roots = np.array(soln[6])
+        else:
+            y_roots = None
+
+        if soln[7]:
+            t_tstop = np.array(soln[7])
+        else:
+            t_tstop = None
+
+        if soln[8]:
+            y_tstop = np.array(soln[8])
+        else:
+            y_tstop = None
+
+        flag = self.RETURN_FLAGS.get(flag_no, "UNKNOWN")
+
+        soln = CVODE_Return(
+            flag=flag, flag_no=flag_no, values=(t,y), err_values=(t_err,y_err),
+            root_values=(t_roots,y_roots), tstop_values=(t_tstop,y_tstop)
+        )
+
+        if self._old_api:
+            return flag_no, t, y, t_err, y_err
+        return soln
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                  np.ndarray[DTYPE_t, ndim=1] y0):
 
-        cdef np.ndarray[DTYPE_t, ndim=1] t_retn, t_interr
-        cdef np.ndarray[DTYPE_t, ndim=2] y_retn, y_interr
+        cdef np.ndarray[DTYPE_t, ndim=1] t_retn
+        cdef np.ndarray[DTYPE_t, ndim=2] y_retn
         t_retn  = np.empty(np.shape(tspan), float)
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
+
+        cdef list t_roots
+        cdef list y_roots
+        t_roots = []
+        y_roots = []
+
+        cdef np.ndarray[DTYPE_t, ndim=1] y_tstop
+        cdef DTYPE_t t_tstop
+        y_tstop = np.empty(np.alen(y0), float)
 
         self._init_step(tspan[0], y0)
         PyErr_CheckSignals()
@@ -1196,6 +1263,8 @@ cdef class CVODE:
         y_retn[0, :] = y0
 
         cdef np.ndarray[DTYPE_t, ndim=1] y_last
+        cdef unsigned int idx = 1 # idx == 0 is IC
+        cdef unsigned int last_idx = np.alen(tspan)
         cdef DTYPE_t t
         cdef int flag
         cdef void *cv_mem = self._cv_mem
@@ -1205,14 +1274,6 @@ cdef class CVODE:
         cdef dict user_data = self.options['user_data']
 
         y_last   = np.empty(np.shape(y0), float)
-
-        cdef int last_idx = np.alen(tspan)
-        cdef unsigned int idx = 1 # idx=0 == IC
-        cdef unsigned int idx_interr = 0, len_interr = last_idx
-
-        t_interr = np.empty((len_interr, ), float)
-        y_interr = np.empty((len_interr, np.alen(y0)), float)
-
         t = tspan[idx]
 
         while True:
@@ -1235,39 +1296,26 @@ cdef class CVODE:
 
             elif ((flag == CV_TSTOP_RETURN) or (flag == CV_ROOT_RETURN)
                   and interruptfn is not None):
-
-                # Resize the interr(uption) arrays if needed...
-                if (idx_interr == len_interr):
-                    len_interr += 10
-                    t_interr.resize((len_interr, 1))
-                    y_interr.resize((len_interr, np.alen(y0)))
-
-                # ...store the current interruption point...
-                t_interr[idx_interr]    = t_out
-                y_interr[idx_interr, :] = y_last
-                idx_interr += 1
-
-                # ...and continue computation if interruptfn returns 0
+                if flag == CV_TSTOP_RETURN:
+                    t_tstop = t_out
+                    y_tstop = y_last
+                else:
+                    t_roots.append(t_out)
+                    y_roots.append(y_last)
                 if not interruptfn.evaluate(flag, t_out, y_last, user_data):
                     continue
-
             # Return values computed so far
             t_retn  = t_retn[0:idx]
             y_retn  = y_retn[0:idx, :]
 
-            # Return the correct interruption points
-            if idx_interr == 0:
-                y_interr = None
-                t_interr = None
-            elif idx_interr == 1:
-                return flag, t_retn, y_retn, t_interr[0], y_interr[0, :]
-            else:
-                t_interr = t_interr[:idx_interr]
-                y_interr = y_interr[:idx_interr, :]
-
             PyErr_CheckSignals()
 
-            return (flag, t_retn, y_retn, t_interr, y_interr)
+            if (flag == CV_SUCCESS) and (idx == last_idx):
+                return (flag, t_retn, y_retn, None, None, t_roots, y_roots,
+                        t_tstop, y_tstop)
+
+            return (flag, t_retn, y_retn, t_out, y_last, t_roots, y_roots,
+                    t_tstop, y_tstop)
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
         """
