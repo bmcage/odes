@@ -762,6 +762,10 @@ cdef class CVODE:
             verbosity = options['verbosity']
             self.options['verbosity'] = verbosity
             self.verbosity = verbosity
+            raise DeprecationWarning(
+                "verbosity is deprecated, control output via logging and "
+                "err_handler"
+            )
 
         # Root function
         if ('rootfn' in options) and (options['rootfn'] is not None):
