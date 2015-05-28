@@ -1,5 +1,6 @@
 from cpython.exc cimport PyErr_CheckSignals
 import inspect
+from warnings import warn
 
 import numpy as np
 cimport numpy as np
@@ -762,6 +763,9 @@ cdef class CVODE:
             verbosity = options['verbosity']
             self.options['verbosity'] = verbosity
             self.verbosity = verbosity
+            warn("verbosity is deprecated, control output via logging and "
+                 "err_handler", DeprecationWarning
+            )
 
         # Root function
         if ('rootfn' in options) and (options['rootfn'] is not None):
