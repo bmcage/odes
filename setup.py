@@ -14,6 +14,11 @@ import setuptools
 
 from common import *
 
+if (sys.version_info[0] < 3) or (
+    sys.version_info[0] == 3 and sys.version_info[1] < 4
+):
+    INSTALL_REQUIRES.append('enum34')
+
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
     config = Configuration(None, parent_package, top_path,
@@ -36,7 +41,7 @@ def setup_package():
         url = URL,
         license = LICENSE,
         configuration = configuration,
-        install_requires = 'scipy',
+        install_requires = INSTALL_REQUIRES,
         zip_safe = False
         )
     return

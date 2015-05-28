@@ -1,5 +1,8 @@
 from cpython.exc cimport PyErr_CheckSignals
+from collections import namedtuple
+from enum import IntEnum
 import inspect
+from warnings import warn
 
 import numpy as np
 cimport numpy as np
@@ -12,6 +15,70 @@ from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
 # TODO: linsolvers: check the output value for errors
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
+
+
+SolverReturn = namedtuple(
+    "SolverReturn", [
+        "flag", "values", "errors", "roots",
+        "tstop", "message"
+    ]
+)
+
+SolverVariables = namedtuple("SolverVariables", ["t", "y"])
+
+class StatusEnum(IntEnum):
+    SUCCESS = CV_SUCCESS
+    TSTOP_RETURN = CV_TSTOP_RETURN
+    ROOT_RETURN = CV_ROOT_RETURN
+    WARNING = CV_WARNING
+    TOO_MUCH_WORK = CV_TOO_MUCH_WORK
+    TOO_MUCH_ACC = CV_TOO_MUCH_ACC
+    ERR_FAILURE = CV_ERR_FAILURE
+    CONV_FAILURE = CV_CONV_FAILURE
+    LINIT_FAIL = CV_LINIT_FAIL
+    LSETUP_FAIL = CV_LSETUP_FAIL
+    LSOLVE_FAIL = CV_LSOLVE_FAIL
+    RHSFUNC_FAIL = CV_RHSFUNC_FAIL
+    FIRST_RHSFUNC_ERR = CV_FIRST_RHSFUNC_ERR
+    REPTD_RHSFUNC_ERR = CV_REPTD_RHSFUNC_ERR
+    UNREC_RHSFUNC_ERR = CV_UNREC_RHSFUNC_ERR
+    RTFUNC_FAIL = CV_RTFUNC_FAIL
+    MEM_FAIL = CV_MEM_FAIL
+    MEM_NULL = CV_MEM_NULL
+    ILL_INPUT = CV_ILL_INPUT
+    NO_MALLOC = CV_NO_MALLOC
+    BAD_K = CV_BAD_K
+    BAD_T = CV_BAD_T
+    BAD_DKY = CV_BAD_DKY
+    TOO_CLOSE = CV_TOO_CLOSE
+
+STATUS_MESSAGE = {
+    StatusEnum.SUCCESS: "Successful function return.",
+    StatusEnum.TSTOP_RETURN: "Reached specified stopping point",
+    StatusEnum.ROOT_RETURN: "Found one or more roots",
+    StatusEnum.WARNING: "Succeeded but something unusual happened",
+    StatusEnum.TOO_MUCH_WORK: "Could not reach endpoint",
+    StatusEnum.TOO_MUCH_ACC: "Could not satisfy accuracy",
+    StatusEnum.ERR_FAILURE: "Error test failures occurred too many times during one internal time step or minimum step size was reached.",
+    StatusEnum.CONV_FAILURE: "Convergence test failures occurred too many times during one internal time step or minimum step size was reached.",
+    StatusEnum.LINIT_FAIL: "The linear solver’s initialization function failed.",
+    StatusEnum.LSETUP_FAIL: "The linear solver’s setup function failed in an unrecoverable manner.",
+    StatusEnum.LSOLVE_FAIL: "The linear solver’s solve function failed in an unrecoverable manner.",
+    StatusEnum.RHSFUNC_FAIL: "The right-hand side function failed in an unrecoverable manner.",
+    StatusEnum.FIRST_RHSFUNC_ERR: "The right-hand side function failed at the first call.",
+    StatusEnum.REPTD_RHSFUNC_ERR: "The right-hand side function had repeated recoverable errors.",
+    StatusEnum.UNREC_RHSFUNC_ERR: "The right-hand side function had a recoverable error, but no recovery is possible.",
+    StatusEnum.RTFUNC_FAIL: "The rootfinding function failed in an unrecoverable manner.",
+    StatusEnum.MEM_FAIL: "A memory allocation failed.",
+    StatusEnum.MEM_NULL: "The cvode_mem argument was NULL.",
+    StatusEnum.ILL_INPUT: "One of the function inputs is illegal.",
+    StatusEnum.NO_MALLOC: "The cvode memory block was not allocated by a call to CVodeMalloc.",
+    StatusEnum.BAD_K: "The derivative order k is larger than the order used.",
+    StatusEnum.BAD_T: "The time t is outside the last step taken.",
+    StatusEnum.BAD_DKY: "The output derivative vector is NULL.",
+    StatusEnum.TOO_CLOSE: "The output and initial times are too close to each other.",
+}
+
 
 # Right-hand side function
 cdef class CV_RhsFunction:
@@ -488,12 +555,14 @@ cdef class CVODE:
             'jacfn': None,
             'prec_setupfn': None,
             'prec_solvefn': None,
-            'jac_times_vecfn': None
+            'jac_times_vecfn': None,
+            'old_api': None,
             }
 
         self.verbosity = 1
         self.options = default_values
         self.N       = -1
+        self._old_api = True # use old api by default
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
         self.initialized = False
@@ -678,7 +747,14 @@ cdef class CVODE:
             'max_nonlin_iters':
                 default = 0,
             'nonlin_conv_coef':
-                default = 0.
+                default = 0,
+            'old_api':
+                Values: True (default), False
+                Description:
+                    Forces use of old api (tuple of 5, with last two items
+                    overloaded) if True or new api (namedtuple) if False.
+                    Other options may require new api, hence using this should
+                    be avoided if possible.
         """
 
         # Update values of all supplied options
@@ -814,6 +890,10 @@ cdef class CVODE:
                 if flag == CV_ILL_INPUT:
                     raise ValueError('IDASetStopTime::Stop value is beyond '
                                      'current value.')
+
+        # Force old/new api
+        if options.get('old_api') is not None:
+            self._old_api = options['old_api']
 
     def init_step(self, double t0, object y0):
         """
@@ -1131,7 +1211,33 @@ cdef class CVODE:
         np_tspan = np.asarray(tspan, dtype=float)
         np_y0    = np.asarray(y0, dtype=float)
 
-        return self._solve(np_tspan, np_y0)
+
+        soln = self._solve(np_tspan, np_y0)
+        if self._old_api:
+            warn("Old api is deprecated, move to new api", DeprecationWarning)
+        flag = StatusEnum(soln[0])
+        t, y, t_err, y_err = soln[1:5]
+
+        t_roots = np.array(soln[5]) if soln[5] else None
+        y_roots = np.array(soln[6]) if soln[6] else None
+        t_tstop = np.array(soln[7]) if soln[7] else None
+        y_tstop = np.array(soln[8]) if soln[8] else None
+
+        if self._old_api:
+            if flag == StatusEnum.ROOT_RETURN:
+                return flag, t, y, t_roots[0], y_roots[0]
+            elif flag == StatusEnum.TSTOP_RETURN:
+                return flag, t, y, t_tstop[0], y_tstop[0]
+            return flag, t, y, t_err, y_err
+
+        return SolverReturn(
+            flag=flag,
+            values=SolverVariables(t=t, y=y),
+            errors=SolverVariables(t=t_err, y=y_err),
+            roots=SolverVariables(t=t_roots, y=y_roots),
+            tstop=SolverVariables(t=t_tstop, y=y_tstop),
+            message=STATUS_MESSAGE[flag]
+        )
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                  np.ndarray[DTYPE_t, ndim=1] y0):
@@ -1141,13 +1247,24 @@ cdef class CVODE:
         t_retn  = np.empty(np.shape(tspan), float)
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
 
+        cdef list t_roots
+        cdef list y_roots
+        t_roots = []
+        y_roots = []
+
+        cdef list t_tstop
+        cdef list y_tstop
+        t_tstop = []
+        y_tstop = []
+
         self._init_step(tspan[0], y0)
         PyErr_CheckSignals()
         t_retn[0] = tspan[0]
         y_retn[0, :] = y0
 
         cdef np.ndarray[DTYPE_t, ndim=1] y_last
-        cdef unsigned int idx
+        cdef unsigned int idx = 1 # idx == 0 is IC
+        cdef unsigned int last_idx = np.alen(tspan)
         cdef DTYPE_t t
         cdef int flag
         cdef void *cv_mem = self._cv_mem
@@ -1155,27 +1272,61 @@ cdef class CVODE:
         cdef N_Vector y  = self.y
 
         y_last   = np.empty(np.shape(y0), float)
+        t = tspan[idx]
 
-        for idx in np.arange(np.alen(tspan))[1:]:
-            t = tspan[idx]
-
+        while True:
             flag = CVode(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
 
             nv_s2ndarray(y,  y_last)
 
-            if flag != CV_SUCCESS:
-                # return values computed so far
-                t_retn  = t_retn[0:idx]
-                y_retn  = y_retn[0:idx, :]
+            if flag == CV_SUCCESS or flag == CV_WARNING:
+                t_retn[idx]    = t_out
+                y_retn[idx, :] = y_last
+                idx = idx + 1
+                PyErr_CheckSignals()
 
-                return flag, t_retn, y_retn, t_out, y_last
+                # Iterate until we reach the end of tspan
+                if idx < last_idx:
+                    t = tspan[idx]
+                    continue
+                else:
+                    return (
+                        flag, t_retn, y_retn, None, None, t_roots, y_roots,
+                        None, None, None
+                    )
 
-            t_retn[idx]    = t_out
-            y_retn[idx, :] = y_last
+            elif flag == CV_ROOT_RETURN:
+                t_roots.append(np.copy(t_out))
+                y_roots.append(np.copy(y_last))
+                break
+            elif flag == CV_TSTOP_RETURN:
+                t_tstop.append(np.copy(t_out))
+                y_tstop.append(np.copy(y_last))
+                break
 
-            PyErr_CheckSignals()
+            break
 
-        return flag, t_retn, y_retn, None, None
+
+        PyErr_CheckSignals()
+
+        # return values computed so far
+        t_retn  = t_retn[0:idx]
+        y_retn  = y_retn[0:idx, :]
+        if flag == CV_ROOT_RETURN:
+            return (
+                flag, t_retn, y_retn, None, None, t_roots, y_roots,
+                t_tstop, y_tstop,
+            )
+        elif flag == CV_TSTOP_RETURN:
+            return (
+                flag, t_retn, y_retn, None, None, t_roots, y_roots,
+                t_tstop, y_tstop,
+            )
+        return (
+            flag, t_retn, y_retn, t_out, y_last, t_roots, y_roots,
+            t_tstop, y_tstop,
+        )
+
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
         """
