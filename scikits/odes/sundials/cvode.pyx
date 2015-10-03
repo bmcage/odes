@@ -1290,10 +1290,7 @@ cdef class CVODE:
                     t = tspan[idx]
                     continue
                 else:
-                    return (
-                        flag, t_retn, y_retn, None, None, t_roots, y_roots,
-                        None, None, None
-                    )
+                    break
 
             elif flag == CV_ROOT_RETURN:
                 t_roots.append(np.copy(t_out))
@@ -1312,18 +1309,14 @@ cdef class CVODE:
         # return values computed so far
         t_retn  = t_retn[0:idx]
         y_retn  = y_retn[0:idx, :]
-        if flag == CV_ROOT_RETURN:
-            return (
-                flag, t_retn, y_retn, None, None, t_roots, y_roots,
-                t_tstop, y_tstop,
-            )
-        elif flag == CV_TSTOP_RETURN:
-            return (
-                flag, t_retn, y_retn, None, None, t_roots, y_roots,
-                t_tstop, y_tstop,
-            )
+        if flag < 0:
+            y_err = y_last
+            t_err = t_out
+        else:
+            y_err = None
+            t_err = None
         return (
-            flag, t_retn, y_retn, t_out, y_last, t_roots, y_roots,
+            flag, t_retn, y_retn, t_err, y_err, t_roots, y_roots,
             t_tstop, y_tstop,
         )
 
