@@ -12,26 +12,22 @@ Requirements before install
 1. You need numpy and scipy installed
 2. You need to have cython installed and executable
 3. You need python development files available (python-dev package)
-3. You need to have the sundials package version 2.5.0 installed from 
+4. If you use python < 3.4, you need the enum34 package, https://pypi.python.org/pypi/enum34 (eg via command: pip install enum34)  
+4. You need to have the sundials package version 2.6.2 installed from 
 https://computation.llnl.gov/casc/sundials/download/download.html
 
 It is required that the Blas/Lapack interface in included in sundials, so check
-the Fortran Settings section of configure that they are present! If problems,
-use the F77 flag to set the fortran compiler, see below.
+the Fortran Settings section. A typical install if sundials download package is
+extracted into directory sundials-2.6.2 is on a *nix system:
 
-The sundials package *must* also be installed with the fPIC flag. 
-On a *nix systhem, do after extraction of the downloaded tar.gz:
-
-./configure --with-cflags=-fPIC
+mkdir build-sundials-2.6.2
+cd build-sundials-2.6.2/
+cmake -DLAPACK_ENABLE=ON ../sundials-2.6.2/
 make
-and as root:
-make install
+as root: make install
 
 This should install sundials in /usr/local/lib
-Make sure you use the fortran compiler as used for your lapack/blas install. 
-Eg, on linux that would be gfortran, so:
-
-./configure --with-cflags=-fPIC F77=gfortran
+Make sure you use the fortran compiler as used for your lapack/blas install!
 
 Installation from sources
 =========================

@@ -305,7 +305,7 @@ cdef extern from "sundials/sundials_pcg.h":
     PcgMem PcgMalloc(int l_max, N_Vector vec_tmpl)
     int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b, int pretype,
                  realtype delta, void *P_data, N_Vector w, ATimesFn atimes,
-                 PSolveFn psolve, realtype *res_norm, int *nli, int *nps);
+                 PSolveFn psolve, realtype *res_norm, int *nli, int *nps)
     void PcgFree(PcgMem mem)
 
     enum: PCG_SUCCESS           #  0  /* PCG algorithm converged          */
@@ -431,8 +431,8 @@ cdef extern from "sundials/sundials_spfgmr.h":
                     int pretype, int gstype, realtype delta, int max_restarts,
                     int maxit, void *P_data, N_Vector s1, N_Vector s2,
                     ATimesFn atimes, PSolveFn psolve, realtype *res_norm,
-                    int *nli, int *nps);
-    void SpfgmrFree(SpfgmrMem mem);
+                    int *nli, int *nps)
+    void SpfgmrFree(SpfgmrMem mem)
 
     enum: SPFGMR_SUCCESS           #  0  /* Converged                     */
     enum: SPFGMR_RES_REDUCED       #  1  /* Did not converge, but reduced
