@@ -1291,6 +1291,10 @@ cdef class CVODE:
     def solve(self, object tspan, object y0):
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0
+
+        if not np.alen(tspan) > 1:
+            raise ValueError("Solve tspan must be array with minimum 2 elements,"
+                             " start and end time.")
         np_tspan = np.asarray(tspan, dtype=float)
         np_y0    = np.asarray(y0, dtype=float)
 
