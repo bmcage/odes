@@ -102,7 +102,7 @@ cdef class CVODE:
     cdef N_Vector atol
     cdef void* _cv_mem
     cdef dict options
-    cdef bint parallel_implementation, initialized
+    cdef bint parallel_implementation, initialized, _old_api
     cdef CV_data aux_data
 
     cdef long int N #problem size, i.e. len(y0) = N
@@ -112,6 +112,7 @@ cdef class CVODE:
 
     # Functions
     cpdef _init_step(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
+    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0)
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                        np.ndarray[DTYPE_t, ndim=1] y0)

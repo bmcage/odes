@@ -17,6 +17,8 @@ LICENSE             = 'new BSD'
 
 DOWNLOAD_URL        = URL
 
+INSTALL_REQUIRES = ['scipy']
+
 MAJOR = 2
 MINOR = 1
 MICRO = 0
@@ -47,4 +49,3 @@ def write_version(fname):
     f.close()
 
 VERSION = build_fverstring()
-INSTALL_REQUIRE = 'scipy'

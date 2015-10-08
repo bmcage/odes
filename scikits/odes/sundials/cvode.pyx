@@ -1,4 +1,6 @@
 from cpython.exc cimport PyErr_CheckSignals
+from collections import namedtuple
+from enum import IntEnum
 import inspect
 from warnings import warn
 
@@ -13,6 +15,70 @@ from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
 # TODO: linsolvers: check the output value for errors
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
+
+
+SolverReturn = namedtuple(
+    "SolverReturn", [
+        "flag", "values", "errors", "roots",
+        "tstop", "message"
+    ]
+)
+
+SolverVariables = namedtuple("SolverVariables", ["t", "y"])
+
+class StatusEnum(IntEnum):
+    SUCCESS = CV_SUCCESS
+    TSTOP_RETURN = CV_TSTOP_RETURN
+    ROOT_RETURN = CV_ROOT_RETURN
+    WARNING = CV_WARNING
+    TOO_MUCH_WORK = CV_TOO_MUCH_WORK
+    TOO_MUCH_ACC = CV_TOO_MUCH_ACC
+    ERR_FAILURE = CV_ERR_FAILURE
+    CONV_FAILURE = CV_CONV_FAILURE
+    LINIT_FAIL = CV_LINIT_FAIL
+    LSETUP_FAIL = CV_LSETUP_FAIL
+    LSOLVE_FAIL = CV_LSOLVE_FAIL
+    RHSFUNC_FAIL = CV_RHSFUNC_FAIL
+    FIRST_RHSFUNC_ERR = CV_FIRST_RHSFUNC_ERR
+    REPTD_RHSFUNC_ERR = CV_REPTD_RHSFUNC_ERR
+    UNREC_RHSFUNC_ERR = CV_UNREC_RHSFUNC_ERR
+    RTFUNC_FAIL = CV_RTFUNC_FAIL
+    MEM_FAIL = CV_MEM_FAIL
+    MEM_NULL = CV_MEM_NULL
+    ILL_INPUT = CV_ILL_INPUT
+    NO_MALLOC = CV_NO_MALLOC
+    BAD_K = CV_BAD_K
+    BAD_T = CV_BAD_T
+    BAD_DKY = CV_BAD_DKY
+    TOO_CLOSE = CV_TOO_CLOSE
+
+STATUS_MESSAGE = {
+    StatusEnum.SUCCESS: "Successful function return.",
+    StatusEnum.TSTOP_RETURN: "Reached specified stopping point",
+    StatusEnum.ROOT_RETURN: "Found one or more roots",
+    StatusEnum.WARNING: "Succeeded but something unusual happened",
+    StatusEnum.TOO_MUCH_WORK: "Could not reach endpoint",
+    StatusEnum.TOO_MUCH_ACC: "Could not satisfy accuracy",
+    StatusEnum.ERR_FAILURE: "Error test failures occurred too many times during one internal time step or minimum step size was reached.",
+    StatusEnum.CONV_FAILURE: "Convergence test failures occurred too many times during one internal time step or minimum step size was reached.",
+    StatusEnum.LINIT_FAIL: "The linear solver’s initialization function failed.",
+    StatusEnum.LSETUP_FAIL: "The linear solver’s setup function failed in an unrecoverable manner.",
+    StatusEnum.LSOLVE_FAIL: "The linear solver’s solve function failed in an unrecoverable manner.",
+    StatusEnum.RHSFUNC_FAIL: "The right-hand side function failed in an unrecoverable manner.",
+    StatusEnum.FIRST_RHSFUNC_ERR: "The right-hand side function failed at the first call.",
+    StatusEnum.REPTD_RHSFUNC_ERR: "The right-hand side function had repeated recoverable errors.",
+    StatusEnum.UNREC_RHSFUNC_ERR: "The right-hand side function had a recoverable error, but no recovery is possible.",
+    StatusEnum.RTFUNC_FAIL: "The rootfinding function failed in an unrecoverable manner.",
+    StatusEnum.MEM_FAIL: "A memory allocation failed.",
+    StatusEnum.MEM_NULL: "The cvode_mem argument was NULL.",
+    StatusEnum.ILL_INPUT: "One of the function inputs is illegal.",
+    StatusEnum.NO_MALLOC: "The cvode memory block was not allocated by a call to CVodeMalloc.",
+    StatusEnum.BAD_K: "The derivative order k is larger than the order used.",
+    StatusEnum.BAD_T: "The time t is outside the last step taken.",
+    StatusEnum.BAD_DKY: "The output derivative vector is NULL.",
+    StatusEnum.TOO_CLOSE: "The output and initial times are too close to each other.",
+}
+
 
 # Right-hand side function
 cdef class CV_RhsFunction:
@@ -181,7 +247,7 @@ cdef int _jacdense(long int Neq, realtype tt,
         raise NotImplemented
     else:
         yy_tmp = aux_data.yy_tmp
-        if aux_data.jac_tmp == None:
+        if aux_data.jac_tmp is None:
             N = np.alen(yy_tmp)
             aux_data.jac_tmp = np.empty((N,N), float)
         jac_tmp = aux_data.jac_tmp
@@ -329,11 +395,11 @@ cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vect
     else:
         yy_tmp = aux_data.yy_tmp
 
-        if aux_data.r_tmp == None:
+        if aux_data.r_tmp is None:
             N = np.alen(yy_tmp)
             aux_data.r_tmp = np.empty(N, float)
 
-        if aux_data.z_tmp == None:
+        if aux_data.z_tmp is None:
             N = np.alen(yy_tmp)
             aux_data.z_tmp = np.empty(N, float)
 
@@ -399,8 +465,8 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
             self._jac_times_vecfn(v, Jv, t, y)
         return 0
 
-cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y, N_Vector fy,
-		void *user_data, N_Vector tmp):
+cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
+                          N_Vector fy, void *user_data, N_Vector tmp):
     """ function with the signature of CVSpilsJacTimesVecFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, v_tmp, Jv_tmp
 
@@ -412,11 +478,11 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y, N_Vec
     else:
         y_tmp = aux_data.yy_tmp
 
-        if aux_data.r_tmp == None:
+        if aux_data.r_tmp is None:
             N = np.alen(y_tmp)
             aux_data.r_tmp = np.empty(N, float)
 
-        if aux_data.z_tmp == None:
+        if aux_data.z_tmp is None:
             N = np.alen(y_tmp)
             aux_data.z_tmp = np.empty(N, float)
 
@@ -482,6 +548,7 @@ cdef void _cv_err_handler_fn(
                                   msg,
                                   aux_data.err_user_data)
 
+# Auxiliary data carrying runtime vales for the CVODE solver
 cdef class CV_data:
     def __cinit__(self, N):
         self.parallel_implementation = False
@@ -503,7 +570,8 @@ cdef class CVODE:
 
         Input:
             Rfn     - right-hand-side function
-            options - additional options for initialization
+            options - additional options for initialization, for the list
+                      of supported options and their values see set_options()
 
         """
 
@@ -537,11 +605,13 @@ cdef class CVODE:
             'jac_times_vecfn': None,
             'err_handler': None,
             'err_user_data': None,
+            'old_api': None,
             }
 
         self.verbosity = 1
         self.options = default_values
         self.N       = -1
+        self._old_api = True # use old api by default
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
         self.initialized = False
@@ -556,6 +626,7 @@ cdef class CVODE:
                 Description:
                     Set the level of verbosity. The higher number user, the
                     more verbose the output will be. Default is 1.
+                Note: Changeable at runtime.
             'implementation':
                 Values: 'serial' (= default), 'parallel'
                 Description:
@@ -598,11 +669,13 @@ cdef class CVODE:
                     stops when condition g[i] is zero for some i.
                     For 'user_data' argument see 'user_data' option
                     above.
+                Note: Changeable at runtime.
             'nr_rootfns':
                 Value: integer
                 Description:
                     The length of the array returned by 'rootfn' (see above),
                     i.e. number of conditions for which we search the value 0.
+                Note: Changeable at runtime.
             'jacfn':
                 Values: function of class CV_JacRhsFunction
                 Description:
@@ -616,10 +689,12 @@ cdef class CVODE:
                 Values: float,  1e-6 = default
                 Description:
                     Relative tolerancy.
+                Note: Changeable at runtime.
             'atol':
                 Values: float or numpy array of floats,  1e-12 = default
                 Description:
                     Absolute tolerancy
+                Note: Changeable at runtime.
             'order':
                 Values: 1, 2, 3, 4, 5 (= default)
                 Description:
@@ -676,8 +751,9 @@ cdef class CVODE:
                 Description:
                     Maximum time until which we perform the computations.
                     Default is 0.0. Once the value is set 0.0, it cannot be
-                    disable (but it will be automatically disable when tstop
+                    disabled (but it will be automatically disabled when tstop
                     is reached and has to be reset again in next run).
+                Note: Changeable at runtime.
             'user_data':
                 Values: python object, None = default
                 Description:
@@ -729,14 +805,24 @@ cdef class CVODE:
             'err_user_data':
                 Description:
                     User data used by 'err_handler', defaults to 'user_data'
+            'old_api':
+                Values: True (default), False
+                Description:
+                    Forces use of old api (tuple of 5, with last two items
+                    overloaded) if True or new api (namedtuple) if False.
+                    Other options may require new api, hence using this should
+                    be avoided if possible.
         """
 
+        # Update values of all supplied options
         for (key, value) in options.items():
             if key.lower() in self.options:
                 self.options[key.lower()] = value
             else:
                 raise ValueError("Option '%s' is not supported by solver" % key)
 
+        # If the solver is running, this re-sets runtime changeable options,
+        # otherwise it does nothing
         self._set_runtime_changeable_options(options)
 
     cpdef _set_runtime_changeable_options(self, object options,
@@ -748,6 +834,7 @@ cdef class CVODE:
         cdef int flag
         cdef void* cv_mem = self._cv_mem
 
+        # Don't do anything if we are not at runtime
         if cv_mem is NULL:
             return 0
 
@@ -755,7 +842,8 @@ cdef class CVODE:
         # be supressed by 'supress_supported_check = True'
         if not supress_supported_check:
             for opt in options.keys():
-                if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns']:
+                if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns',
+                               'verbosity']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
 
         # Verbosity level
@@ -767,27 +855,30 @@ cdef class CVODE:
                  "err_handler", DeprecationWarning
             )
 
-        # Root function
+        # Root function (rootfn and nr_rootfns)
         if ('rootfn' in options) and (options['rootfn'] is not None):
-            # TODO: Unsetting the rootfn?
-            rootfn = options['rootfn']
-            if rootfn is not None:
-                self.options['rootfn'] = rootfn
 
-                nr_rootfns = options['nr_rootfns']
-                self.options['nr_rootfns'] = nr_rootfns
+            # Set root function to internal options...
+            rootfn     = options['rootfn']
+            nr_rootfns = options['nr_rootfns']
+
             if nr_rootfns is None:
                 raise ValueError('Number of root-ing functions ''nr_rootfns'' '
                                  'must be specified.')
+
             if not isinstance(rootfn, CV_RootFunction):
                 tmpfun = CV_WrapRootFunction()
                 tmpfun.set_rootfn(rootfn)
                 rootfn = tmpfun
-                self.opts['rootfn'] = tmpfun
 
+            self.options['rootfn'] = rootfn
+            self.options['nr_rootfns'] = nr_rootfns
+
+            # ...and to the auxiliary data object (holding runtime data)
             self.aux_data.rootfn = rootfn
             self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
 
+            # TODO: Shouldn't be the rootn in the cvode obj unset first?
             flag = CVodeRootInit(cv_mem, nr_rootfns, _rootfn)
 
             if flag == CV_SUCCESS:
@@ -798,7 +889,7 @@ cdef class CVODE:
             elif flag == CV_MEM_FAIL:
                 raise MemoryError('CVRootInit: Memory allocation error')
 
-        # Set tolerances
+        # Set atol and rtol tolerances
         cdef N_Vector atol
         cdef np.ndarray[DTYPE_t, ndim=1] np_atol
 
@@ -860,7 +951,17 @@ cdef class CVODE:
                     raise ValueError('IDASetStopTime::Stop value is beyond '
                                      'current value.')
 
+        # Force old/new api
+        if options.get('old_api') is not None:
+            self._old_api = options['old_api']
+
     def init_step(self, double t0, object y0):
+        """
+        Initialize the solver and all the internal variables. This assumes
+        the call to 'set_options()' to be done and hence all the information
+        for correct solver initialization to be available.
+        Note: some options can be re-set also at runtime. See 'reinit_IC()'
+        """
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         np_y0 = np.asarray(y0)
 
@@ -896,7 +997,7 @@ cdef class CVODE:
         cdef long int N
         N = <long int> np.alen(y0)
 
-        if opts['rfn'] == None:
+        if opts['rfn'] is None:
             raise ValueError('The right-hand-side function rfn not assigned '
                               'during ''set_options'' call !')
 
@@ -907,11 +1008,12 @@ cdef class CVODE:
             N_VDestroy(self.y)
             N_VDestroy(self.yp)
 
+        # Initialize y0, y, yp
         if self.parallel_implementation:
             raise NotImplemented
         else:
-            self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
-            self.y   = N_VClone(self.y0)
+            self.y0 = N_VMake_Serial(N, <realtype *>y0.data)
+            self.y  = N_VClone(self.y0)
             self.yp = N_VNew_Serial(N)
 
         cdef int flag
@@ -942,7 +1044,7 @@ cdef class CVODE:
 
         self.N = N
 
-        # auxiliary variables
+        # Initialize auxiliary variables
         self.aux_data = CV_data(N)
 
         # Set err_handler
@@ -1011,6 +1113,7 @@ cdef class CVODE:
 
         self.aux_data.user_data = opts['user_data']
 
+        # As cv_mem is now initialized, set also options changeable at runtime
         self._set_runtime_changeable_options(opts, supress_supported_check=True)
 
         # As user data we pass the CV_data object
@@ -1148,13 +1251,76 @@ cdef class CVODE:
 
         return (True, t0)
 
+    def reinit_IC(self, double t0, object y0):
+        """
+        Re-initialize (only) the initial condition IC without re-setting also
+        all the remaining solver options. See also 'init_step()' funtion.
+        """
+
+        cdef np.ndarray[DTYPE_t, ndim=1] np_y0
+        np_y0 = np.asarray(y0)
+
+        return self._reinit_IC(t0, np_y0)
+
+    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0):
+        # If not yet initialized, run full initialization
+        if self.y0 is NULL:
+            self._init_step(t0, y0)
+            return
+
+        cdef long int N
+        N = <long int> np.alen(y0)
+        if N == self.N:
+            self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
+        else:
+            raise ValueError("Cannot re-init IC with array of unequal lenght.")
+
+        flag = CVodeReInit(self._cv_mem, <realtype> t0, self.y0)
+
+        if flag == CV_ILL_INPUT:
+            raise ValueError('CVodeReInit: Ill input')
+        elif flag == CV_MEM_FAIL:
+            raise MemoryError('CVReInit: Memory allocation error')
+        elif flag == CV_MEM_NULL:
+            raise MemoryError('CVodeReCreate: Memory allocation error')
+        elif flag == CV_NO_MALLOC:
+            raise MemoryError('CVodeReInit: No memory allocated in CVInit.')
+
+        return (True, t0)
+
     def solve(self, object tspan, object y0):
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0
         np_tspan = np.asarray(tspan, dtype=float)
         np_y0    = np.asarray(y0, dtype=float)
 
-        return self._solve(np_tspan, np_y0)
+
+        soln = self._solve(np_tspan, np_y0)
+        if self._old_api:
+            warn("Old api is deprecated, move to new api", DeprecationWarning)
+        flag = StatusEnum(soln[0])
+        t, y, t_err, y_err = soln[1:5]
+
+        t_roots = np.array(soln[5]) if soln[5] else None
+        y_roots = np.array(soln[6]) if soln[6] else None
+        t_tstop = np.array(soln[7]) if soln[7] else None
+        y_tstop = np.array(soln[8]) if soln[8] else None
+
+        if self._old_api:
+            if flag == StatusEnum.ROOT_RETURN:
+                return flag, t, y, t_roots[0], y_roots[0]
+            elif flag == StatusEnum.TSTOP_RETURN:
+                return flag, t, y, t_tstop[0], y_tstop[0]
+            return flag, t, y, t_err, y_err
+
+        return SolverReturn(
+            flag=flag,
+            values=SolverVariables(t=t, y=y),
+            errors=SolverVariables(t=t_err, y=y_err),
+            roots=SolverVariables(t=t_roots, y=y_roots),
+            tstop=SolverVariables(t=t_tstop, y=y_tstop),
+            message=STATUS_MESSAGE[flag]
+        )
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                  np.ndarray[DTYPE_t, ndim=1] y0):
@@ -1164,13 +1330,24 @@ cdef class CVODE:
         t_retn  = np.empty(np.shape(tspan), float)
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
 
+        cdef list t_roots
+        cdef list y_roots
+        t_roots = []
+        y_roots = []
+
+        cdef list t_tstop
+        cdef list y_tstop
+        t_tstop = []
+        y_tstop = []
+
         self._init_step(tspan[0], y0)
         PyErr_CheckSignals()
         t_retn[0] = tspan[0]
         y_retn[0, :] = y0
 
         cdef np.ndarray[DTYPE_t, ndim=1] y_last
-        cdef unsigned int idx
+        cdef unsigned int idx = 1 # idx == 0 is IC
+        cdef unsigned int last_idx = np.alen(tspan)
         cdef DTYPE_t t
         cdef int flag
         cdef void *cv_mem = self._cv_mem
@@ -1178,39 +1355,54 @@ cdef class CVODE:
         cdef N_Vector y  = self.y
 
         y_last   = np.empty(np.shape(y0), float)
+        t = tspan[idx]
 
-        for idx in np.arange(np.alen(tspan))[1:]:
-            t = tspan[idx]
-
+        while True:
             flag = CVode(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
 
             nv_s2ndarray(y,  y_last)
 
-            if flag != CV_SUCCESS:
-                if flag == CV_TSTOP_RETURN:
-                    if self.verbosity > 1:
-                        print('Stop time reached... stopping computation...')
-                elif flag == CV_ROOT_RETURN:
-                    if self.verbosity > 1:
-                        print('Found root... stopping computation...')
-                elif flag < 0:
-                    print('Error occured. See returned flag '
-                          'variable and CVode documentation.')
+            if flag == CV_SUCCESS or flag == CV_WARNING:
+                t_retn[idx]    = t_out
+                y_retn[idx, :] = y_last
+                idx = idx + 1
+                PyErr_CheckSignals()
+
+                # Iterate until we reach the end of tspan
+                if idx < last_idx:
+                    t = tspan[idx]
+                    continue
                 else:
-                    print('Unhandled flag:', flag,
-                          '\nComputation stopped... ')
+                    break
 
-                t_retn  = t_retn[0:idx]
-                y_retn  = y_retn[0:idx, :]
+            elif flag == CV_ROOT_RETURN:
+                t_roots.append(np.copy(t_out))
+                y_roots.append(np.copy(y_last))
+                break
+            elif flag == CV_TSTOP_RETURN:
+                t_tstop.append(np.copy(t_out))
+                y_tstop.append(np.copy(y_last))
+                break
 
-                return flag, t_retn, y_retn, t_out, y_last
+            break
 
-            t_retn[idx]    = t_out
-            y_retn[idx, :] = y_last
 
-            PyErr_CheckSignals()
+        PyErr_CheckSignals()
 
-        return flag, t_retn, y_retn, None, None
+        # return values computed so far
+        t_retn  = t_retn[0:idx]
+        y_retn  = y_retn[0:idx, :]
+        if flag < 0:
+            y_err = y_last
+            t_err = t_out
+        else:
+            y_err = None
+            t_err = None
+        return (
+            flag, t_retn, y_retn, t_err, y_err, t_roots, y_roots,
+            t_tstop, y_tstop,
+        )
+
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
         """

@@ -192,7 +192,7 @@ cdef int _jacdense(long int Neq, realtype tt, realtype cj,
     else:
         yy_tmp = aux_data.yy_tmp
         yp_tmp = aux_data.yp_tmp
-        if aux_data.jac_tmp == None:
+        if aux_data.jac_tmp is None:
             N = np.alen(yy_tmp)
             aux_data.jac_tmp = np.empty((N,N), float)
         jac_tmp = aux_data.jac_tmp
@@ -631,7 +631,7 @@ cdef class IDA:
         cdef long int N
         N = <long int> np.alen(y0)
 
-        if opts['rfn'] == None:
+        if opts['rfn'] is None:
             raise ValueError('The residual function rfn not assigned '
                               'during ''set_options'' call !')
 

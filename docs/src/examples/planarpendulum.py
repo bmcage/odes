@@ -146,9 +146,11 @@ class RootFn(ida.IDA_RootFunction):
         out[0] = 10.-t
         return 0
 
-solver.set_options(nr_rootfns = 1, rootfn=RootFn())
+rootfn = RootFn()
+solver.set_options(nr_rootfns = 1, rootfn=rootfn)
 
-print ('test', isinstance(RootFn, ida.IDA_RootFunction))
+if not isinstance(rootfn, ida.IDA_RootFunction):
+    print ('Test for IDA_RootFunction instance failed')
 
 _flag, t3, y3 = solver.solve(time, problem.z0, problem.zp0)[:3]
 
