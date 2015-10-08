@@ -95,6 +95,7 @@ PYTHONPATH=/path-to-build python -c 'import scikits.odes as od; od.test()'
 ## Release info
 
 Release: 
+
 1. set in common.py version string and DEV=False, commit this.
 2. tag like: `git tag -a v1.0.0 -m "version 1.0.0"`
 3. push tag: `git push --tags`
