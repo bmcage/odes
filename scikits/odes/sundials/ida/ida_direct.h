@@ -1,14 +1,19 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2010/12/01 22:14:09 $
+ * $Revision: 4378 $
+ * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
  * ----------------------------------------------------------------- 
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2006, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2014, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * Common header file for the direct linear solvers in IDA.
  * -----------------------------------------------------------------
@@ -17,12 +22,12 @@
 #ifndef _IDADLS_H
 #define _IDADLS_H
 
+#include <sundials/sundials_direct.h>
+#include <sundials/sundials_nvector.h>
+
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-
-#include <sundials/sundials_direct.h>
-#include <sundials/sundials_nvector.h>
 
 /*
  * =================================================================
@@ -78,7 +83,7 @@ extern "C" {
  *     the inverse of the step size h.
  *                                                                
  * user_data is a pointer to user Jacobian data - the same as the    
- *     user_data parameter passed to IDASetRdata.                     
+ *     user_data parameter passed to IDASetUserData.                     
  *                                                                
  * Jac is the dense matrix (of type DlsMat) to be loaded by  
  *     an IDADlsDenseJacFn routine with an approximation to the   
@@ -164,7 +169,7 @@ typedef int (*IDADlsDenseJacFn)(long int N, realtype t, realtype c_j,
  * c_j is the scalar in the system Jacobian, proportional to 1/hh.
  *                                                                
  * user_data  is a pointer to user Jacobian data - the same as the    
- *    user_data parameter passed to IDASetRdata.                      
+ *    user_data parameter passed to IDASetUserData.                      
  *                                                                
  * Jac is the band matrix (of type BandMat) to be loaded by    
  *     an IDADlsBandJacFn routine with an approximation to the    
