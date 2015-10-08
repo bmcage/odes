@@ -27,18 +27,38 @@ def rhseqn(t, x, xdot):
 from scikits.odes import ode
 solver = ode('cvode', rhseqn)
 #obtain solution at a required time
-result = solver.solve([0., 1., 2.], initx)
+result = solver.solve([0., 10., 20.], initx)
 
+print ('\n sundials cvode')
 print('\n   t        Solution          Exact')
 print('------------------------------------')
 for t, u in zip(result[1], result[2]):
     print('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
 
 #continue the solver
-result = solver.solve([result[1][-1], result[1][-1]+1], result[2][-1])
+result = solver.solve([result[1][-1], result[1][-1]+10, result[1][-1]+110], result[2][-1])
 print('------------------------------------')
 print('  ...continuation of the solution')
 print('------------------------------------')
 
 for t, u in zip(result[1], result[2]):
     print ('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
+
+from scipy.integrate import ode as scode
+#define function for the right-hand-side equations which has specific signature
+def scrhseqn(t, x):
+    """ we create rhs equations for the problem"""
+    return [ x[1],  - k/m * x[0]]
+solver = scode(scrhseqn).set_integrator('vode', method='bdf')
+solver.set_initial_value(initx,0)
+#obtain solution at a required time
+print ('\n scipy vode')
+print('\n   t        Solution          Exact')
+print('------------------------------------')
+
+while solver.successful() and solver.t < 30:
+    solver.integrate(solver.t+10)
+    print('%4.2f %15.6g %15.6g' % (solver.t, solver.y[0], initx[0]*cos(sqrt(k/m)*solver.t)+initx[1]*sin(sqrt(k/m)*solver.t)/sqrt(k/m)))
+
+solver.integrate(solver.t+100)
+print('%4.2f %15.6g %15.6g' % (solver.t, solver.y[0], initx[0]*cos(sqrt(k/m)*solver.t)+initx[1]*sin(sqrt(k/m)*solver.t)/sqrt(k/m)))
