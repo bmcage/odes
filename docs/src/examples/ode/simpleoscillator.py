@@ -52,7 +52,7 @@ def scrhseqn(t, x):
 solver = scode(scrhseqn).set_integrator('vode', method='bdf')
 solver.set_initial_value(initx,0)
 #obtain solution at a required time
-print ('\n scipy vode')
+print ('\n scipy vode (fails some seconds earlier than cvode)')
 print('\n   t        Solution          Exact')
 print('------------------------------------')
 
