@@ -10,7 +10,17 @@ are the *Sundials* solvers.
 
 # Documentation
 
-For examples, see the docs/src/examples directory and scikits/odes/tests directory. 
+## Notebook examples
+* [Simple oscillator](https://github.com/bmcage/odes/blob/master/docs/ipython/Simple%20Oscillator.ipynb) solved with cvode
+
+## Python examples
+For examples, see the [docs/src/examples](https://github.com/bmcage/odes/blob/master/docs/src/examples) directory and [scikits/odes/tests](https://github.com/bmcage/odes/blob/master/scikits/odes/tests) directory. 
+
+## Projects that use odes
+You can learn by example from following code that uses odes
+* Centrifuge simulation, a wrapper around the ida solver: see [centrifuge-1d](https://github.com/bmcage/centrifuge-1d/blob/master/centrifuge1d/modules/shared/solver.py)
+
+You have a project using odes? Do a pull request to add your project.
 
 # Installation
 
@@ -40,7 +50,7 @@ as root:
 This should install sundials in _/usr/local/lib_
 Make sure you use the fortran compiler as used for your lapack/blas install!
 
-## Installation from sources
+## Installation of ODES scikit from sources
 
 You can copy the git repository locally in directory odes with:
 ```
@@ -90,6 +100,17 @@ or shorter, in a terminal:
 
 ```
 PYTHONPATH=/path-to-build python -c 'import scikits.odes as od; od.test()'
+```
+
+## IPython
+Please submit extra ipython notebook examples of usage of odes scikit. To install and use ipython, typical install instructions on Ubuntu 14.04 would be:
+```
+pip install "ipython[notebook]"
+ipython notebook
+```
+Which should open a browser window from the current directory to work on a python notebook. Do this in the directory  `odes/docs/ipython`. You might obtain errors due to missing dependencies. For example, common is simplegeneric missing. Again, in Ubuntu 14.04 you would install it with
+```
+sudo apt-get install python-simplegeneric
 ```
 
 ## Release info
