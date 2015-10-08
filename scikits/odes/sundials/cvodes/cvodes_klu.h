@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4357 $
- * $Date: 2015-02-09 13:22:31 -0800 (Mon, 09 Feb 2015) $
+ * $Revision: 4491 $
+ * $Date: 2015-04-30 16:56:10 -0700 (Thu, 30 Apr 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -102,6 +102,51 @@ extern "C" {
 
   SUNDIALS_EXPORT int CVKLUSetOrdering(void *cv_mem, int ordering_choice); 
 
+/* 
+ * ================================================================
+ *
+ *                   PART II - backward problems
+ *
+ * ================================================================
+ */
+
+/*
+ * -----------------------------------------------------------------
+ * Function: CVKLUB
+ * -----------------------------------------------------------------
+ * CVKLUB is a wrapper around CVKLU. It attaches the CVKLU linear
+ * solver to the backward problem memory block.
+ * The 'which' argument is the int returned by CVodeCreateB.
+ * -----------------------------------------------------------------
+ */
+
+  SUNDIALS_EXPORT int CVKLUB(void *cvode_mem, int which, int n, int nnz);
+
+
+/*
+ * -----------------------------------------------------------------
+ * Function: CVKLUReInitB
+ * -----------------------------------------------------------------
+ * CVKLUReInitB is a wrapper around CVKLUReInit. 
+ * CVKLUReInitB pulls off the memory block associated with the
+ * which parameter and reinitializes the KLU solver associated with that block.
+ * The 'which' argument is the int returned by CVodeCreateB.
+ * -----------------------------------------------------------------
+ */
+
+  SUNDIALS_EXPORT int CVKLUReInitB(void *cvode_mem, int which, int n, int nnz, int reinit_type);
+
+/*
+ * -----------------------------------------------------------------
+ * Function: CVKLUSetOrderingB
+ * -----------------------------------------------------------------
+ * CVKLUSetOrderingB is a wrapper around CVKLUSetOrdering. 
+ * CVKLUSetOrderingB pulls off the memory block associated with the
+ * which parameter and sets the ordering for the solver associated with that block.
+ * -----------------------------------------------------------------
+ */
+
+  SUNDIALS_EXPORT int CVKLUSetOrderingB(void *cv_mem, int which, int ordering_choice); 
 
   
 #ifdef __cplusplus

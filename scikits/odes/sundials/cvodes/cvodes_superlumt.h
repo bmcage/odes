@@ -15,7 +15,7 @@
  * For details, see the LICENSE file.
  * LLNS Copyright End
  * -----------------------------------------------------------------
- * This is the header file for the IDASuperLUMT linear solver module.
+ * This is the header file for the CVSuperLUMT linear solver module.
  * -----------------------------------------------------------------
  */
 
@@ -80,16 +80,28 @@ extern "C" {
  * -----------------------------------------------------------------
  * Function: CVSuperLUMTB
  * -----------------------------------------------------------------
- * CVSuperLUMTB links the main IDAS integrator with the CVSuperLUMT
+ * CVSuperLUMTB links the main CVODES integrator with the CVSuperLUMT
  * linear solver for the backward integration.
+ * The 'which' argument is the int returned by CVodeCreateB.
  * -----------------------------------------------------------------
  */
  
-  SUNDIALS_EXPORT int CVSuperLUMTB(void *cvode_mem, int num_threads, 
-				   int which, int nB, int nnzB);
+  SUNDIALS_EXPORT int CVSuperLUMTB(void *cvode_mem, int which, int num_threads, 
+				   int nB, int nnzB);
  
  
-
+/*
+ * -----------------------------------------------------------------
+ * Function: CVSuperLUMTSetOrderingB
+ * -----------------------------------------------------------------
+ * CVSuperLUMTSetOrderingB pulls off the memory block associated with the
+ * which parameter and sets the ordering for the solver associated with that block.
+ * The 'which' argument is the int returned by CVodeCreateB.
+ * -----------------------------------------------------------------
+ */
+ 
+  SUNDIALS_EXPORT int CVSuperLUMTSetOrderingB(void *cvode_mem, int which, 
+					      int ordering_choice);
 
   
 #ifdef __cplusplus

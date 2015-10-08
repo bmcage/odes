@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision: 4489 $
+ * $Date: 2015-04-29 17:15:44 -0700 (Wed, 29 Apr 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan C. Hindmarsh, Radu Serban and
  *                Aaron Collier @ LLNL
@@ -313,6 +313,7 @@ typedef int (*IDABBDCommFnB)(long int NlocalB, realtype tt,
  * -----------------------------------------------------------------
  * Interface functions for the IDABBDPRE preconditioner to be used
  * on the backward phase.
+ * The 'which' argument is the int returned by IDACreateB.
  * -----------------------------------------------------------------
  */
 

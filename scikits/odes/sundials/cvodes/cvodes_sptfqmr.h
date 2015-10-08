@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision: 4488 $
+ * $Date: 2015-04-29 16:39:48 -0700 (Wed, 29 Apr 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Aaron Collier and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -79,6 +79,16 @@ SUNDIALS_EXPORT int CVSptfqmr(void *cvode_mem, int pretype, int maxl);
 /* 
  * -----------------------------------------------------------------
  * PART II - backward problems
+ * -----------------------------------------------------------------
+ */
+
+/*
+ * -----------------------------------------------------------------
+ * Function: CVSptfqmrB
+ * -----------------------------------------------------------------
+ * CVSptfqmrB links the main CVODES integrator with the CVSptfqmr
+ * linear solver for the backward integration.
+ * The 'which' argument is the int returned by CVodeCreateB.
  * -----------------------------------------------------------------
  */
 

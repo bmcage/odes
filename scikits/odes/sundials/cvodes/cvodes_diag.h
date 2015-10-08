@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision: 4488 $
+ * $Date: 2015-04-29 16:39:48 -0700 (Wed, 29 Apr 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -132,6 +132,7 @@ SUNDIALS_EXPORT char *CVDiagGetReturnFlagName(long int flag);
  * -----------------------------------------------------------------
  * CVDiagB links the main CVODE integrator with the CVDIAG
  * linear solver for the backward integration.
+ * The 'which' argument is the int returned by CVodeCreateB.
  * -----------------------------------------------------------------
  */
   

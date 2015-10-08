@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision: 4490 $
+ * $Date: 2015-04-30 16:55:37 -0700 (Thu, 30 Apr 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Aaron Collier and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -78,6 +78,16 @@ SUNDIALS_EXPORT int CVSpbcg(void *cvode_mem, int pretype, int maxl);
 /* 
  * -----------------------------------------------------------------
  * PART II - backward problems
+ * -----------------------------------------------------------------
+ */
+
+/*
+ * -----------------------------------------------------------------
+ * Function: CVSpbcgB
+ * -----------------------------------------------------------------
+ * CVSpbcgB links the main CVODES integrator with the CVSpbcg
+ * linear solver for the backward integration.
+ * The 'which' argument is the int returned by CVodeCreateB.
  * -----------------------------------------------------------------
  */
 

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4357 $
- * $Date: 2015-02-09 13:22:31 -0800 (Mon, 09 Feb 2015) $
+ * $Revision: 4491 $
+ * $Date: 2015-04-30 16:56:10 -0700 (Thu, 30 Apr 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -89,17 +89,6 @@ extern "C" {
   SUNDIALS_EXPORT int IDAKLUReInit(void *ida_mem_v, int n, int nnz, 
 				   int reinit_type);
 
-/*
- * -----------------------------------------------------------------
- * Function: IDAKLUB
- * -----------------------------------------------------------------
- * IDAKLUB links the main IDAS integrator with the IDAKLU
- * linear solver for the backward integration.
- * -----------------------------------------------------------------
- */
-
-  SUNDIALS_EXPORT int IDAKLUB(void *ida_mem, int which, int nB, int nnzB);
-
 /* 
  * -----------------------------------------------------------------
  * Optional Input Specification Functions
@@ -113,6 +102,52 @@ extern "C" {
 
   SUNDIALS_EXPORT int IDAKLUSetOrdering(void *ida_mem, int ordering_choice); 
 
+/* 
+ * ================================================================
+ *
+ *                   PART II - backward problems
+ *
+ * ================================================================
+ */
+
+
+/*
+ * -----------------------------------------------------------------
+ * Function: IDAKLUB
+ * -----------------------------------------------------------------
+ * IDAKLUB links the main IDAS integrator with the IDAKLU
+ * linear solver for the backward integration.
+ * The 'which' argument is the int returned by IDACreateB.
+ * -----------------------------------------------------------------
+ */
+
+  SUNDIALS_EXPORT int IDAKLUB(void *ida_mem, int which, int nB, int nnzB);
+
+
+/*
+ * -----------------------------------------------------------------
+ * Function: IDAKLUReInitB
+ * -----------------------------------------------------------------
+ * IDAKLUReInitB pulls off the memory block associated with the which parameter
+ * and reinitializes the KLU solver associated with that memory block.
+ * The 'which' argument is the int returned by IDACreateB.
+ * -----------------------------------------------------------------
+ */
+
+  SUNDIALS_EXPORT int IDAKLUReInitB(void *ida_mem, int which, int nB, int nnzB, int reinit_type);
+
+
+/*
+ * -----------------------------------------------------------------
+ * Function: IDAKLUSetOrderingB
+ * -----------------------------------------------------------------
+ * IDAKLUSetOrderingB pulls off the memory block associated with the which parameter
+ * and sets the ordering for the KLU solver associated with that memory block.
+ * The 'which' argument is the int returned by IDACreateB.
+ * -----------------------------------------------------------------
+ */
+
+  SUNDIALS_EXPORT int IDAKLUSetOrderingB(void *ida_mem, int which, int ordering_choiceB);
 
   
 #ifdef __cplusplus

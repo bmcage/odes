@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision: 4489 $
+ * $Date: 2015-04-29 17:15:44 -0700 (Wed, 29 Apr 2015) $
  * ----------------------------------------------------------------- 
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -404,6 +404,7 @@ typedef int (*IDADlsBandJacFnBS)(long int NeqB, long int mupperB, long int mlowe
  * the backward problem does not depend on forward sensitivities.
  * IDADlsSetDenseJacFnBS and IDADlsSetBandJacFnBS specify the Jacobian
  * functions when the backward problem does depend on sensitivities.
+ * The 'which' argument is the int returned by IDACreateB.
  * --------------------------------------------------------------------
  */
 

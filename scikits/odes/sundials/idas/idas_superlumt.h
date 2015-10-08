@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4180 $
- * $Date: 2014-07-23 12:36:20 -0700 (Wed, 23 Jul 2014) $
+ * $Revision: 4491 $
+ * $Date: 2015-04-30 16:56:10 -0700 (Thu, 30 Apr 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -56,21 +56,6 @@ extern "C" {
   SUNDIALS_EXPORT int IDASuperLUMT(void *ida_mem, int num_threads, 
 				   int n, int nnz); 
 
-/*
- * -----------------------------------------------------------------
- * Function: IDASuperLUMTB
- * -----------------------------------------------------------------
- * IDASuperLUMTB links the main IDAS integrator with the IDASuperLUMT
- * linear solver for the backward integration.
- * -----------------------------------------------------------------
- */
-
-  SUNDIALS_EXPORT int IDASuperLUMTB(void *ida_mem, int num_threads, 
-				    int which, int nB, int nnzB);
-
-
-
-
 /* 
  * -----------------------------------------------------------------
  * Optional Input Specification Functions
@@ -89,6 +74,34 @@ extern "C" {
 
   SUNDIALS_EXPORT int IDASuperLUMTSetOrdering(void *ida_mem, 
 					      int ordering_choice); 
+
+
+
+/*
+ * -----------------------------------------------------------------
+ * Function: IDASuperLUMTB
+ * -----------------------------------------------------------------
+ * IDASuperLUMTB links the main IDAS integrator with the IDASuperLUMT
+ * linear solver for the backward integration.
+ * The 'which' argument is the int returned by IDACreateB.
+ * -----------------------------------------------------------------
+ */
+
+  SUNDIALS_EXPORT int IDASuperLUMTB(void *ida_mem, int which, int num_threads, 
+				    int nB, int nnzB);
+
+
+/*
+ * -----------------------------------------------------------------
+ * Function: IDASuperLUMTSetOrderingB
+ * -----------------------------------------------------------------
+ * IDASuperLUMTSetOrderingB pulls off the memory block associated with the which parameter
+ * and sets the ordering for the KLU solver associated with that memory block.
+ * The 'which' argument is the int returned by IDACreateB.
+ * -----------------------------------------------------------------
+ */
+  SUNDIALS_EXPORT int IDASuperLUMTSetOrderingB(void *ida_mem, int which, 
+					      int ordering_choiceB); 
 
 
   
