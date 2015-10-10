@@ -235,13 +235,22 @@ As an easy example, consider the simple oscillator,
                     returned. Must contain the start time.
             y0    - list/numpy array of initial values
 
-        Return values:
+        Return values :
+         if old_api:
             flag   - indicating return status of the solver
             t      - numpy array of times at which the computations were successful
             y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
             t_err  - float or None - if recoverable error occured (for example reached maximum
                      number of allowed iterations), this is the time at which it happened
             y_err  - numpy array of values corresponding to time t_err
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
         """
         return self._integrator.solve(tspan, y0)
 
@@ -274,9 +283,19 @@ As an easy example, consider the simple oscillator,
             y_retn - numpy vector (ndim = 1) in which the computed
                      value will be stored  (needs to be preallocated)
         Return values:
+         if old_api:
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
 
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y. y will 
+                            correspond to y_retn value
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
         """
         return self._integrator.step(t, y_retn)
 

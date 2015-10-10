@@ -107,6 +107,10 @@ cdef class CVODE:
 
     cdef long int N #problem size, i.e. len(y0) = N
     cdef N_Vector y0, y, yp # for 'step' method
+    cdef list t_roots
+    cdef list y_roots
+    cdef list t_tstop
+    cdef list y_tstop
 
     cdef int verbosity
 

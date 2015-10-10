@@ -1245,6 +1245,13 @@ cdef class CVODE:
 
         if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
             CVDlsSetDenseJacFn(cv_mem, _jacdense)
+        
+        #now we initialize storage which is persistent over steps
+        self.t_roots = []
+        self.y_roots = []
+        self.t_tstop = []
+        self.y_tstop = []
+
         #TODO: Reinitialization of the rooting function
 
         self.initialized = True
@@ -1334,16 +1341,6 @@ cdef class CVODE:
         t_retn  = np.empty(np.shape(tspan), float)
         y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
 
-        cdef list t_roots
-        cdef list y_roots
-        t_roots = []
-        y_roots = []
-
-        cdef list t_tstop
-        cdef list y_tstop
-        t_tstop = []
-        y_tstop = []
-
         self._init_step(tspan[0], y0)
         PyErr_CheckSignals()
         t_retn[0] = tspan[0]
@@ -1380,12 +1377,12 @@ cdef class CVODE:
                     break
 
             elif flag == CV_ROOT_RETURN:
-                t_roots.append(np.copy(t_out))
-                y_roots.append(np.copy(y_last))
+                self.t_roots.append(np.copy(t_out))
+                self.y_roots.append(np.copy(y_last))
                 break
             elif flag == CV_TSTOP_RETURN:
-                t_tstop.append(np.copy(t_out))
-                y_tstop.append(np.copy(y_last))
+                self.t_tstop.append(np.copy(t_out))
+                self.y_tstop.append(np.copy(y_last))
                 break
 
             break
@@ -1403,8 +1400,8 @@ cdef class CVODE:
             y_err = None
             t_err = None
         return (
-            flag, t_retn, y_retn, t_err, y_err, t_roots, y_roots,
-            t_tstop, y_tstop,
+            flag, t_retn, y_retn, t_err, y_err, self.t_roots, self.y_roots,
+            self.t_tstop, self.y_tstop,
         )
 
 
@@ -1432,16 +1429,51 @@ cdef class CVODE:
 
         cdef N_Vector y  = self.y
         cdef realtype t_out
-        cdef int flag
+        cdef int flagCV
 
         if t>0.0:
-            flag = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
+            flagCV = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
         else:
             flagCV = CVode(self._cv_mem, <realtype> -t,  y, &t_out, CV_ONE_STEP)
 
-        nv_s2ndarray(y, y_retn)
+        if self._old_api:
+            warn("Old api is deprecated, move to new api", DeprecationWarning)
 
-        return flag, t_out
+        nv_s2ndarray(y, y_retn)
+        flag = StatusEnum(flagCV)
+        
+        t_err = None
+        y_err = None
+        if flag == CV_SUCCESS or flag == CV_WARNING:
+            pass
+        elif flag == CV_ROOT_RETURN:
+            self.t_roots.append(np.copy(t_out))
+            self.y_roots.append(np.copy(y_retn))
+        elif flag == CV_TSTOP_RETURN:
+            self.t_tstop.append(np.copy(t_out))
+            self.y_tstop.append(np.copy(y_retn))
+        elif flag < 0:
+            t_err = np.copy(t_out)
+            y_err = np.copy(y_retn)
+
+        PyErr_CheckSignals()
+
+        t_roots = self.t_roots if self.t_roots else None
+        y_roots = self.y_roots if self.y_roots else None
+        t_tstop = self.t_tstop if self.t_tstop else None
+        y_tstop = self.y_tstop if self.y_tstop else None
+
+        if self._old_api:    
+            return flagCV, t_out
+
+        return SolverReturn(
+            flag=flag,
+            values=SolverVariables(t=t_out, y=y_retn),
+            errors=SolverVariables(t=t_err, y=y_err),
+            roots=SolverVariables(t=t_roots, y=y_roots),
+            tstop=SolverVariables(t=t_tstop, y=y_tstop),
+            message=STATUS_MESSAGE[flag]
+        )
 
     def __dealloc__(self):
         if not self._cv_mem is NULL: CVodeFree(&self._cv_mem)
