@@ -1,4 +1,7 @@
+from collections import namedtuple
+from enum import IntEnum
 import inspect
+from warnings import warn
 
 import numpy as np
 cimport numpy as np
@@ -12,6 +15,77 @@ from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
 # TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
 
+SolverReturn = namedtuple(
+    "SolverReturn", [
+        "flag", "values", "errors", "roots",
+        "tstop", "message"
+    ]
+)
+
+SolverVariables = namedtuple("SolverVariables", ["t", "y", "ydot"])
+
+class StatusEnumIDA(IntEnum):
+    SUCCESS = IDA_SUCCESS
+    TSTOP_RETURN = IDA_TSTOP_RETURN
+    ROOT_RETURN = IDA_ROOT_RETURN
+    
+    WARNING = IDA_WARNING
+    
+    TOO_MUCH_WORK = IDA_TOO_MUCH_WORK
+    TOO_MUCH_ACC = IDA_TOO_MUCH_ACC
+    ERR_FAIL = IDA_ERR_FAIL
+    CONV_FAIL = IDA_CONV_FAIL 
+    
+    LINIT_FAIL = IDA_LINIT_FAIL
+    LSETUP_FAIL = IDA_LSETUP_FAIL
+    LSOLVE_FAIL = IDA_LSOLVE_FAIL
+    RES_FAIL = IDA_RES_FAIL 
+    REP_RES_ERR = IDA_REP_RES_ERR 
+    RTFUNC_FAIL = IDA_RTFUNC_FAIL 
+    CONSTR_FAIL= IDA_CONSTR_FAIL
+    
+    FIRST_RES_FAIL = IDA_FIRST_RES_FAIL
+    LINESEARCH_FAIL = IDA_LINESEARCH_FAIL
+    NO_RECOVERY = IDA_NO_RECOVERY
+    
+    MEM_NULL= IDA_MEM_NULL
+    MEM_FAIL = IDA_MEM_FAIL
+    ILL_INPUT = IDA_ILL_INPUT
+    NO_MALLOC = IDA_NO_MALLOC 
+    BAD_EWT = IDA_BAD_EWT 
+    BAD_K = IDA_BAD_K
+    BAD_T = IDA_BAD_T 
+    BAD_DKY = IDA_BAD_DKY 
+
+STATUS_MESSAGE = {
+    StatusEnumIDA.SUCCESS: "Successful function return.",
+    StatusEnumIDA.TSTOP_RETURN: "Reached specified stopping point",
+    StatusEnumIDA.ROOT_RETURN: "Found one or more roots",
+    StatusEnumIDA.WARNING: "Succeeded but something unusual happened",
+    StatusEnumIDA.TOO_MUCH_WORK: "Could not reach endpoint",
+    StatusEnumIDA.TOO_MUCH_ACC: "Could not satisfy accuracy",
+    StatusEnumIDA.ERR_FAIL: "Error test failures occurred too many times during one internal time step or minimum step size was reached.",
+    StatusEnumIDA.CONV_FAIL: "Convergence test failures occurred too many times during one internal time step or minimum step size was reached.",
+    StatusEnumIDA.LINIT_FAIL: "The linear solver’s initialization function failed.",
+    StatusEnumIDA.LSETUP_FAIL: "The linear solver’s setup function failed in an unrecoverable manner.",
+    StatusEnumIDA.LSOLVE_FAIL: "The linear solver’s solve function failed in an unrecoverable manner.",
+    StatusEnumIDA.RES_FAIL: "The residual function had a non-recoverable error",
+    StatusEnumIDA.REP_RES_ERR: "There are repeated recoverable residual errors.",
+    StatusEnumIDA.RTFUNC_FAIL: "The rootfinding routine failed in an unrecoverable manner.",
+    StatusEnumIDA.CONSTR_FAIL: "The inequality constraints could not be met.",
+    StatusEnumIDA.FIRST_RES_FAIL: "The residual function failed at the first call.",
+    StatusEnumIDA.LINESEARCH_FAIL: "The linesearch failed (on steptol test)",
+    StatusEnumIDA.NO_RECOVERY: "The residual routine or the linear setup or solve routine had a recoverable error, but IDACalcIC was unable to recover.",
+    StatusEnumIDA.MEM_NULL: "Integrator memory is NULL.",
+    StatusEnumIDA.MEM_FAIL: "A memory request failed.",
+    StatusEnumIDA.ILL_INPUT: "Invalid input detected.",
+    StatusEnumIDA.NO_MALLOC: "Attempt to call before IDAMalloc. Allocate memory first.",
+    StatusEnumIDA.BAD_EWT: "Some initial ewt component = 0.0 illegal.",
+    StatusEnumIDA.BAD_K: "Illegal value for k. If the requested k is not in the range 0,1,...,order used ",
+    StatusEnumIDA.BAD_T: "Illegal value for t. If t is not within the interval of the last step taken.",
+    StatusEnumIDA.BAD_DKY: "The dky vector is NULL",
+   
+}
 # Right-hand side function
 cdef class IDA_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
@@ -256,12 +330,14 @@ cdef class IDA:
             'rfn': None,
             'rootfn': None,
             'nr_rootfns': 0,
-            'jacfn': None
+            'jacfn': None,
+            'old_api': None,
             }
 
         self.verbosity = 1
         self.options = default_values
         self.N       = -1
+        self._old_api = True # use old api by default
         self.set_options(rfn=Rfn, **options)
         self._ida_mem = NULL
         self.initialized = False
@@ -443,6 +519,13 @@ cdef class IDA:
                              2.0 - variable has to be positive (i.e. > 0)
                             -1.0 - variable has to be non-positive (i.e. <= 0)
                             -2.0 - variable has to be negative (i.e. < 0)
+            'old_api':
+                Values: True (default), False
+                Description:
+                    Forces use of old api (tuple of 7) if True or 
+                    new api (namedtuple) if False.
+                    Other options may require new api, hence using this should
+                    be avoided if possible.
         """
 
         for (key, value) in options.items():
@@ -477,6 +560,10 @@ cdef class IDA:
             verbosity = options['verbosity']
             self.options['verbosity'] = verbosity
             self.verbosity = verbosity
+            warn("verbosity is deprecated, control output via logging and "
+                 "err_handler", DeprecationWarning
+            )
+
 
         # Root function
         if ('rootfn' in options) and (options['rootfn'] is not None):
@@ -570,6 +657,10 @@ cdef class IDA:
                if flag == IDA_ILL_INPUT:
                    raise ValueError('IDASetStopTime::Stop value is beyond '
                                     'current value.')
+
+        # Force old/new api
+        if options.get('old_api') is not None:
+            self._old_api = options['old_api']
 
     def init_step(self, double t0, object y0, object yp0,
                    np.ndarray y_ic0_retn = None,
@@ -923,7 +1014,8 @@ cdef class IDA:
             y0    - numpy array of initial values
             yp0   - numpy array of initial values of derivatives
 
-        Return values:
+        Return values:        
+         if old_api
             flag   - indicating return status of the solver
             t      - numpy array of times at which the computations were
                      successful
@@ -937,11 +1029,14 @@ cdef class IDA:
             y_err  - numpy array of values corresponding to time t_err
             yp_err - numpy array of derivatives corresponding to time t_err
 
-        Note:
-            If 'calc_initcond' then solver returns instead of user supplied
-            y0, yp0 values as the starting values the values calculated by the
-            solver (i.e. consistent initial conditions. The starting time is
-            then also the precomputed time.
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y and ydot
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
+                message= String with message in case of an error
         """
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0, np_yp0
@@ -950,12 +1045,49 @@ cdef class IDA:
         np_y0    = np.asarray(y0)
         np_yp0   = np.asarray(yp0)
 
-        return self._solve(np_tspan, np_y0, np_yp0)
+        soln = self._solve(np_tspan, np_y0, np_yp0)
+        if self._old_api:
+            warn("Old api is deprecated, move to new api", DeprecationWarning)
+            return soln
+
+        flag = StatusEnumIDA(soln[0])
+        t, y, yp = soln[1:4]
+
+        t_roots = None
+        y_roots = None
+        yp_roots = None
+        t_tstop = None
+        y_tstop = None
+        yp_tstop = None
+        t_err   = None
+        y_err   = None
+        yp_err   = None
+        
+        if flag == StatusEnumIDA.ROOT_RETURN:
+            t_roots = np.array(soln[4])
+            y_roots = np.array(soln[5])
+            yp_roots = np.array(soln[6])
+        elif flag == StatusEnumIDA.TSTOP_RETURN:
+            t_tstop = np.array(soln[4])
+            y_tstop = np.array(soln[5])
+            yp_tstop = np.array(soln[6])
+        elif flag != StatusEnumIDA.SUCCESS:
+            t_err = np.array(soln[4])
+            y_err = np.array(soln[5])
+            yp_err = np.array(soln[6])
+
+        return SolverReturn(
+            flag=flag,
+            values=SolverVariables(t=t, y=y, ydot=yp),
+            errors=SolverVariables(t=t_err, y=y_err, ydot=yp_err),
+            roots=SolverVariables(t=t_roots, y=y_roots, ydot=yp_roots),
+            tstop=SolverVariables(t=t_tstop, y=y_tstop, ydot=yp_tstop),
+            message=STATUS_MESSAGE[flag]
+        )
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                        np.ndarray[DTYPE_t, ndim=1] y0,
                        np.ndarray[DTYPE_t, ndim=1] yp0):
-
 
         cdef np.ndarray[DTYPE_t, ndim=1] t_retn
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn, yp_retn
@@ -991,19 +1123,6 @@ cdef class IDA:
             nv_s2ndarray(yp,  yp_last)
 
             if flag != IDA_SUCCESS:
-                if flag == IDA_TSTOP_RETURN:
-                    if self.verbosity > 1:
-                        print('Stop time reached... stopping computation...')
-                elif flag == IDA_ROOT_RETURN:
-                    if self.verbosity > 1:
-                        print('Found root... stopping computation...')
-                elif flag < 0:
-                    print('Error occured. See returned flag '
-                          'variable and IDA documentation.')
-                else:
-                    print('Unhandled flag:', flag,
-                          '\nComputation stopped... ')
-
                 t_retn   = t_retn[0:idx]
                 y_retn   = y_retn[0:idx, :]
                 yp_retn  = yp_retn[0:idx, :]

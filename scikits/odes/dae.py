@@ -107,6 +107,7 @@ class DaeBase(object):
             yp0   - list/numpy array of initial values of derivatives
             
         Return values:
+         if old_api:
             flag   - indicating return status of the solver
             t      - numpy array of times at which the computations were successful
             y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
@@ -115,12 +116,14 @@ class DaeBase(object):
                      number of allowed iterations), this is the time at which it happened
             y_err  - numpy array of values corresponding to time t_err
             yp_err - numpy array of derivatives corresponding to time t_err
-            
-        Note:
-            If 'calc_initcond' option set, then solver returns instead of user 
-            supplied y0, yp0 values as the starting values the values calculated 
-            by the solver (i.e. consistent initial
-            conditions. The starting time is then also the precomputed time.
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y and ydot
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
+                message= String with message in case of an error
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
@@ -271,6 +274,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             yp0   - list/numpy array of initial values of derivatives
             
         Return values:
+         if old_api
             flag   - indicating return status of the solver
             t      - numpy array of times at which the computations were successful
             y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
@@ -279,12 +283,15 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
                      number of allowed iterations), this is the time at which it happened
             y_err  - numpy array of values corresponding to time t_err
             yp_err - numpy array of derivatives corresponding to time t_err
-            
-        Note:
-            If 'calc_initcond' option set, then solver returns instead of user 
-            supplied y0, yp0 values as the starting values the values calculated 
-            by the solver (i.e. consistent initial
-            conditions. The starting time is then also the precomputed time.
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y and ydot
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
+                message= String with message in case of an error
         """
         return self._integrator.solve(tspan, y0,  yp0)
 
