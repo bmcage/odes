@@ -96,12 +96,21 @@ class OdeBase(object):
             y0    - list/numpy array of initial values
 
         Return values:
+         if old_api
             flag   - indicating return status of the solver
             t      - numpy array of times at which the computations were successful
             y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
             t_err  - float or None - if recoverable error occured (for example reached maximum
                      number of allowed iterations), this is the time at which it happened
             y_err  - numpy array of values corresponding to time t_err
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y
+                errors = Named tuple with entries t and y
+                roots  = Named tuple with entries t and y
+                tstop  = Named tuple with entries t and y
+                message= String with message in case of an error
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
@@ -247,9 +256,9 @@ As an easy example, consider the simple oscillator,
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnum)
                 values = Named tuple with entries t and y
-                errors = Named tuple with entries t_err and y_err
-                roots  = Named tuple with entries t_roots and y_roots
-                tstop  = Named tuple with entries t_stop and y_tstop
+                errors = Named tuple with entries t and y
+                roots  = Named tuple with entries t and y
+                tstop  = Named tuple with entries t and y
                 message= String with message in case of an error
         """
         return self._integrator.solve(tspan, y0)
