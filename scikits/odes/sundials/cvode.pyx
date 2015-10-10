@@ -1437,7 +1437,7 @@ cdef class CVODE:
         if t>0.0:
             flag = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
         else:
-            flag = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_ONE_STEP)
+            flagCV = CVode(self._cv_mem, <realtype> -t,  y, &t_out, CV_ONE_STEP)
 
         nv_s2ndarray(y, y_retn)
 
