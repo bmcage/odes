@@ -958,7 +958,6 @@ cdef class IDA:
 
         # Initial condition
         cdef bint compute_initcond_p
-        cdef float t0_init
         cdef realtype ic_t0 = <realtype>opts['compute_initcond_t0']
 
         if compute_initcond in [None, 'y0', 'yp0', '']:
@@ -969,19 +968,15 @@ cdef class IDA:
                              % compute_initcond)
 
         if compute_initcond_p:
+            flag = IDA_ILL_INPUT
+            
             if compute_initcond == 'yp0':
                 flag = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, ic_t0)
             elif compute_initcond == 'y0':
                 flag = IDACalcIC(ida_mem, IDA_Y_INIT, ic_t0)
 
             if not (flag == IDA_SUCCESS):
-                print('IDAInitCond: Error occured during computation'
-                      ' of initial condition, flag', flag)
-                return (False, t0)
-
-            t0_init = ic_t0
-        else:
-            t0_init = t0
+                return (flag, t0)
 
         if not ((y_ic0_retn is None) and (yp_ic0_retn is None)):
             assert np.alen(y_ic0_retn) == np.alen(yp_ic0_retn) == N,\
@@ -1002,7 +997,7 @@ cdef class IDA:
 
         self.initialized = True
 
-        return (True, t0_init)
+        return (flag, t0)
 
     def solve(self, object tspan, object y0,  object yp0):
         """
@@ -1010,7 +1005,7 @@ cdef class IDA:
 
         Input:
             tspan - an numpy array of times at which the computed value will be
-                    returned
+                    returned.  Must contain the start time as first entry.
             y0    - numpy array of initial values
             yp0   - numpy array of initial values of derivatives
 
@@ -1096,11 +1091,28 @@ cdef class IDA:
         yp_retn = np.empty([np.alen(tspan), np.alen(y0)], float)
 
         cdef int flag
+        
+        #check to avoid typical error
+        cdef dict opts = self.options
+        cdef realtype ic_t0 = <realtype>opts['compute_initcond_t0']
+        if ((np.alen(tspan)>1 and ic_t0 > tspan[0] and tspan[1] > tspan[0]) or
+            (np.alen(tspan)>1 and ic_t0 < tspan[0] and tspan[1] < tspan[0])):
+            pass
+        else:
+            raise ValueError('InitCond: ''compute_initcond_t0'' value: %f '
+                    ' is in different direction from start time %f than the '
+                    'first required output %f.'
+                             % (ic_t0, tspan[0], tspan[1]))
 
         (flag, t_retn[0]) = self.init_step(tspan[0], y0, yp0,
                                            y_retn[0, :], yp_retn[0, :])
-        if not flag:
-            return (False, t_retn[0], y0, None, None, None, None)
+        if not (flag == IDA_SUCCESS):
+            if self._old_api:
+                print('IDAInitCond: Error occured during computation'
+                      ' of initial condition, flag', flag)
+                return (False, t_retn[0], y0, None, None, None, None)
+            else:
+                return (flag, t_retn[0], y0, None, None, None, None)
         #TODO: Parallel version
         cdef np.ndarray[DTYPE_t, ndim=1] y_last, yp_last
         cdef unsigned int idx

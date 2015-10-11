@@ -1296,7 +1296,31 @@ cdef class CVODE:
         return (True, t0)
 
     def solve(self, object tspan, object y0):
+        """
+        Runs the solver.
 
+        Input:
+            tspan - an list/array of times at which the computed value will be
+                    returned. Must contain the start time as first entry..
+            y0    - list/numpy array of initial values
+
+        Return values:
+         if old_api
+            flag   - indicating return status of the solver
+            t      - numpy array of times at which the computations were successful
+            y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+            t_err  - float or None - if recoverable error occured (for example reached maximum
+                     number of allowed iterations), this is the time at which it happened
+            y_err  - numpy array of values corresponding to time t_err
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y
+                errors = Named tuple with entries t and y
+                roots  = Named tuple with entries t and y
+                tstop  = Named tuple with entries t and y
+                message= String with message in case of an error
+        """
         cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0
 
         if not np.alen(tspan) > 1:

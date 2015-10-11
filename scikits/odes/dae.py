@@ -102,7 +102,7 @@ class DaeBase(object):
         
         Input:
             tspan - an list/array of times at which the computed value will be
-                    returned. Must contain the start time.
+                    returned. Must contain the start time as first entry.
             y0    - list/numpy array of initial values
             yp0   - list/numpy array of initial values of derivatives
             
@@ -269,7 +269,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         
         Input:
             tspan - an list/array of times at which the computed value will be
-                    returned. Must contain the start time.
+                    returned. Must contain the start time as first entry.
             y0    - list/numpy array of initial values
             yp0   - list/numpy array of initial values of derivatives
             

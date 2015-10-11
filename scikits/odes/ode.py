@@ -92,7 +92,7 @@ class OdeBase(object):
 
         Input:
             tspan - an list/array of times at which the computed value will be
-                    returned. Must contain the start time.
+                    returned. Must contain the start time as first entry..
             y0    - list/numpy array of initial values
 
         Return values:
