@@ -141,8 +141,19 @@ class OdeBase(object):
             y_retn - numpy vector (ndim = 1) in which the computed
                      value will be stored  (needs to be preallocated)
         Return values:
+         if old_api:
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y. y will 
+                            correspond to y_retn value
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
 
         """
         raise NotImplementedError('all ODE solvers must implement this')
