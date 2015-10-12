@@ -53,6 +53,12 @@ cdef class IDA:
     cdef N_Vector y0, yp0, residual, y, yp
     cdef N_Vector dae_vars_id, constraints
     cdef long int N #problem size, i.e. len(y0) = N
+    cdef list t_roots
+    cdef list y_roots
+    cdef list yp_roots
+    cdef list t_tstop
+    cdef list y_tstop
+    cdef list yp_tstop
 
     cdef int order, nsteps
     cdef double maxstep, first_step
@@ -85,7 +91,7 @@ cdef class IDA:
                     np.ndarray y_ic0_retn = ?,
                     np.ndarray yp_ic0_retn = ?)
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
-                       np.ndarray[DTYPE_t, ndim=1]y0,
+                       np.ndarray[DTYPE_t, ndim=1] y0,
                        np.ndarray[DTYPE_t, ndim=1] yp0)
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=*)

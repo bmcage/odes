@@ -1,3 +1,4 @@
+from cpython.exc cimport PyErr_CheckSignals
 from collections import namedtuple
 from enum import IntEnum
 import inspect
@@ -684,7 +685,37 @@ cdef class IDA:
         np_y0  = np.asarray(y0, dtype=float)
         np_yp0 = np.asarray(yp0, dtype=float)
 
-        return self._init_step(t0, np_y0, np_yp0, y_ic0_retn, yp_ic0_retn)
+        flag, time = self._init_step(t0, np_y0, np_yp0, y_ic0_retn, yp_ic0_retn)
+        if not (flag == IDA_SUCCESS):
+            if self._old_api:
+                print('IDAInitCond: Error occured during computation'
+                      ' of initial condition, flag', flag)
+                return (False, time)
+            else:
+                return SolverReturn(
+                    flag=flag,
+                    values=SolverVariables(t=None, y=None, ydot=None),
+                    errors=SolverVariables(t=time, y=np_y0, ydot=np_yp0),
+                    roots=SolverVariables(t=None, y=None, ydot=None),
+                    tstop=SolverVariables(t=None, y=None, ydot=None),
+                    message=STATUS_MESSAGE[flag]
+                )
+        else:
+            if self._old_api:
+                return (True, time)
+            else:
+                y_retn  = np.empty(np.alen(np_y0), float)
+                yp_retn = np.empty(np.alen(np_y0), float)
+                nv_s2ndarray(self.y, y_retn)
+                nv_s2ndarray(self.yp, yp_retn)
+                return SolverReturn(
+                    flag=flag,
+                    values=SolverVariables(t=[time], y=[y_retn], ydot=[yp_retn]),
+                    errors=SolverVariables(t=None, y=None, ydot=None),
+                    roots=SolverVariables(t=None, y=None, ydot=None),
+                    tstop=SolverVariables(t=None, y=None, ydot=None),
+                    message=STATUS_MESSAGE[flag]
+                )
 
     cpdef _init_step(self, DTYPE_t t0,
                      np.ndarray[DTYPE_t, ndim=1] y0,
@@ -710,7 +741,7 @@ cdef class IDA:
                   you need to call 'init_step' prior to the 'step' method to
                   assure the values are correctly initialized.
 
-            Returns the time of the intial step.
+            Returns the (flag, time) of the intial step.
         """
         #TODO: jacobi function ?isset
 
@@ -967,6 +998,12 @@ cdef class IDA:
             raise ValueError('InitCond: Unknown ''compute_initcond'' value: %s'
                              % compute_initcond)
 
+        #now we initialize storage which is persistent over steps
+        self.t_roots = []
+        self.y_roots = []
+        self.t_tstop = []
+        self.y_tstop = []
+        
         if compute_initcond_p:
             flag = IDA_ILL_INPUT
             
@@ -1044,41 +1081,7 @@ cdef class IDA:
         if self._old_api:
             warn("Old api is deprecated, move to new api", DeprecationWarning)
             return soln
-
-        flag = StatusEnumIDA(soln[0])
-        t, y, yp = soln[1:4]
-
-        t_roots = None
-        y_roots = None
-        yp_roots = None
-        t_tstop = None
-        y_tstop = None
-        yp_tstop = None
-        t_err   = None
-        y_err   = None
-        yp_err   = None
-        
-        if flag == StatusEnumIDA.ROOT_RETURN:
-            t_roots = np.array(soln[4])
-            y_roots = np.array(soln[5])
-            yp_roots = np.array(soln[6])
-        elif flag == StatusEnumIDA.TSTOP_RETURN:
-            t_tstop = np.array(soln[4])
-            y_tstop = np.array(soln[5])
-            yp_tstop = np.array(soln[6])
-        elif flag != StatusEnumIDA.SUCCESS:
-            t_err = np.array(soln[4])
-            y_err = np.array(soln[5])
-            yp_err = np.array(soln[6])
-
-        return SolverReturn(
-            flag=flag,
-            values=SolverVariables(t=t, y=y, ydot=yp),
-            errors=SolverVariables(t=t_err, y=y_err, ydot=yp_err),
-            roots=SolverVariables(t=t_roots, y=y_roots, ydot=yp_roots),
-            tstop=SolverVariables(t=t_tstop, y=y_tstop, ydot=yp_tstop),
-            message=STATUS_MESSAGE[flag]
-        )
+        return soln
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                        np.ndarray[DTYPE_t, ndim=1] y0,
@@ -1104,15 +1107,27 @@ cdef class IDA:
                     'first required output %f.'
                              % (ic_t0, tspan[0], tspan[1]))
 
-        (flag, t_retn[0]) = self.init_step(tspan[0], y0, yp0,
+        ret_ic = self.init_step(tspan[0], y0, yp0,
                                            y_retn[0, :], yp_retn[0, :])
+
+        PyErr_CheckSignals()
+        if self._old_api:
+            flag = ret_ic[0]
+        else:
+            flag = ret_ic.flag
+            
         if not (flag == IDA_SUCCESS):
             if self._old_api:
                 print('IDAInitCond: Error occured during computation'
                       ' of initial condition, flag', flag)
-                return (False, t_retn[0], y0, None, None, None, None)
+                return (False, ret_ic[1], y0, None, None, None, None)
             else:
-                return (flag, t_retn[0], y0, None, None, None, None)
+                return ret_ic
+        else:
+            if self._old_api:
+                t_retn[0] = ret_ic[1]
+            else:
+                t_retn[0] = ret_ic.values.t[0]
         #TODO: Parallel version
         cdef np.ndarray[DTYPE_t, ndim=1] y_last, yp_last
         cdef unsigned int idx
@@ -1134,18 +1149,59 @@ cdef class IDA:
             nv_s2ndarray(y,  y_last)
             nv_s2ndarray(yp,  yp_last)
 
-            if flag != IDA_SUCCESS:
+            if flag == IDA_SUCCESS or flag == IDA_WARNING:
+                PyErr_CheckSignals()
+            else:
                 t_retn   = t_retn[0:idx]
                 y_retn   = y_retn[0:idx, :]
                 yp_retn  = yp_retn[0:idx, :]
 
-                return flag, t_retn, y_retn, yp_retn, t_out, y_last, yp_last
+                soln = flag, t_retn, y_retn, yp_retn, t_out, y_last, yp_last
+                break
 
             t_retn[idx]     = t_out
             y_retn[idx, :]  = y_last
             yp_retn[idx, :] = yp_last
+        
+        PyErr_CheckSignals()
 
-        return flag, t_retn, y_retn, yp_retn, None, None, None
+        if flag == IDA_SUCCESS or flag == IDA_WARNING:
+            soln = flag, t_retn, y_retn, yp_retn, None, None, None
+            
+        if self._old_api:
+            return soln
+
+        flag = StatusEnumIDA(flag)
+
+        t_err   = None
+        y_err   = None
+        yp_err   = None
+        
+        if flag == StatusEnumIDA.ROOT_RETURN:
+            self.t_roots.append(np.copy(t_out))
+            self.y_roots.append(np.copy(y_last))
+            self.yp_roots.append(np.copy(yp_last))
+        elif flag == StatusEnumIDA.TSTOP_RETURN:
+            self.t_tstop.append(np.copy(t_out))
+            self.y_tstop.append(np.copy(y_last))
+            self.yp_tstop.append(np.copy(yp_last))
+        elif flag != StatusEnumIDA.SUCCESS and flag != StatusEnumIDA.WARNING:
+            t_err = t_out
+            y_err = np.copy(y_last)
+            yp_err = np.copy(yp_last)
+
+        return SolverReturn(
+            flag=flag,
+            values=SolverVariables(t=t_retn, y=y_retn, ydot=yp_retn),
+            errors=SolverVariables(t=t_err, y=y_err, ydot=yp_err),
+            roots=SolverVariables(t=self.t_roots or None,
+                                  y=self.y_roots or None,
+                                  ydot=self.yp_roots or None),
+            tstop=SolverVariables(t=self.t_tstop or None,
+                                  y=self.y_tstop or None,
+                                  ydot=self.yp_tstop or None),
+            message=STATUS_MESSAGE[flag]
+        )
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn = None,
                               np.ndarray[DTYPE_t, ndim=1] yp_retn = None):
@@ -1175,19 +1231,77 @@ cdef class IDA:
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp
         cdef realtype t_out
-        cdef int flag
+        cdef int flagIDA
         if t>0.0:
-            flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+            flagIDA = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
                             IDA_NORMAL)
         else:
-            flag = IDASolve(self._ida_mem, <realtype> -t, &t_out, y, yp,
+            flagIDA = IDASolve(self._ida_mem, <realtype> -t, &t_out, y, yp,
                             IDA_ONE_STEP)
+
+        if self._old_api:
+            warn("Old api is deprecated, move to new api", DeprecationWarning)
+
+        cdef np.ndarray[DTYPE_t, ndim=1] y_out
+        cdef np.ndarray[DTYPE_t, ndim=1] yp_out
         if not y_retn is None:
             nv_s2ndarray(y, y_retn)
+            y_out = y_retn
+        else:
+            y_out  = np.empty(self.N, float)
+            nv_s2ndarray(y, y_out)
+            
         if not yp_retn is None:
             nv_s2ndarray(yp, yp_retn)
+            yp_out = yp_retn
+        else:
+            yp_out  = np.empty(self.N, float)
+            nv_s2ndarray(yp, yp_out)
+            
+        flag = StatusEnumIDA(flagIDA)
 
-        return flag, t_out
+        t_err = None
+        y_err = None
+        yp_err = None
+        sol_t_out = t_out
+        if flag == IDA_SUCCESS or flag == IDA_WARNING:
+            pass
+        elif flag == IDA_ROOT_RETURN:
+            self.t_roots.append(np.copy(t_out))
+            self.y_roots.append(np.copy(y_out))
+            self.yp_roots.append(np.copy(yp_out))
+        elif flag == IDA_TSTOP_RETURN:
+            self.t_tstop.append(np.copy(t_out))
+            self.y_tstop.append(np.copy(y_out))
+            self.yp_tstop.append(np.copy(yp_out))
+        elif flag < 0:
+            t_err = np.copy(t_out)
+            y_err = np.copy(y_out)
+            yp_err = np.copy(yp_out)
+            sol_t_out = None
+            y_out = None
+            yp_out = None
+
+        PyErr_CheckSignals()
+
+        t_roots = self.t_roots if self.t_roots else None
+        y_roots = self.y_roots if self.y_roots else None
+        yp_roots = self.yp_roots if self.yp_roots else None
+        t_tstop = self.t_tstop if self.t_tstop else None
+        y_tstop = self.y_tstop if self.y_tstop else None
+        yp_tstop = self.yp_tstop if self.yp_tstop else None
+        
+        if self._old_api:
+            return flagIDA, t_out
+
+        return SolverReturn(
+            flag=flag,
+            values=SolverVariables(t=sol_t_out, y=y_out, ydot=yp_out),
+            errors=SolverVariables(t=t_err, y=y_err, ydot=yp_err),
+            roots=SolverVariables(t=t_roots, y=y_roots, ydot=yp_roots),
+            tstop=SolverVariables(t=t_tstop, y=y_tstop, ydot=yp_tstop),
+            message=STATUS_MESSAGE[flag]
+        )
 
     def __dealloc__(self):
         if not self._ida_mem is NULL: IDAFree(&self._ida_mem)

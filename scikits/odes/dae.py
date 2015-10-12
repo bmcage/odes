@@ -147,7 +147,7 @@ class DaeBase(object):
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
-    def step(self, t, y_retn, yp_retn = None):
+    def step(self, t, y_retn=None, yp_retn=None):
         """
         Method for calling successive next step of the IDA solver to allow
         more precise control over the IDA solver. The 'init_step' method has to
@@ -164,8 +164,19 @@ class DaeBase(object):
                       filled (needs to be preallocated)
                       with derivatives of y at time t.
         Return values:
+         if old_api:
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y and ydot. y will 
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
@@ -312,7 +323,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         """
         return self._integrator.init_step(t0, y0, yp0, y_ic0_retn, yp_ic0_retn)
 
-    def step(self, t, y_retn, yp_retn = None):
+    def step(self, t, y_retn=None, yp_retn=None):
         """
         Method for calling successive next step of the solver to allow
         more precise control over the solver. The 'init_step' method has to
@@ -329,8 +340,19 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
                       filled (needs to be preallocated)
                       with derivatives of y at time t.
         Return values:
+         if old_api:
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y and ydot. y will 
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
         """
         return self._integrator.step(t, y_retn, yp_retn)
 
