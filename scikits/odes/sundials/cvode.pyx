@@ -1429,7 +1429,7 @@ cdef class CVODE:
         )
 
 
-    def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn):
+    def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn = None):
         """
         Method for calling successive next step of the CVODE solver to allow
         more precise control over the solver. The 'init_step' method has to
@@ -1463,22 +1463,32 @@ cdef class CVODE:
         if self._old_api:
             warn("Old api is deprecated, move to new api", DeprecationWarning)
 
-        nv_s2ndarray(y, y_retn)
+        cdef np.ndarray[DTYPE_t, ndim=1] y_out, y_err
+        if not y_retn is None:
+            nv_s2ndarray(y, y_retn)
+            y_out = y_retn
+        else:
+            y_out  = np.empty(self.N, float)
+            nv_s2ndarray(y, y_out)
+            
         flag = StatusEnum(flagCV)
-        
+
         t_err = None
         y_err = None
-        if flag == CV_SUCCESS or flag == CV_WARNING:
+        sol_t_out = t_out
+        if flagCV == CV_SUCCESS or flag == CV_WARNING:
             pass
-        elif flag == CV_ROOT_RETURN:
+        elif flagCV == CV_ROOT_RETURN:
             self.t_roots.append(np.copy(t_out))
-            self.y_roots.append(np.copy(y_retn))
-        elif flag == CV_TSTOP_RETURN:
+            self.y_roots.append(np.copy(y_out))
+        elif flagCV == CV_TSTOP_RETURN:
             self.t_tstop.append(np.copy(t_out))
-            self.y_tstop.append(np.copy(y_retn))
-        elif flag < 0:
+            self.y_tstop.append(np.copy(y_out))
+        elif flagCV < 0:
             t_err = np.copy(t_out)
-            y_err = np.copy(y_retn)
+            y_err = np.copy(y_out)
+            sol_t_out = None
+            y_out = None
 
         PyErr_CheckSignals()
 
@@ -1492,7 +1502,7 @@ cdef class CVODE:
 
         return SolverReturn(
             flag=flag,
-            values=SolverVariables(t=t_out, y=y_retn),
+            values=SolverVariables(t=sol_t_out, y=y_out),
             errors=SolverVariables(t=t_err, y=y_err),
             roots=SolverVariables(t=t_roots, y=y_roots),
             tstop=SolverVariables(t=t_tstop, y=y_tstop),

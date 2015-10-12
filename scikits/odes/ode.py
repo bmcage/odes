@@ -127,7 +127,7 @@ class OdeBase(object):
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
-    def step(self, t, y_retn):
+    def step(self, t, y_retn=None):
         """
         Method for calling successive next step of the ODE solver to allow
         more precise control over the solver. The 'init_step' method has to
@@ -289,7 +289,7 @@ As an easy example, consider the simple oscillator,
         """
         return self._integrator.init_step(t0, y0)
 
-    def step(self, t, y_retn):
+    def step(self, t, y_retn=None):
         """
         Method for calling successive next step of the ODE solver to allow
         more precise control over the solver. The 'init_step' method has to
