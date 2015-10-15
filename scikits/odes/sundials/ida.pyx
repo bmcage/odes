@@ -29,34 +29,34 @@ class StatusEnumIDA(IntEnum):
     SUCCESS = IDA_SUCCESS
     TSTOP_RETURN = IDA_TSTOP_RETURN
     ROOT_RETURN = IDA_ROOT_RETURN
-    
+
     WARNING = IDA_WARNING
-    
+
     TOO_MUCH_WORK = IDA_TOO_MUCH_WORK
     TOO_MUCH_ACC = IDA_TOO_MUCH_ACC
     ERR_FAIL = IDA_ERR_FAIL
-    CONV_FAIL = IDA_CONV_FAIL 
-    
+    CONV_FAIL = IDA_CONV_FAIL
+
     LINIT_FAIL = IDA_LINIT_FAIL
     LSETUP_FAIL = IDA_LSETUP_FAIL
     LSOLVE_FAIL = IDA_LSOLVE_FAIL
-    RES_FAIL = IDA_RES_FAIL 
-    REP_RES_ERR = IDA_REP_RES_ERR 
-    RTFUNC_FAIL = IDA_RTFUNC_FAIL 
+    RES_FAIL = IDA_RES_FAIL
+    REP_RES_ERR = IDA_REP_RES_ERR
+    RTFUNC_FAIL = IDA_RTFUNC_FAIL
     CONSTR_FAIL= IDA_CONSTR_FAIL
-    
+
     FIRST_RES_FAIL = IDA_FIRST_RES_FAIL
     LINESEARCH_FAIL = IDA_LINESEARCH_FAIL
     NO_RECOVERY = IDA_NO_RECOVERY
-    
+
     MEM_NULL= IDA_MEM_NULL
     MEM_FAIL = IDA_MEM_FAIL
     ILL_INPUT = IDA_ILL_INPUT
-    NO_MALLOC = IDA_NO_MALLOC 
-    BAD_EWT = IDA_BAD_EWT 
+    NO_MALLOC = IDA_NO_MALLOC
+    BAD_EWT = IDA_BAD_EWT
     BAD_K = IDA_BAD_K
-    BAD_T = IDA_BAD_T 
-    BAD_DKY = IDA_BAD_DKY 
+    BAD_T = IDA_BAD_T
+    BAD_DKY = IDA_BAD_DKY
 
 STATUS_MESSAGE = {
     StatusEnumIDA.SUCCESS: "Successful function return.",
@@ -85,7 +85,7 @@ STATUS_MESSAGE = {
     StatusEnumIDA.BAD_K: "Illegal value for k. If the requested k is not in the range 0,1,...,order used ",
     StatusEnumIDA.BAD_T: "Illegal value for t. If t is not within the interval of the last step taken.",
     StatusEnumIDA.BAD_DKY: "The dky vector is NULL",
-   
+
 }
 # Right-hand side function
 cdef class IDA_RhsFunction:
@@ -307,7 +307,6 @@ cdef class IDA:
         """
 
         default_values = {
-            'verbosity': 1,
             'implementation': 'serial',
             'rtol': 1e-6, 'atol': 1e-12,
             'linsolver': 'dense',
@@ -353,6 +352,7 @@ cdef class IDA:
                 Description:
                     Set the level of verbosity. The higher number user, the
                     more verbose the output will be. Default is 1.
+                    Deprecated, does nothing!
             'implementation':
                 Values: 'serial' (= default), 'parallel'
                 Description:
@@ -523,7 +523,7 @@ cdef class IDA:
             'old_api':
                 Values: True (default), False
                 Description:
-                    Forces use of old api (tuple of 7) if True or 
+                    Forces use of old api (tuple of 7) if True or
                     new api (namedtuple) if False.
                     Other options may require new api, hence using this should
                     be avoided if possible.
@@ -1003,10 +1003,10 @@ cdef class IDA:
         self.y_roots = []
         self.t_tstop = []
         self.y_tstop = []
-        
+
         if compute_initcond_p:
             flag = IDA_ILL_INPUT
-            
+
             if compute_initcond == 'yp0':
                 flag = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, ic_t0)
             elif compute_initcond == 'y0':
@@ -1046,7 +1046,7 @@ cdef class IDA:
             y0    - numpy array of initial values
             yp0   - numpy array of initial values of derivatives
 
-        Return values:        
+        Return values:
          if old_api
             flag   - indicating return status of the solver
             t      - numpy array of times at which the computations were
@@ -1094,7 +1094,7 @@ cdef class IDA:
         yp_retn = np.empty([np.alen(tspan), np.alen(y0)], float)
 
         cdef int flag
-        
+
         #check to avoid typical error
         cdef dict opts = self.options
         cdef realtype ic_t0 = <realtype>opts['compute_initcond_t0']
@@ -1115,7 +1115,7 @@ cdef class IDA:
             flag = ret_ic[0]
         else:
             flag = ret_ic.flag
-            
+
         if not (flag == IDA_SUCCESS):
             if self._old_api:
                 print('IDAInitCond: Error occured during computation'
@@ -1162,12 +1162,12 @@ cdef class IDA:
             t_retn[idx]     = t_out
             y_retn[idx, :]  = y_last
             yp_retn[idx, :] = yp_last
-        
+
         PyErr_CheckSignals()
 
         if flag == IDA_SUCCESS or flag == IDA_WARNING:
             soln = flag, t_retn, y_retn, yp_retn, None, None, None
-            
+
         if self._old_api:
             return soln
 
@@ -1176,7 +1176,7 @@ cdef class IDA:
         t_err   = None
         y_err   = None
         yp_err   = None
-        
+
         if flag == StatusEnumIDA.ROOT_RETURN:
             self.t_roots.append(np.copy(t_out))
             self.y_roots.append(np.copy(y_last))
@@ -1250,14 +1250,14 @@ cdef class IDA:
         else:
             y_out  = np.empty(self.N, float)
             nv_s2ndarray(y, y_out)
-            
+
         if not yp_retn is None:
             nv_s2ndarray(yp, yp_retn)
             yp_out = yp_retn
         else:
             yp_out  = np.empty(self.N, float)
             nv_s2ndarray(yp, yp_out)
-            
+
         flag = StatusEnumIDA(flagIDA)
 
         t_err = None
@@ -1290,7 +1290,7 @@ cdef class IDA:
         t_tstop = self.t_tstop if self.t_tstop else None
         y_tstop = self.y_tstop if self.y_tstop else None
         yp_tstop = self.yp_tstop if self.yp_tstop else None
-        
+
         if self._old_api:
             return flagIDA, t_out
 

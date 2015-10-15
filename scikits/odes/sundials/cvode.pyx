@@ -576,7 +576,6 @@ cdef class CVODE:
         """
 
         default_values = {
-            'verbosity': 1,
             'implementation': 'serial',
             'lmm_type': 'BDF',
             'iter_type': 'NEWTON',
@@ -626,6 +625,7 @@ cdef class CVODE:
                 Description:
                     Set the level of verbosity. The higher number user, the
                     more verbose the output will be. Default is 1.
+                    Deprecated, does nothing
                 Note: Changeable at runtime.
             'implementation':
                 Values: 'serial' (= default), 'parallel'
@@ -1245,7 +1245,7 @@ cdef class CVODE:
 
         if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
             CVDlsSetDenseJacFn(cv_mem, _jacdense)
-        
+
         #now we initialize storage which is persistent over steps
         self.t_roots = []
         self.y_roots = []
@@ -1470,7 +1470,7 @@ cdef class CVODE:
         else:
             y_out  = np.empty(self.N, float)
             nv_s2ndarray(y, y_out)
-            
+
         flag = StatusEnum(flagCV)
 
         t_err = None
@@ -1497,7 +1497,7 @@ cdef class CVODE:
         t_tstop = self.t_tstop if self.t_tstop else None
         y_tstop = self.y_tstop if self.y_tstop else None
 
-        if self._old_api:    
+        if self._old_api:
             return flagCV, t_out
 
         return SolverReturn(
