@@ -102,7 +102,7 @@ cdef class CVODE:
     cdef N_Vector atol
     cdef void* _cv_mem
     cdef dict options
-    cdef bint parallel_implementation, initialized, _old_api
+    cdef bint parallel_implementation, initialized, _old_api, _step_compute
     cdef CV_data aux_data
 
     cdef long int N #problem size, i.e. len(y0) = N

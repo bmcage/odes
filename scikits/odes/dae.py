@@ -10,7 +10,7 @@ algebraic system of first order ODEs with prescribed initial conditions:
             d t
 
     y(t=0)[i] = y0[i],
-    
+
       d y(t=0)
     ---------- [i]  = yprime0[i],
         d t
@@ -20,22 +20,22 @@ where::
     i = 0, ..., len(y0) - 1
     A is a (possibly singular) matrix of size i x i
     f(t,y) is a vector of size i
-    
-or more generally, equations of the form 
+
+or more generally, equations of the form
 
     G(t,y,y') = 0
 
 class dae
 ---------
 
-A generic interface class to differential algebraic equations. 
+A generic interface class to differential algebraic equations.
 It has the following methods::
 
     integrator = dae(integrator_name, resfn, **options)
     integrator.set_options(options)
     result = integrator.solve(times, init_val_y, init_val_yp, user_data)
 
-Alternatively, an init_step, and step method can be used to iterate over a 
+Alternatively, an init_step, and step method can be used to iterate over a
 solution.
 
 For dae resfn is required, this is the residual equations evaluator
@@ -50,11 +50,11 @@ Available integrators
 ---------------------
 ida
 ddaspk
-lsodi 
+lsodi
 
 Possibilities for the future:
 
-ddaskr  
+ddaskr
 ~~~~~~
 Not included, starting hints:
                  http://osdir.com/ml/python.f2py.user/2005-07/msg00014.html
@@ -75,7 +75,7 @@ import re, sys
 
 class DaeBase(object):
     """ the interface which DAE solvers must implement"""
-    
+
     integrator_classes = []
 
     def __init__(self, Rfn, **options):
@@ -91,7 +91,7 @@ class DaeBase(object):
     def set_options(self, **options):
         """
         Set specific options for the solver.
-        
+
         Calling set_options a second time, normally resets the solver.
         """
         raise NotImplementedError('all DAE solvers must implement this')
@@ -99,13 +99,13 @@ class DaeBase(object):
     def solve(self, tspan, y0,  yp0):
         """
         Runs the solver.
-        
+
         Input:
             tspan - an list/array of times at which the computed value will be
                     returned. Must contain the start time as first entry.
             y0    - list/numpy array of initial values
             yp0   - list/numpy array of initial values of derivatives
-            
+
         Return values:
          if old_api:
             flag   - indicating return status of the solver
@@ -135,12 +135,12 @@ class DaeBase(object):
             t0     - initial time
             y0     - initial condition for y (can be list or numpy array)
             yp0    - initial condition for yp (can be list or numpy array)
-            y_ic0  - (optional) returns the calculated consistent initial 
+            y_ic0  - (optional) returns the calculated consistent initial
                      condition for y
                      It MUST be a numpy array.
             yp_ic0 - (optional) returns the calculated consistent initial
                      condition for y derivated. It MUST be a numpy array.
-        
+
         Return Value:
             t      - time of solver at end of init_step, from which solver will
                      continue
@@ -152,17 +152,25 @@ class DaeBase(object):
         Method for calling successive next step of the IDA solver to allow
         more precise control over the IDA solver. The 'init_step' method has to
         be called before the 'step' method.
-        
+
         Input:
-            t - if t>0.0 then integration is performed until this time
-                         and results at this time are returned in y_retn
-              - if t<0.0 only one internal step is perfomed towards time abs(t)
+            t - A step is done towards time t, and output at t returned.
+                This time can be higher or lower than the previous time.
+                If option 'one_step_compute'==True, and the solver supports
+                it, only one internal solver step is done in the direction
+                of t starting at the current step.
+
+                If old_api=True, the old behavior is used:
+                 if t>0.0 then integration is performed until this time
+                          and results at this time are returned in y_retn
+                 if t<0.0 only one internal step is perfomed towards time abs(t)
                          and results after this one time step are returned
             y_retn - numpy vector (ndim = 1) in which the computed
-                     value will be stored  (needs to be preallocated)
+                     value will be stored  (needs to be preallocated).  If
+                     None y_retn is not used.
             yp_retn - numpy vector (ndim = 1) or None. If not None, will be
-                      filled (needs to be preallocated)
-                      with derivatives of y at time t.
+                      filled (needs to be preallocated) with derivatives of y
+                      at time t. If None yp_retn is not used.
         Return values:
          if old_api:
             flag  - status of the computation (successful or error occured)
@@ -171,7 +179,7 @@ class DaeBase(object):
          if old_api False (cvode solver):
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y and ydot. y will 
+                values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
                 errors = Named tuple with entries t_err and y_err
                 roots  = Named tuple with entries t_roots and y_roots
@@ -195,10 +203,10 @@ ode : class around vode ODE integrator
 
 Examples
 --------
-DAE arise in many applications of dynamical systems, as well as in 
-discritisations of PDE (eg moving mesh combined with method of 
-lines). 
-As an easy example, consider the simple oscillator, which we write as 
+DAE arise in many applications of dynamical systems, as well as in
+discritisations of PDE (eg moving mesh combined with method of
+lines).
+As an easy example, consider the simple oscillator, which we write as
 G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
 
 >>> from __future__ import print_function
@@ -211,7 +219,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
     # we create residual equations for the problem
       result[0] = m*xdot[1] + k*x[0]
       result[1] = xdot[0] - x[1]
-    
+
 >>> from scikits.odes import dae
 >>> solver = dae('ida', reseqn)
 >>> result = solver.solve([0., 1., 2.], initx, initxp)
@@ -228,30 +236,30 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         """
         Initialize the DAE Solver and it's default values
 
-        Define equation res = G(t,y,y') which can eg be G = f(y,t) - A y' when 
-        solving A y' = f(y,t), 
+        Define equation res = G(t,y,y') which can eg be G = f(y,t) - A y' when
+        solving A y' = f(y,t),
         and where (optional) jac is the jacobian matrix of the nonlinear system
         see fortran source code), so d res/dy + scaling * d res/dy' or d res/dy
         depending on the backend
 
         Parameters
         ----------
-        integrator_name : name of the integrator solver to use. Currently you 
+        integrator_name : name of the integrator solver to use. Currently you
             can choose ida, ddaspk and lsodi, with ida the most recent solver.
         eqsres : residual function
             Residual of the DAE. The signature of this function depends on the
             solver used, see the solver documentation for details.
             Generally however, you can assume the following signature to work:
                         eqsres(x, y, yprime, return_residual)
-            with 
+            with
             x       : independent variable, eg the time, float
             y       : array of n unknowns in x
             yprime  : dy/dx array of n unknowns in x, dimension = dim(y)
-            return_residual: array that must be updated with the value of the 
+            return_residual: array that must be updated with the value of the
                       residuals, so G(t,y,y').  The dimension is equal to dim(y)
-            return value: An integer, 0 for success. It is not guaranteed that 
+            return value: An integer, 0 for success. It is not guaranteed that
                       a solver takes this status into account
-        
+
             Some solvers will allow userdata to be passed to eqsres, or optional
             formats that are more performant.
         options :  additional options of the solver, see set_options method of
@@ -269,7 +277,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         """
         Set specific options for the solver.
         See the solver documentation for details.
-        
+
         Calling set_options a second time, normally resets the solver.
         """
         return self._integrator.set_options(**options)
@@ -277,13 +285,13 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
     def solve(self, tspan, y0,  yp0):
         """
         Runs the solver.
-        
+
         Input:
             tspan - an list/array of times at which the computed value will be
                     returned. Must contain the start time as first entry.
             y0    - list/numpy array of initial values
             yp0   - list/numpy array of initial values of derivatives
-            
+
         Return values:
          if old_api
             flag   - indicating return status of the solver
@@ -308,7 +316,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
 
     def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
         """
-        Initializes the solver and allocates memory. It is not needed to 
+        Initializes the solver and allocates memory. It is not needed to
         call this method if solve is used to compute the solution. In the case
         step is used, init_step must be called first.
 
@@ -328,17 +336,25 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         Method for calling successive next step of the solver to allow
         more precise control over the solver. The 'init_step' method has to
         be called before the 'step' method.
-        
+
         Input:
-            t - if t>0.0 then integration is performed until this time
-                         and results at this time are returned in y_retn
-              - if t<0.0 only one internal step is perfomed towards time abs(t)
+            t - A step is done towards time t, and output at t returned.
+                This time can be higher or lower than the previous time.
+                If option 'one_step_compute'==True, and the solver supports
+                it, only one internal solver step is done in the direction
+                of t starting at the current step.
+
+                If old_api=True, the old behavior is used:
+                 if t>0.0 then integration is performed until this time
+                          and results at this time are returned in y_retn
+                 if t<0.0 only one internal step is perfomed towards time abs(t)
                          and results after this one time step are returned
             y_retn - numpy vector (ndim = 1) in which the computed
-                     value will be stored  (needs to be preallocated)
+                     value will be stored  (needs to be preallocated).  If
+                     None y_retn is not used.
             yp_retn - numpy vector (ndim = 1) or None. If not None, will be
-                      filled (needs to be preallocated)
-                      with derivatives of y at time t.
+                      filled (needs to be preallocated) with derivatives of y
+                      at time t. If None yp_retn is not used.
         Return values:
          if old_api:
             flag  - status of the computation (successful or error occured)
@@ -347,7 +363,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
          if old_api False (cvode solver):
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y and ydot. y will 
+                values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
                 errors = Named tuple with entries t_err and y_err
                 roots  = Named tuple with entries t_roots and y_roots
@@ -357,7 +373,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
         return self._integrator.step(t, y_retn, yp_retn)
 
     def __del__(self):
-        """ 
+        """
         Clean up what is needed
         """
         del self._integrator
@@ -367,7 +383,7 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
 #------------------------------------------------------------------------------
 
 integrator_info_ida = """
-            IDA solver from the SUNDIALS package. See info in 
+            IDA solver from the SUNDIALS package. See info in
             scikits.odes.sundials.ida.IDA class
             """
 __doc__ += integrator_info_ida
@@ -397,7 +413,7 @@ def find_dae_integrator(name):
             print(sys.exc_info()[1])
 
         dae.LOADED = True
-        
+
     for cl in DaeBase.integrator_classes:
         if re.match(name, cl.__name__, re.I):
             return cl

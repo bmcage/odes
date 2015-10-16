@@ -134,12 +134,20 @@ class OdeBase(object):
         be called before the 'step' method.
 
         Input:
-            t - if t>0.0 then integration is performed until this time
-                         and results at this time are returned in y_retn
-              - if t<0.0 only one internal step is perfomed towards time abs(t)
+            t - A step is done towards time t, and output at t returned.
+                This time can be higher or lower than the previous time.
+                If option 'one_step_compute'==True, and the solver supports
+                it, only one internal solver step is done in the direction
+                of t starting at the current step.
+
+                If old_api=True, the old behavior is used:
+                 if t>0.0 then integration is performed until this time
+                          and results at this time are returned in y_retn
+                 if t<0.0 only one internal step is perfomed towards time abs(t)
                          and results after this one time step are returned
             y_retn - numpy vector (ndim = 1) in which the computed
-                     value will be stored  (needs to be preallocated)
+                     value will be stored  (needs to be preallocated).  If
+                     None y_retn is not used.
         Return values:
          if old_api:
             flag  - status of the computation (successful or error occured)
@@ -148,7 +156,7 @@ class OdeBase(object):
          if old_api False (cvode solver):
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y. y will 
+                values = Named tuple with entries t and y. y will
                             correspond to y_retn value
                 errors = Named tuple with entries t_err and y_err
                 roots  = Named tuple with entries t_roots and y_roots
@@ -296,12 +304,17 @@ As an easy example, consider the simple oscillator,
         be called before the 'step' method.
 
         Input:
-            t - if t>0.0 then integration is performed until this time
-                         and results at this time are returned in y_retn
-              - if t<0.0 only one internal step is perfomed towards time abs(t)
+            t - A step is done towards time t, and output at t returned.
+                This time can be higher or lower than the previous time.
+                If option 'one_step_compute'==True, and the solver supports
+                it, only one internal solver step is done in the direction
+                of t starting at the current step.
+
+                If old_api=True, the old behavior is used:
+                 if t>0.0 then integration is performed until this time
+                          and results at this time are returned in y_retn
+                 if t<0.0 only one internal step is perfomed towards time abs(t)
                          and results after this one time step are returned
-            y_retn - numpy vector (ndim = 1) in which the computed
-                     value will be stored  (needs to be preallocated)
         Return values:
          if old_api:
             flag  - status of the computation (successful or error occured)
@@ -310,7 +323,7 @@ As an easy example, consider the simple oscillator,
          if old_api False (cvode solver):
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y. y will 
+                values = Named tuple with entries t and y. y will
                             correspond to y_retn value
                 errors = Named tuple with entries t_err and y_err
                 roots  = Named tuple with entries t_roots and y_roots

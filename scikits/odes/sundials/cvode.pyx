@@ -594,6 +594,7 @@ cdef class CVODE:
             'max_conv_fails': 0,
             'max_nonlin_iters': 0,
             'nonlin_conv_coef': 0.,
+            'one_step_compute': False,
             'user_data': None,
             'rfn': None,
             'rootfn': None,
@@ -611,6 +612,7 @@ cdef class CVODE:
         self.options = default_values
         self.N       = -1
         self._old_api = True # use old api by default
+        self._step_compute = False #avoid dict lookup
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
         self.initialized = False
@@ -754,6 +756,14 @@ cdef class CVODE:
                     disabled (but it will be automatically disabled when tstop
                     is reached and has to be reset again in next run).
                 Note: Changeable at runtime.
+            'one_step_compute':
+                Values: False (default) or True
+                Description:
+                    Only influences the step() method.
+                    Solver computes normally up to the required output time.
+                    If value is True, solver insteads does one internal step
+                    of the solver in the direction of the output time, as seen
+                    from the current time of the solution.
             'user_data':
                 Values: python object, None = default
                 Description:
@@ -843,7 +853,7 @@ cdef class CVODE:
         if not supress_supported_check:
             for opt in options.keys():
                 if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns',
-                               'verbosity']:
+                               'verbosity', 'one_step_compute']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
 
         # Verbosity level
@@ -948,12 +958,22 @@ cdef class CVODE:
             if (not opts_tstop is None) and (opts_tstop > 0.):
                 flag = CVodeSetStopTime(cv_mem, <realtype> opts_tstop)
                 if flag == CV_ILL_INPUT:
-                    raise ValueError('IDASetStopTime::Stop value is beyond '
+                    raise ValueError('CVodeSetStopTime::Stop value is beyond '
                                      'current value.')
 
         # Force old/new api
         if options.get('old_api') is not None:
+            if not options['old_api'] in [True, False]:
+                raise ValueError('Option old_api must be True or False')
             self._old_api = options['old_api']
+
+        if options.get('one_step_compute') is not None:
+            if not options['one_step_compute'] in [True, False]:
+                raise ValueError('Option one_step_compute must be True or False')
+            if options['one_step_compute'] and self._old_api:
+                raise ValueError("Option 'one_step_compute' requires 'old_api' to be False")
+            self.options['one_step_compute'] = options['one_step_compute']
+            self._step_compute = self.options['one_step_compute']
 
     def init_step(self, double t0, object y0):
         """
@@ -1455,10 +1475,16 @@ cdef class CVODE:
         cdef realtype t_out
         cdef int flagCV
 
-        if t>0.0:
-            flagCV = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
+        if self._old_api:
+            if t>0.0:
+                flagCV = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
+            else:
+                flagCV = CVode(self._cv_mem, <realtype> -t,  y, &t_out, CV_ONE_STEP)
         else:
-            flagCV = CVode(self._cv_mem, <realtype> -t,  y, &t_out, CV_ONE_STEP)
+            if self._step_compute:
+                flagCV = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_ONE_STEP)
+            else:
+                flagCV = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
 
         if self._old_api:
             warn("Old api is deprecated, move to new api", DeprecationWarning)

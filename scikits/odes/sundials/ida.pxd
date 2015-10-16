@@ -73,7 +73,7 @@ cdef class IDA:
     cdef void* _ida_mem
     cdef dict options
     cdef bint parallel_implementation
-    cdef bint _old_api
+    cdef bint _old_api, _step_compute
     cdef realtype t, t0
 
     cdef IDA_data aux_data

@@ -326,6 +326,7 @@ cdef class IDA:
             'constraints_type': None,
             'algebraic_vars_idx':None,
             'exclude_algvar_from_error': False,
+            'one_step_compute': False,
             'user_data': None,
             'rfn': None,
             'rootfn': None,
@@ -338,6 +339,7 @@ cdef class IDA:
         self.options = default_values
         self.N       = -1
         self._old_api = True # use old api by default
+        self._step_compute = False #avoid dict lookup
         self.set_options(rfn=Rfn, **options)
         self._ida_mem = NULL
         self.initialized = False
@@ -440,6 +442,14 @@ cdef class IDA:
                     When calculating the initial condition, specifies the time
                     until which the solver tries to
                     get the consistent values for either y0 or yp0.
+            'one_step_compute':
+                Values: False (default) or True
+                Description:
+                    Only influences the step() method.
+                    Solver computes normally up to the required output time.
+                    If value is True, solver insteads does one internal step
+                    of the solver in the direction of the output time, as seen
+                    from the current time of the solution.
             'user_data':
                 Values: python object, None = default
                 Description:
@@ -553,7 +563,8 @@ cdef class IDA:
         # be supressed by 'supress_supported_check = True'
         if not supress_supported_check:
             for opt in options.keys():
-                if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns']:
+                if not opt in ['atol', 'rtol', 'tstop', 'rootfn',
+                               'nr_rootfns', 'one_step_compute']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
 
         # Verbosity level
@@ -661,7 +672,17 @@ cdef class IDA:
 
         # Force old/new api
         if options.get('old_api') is not None:
+            if not options['old_api'] in [True, False]:
+                raise ValueError('Option old_api must be True or False')
             self._old_api = options['old_api']
+
+        if options.get('one_step_compute') is not None:
+            if not options['one_step_compute'] in [True, False]:
+                raise ValueError('Option one_step_compute must be True or False')
+            if options['one_step_compute'] and self._old_api:
+                raise ValueError("Option 'one_step_compute' requires 'old_api' to be False")
+            self.options['one_step_compute'] = options['one_step_compute']
+            self._step_compute = self.options['one_step_compute']
 
     def init_step(self, double t0, object y0, object yp0,
                    np.ndarray y_ic0_retn = None,
@@ -1232,12 +1253,20 @@ cdef class IDA:
         cdef N_Vector yp = self.yp
         cdef realtype t_out
         cdef int flagIDA
-        if t>0.0:
-            flagIDA = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
-                            IDA_NORMAL)
+        if self._old_api:
+            if t>0.0:
+                flagIDA = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+                                   IDA_NORMAL)
+            else:
+                flagIDA = IDASolve(self._ida_mem, <realtype> -t, &t_out, y, yp,
+                                   IDA_ONE_STEP)
         else:
-            flagIDA = IDASolve(self._ida_mem, <realtype> -t, &t_out, y, yp,
-                            IDA_ONE_STEP)
+            if self._step_compute:
+                flagIDA = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+                                   IDA_ONE_STEP)
+            else:
+                flagIDA = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+                                   IDA_NORMAL)
 
         if self._old_api:
             warn("Old api is deprecated, move to new api", DeprecationWarning)
