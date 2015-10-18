@@ -122,8 +122,21 @@ class OdeBase(object):
             t0     - initial time
             y0     - initial condition for y (can be list or numpy array)
 
-        Return value:
-            t      - initial time at which solver will start.
+        Return values:
+         if old_api:
+            flag  - boolean status of the computation (successful or error occured)
+            t_out - inititial time 
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries t and y and ydot. y will
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
+            
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
@@ -292,8 +305,21 @@ As an easy example, consider the simple oscillator,
             t0     - initial time
             y0     - initial condition for y (can be list or numpy array)
 
-        Return value:
-            t      - initial time at which solver will start.
+        Return values:
+         if old_api:
+            flag  - boolean status of the computation (successful or error occured)
+            t_out - inititial time 
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries t and y and ydot. y will
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
+            
         """
         return self._integrator.init_step(t0, y0)
 

@@ -980,12 +980,44 @@ cdef class CVODE:
         Initialize the solver and all the internal variables. This assumes
         the call to 'set_options()' to be done and hence all the information
         for correct solver initialization to be available.
+        An error is raised for almost all errors.
+        
+        Return values:
+         if old_api:
+            flag  - boolean status of the computation (successful or error occured)
+            t_out - inititial time 
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries t and y and ydot. y will
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
+            
         Note: some options can be re-set also at runtime. See 'reinit_IC()'
         """
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         np_y0 = np.asarray(y0)
 
-        return self._init_step(t0, np_y0)
+        #flag is always True, as errors are exceptions for cvode init_step!
+        (flag, time) = self._init_step(t0, np_y0)
+        
+        if self._old_api:
+            return (flag, time)
+        else:
+            y_retn  = np.empty(np.alen(np_y0), float)
+            y_retn[:] = np_y0[:]
+            return SolverReturn(
+                flag=flag,
+                values=SolverVariables(t=time, y=y_retn),
+                errors=SolverVariables(t=None, y=None),
+                roots=SolverVariables(t=None, y=None),
+                tstop=SolverVariables(t=None, y=None),
+                message=STATUS_MESSAGE[StatusEnum.SUCCESS]
+            )
 
     cpdef _init_step(self, DTYPE_t t0,
                      np.ndarray[DTYPE_t, ndim=1] y0):
