@@ -154,9 +154,9 @@ class DaeBase(object):
                 flag   = An integer flag (StatusEnumXXX)
                 values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
-                errors = Named tuple with entries t_err and y_err
-                roots  = Named tuple with entries t_roots and y_roots
-                tstop  = Named tuple with entries t_stop and y_tstop
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
         raise NotImplementedError('all DAE solvers must implement this')
@@ -195,9 +195,9 @@ class DaeBase(object):
                 flag   = An integer flag (StatusEnumXXX)
                 values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
-                errors = Named tuple with entries t_err and y_err
-                roots  = Named tuple with entries t_roots and y_roots
-                tstop  = Named tuple with entries t_stop and y_tstop
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
         raise NotImplementedError('all DAE solvers must implement this')
@@ -354,9 +354,9 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
                 flag   = An integer flag (StatusEnumXXX)
                 values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
-                errors = Named tuple with entries t_err and y_err
-                roots  = Named tuple with entries t_roots and y_roots
-                tstop  = Named tuple with entries t_stop and y_tstop
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
         return self._integrator.init_step(t0, y0, yp0, y_ic0_retn, yp_ic0_retn)
@@ -395,9 +395,9 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
                 flag   = An integer flag (StatusEnumXXX)
                 values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
-                errors = Named tuple with entries t_err and y_err
-                roots  = Named tuple with entries t_roots and y_roots
-                tstop  = Named tuple with entries t_stop and y_tstop
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
         return self._integrator.step(t, y_retn, yp_retn)

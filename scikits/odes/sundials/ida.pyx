@@ -710,9 +710,9 @@ cdef class IDA:
                 flag   = An integer flag (StatusEnumXXX)
                 values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
-                errors = Named tuple with entries t_err and y_err
-                roots  = Named tuple with entries t_roots and y_roots
-                tstop  = Named tuple with entries t_stop and y_tstop
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
 
@@ -1037,8 +1037,10 @@ cdef class IDA:
         #now we initialize storage which is persistent over steps
         self.t_roots = []
         self.y_roots = []
+        self.yp_roots = []
         self.t_tstop = []
         self.y_tstop = []
+        self.yp_tstop = []
 
         if compute_initcond_p:
             flag = IDA_ILL_INPUT
@@ -1266,9 +1268,9 @@ cdef class IDA:
                 flag   = An integer flag (StatusEnumXXX)
                 values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
-                errors = Named tuple with entries t_err and y_err
-                roots  = Named tuple with entries t_roots and y_roots
-                tstop  = Named tuple with entries t_stop and y_tstop
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
         if not self.initialized:
