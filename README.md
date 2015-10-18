@@ -14,6 +14,7 @@ are the *Sundials* solvers.
 Basic use:
 * [Simple oscillator](https://github.com/bmcage/odes/blob/master/docs/ipython/Simple%20Oscillator.ipynb) solved with cvode
 * [DAE example: planar pendulum](https://github.com/bmcage/odes/blob/master/docs/ipython/Planar%20Pendulum%20as%20DAE.ipynb) solved with ida
+
 Advanced use:
 * [Double pendulum](https://github.com/bmcage/odes/blob/master/docs/ipython/Double%20Pendulum%20as%20DAE%20with%20roots.ipynb) Example of using classes to pass residual and jacobian functions to IDA, and of how to implement roots functionality.
 
