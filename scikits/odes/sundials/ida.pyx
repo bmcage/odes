@@ -731,7 +731,7 @@ cdef class IDA:
                 nv_s2ndarray(self.yp, yp_retn)
                 return SolverReturn(
                     flag=flag,
-                    values=SolverVariables(t=[time], y=[y_retn], ydot=[yp_retn]),
+                    values=SolverVariables(t=time, y=y_retn, ydot=yp_retn),
                     errors=SolverVariables(t=None, y=None, ydot=None),
                     roots=SolverVariables(t=None, y=None, ydot=None),
                     tstop=SolverVariables(t=None, y=None, ydot=None),
@@ -1085,9 +1085,9 @@ cdef class IDA:
          if old_api False (cvode solver):
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y and ydot
-                errors = Named tuple with entries t and y and ydot
-                roots  = Named tuple with entries t and y and ydot
+                values = Named tuple with entries array t and array y and array ydot
+                errors = Named tuple with entries t and y and ydot of error
+                roots  = Named tuple with entries array t and array y and array ydot
                 tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
@@ -1148,7 +1148,7 @@ cdef class IDA:
             if self._old_api:
                 t_retn[0] = ret_ic[1]
             else:
-                t_retn[0] = ret_ic.values.t[0]
+                t_retn[0] = ret_ic.values.t
         #TODO: Parallel version
         cdef np.ndarray[DTYPE_t, ndim=1] y_last, yp_last
         cdef unsigned int idx

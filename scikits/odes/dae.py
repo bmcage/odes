@@ -116,13 +116,16 @@ class DaeBase(object):
                      number of allowed iterations), this is the time at which it happened
             y_err  - numpy array of values corresponding to time t_err
             yp_err - numpy array of derivatives corresponding to time t_err
-         if old_api False (cvode solver):
+
+         if old_api False (ida solver):
             A named tuple, with entries:
-                flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y and ydot
-                errors = Named tuple with entries t and y and ydot
-                roots  = Named tuple with entries t and y and ydot
-                tstop  = Named tuple with entries t and y and ydot
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries array t and array y and array 
+                            ydot y will correspond to y_retn value and ydot to 
+                            yp_retn!
+                errors = Named tuple with entries t and y and ydot of error
+                roots  = Named tuple with entries array t and array y and array ydot
+                tstop  = Named tuple with entries array t and array y and array ydot
                 message= String with message in case of an error
         """
         raise NotImplementedError('all DAE solvers must implement this')
@@ -141,9 +144,20 @@ class DaeBase(object):
             yp_ic0 - (optional) returns the calculated consistent initial
                      condition for y derivated. It MUST be a numpy array.
 
-        Return Value:
-            t      - time of solver at end of init_step, from which solver will
-                     continue
+        Return values:
+         if old_api:
+            flag  - status of the computation (successful or error occured)
+            t_out - time, where the solver stopped (when no error occured, t_out == t)
+
+         if old_api False (ida solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries t and y and ydot. y will
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
@@ -176,9 +190,9 @@ class DaeBase(object):
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
 
-         if old_api False (cvode solver):
+         if old_api False (ida solver):
             A named tuple, with entries:
-                flag   = An integer flag (StatusEnum)
+                flag   = An integer flag (StatusEnumXXX)
                 values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
                 errors = Named tuple with entries t_err and y_err
@@ -303,13 +317,15 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             y_err  - numpy array of values corresponding to time t_err
             yp_err - numpy array of derivatives corresponding to time t_err
 
-         if old_api False (cvode solver):
+         if old_api False (ida solver):
             A named tuple, with entries:
-                flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y and ydot
-                errors = Named tuple with entries t and y and ydot
-                roots  = Named tuple with entries t and y and ydot
-                tstop  = Named tuple with entries t and y and ydot
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries array t and array y and array 
+                            ydot y will correspond to y_retn value and ydot to 
+                            yp_retn!
+                errors = Named tuple with entries t and y and ydot of error
+                roots  = Named tuple with entries array t and array y and array ydot
+                tstop  = Named tuple with entries array t and array y and array ydot
                 message= String with message in case of an error
         """
         return self._integrator.solve(tspan, y0,  yp0)
@@ -328,6 +344,20 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
                      It MUST be a numpy array.
             yp_ic0 - (optional) returns the calculated consistent initial
                      condition for y derivated. It MUST be a numpy array.
+        Return values:
+         if old_api:
+            flag  - status of the computation (successful or error occured)
+            t_out - time, where the solver stopped (when no error occured, t_out == t)
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries t and y and ydot. y will
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
         """
         return self._integrator.init_step(t0, y0, yp0, y_ic0_retn, yp_ic0_retn)
 
@@ -360,9 +390,9 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
 
-         if old_api False (cvode solver):
+         if old_api False (ida solver):
             A named tuple, with entries:
-                flag   = An integer flag (StatusEnum)
+                flag   = An integer flag (StatusEnumXXX)
                 values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
                 errors = Named tuple with entries t_err and y_err
