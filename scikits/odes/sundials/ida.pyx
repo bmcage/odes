@@ -699,6 +699,21 @@ cdef class IDA:
                      It MUST be a numpy array.
             yp_ic0 - (optional) returns the calculated consistent initial
                      condition for y derivated. It MUST be a numpy array.
+
+        Return values:
+         if old_api:
+            flag  - status of the computation (successful or error occured)
+            t_out - time, where the solver stopped (when no error occured, t_out == t)
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries t and y and ydot. y will
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
         """
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
@@ -1088,7 +1103,7 @@ cdef class IDA:
                 values = Named tuple with entries array t and array y and array ydot
                 errors = Named tuple with entries t and y and ydot of error
                 roots  = Named tuple with entries array t and array y and array ydot
-                tstop  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries array t and array y and array ydot
                 message= String with message in case of an error
         """
 
@@ -1242,9 +1257,19 @@ cdef class IDA:
                       filled (needs to be preallocated)
                       with derivatives of y at time t.
         Return values:
+         if old_api:
             flag  - status of the computation (successful or error occured)
-            t_out - time, where the solver stopped (when no error occured,
-                    t_out == t)
+            t_out - time, where the solver stopped (when no error occured, t_out == t)
+
+         if old_api False (ida solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries t and y and ydot. y will
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
         """
         if not self.initialized:
             raise ValueError('Method ''init_step'' has to be called prior to'
