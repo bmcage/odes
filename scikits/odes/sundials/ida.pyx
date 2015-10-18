@@ -709,7 +709,7 @@ cdef class IDA:
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnumXXX)
                 values = Named tuple with entries t and y and ydot. y will
-                            correspond to y_retn value and ydot to yp_retn!
+                            correspond to y_ic0_retn value and ydot to yp_ic0_retn!
                 errors = Named tuple with entries t and y and ydot
                 roots  = Named tuple with entries t and y and ydot
                 tstop  = Named tuple with entries t and y and ydot
@@ -742,8 +742,14 @@ cdef class IDA:
             else:
                 y_retn  = np.empty(np.alen(np_y0), float)
                 yp_retn = np.empty(np.alen(np_y0), float)
-                nv_s2ndarray(self.y, y_retn)
-                nv_s2ndarray(self.yp, yp_retn)
+                # if no init cond computed, the start values are values at t=0
+                y_retn[:] = np_y0[:]
+                yp_retn[:] = np_yp0[:]
+                if (self.options['compute_initcond'] and 
+                    (self.options['compute_initcond'].lower() in ['y0', 'yp0'])):
+                    #an init cond was computed, obtain it to return it
+                    nv_s2ndarray(self.y, y_retn)
+                    nv_s2ndarray(self.yp, yp_retn)
                 return SolverReturn(
                     flag=flag,
                     values=SolverVariables(t=time, y=y_retn, ydot=yp_retn),
@@ -1052,16 +1058,15 @@ cdef class IDA:
 
             if not (flag == IDA_SUCCESS):
                 return (flag, t0)
-
+            else:
+                flag = IDAGetConsistentIC(self._ida_mem, self.y, self.yp)
+    
+                if flag == IDA_ILL_INPUT:
+                    raise NameError('Method ''get_consistent_ic'' has to be called'
+                                    ' prior the first call to the ''step'' method.')
         if not ((y_ic0_retn is None) and (yp_ic0_retn is None)):
             assert np.alen(y_ic0_retn) == np.alen(yp_ic0_retn) == N,\
               'y_ic0 and/or yp_ic0 have to be of the same size as y0.'
-
-            flag = IDAGetConsistentIC(self._ida_mem, self.y, self.yp)
-
-            if flag == IDA_ILL_INPUT:
-                raise NameError('Method ''get_consistent_ic'' has to be called'
-                                ' prior the first call to the ''step'' method.')
 
             if not y_ic0_retn is None: nv_s2ndarray(self.y, y_ic0_retn)
             if not yp_ic0_retn is None: nv_s2ndarray(self.yp, yp_ic0_retn)
