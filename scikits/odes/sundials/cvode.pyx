@@ -501,6 +501,21 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
 
     return 0
 
+cdef class CV_ContinuationFunction:
+    """
+    Simple wrapper for functions called when ROOT or TSTOP are returned.
+    """
+    def __cinit__(self, fn):
+        self._fn = fn
+    cpdef int evaluate(self,
+                       DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       CVODE solver):
+        return self._fn(t, y, solver)
+
+def no_continue_fn(t, y, solver):
+    return 1
+
 cdef class CV_ErrHandler:
     cpdef evaluate(self,
                    int error_code,
@@ -606,6 +621,7 @@ cdef class CVODE:
             'err_handler': None,
             'err_user_data': None,
             'old_api': None,
+            'ontstop': None,
             }
 
         self.verbosity = 1
@@ -822,6 +838,10 @@ cdef class CVODE:
                     overloaded) if True or new api (namedtuple) if False.
                     Other options may require new api, hence using this should
                     be avoided if possible.
+            'ontstop':
+                Description:
+                    If the solver returns TSTOP, call this function. If it
+                    returns 0, continue solving, otherwise stop.
         """
 
         # Update values of all supplied options
@@ -974,6 +994,16 @@ cdef class CVODE:
                 raise ValueError("Option 'one_step_compute' requires 'old_api' to be False")
             self.options['one_step_compute'] = options['one_step_compute']
             self._step_compute = self.options['one_step_compute']
+
+        # Set ontstop
+        if options.get('ontstop', None) is not None:
+            fn = options['ontstop']
+            if not isinstance(fn, CV_ContinuationFunction):
+                fn = CV_ContinuationFunction(fn)
+
+            self.options['ontstop'] = fn
+        elif self.options.get('ontstop', None) is None:
+            self.options['ontstop'] = CV_ContinuationFunction(no_continue_fn)
 
     def init_step(self, double t0, object y0):
         """
@@ -1430,6 +1460,8 @@ cdef class CVODE:
         cdef void *cv_mem = self._cv_mem
         cdef realtype t_out
         cdef N_Vector y  = self.y
+        cdef CV_ContinuationFunction ontstop = self.options['ontstop']
+        cdef dict user_data = self.options['user_data']
 
         y_last   = np.empty(np.shape(y0), float)
         t = tspan[idx]
@@ -1459,6 +1491,10 @@ cdef class CVODE:
             elif flag == CV_TSTOP_RETURN:
                 self.t_tstop.append(np.copy(t_out))
                 self.y_tstop.append(np.copy(y_last))
+                tstop_flag = ontstop.evaluate(t_out, y_last, self)
+                if tstop_flag == 0:
+                    PyErr_CheckSignals()
+                    continue
                 break
 
             break

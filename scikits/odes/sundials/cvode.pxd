@@ -71,6 +71,11 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
     cdef int with_userdata
     cpdef set_jac_times_vecfn(self, object jac_times_vecfn)
 
+cdef class CV_ContinuationFunction:
+    cpdef object _fn
+    cpdef int evaluate(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y,
+                       CVODE solver)
+
 cdef class CV_ErrHandler:
     cpdef evaluate(self,
                    int error_code,
