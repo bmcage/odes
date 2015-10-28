@@ -26,6 +26,24 @@ LIBS_CVODE    = ['sundials_cvode']
 LIB_DIRS_FORTRAN = []
 LIBS_FORTRAN     = []
 
+# use pkgconfig to find sundials
+PKGCONFIG_CVODE = 'sundials-cvode-serial'
+
+try:
+    import pkgconfig
+    try:
+        if pkgconfig.exists(PKGCONFIG_CVODE):
+            pkgconf = pkgconfig.parse(PKGCONFIG_CVODE)
+            for d in pkgconf['library_dirs']:
+                LIB_DIRS_SUNDIALS.append(str(d))
+            for d in pkgconf['include_dirs']:
+                INCL_DIRS_SUNDIALS.append(str(d))
+    except EnvironmentError:
+        pass
+except ImportError:
+    print("pkgconfig module not found, using preset paths")
+
+
 use_lapack = False
 try:
     if INCL_DIRS_LAPACK and LIB_DIRS_LAPACK and LIBS_LAPACK:
