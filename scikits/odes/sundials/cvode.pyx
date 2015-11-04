@@ -1603,11 +1603,15 @@ cdef class CVODE:
         """
         Validates the flag returned by `CVODE.solve`.
 
-        Validation happens using the following scheme: failures (flag < 0) raise
-        `CVODESolveFailed` or a subclass of it; finding a root raises
-        `CVODESolveFoundRoot`; reaching tstop raises `CVODESolveReachedTSTOP`;
-        and success without finding a root or reaching tstop returns the vectors
-        t_vals and y_vals.
+        Validation happens using the following scheme:
+         * failures (`flag` < 0) raise `CVODESolveFailed` or a subclass of it;
+         * finding a root (and stopping) raises `CVODESolveFoundRoot`;
+         * reaching `tstop` (and stopping) raises `CVODESolveReachedTSTOP`;
+         * otherwise, return an instance of `SolverReturn`.
+
+        In the case where ontstop or onroot are used, `CVODESolveFoundRoot` or
+        `CVODESolveReachedTSTOP` will be raised only if the solver is told to
+        stop at that point.
         """
         if soln.flag == StatusEnum.SUCCESS:
             return soln
