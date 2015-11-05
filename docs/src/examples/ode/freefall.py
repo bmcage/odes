@@ -10,7 +10,7 @@ the reinit_IC() method of the CVODE solver.
 """
 from __future__ import print_function
 import numpy as np
-from scikits.odes.sundials import cvode
+from scikits.odes import ode
 
 #data
 g  = 9.81    # gravitational constant
@@ -48,18 +48,27 @@ def root_fn(t, y, out):
     return 0
 
 def onroot_va(t, y, solver):
-    """ function to handle interrupt cause by finding the root """
-    # Note: we know that flag can only 2 == Root found, so no need to check
-
+    """
+    onroot function to reset the solver back at the start, but keep the current
+    velocity
+    """
     # Teleport the object back to height Y0, but retain its speed
     solver.reinit_IC(t, [Y0, y[1]])
 
     return 0
 
 def onroot_vb(t, y, solver):
+    """
+    onroot function to stop solver when root is found
+    """
     return 1
 
 def onroot_vc(t, y, solver):
+    """
+    onroot function to reset the solver back at the start, but keep the current
+    velocity as long as the time is less than a given amount
+    """
+
     if t > 28: # we have found 4 interruption points, so we stop
         return 1
 
@@ -77,7 +86,7 @@ def print_results(experiment_no, result, require_no_roots=False):
     print('--------------------------------------')
 
     for (t, y, v) in zip(ts, ys[:, 0], ys[:, 1]):
-        print('%6.1f %15.4f %15.2f' % (t, y, v))
+        print('{:6.1f} {:15.4f} {:15.2f}'.format(t, y, v))
 
 
     t_roots, y_roots = result.roots.t, result.roots.y
@@ -86,13 +95,13 @@ def print_results(experiment_no, result, require_no_roots=False):
         print('\n t_roots     y_roots        v_roots')
         print('--------------------------------------')
         if (t_roots is None) and (y_roots is None):
-            print('%6s %15s %15s' % (t_roots, y_roots, y_roots))
+            print('{!s:6} {!s:15} {!s:15}'.format(t_roots, y_roots, y_roots))
         elif (t_roots is not None) and (y_roots is not None):
             if np.isscalar(t_roots):
-                print('%6.1f %15.4f %15.2f' % (t_roots, y_roots[0], y_roots[1]))
+                print('{:6.1f} {:15.4f} {:15.2f}'.format(t_roots, y_roots[0], y_roots[1]))
             else:
                 for (t, y, v) in zip(t_roots, y_roots[:, 0], y_roots[:, 1]):
-                    print('%6.1f %15.4f %15.2f' % (t, y, v))
+                    print('{:6.1f} {:15.4f} {:15.2f}'.format(t, y, v))
         else:
             print('Error: one of (t_roots, y_roots) is None while the other not.')
     else:
@@ -101,17 +110,17 @@ def print_results(experiment_no, result, require_no_roots=False):
 # Set tspan to end at t_end1
 tspan = np.arange(0, t_end1 + 1, 1.0, np.float)
 #
-# 1. Solve the problem without interrupt function i.e. compute until
+# 1. Solve the problem without onroot function i.e. compute until
 #    the first root is found
 #
-solver = cvode.CVODE(rhs_fn, nr_rootfns=1, rootfn=root_fn, old_api=False)
+solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, old_api=False)
 print_results(1, solver.solve(tspan, y0))
 
 #
-# 2. Solve the problem with interrupt function i.e. compute until
-#    the final time is reached
+# 2. Solve the problem with onroot function onroot_va, which resets the problem
+# with the current velocity when a root is found. Note that we expect no roots.
 #
-solver = cvode.CVODE(rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_va, old_api=False)
+solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_va, old_api=False)
 print_results(2, solver.solve(tspan, y0), require_no_roots=True)
 
 # Set tspan to end at t_end2
@@ -120,26 +129,27 @@ tspan = np.arange(0, t_end2 + 1, 1.0, np.float)
 # 3. Solve the problem without interrupt function i.e. compute until
 #    the first root is found
 #
-solver = cvode.CVODE(rhs_fn, nr_rootfns=1, rootfn=root_fn, old_api=False)
+solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, old_api=False)
 print_results(3, solver.solve(tspan, y0))
 
 #
-# 4. Solve the problem with interrupt function i.e. compute until
-#    the final time is reached
+# 4. Solve the problem with onroot function onroot_va, which resets the problem
+# with the current velocity when a root is found. Note that unlike 2 we expect
+# no roots.
 #
-solver = cvode.CVODE(rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_va, old_api=False)
+solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_va, old_api=False)
 print_results(4, solver.solve(tspan, y0))
 
 #
-# 5. Solve the problem without interrupt function i.e. compute until
-#    the first root is found
+# 5. Solve the problem with onroot function onroot_vb, which behaves similarly
+# to the default, which is to compute until a root is found.
 #
-solver = cvode.CVODE(rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_vb, old_api=False)
+solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_vb, old_api=False)
 print_results(5, solver.solve(tspan, y0))
 
 #
-# 6. Solve the problem with interrupt function i.e. compute until
-#    the final time is reached
+# 6. Solve the problem with onroot function onroot_vc, which resets the problem
+# like onroot_va, except that it stops after a certain time.
 #
-solver = cvode.CVODE(rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_vc, old_api=False)
+solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_vc, old_api=False)
 print_results(6, solver.solve(tspan, y0))
