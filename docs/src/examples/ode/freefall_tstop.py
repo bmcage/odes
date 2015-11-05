@@ -10,7 +10,7 @@ the reinit_IC() method of the CVODE solver.
 """
 from __future__ import print_function
 import numpy as np
-from scikits.odes.sundials import cvode
+from scikits.odes import ode
 
 #data
 g  = 9.81    # gravitational constant
@@ -41,7 +41,10 @@ def rhs_fn(t, y, ydot):
     ydot[1] = -g
 
 def ontstop_va(t, y, solver):
-    """ function to handle interrupt cause by finding the tstop """
+    """
+    ontstop function to reset the solver back at the start, but keep the current
+    velocity
+    """
 
     # Teleport the object back to height Y0, but retain its speed
     solver.reinit_IC(t, [Y0, y[1]])
@@ -49,9 +52,16 @@ def ontstop_va(t, y, solver):
     return 0
 
 def ontstop_vb(t, y, solver):
+    """
+    ontstop function to stop solver when root is found
+    """
     return 1
 
 def ontstop_vc(t, y, solver):
+    """
+    ontstop function to reset the solver back at the start, but keep the current
+    velocity as long as the time is less than a given amount
+    """
     if t > 28: # we have found 4 interruption points, so we stop
         return 1
 
@@ -69,7 +79,7 @@ def print_results(experiment_no, result, require_no_tstop=False):
     print('--------------------------------------')
 
     for (t, y, v) in zip(ts, ys[:, 0], ys[:, 1]):
-        print('%6.1f %15.4f %15.2f' % (t, y, v))
+        print('{:6.1f} {:15.4f} {:15.2f}'.format(t, y, v))
 
 
     t_tstop, y_tstop = result.tstop.t, result.tstop.y
@@ -78,13 +88,13 @@ def print_results(experiment_no, result, require_no_tstop=False):
         print('\n t_tstop     y_tstop        v_tstop')
         print('--------------------------------------')
         if (t_tstop is None) and (y_tstop is None):
-            print('%6s %15s %15s' % (t_tstop, y_tstop, y_tstop))
+            print('{!s:6} {!s:15} {!s:15}'.format(t_tstop, y_tstop, y_tstop))
         elif (t_tstop is not None) and (y_tstop is not None):
             if np.isscalar(t_tstop):
-                print('%6.1f %15.4f %15.2f' % (t_tstop, y_tstop[0], y_tstop[1]))
+                print('{:6.1f} {:15.4f} {:15.2f}'.format(t_tstop, y_tstop[0], y_tstop[1]))
             else:
                 for (t, y, v) in zip(t_tstop, y_tstop[:, 0], y_tstop[:, 1]):
-                    print('%6.1f %15.4f %15.2f' % (t, y, v))
+                    print('{:6.1f} {:15.4f} {:15.2f}'.format(t, y, v))
         else:
             print('Error: one of (t_tstop, y_tstop) is None while the other not.')
     else:
@@ -93,17 +103,17 @@ def print_results(experiment_no, result, require_no_tstop=False):
 # Set tspan to end at t_end1
 tspan = np.arange(0, t_end1 + 1, 1.0, np.float)
 #
-# 1. Solve the problem without interrupt function i.e. compute until
+# 1. Solve the problem without ontstop function i.e. compute until
 #    the first tstop is found
 #
-solver = cvode.CVODE(rhs_fn, tstop=10, old_api=False)
+solver = ode('cvode', rhs_fn, tstop=Y1, old_api=False)
 print_results(1, solver.solve(tspan, y0))
 
 #
-# 2. Solve the problem with interrupt function i.e. compute until
-#    the final time is reached
+# 2. Solve the problem with ontstop function ontstop_va, which resets the problem
+# with the current velocity when a root is found. Note that we expect no roots.
 #
-solver = cvode.CVODE(rhs_fn, tstop=10, ontstop=ontstop_va, old_api=False)
+solver = ode('cvode', rhs_fn, tstop=Y1, ontstop=ontstop_va, old_api=False)
 print_results(2, solver.solve(tspan, y0), require_no_tstop=True)
 
 # Set tspan to end at t_end2
@@ -112,26 +122,27 @@ tspan = np.arange(0, t_end2 + 1, 1.0, np.float)
 # 3. Solve the problem without interrupt function i.e. compute until
 #    the first tstop is found
 #
-solver = cvode.CVODE(rhs_fn, tstop=10, old_api=False)
+solver = ode('cvode', rhs_fn, tstop=Y1, old_api=False)
 print_results(3, solver.solve(tspan, y0))
 
 #
-# 4. Solve the problem with interrupt function i.e. compute until
-#    the final time is reached
+# 4. Solve the problem with ontstop function ontstop_va, which resets the problem
+# with the current velocity when a root is found. Note that unlike 2 we expect
+# no roots.
 #
-solver = cvode.CVODE(rhs_fn, tstop=10, ontstop=ontstop_va, old_api=False)
+solver = ode('cvode', rhs_fn, tstop=Y1, ontstop=ontstop_va, old_api=False)
 print_results(4, solver.solve(tspan, y0))
 
 #
-# 5. Solve the problem without interrupt function i.e. compute until
-#    the first tstop is found
+# 5. Solve the problem with ontstop function ontstop_vb, which behaves similarly
+# to the default, which is to compute until a root is found.
 #
-solver = cvode.CVODE(rhs_fn, tstop=10, ontstop=ontstop_vb, old_api=False)
+solver = ode('cvode', rhs_fn, tstop=Y1, ontstop=ontstop_vb, old_api=False)
 print_results(5, solver.solve(tspan, y0))
 
 #
-# 6. Solve the problem with interrupt function i.e. compute until
-#    the final time is reached
+# 6. Solve the problem with ontstop function ontstop_vc, which resets the problem
+# like ontstop_va, except that it stops after a certain time.
 #
-solver = cvode.CVODE(rhs_fn, tstop=10, ontstop=ontstop_vc, old_api=False)
+solver = ode('cvode', rhs_fn, tstop=Y1, ontstop=ontstop_vc, old_api=False)
 print_results(6, solver.solve(tspan, y0))
