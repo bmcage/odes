@@ -42,9 +42,7 @@ def rhs_fn(t, y, ydot):
 
 def root_fn(t, y, out):
     """ root function to check the object reached height Y1 """
-    #print('t = ', t, ', Y = ', y[0], ', v = ', y[1])
-    #print('Y1=', Y1, x)
-    out[0] = 10 - y[0]
+    out[0] = Y1 - y[0]
     return 0
 
 def onroot_va(t, y, solver):
