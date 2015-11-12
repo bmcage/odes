@@ -17,7 +17,7 @@ class CVODESolveFailed(CVODESolveException):
 
 class CVODESolveFoundRoot(CVODESolveException):
     """`CVODE.solve` found a root"""
-    _message = "Solver found a root at {0.roots.t.[0]}."
+    _message = "Solver found a root at {0.roots.t[0]}."
 
 class CVODESolveReachedTSTOP(CVODESolveException):
     """`CVODE.solve` reached the endpoint specified by tstop."""
