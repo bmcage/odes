@@ -36,6 +36,7 @@ class TestDae(TestCase):
                 assert flag==0, (problem.info(), flag)
             else:
                 assert flag > 0, (problem.info(), flag)
+
         assert problem.verify(array(z), array(zprime),  [0.]+problem.stop_t), \
                     (problem.info(),)
 
@@ -50,7 +51,7 @@ class TestDae(TestCase):
         for problem_cls in PROBLEMS_LSODI:
             problem = problem_cls()
             self._do_problem(problem, 'lsodi', **problem.lsodi_pars)
-    
+
     def test_ida(self):
         """Check the ida solver"""
         for problem_cls in PROBLEMS:
@@ -80,7 +81,7 @@ class DAE:
     ddaspk_pars = {}
     ida_pars = {}
     lsodi_pars = {'adda' : simple_adda}
-    
+
     def info(self):
         return self.__class__.__name__ + ": No info given"
 
@@ -99,7 +100,7 @@ class SimpleOscillator(DAE):
     m = 1.0
     z0      = array([dotu0, u0], float)
     zprime0 = array([-k*u0/m, dotu0], float)
-    
+
     def __init__(self):
         self.lsodi_pars = {'adda_func' : self.adda}
 
@@ -128,7 +129,7 @@ class SimpleOscillator(DAE):
             u = self.z0[1]*cos(omega*time)+self.z0[0]*sin(omega*time)/omega
             ok = ok and allclose(u, z[1], atol=self.atol, rtol=self.rtol) and \
             allclose(z[0], zp[1], atol=self.atol, rtol=self.rtol)
-            ##print('verify SO', time, ok, z, u)
+            ##print('verify SO', time, ok, z, u, self.z0)
         return ok
 
 class SimpleOscillatorJac(SimpleOscillator):
@@ -137,16 +138,16 @@ class SimpleOscillatorJac(SimpleOscillator):
         jc = zeros((len(y), len(y)), float)
         cj_in = cj
         jac[0][0] = self.m*cj_in ;jac[0][1] = self.k
-        jac[1][0] = -1       ;jac[1][1] = cj_in;  
+        jac[1][0] = -1       ;jac[1][1] = cj_in;
 
 class StiffVODECompare(DAE):
     r"""
-    We create a stiff problem, obtain the vode solution, and compare with 
+    We create a stiff problem, obtain the vode solution, and compare with
     dae solution
     Correct solution with runga-kutta 45:
-     [t = 0.4, y0(t) = 0.985172121250895372, y1(t) = 0.0000338791735424692934, 
+     [t = 0.4, y0(t) = 0.985172121250895372, y1(t) = 0.0000338791735424692934,
                y2(t) = 0.0147939995755618956]
-     [t = 4., y0(t) = 0.905519130228504610, y1(t) = 0.0000224343714361267687, 
+     [t = 4., y0(t) = 0.905519130228504610, y1(t) = 0.0000224343714361267687,
                y2(t) = 0.0944584354000592570]
     """
     z0      = array([1., 0., 0.], float)
@@ -170,7 +171,7 @@ class StiffVODECompare(DAE):
     def __init__(self):
         """We obtain the vode solution first"""
         r = ode(self.f_vode, self.jac_vode).set_integrator('vode',
-                                  rtol=[1e-4,1e-4,1e-4], 
+                                  rtol=[1e-4,1e-4,1e-4],
                                   atol=[1e-8,1e-14,1e-6],
                                   method='bdf',
                                   )
@@ -189,16 +190,16 @@ class StiffVODECompare(DAE):
 
         #we need to activate some extra parameters in the solver
         #order par is rtol,atol,lband,uband,tstop,order,nsteps,
-        #         max_step,first_step,enforce_nonnegativity,nonneg_type, 
+        #         max_step,first_step,enforce_nonnegativity,nonneg_type,
         #         compute_initcond,constraint_init,constraint_type,algebraic_var
-        self.ddaspk_pars = {'rtol' : [1e-4,1e-4,1e-4], 
-                            'atol' : [1e-8,1e-14,1e-6], 
+        self.ddaspk_pars = {'rtol' : [1e-4,1e-4,1e-4],
+                            'atol' : [1e-8,1e-14,1e-6],
                            }
-        self.ida_pars = {'rtol' : 1e-4, 
-                         'atol' : [1e-8,1e-14,1e-6], 
+        self.ida_pars = {'rtol' : 1e-4,
+                         'atol' : [1e-8,1e-14,1e-6],
                         }
-        self.lsodi_pars = {'rtol' : [1e-4,1e-4,1e-4], 
-                            'atol' : [1e-6,1e-10,1e-6], 
+        self.lsodi_pars = {'rtol' : [1e-4,1e-4,1e-4],
+                            'atol' : [1e-6,1e-10,1e-6],
                             'adda_func' : self.adda
                            }
 
@@ -219,7 +220,7 @@ class StiffVODECompare(DAE):
         ##print('verify SOV', y, self.sol)
         return allclose(self.sol, y, atol=self.atol, rtol=self.rtol)
 
-PROBLEMS = [SimpleOscillator, StiffVODECompare,  
+PROBLEMS = [SimpleOscillator, StiffVODECompare,
             SimpleOscillatorJac ]
 PROBLEMS_LSODI = [SimpleOscillator, StiffVODECompare]
 #------------------------------------------------------------------------------

@@ -120,8 +120,8 @@ class DaeBase(object):
          if old_api False (ida solver):
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnumXXX)
-                values = Named tuple with entries array t and array y and array 
-                            ydot y will correspond to y_retn value and ydot to 
+                values = Named tuple with entries array t and array y and array
+                            ydot. y will correspond to y_retn value and ydot to
                             yp_retn!
                 errors = Named tuple with entries t and y and ydot of error
                 roots  = Named tuple with entries array t and array y and array ydot
@@ -320,8 +320,8 @@ G(y,y',t) = 0 instead of the normal ode, and solve as a DAE.
          if old_api False (ida solver):
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnumXXX)
-                values = Named tuple with entries array t and array y and array 
-                            ydot y will correspond to y_retn value and ydot to 
+                values = Named tuple with entries array t and array y and array
+                            ydot. y will correspond to y_retn value and ydot to
                             yp_retn!
                 errors = Named tuple with entries t and y and ydot of error
                 roots  = Named tuple with entries array t and array y and array ydot

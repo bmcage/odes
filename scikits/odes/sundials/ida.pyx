@@ -715,7 +715,6 @@ cdef class IDA:
                 tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
-
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         cdef np.ndarray[DTYPE_t, ndim=1] np_yp0
         np_y0  = np.asarray(y0, dtype=float)
@@ -745,7 +744,7 @@ cdef class IDA:
                 # if no init cond computed, the start values are values at t=0
                 y_retn[:] = np_y0[:]
                 yp_retn[:] = np_yp0[:]
-                if (self.options['compute_initcond'] and 
+                if (self.options['compute_initcond'] and
                     (self.options['compute_initcond'].lower() in ['y0', 'yp0'])):
                     #an init cond was computed, obtain it to return it
                     nv_s2ndarray(self.y, y_retn)
@@ -823,8 +822,9 @@ cdef class IDA:
             self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
             self.yp0 = N_VMake_Serial(N, <realtype *>yp0.data)
             self.residual = N_VNew_Serial(N)
-            self.y   = N_VClone(self.y0)
-            self.yp  = N_VClone(self.yp0)
+            self.y   = N_VClone(self.y0)  #clone does not copy data!
+            self.yp  = N_VClone(self.yp0) #clone does not copy data!
+
 
         cdef int flag
         cdef void* ida_mem = self._ida_mem
@@ -1048,6 +1048,8 @@ cdef class IDA:
         self.y_tstop = []
         self.yp_tstop = []
 
+        yinit = self.y0
+        ypinit = self.yp0
         if compute_initcond_p:
             flag = IDA_ILL_INPUT
 
@@ -1060,16 +1062,20 @@ cdef class IDA:
                 return (flag, t0)
             else:
                 flag = IDAGetConsistentIC(self._ida_mem, self.y, self.yp)
-    
+
                 if flag == IDA_ILL_INPUT:
                     raise NameError('Method ''get_consistent_ic'' has to be called'
                                     ' prior the first call to the ''step'' method.')
+
+                yinit = self.y
+                ypinit = self.yp
+
         if not ((y_ic0_retn is None) and (yp_ic0_retn is None)):
             assert np.alen(y_ic0_retn) == np.alen(yp_ic0_retn) == N,\
               'y_ic0 and/or yp_ic0 have to be of the same size as y0.'
 
-            if not y_ic0_retn is None: nv_s2ndarray(self.y, y_ic0_retn)
-            if not yp_ic0_retn is None: nv_s2ndarray(self.yp, yp_ic0_retn)
+            if not y_ic0_retn is None: nv_s2ndarray(yinit, y_ic0_retn)
+            if not yp_ic0_retn is None: nv_s2ndarray(ypinit, yp_ic0_retn)
 
         #TODO: implement the rest of IDA*Set* functions for linear solvers
 

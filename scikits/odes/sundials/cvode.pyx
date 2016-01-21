@@ -1030,7 +1030,7 @@ cdef class CVODE:
         Return values:
          if old_api:
             flag  - boolean status of the computation (successful or error occured)
-            t_out - inititial time
+            t_out - initial time
 
          if old_api False (cvode solver):
             A named tuple, with entries:
