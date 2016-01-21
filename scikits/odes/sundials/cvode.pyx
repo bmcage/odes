@@ -7,6 +7,8 @@ from warnings import warn
 import numpy as np
 cimport numpy as np
 
+from . import CVODESolveFailed, CVODESolveFoundRoot, CVODESolveReachedTSTOP
+
 from .c_sundials cimport realtype, N_Vector
 from .c_cvode cimport *
 from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
@@ -79,6 +81,7 @@ STATUS_MESSAGE = {
     StatusEnum.TOO_CLOSE: "The output and initial times are too close to each other.",
 }
 
+WARNING_STR = "Solver succeeded with flag {} and finished at {} with values {}"
 
 # Right-hand side function
 cdef class CV_RhsFunction:
@@ -623,6 +626,7 @@ cdef class CVODE:
             'old_api': None,
             'onroot': None,
             'ontstop': None,
+            'validate_flags': None,
             }
 
         self.verbosity = 1
@@ -630,6 +634,7 @@ cdef class CVODE:
         self.N       = -1
         self._old_api = True # use old api by default
         self._step_compute = False #avoid dict lookup
+        self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
         self.initialized = False
@@ -849,6 +854,12 @@ cdef class CVODE:
                     If the solver returns TSTOP, call this function. If it
                     returns 0, continue solving, otherwise stop.
                     If not given, solver stops after a TSTOP
+            'validate_flags':
+                Values: True, False (=default)
+                Description:
+                    Controls whether to validate flags as a result of calling
+                    `solve`. See the `validate_flags` function for how this
+                    affects `solve`.
         """
 
         # Update values of all supplied options
@@ -1019,6 +1030,16 @@ cdef class CVODE:
             self.options['ontstop'] = fn
         elif self.options.get('ontstop', None) is None:
             self.options['ontstop'] = CV_ContinuationFunction(no_continue_fn)
+
+        # Set validate status
+        if options.get('validate_flags') is not None:
+            validate_flags = options["validate_flags"]
+            if not validate_flags in [True, False]:
+                raise ValueError("Option 'validate_flags' must be True or False")
+            if validate_flags and self._old_api:
+                raise ValueError("Option 'validate_flags' requires 'old_api' to be False")
+            self.options['validate_flags'] = validate_flags
+            self._validate_flags = options["validate_flags"]
 
     def init_step(self, double t0, object y0):
         """
@@ -1445,7 +1466,7 @@ cdef class CVODE:
                 return flag, t, y, t_tstop[0], y_tstop[0]
             return flag, t, y, t_err, y_err
 
-        return SolverReturn(
+        soln = SolverReturn(
             flag=flag,
             values=SolverVariables(t=t, y=y),
             errors=SolverVariables(t=t_err, y=y_err),
@@ -1453,6 +1474,9 @@ cdef class CVODE:
             tstop=SolverVariables(t=t_tstop, y=y_tstop),
             message=STATUS_MESSAGE[flag]
         )
+        if self._validate_flags:
+            return self.validate_flags(soln)
+        return soln
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                  np.ndarray[DTYPE_t, ndim=1] y0):
@@ -1630,3 +1654,28 @@ cdef class CVODE:
         if not self.y0   is NULL: N_VDestroy(self.y0)
         if not self.y    is NULL: N_VDestroy(self.y)
         if not self.atol is NULL: N_VDestroy(self.atol)
+
+    def validate_flags(self, soln):
+        """
+        Validates the flag returned by `CVODE.solve`.
+
+        Validation happens using the following scheme:
+         * failures (`flag` < 0) raise `CVODESolveFailed` or a subclass of it;
+         * finding a root (and stopping) raises `CVODESolveFoundRoot`;
+         * reaching `tstop` (and stopping) raises `CVODESolveReachedTSTOP`;
+         * otherwise, return an instance of `SolverReturn`.
+
+        In the case where ontstop or onroot are used, `CVODESolveFoundRoot` or
+        `CVODESolveReachedTSTOP` will be raised only if the solver is told to
+        stop at that point.
+        """
+        if soln.flag == StatusEnum.SUCCESS:
+            return soln
+        if soln.flag < 0:
+            raise CVODESolveFailed(soln)
+        elif soln.flag == StatusEnum.TSTOP_RETURN:
+            raise CVODESolveReachedTSTOP(soln)
+        elif soln.flag == StatusEnum.ROOT_RETURN:
+            raise CVODESolveFoundRoot(soln)
+        warn(WARNING_STR.format(soln.flag, *soln.err_values))
+        return soln
