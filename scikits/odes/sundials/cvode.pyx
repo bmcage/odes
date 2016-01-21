@@ -622,6 +622,7 @@ cdef class CVODE:
             'err_user_data': None,
             'old_api': None,
             'onroot': None,
+            'ontstop': None,
             }
 
         self.verbosity = 1
@@ -842,6 +843,12 @@ cdef class CVODE:
                 Description:
                     If the solver returns ROOT, call this function. If it
                     returns 0, continue solving, otherwise stop.
+                    If not given, solver stops after a ROOT
+            'ontstop':
+                Description:
+                    If the solver returns TSTOP, call this function. If it
+                    returns 0, continue solving, otherwise stop.
+                    If not given, solver stops after a TSTOP
         """
 
         # Update values of all supplied options
@@ -1000,10 +1007,18 @@ cdef class CVODE:
             fn = options['onroot']
             if not isinstance(fn, CV_ContinuationFunction):
                 fn = CV_ContinuationFunction(fn)
-
             self.options['onroot'] = fn
         elif self.options.get('onroot', None) is None:
             self.options['onroot'] = CV_ContinuationFunction(no_continue_fn)
+
+        # Set ontstop
+        if options.get('ontstop', None) is not None:
+            fn = options['ontstop']
+            if not isinstance(fn, CV_ContinuationFunction):
+                fn = CV_ContinuationFunction(fn)
+            self.options['ontstop'] = fn
+        elif self.options.get('ontstop', None) is None:
+            self.options['ontstop'] = CV_ContinuationFunction(no_continue_fn)
 
     def init_step(self, double t0, object y0):
         """
@@ -1011,11 +1026,11 @@ cdef class CVODE:
         the call to 'set_options()' to be done and hence all the information
         for correct solver initialization to be available.
         An error is raised for almost all errors.
-        
+
         Return values:
          if old_api:
             flag  - boolean status of the computation (successful or error occured)
-            t_out - inititial time 
+            t_out - inititial time
 
          if old_api False (cvode solver):
             A named tuple, with entries:
@@ -1026,7 +1041,7 @@ cdef class CVODE:
                 roots  = Named tuple with entries t_roots and y_roots
                 tstop  = Named tuple with entries t_stop and y_tstop
                 message= String with message in case of an error
-            
+
         Note: some options can be re-set also at runtime. See 'reinit_IC()'
         """
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
@@ -1034,7 +1049,7 @@ cdef class CVODE:
 
         #flag is always True, as errors are exceptions for cvode init_step!
         (flag, time) = self._init_step(t0, np_y0)
-        
+
         if self._old_api:
             return (flag, time)
         else:
@@ -1461,6 +1476,7 @@ cdef class CVODE:
         cdef realtype t_out
         cdef N_Vector y  = self.y
         cdef CV_ContinuationFunction onroot = self.options['onroot']
+        cdef CV_ContinuationFunction ontstop = self.options['ontstop']
         cdef dict user_data = self.options['user_data']
 
         y_last   = np.empty(np.shape(y0), float)
@@ -1495,6 +1511,10 @@ cdef class CVODE:
             elif flag == CV_TSTOP_RETURN:
                 self.t_tstop.append(np.copy(t_out))
                 self.y_tstop.append(np.copy(y_last))
+                tstop_flag = ontstop.evaluate(t_out, y_last, self)
+                if tstop_flag == 0:
+                    PyErr_CheckSignals()
+                    continue
                 break
 
             break
