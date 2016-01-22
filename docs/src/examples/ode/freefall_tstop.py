@@ -50,7 +50,6 @@ def ontstop_va(t, y, solver):
     global n
     solver.reinit_IC(t, [Y0, y[1]])
     n += 1
-    print ('setting tstop at', Y1+n*10)
     solver.set_options(tstop=Y1+n*10)
 
     return 0
