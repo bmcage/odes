@@ -10,8 +10,8 @@ from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
                     empty, alen)
 
 from numpy.testing import TestCase, run_module_suite
-from scipy.integrate import ode
-from scikits.odes import dae
+from scipy.integrate import ode as Iode
+from scikits.odes import ode,dae
 
 class TestDae(TestCase):
     """
@@ -179,25 +179,41 @@ class StiffVODECompare(DAE):
               [0.0    ,6e7*y[1]           ,0.0]]
         return array(jc)
 
+    def f_cvode(self, t, y, ydot):
+        ydot[:] = self.f_vode(t, y)
+
+    def jac_cvode(self, t, y, J):
+        J[:,:] = self.jac_vode(t, y)
+
     def __init__(self):
         """We obtain the vode solution first"""
-        r = ode(self.f_vode, self.jac_vode).set_integrator('vode',
+        r = Iode(self.f_vode, self.jac_vode).set_integrator('vode',
                                   rtol=[1e-4,1e-4,1e-4],
                                   atol=[1e-8,1e-14,1e-6],
                                   method='bdf',
                                   )
         r.set_initial_value([1.,0.,0.])
-        nr = 4
-        self.sol = zeros((nr+1, 3))
-        self.stop_t = [0.4]*nr
-        for i in range(nr-1):
-            self.stop_t[i+1] = 10 * self.stop_t[i]
+        nr = 5
+        self.sol = zeros((nr, 3))
+        self.stop_t = [0., 0.4, 4., 40., 400.]
         self.sol[0] = r.y
         i=1
-        for time in self.stop_t:
+        for time in self.stop_t[1:]:
             r.integrate(time)
             self.sol[i] = r.y
             i +=1
+        #we now do the same with the sundials CVODE solution
+        r = ode('cvode', self.f_cvode, jacfn=self.jac_cvode,
+                         rtol=1e-4,
+                         atol=[1e-8,1e-14,1e-6],
+                         lmm_type='bdf',
+                         old_api=False,
+        )
+        soln = r.solve(self.stop_t, [1.,0.,0.])
+        self.sol2 = soln.values.y
+
+        #for the solvers, only stop time, not start:
+        self.stop_t = self.stop_t[1:]
 
         #we need to activate some extra parameters in the solver
         #order par is rtol,atol,lband,uband,tstop,order,nsteps,
@@ -228,8 +244,8 @@ class StiffVODECompare(DAE):
         return p
 
     def verify(self, y, yp, t):
-        ##print('verify SOV', y, self.sol)
-        return allclose(self.sol, y, atol=self.atol, rtol=self.rtol)
+        return ( allclose(self.sol, y, atol=self.atol, rtol=self.rtol) and
+                 allclose(self.sol2, y, atol=self.atol, rtol=self.rtol) )
 
 PROBLEMS = [SimpleOscillator, StiffVODECompare,
             SimpleOscillatorJac ]

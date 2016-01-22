@@ -45,6 +45,17 @@ def root_fn(t, y, out):
     out[0] = Y1 - y[0]
     return 0
 
+def root_fn2(t, y, out):
+    """ root function to check the object reached height Y1 """
+    out[0] = Y1 - y[0]
+    out[1] = (t-10)*(t-20)*(t-30)
+    return 0
+
+def root_fn3(t, y, out):
+    """ root function to check the object reached time 10 """
+    out[0] = (t - 10)*(t-20)*(t-30)
+    return 0
+
 def onroot_va(t, y, solver):
     """
     onroot function to reset the solver back at the start, but keep the current
@@ -66,11 +77,18 @@ def onroot_vc(t, y, solver):
     onroot function to reset the solver back at the start, but keep the current
     velocity as long as the time is less than a given amount
     """
-
     if t > 28: # we have found 4 interruption points, so we stop
         return 1
-
     solver.reinit_IC(t, [Y0, y[1]])
+
+    return 0
+
+def onroot_vd(t, y, solver):
+    """
+    onroot function to just continue if time <28
+    """
+    if t > 28:
+        return 1
 
     return 0
 
@@ -84,7 +102,7 @@ def print_results(experiment_no, result, require_no_roots=False):
     print('--------------------------------------')
 
     for (t, y, v) in zip(ts, ys[:, 0], ys[:, 1]):
-        print('{:6.1f} {:15.4f} {:15.2f}'.format(t, y, v))
+        print('{:6.1f} {:15.4f} {:15.4f}'.format(t, y, v))
 
 
     t_roots, y_roots = result.roots.t, result.roots.y
@@ -99,7 +117,7 @@ def print_results(experiment_no, result, require_no_roots=False):
                 print('{:6.1f} {:15.4f} {:15.2f}'.format(t_roots, y_roots[0], y_roots[1]))
             else:
                 for (t, y, v) in zip(t_roots, y_roots[:, 0], y_roots[:, 1]):
-                    print('{:6.1f} {:15.4f} {:15.2f}'.format(t, y, v))
+                    print('{:6.6f} {:15.4f} {:15.4f}'.format(t, y, v))
         else:
             print('Error: one of (t_roots, y_roots) is None while the other not.')
     else:
@@ -151,3 +169,16 @@ print_results(5, solver.solve(tspan, y0))
 #
 solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_vc, old_api=False)
 print_results(6, solver.solve(tspan, y0))
+
+#
+# 7. 2 root functions, one with time
+#
+solver = ode('cvode', rhs_fn, nr_rootfns=2, rootfn=root_fn2, onroot=onroot_vc, old_api=False)
+print_results(7, solver.solve(tspan, y0))
+
+#
+# 8. root functions with time, with root at end time
+#
+tspan = np.arange(0, 30 + 1, 1.0, np.float)
+solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn3, onroot=onroot_vc, old_api=False)
+print_results(8, solver.solve(tspan, y0))
