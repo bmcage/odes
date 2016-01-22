@@ -9,6 +9,7 @@ cdef class IDA_RhsFunction:
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] result,
                        object userdata = *)
+
 cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
     cdef object _resfn
     cdef int with_userdata
@@ -20,6 +21,7 @@ cdef class IDA_RootFunction:
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] g,
                        object userdata = *)
+
 cdef class IDA_WrapRootFunction(IDA_RootFunction):
     cpdef object _rootfn
     cdef int with_userdata
@@ -36,6 +38,12 @@ cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
     cpdef object _jacfn
     cdef int with_userdata
     cpdef set_jacfn(self, object jacfn)
+
+cdef class IDA_ContinuationFunction:
+    cpdef object _fn
+    cpdef int evaluate(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] ydot,
+                       IDA solver)
 
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj)
 
@@ -73,7 +81,7 @@ cdef class IDA:
     cdef void* _ida_mem
     cdef dict options
     cdef bint parallel_implementation
-    cdef bint _old_api, _step_compute
+    cdef bint _old_api, _step_compute, _validate_flags
     cdef realtype t, t0
 
     cdef IDA_data aux_data
