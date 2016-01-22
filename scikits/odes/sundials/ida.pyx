@@ -1298,6 +1298,16 @@ cdef class IDA:
                 self.y_roots.append(np.copy(y_last))
                 self.yp_roots.append(np.copy(yp_last))
                 root_flag = onroot.evaluate(t_out, y_last, yp_last, self)
+                if (t_out == t):
+                    #a root at our wanted output, and we continue comp
+                    t_retn[idx]    = t_out
+                    y_retn[idx, :] = y_last
+                    yp_retn[idx, :] = yp_last
+                    idx = idx + 1
+                    if idx < last_idx:
+                        t = tspan[idx]
+                    else:
+                        break
                 if root_flag == 0:
                     PyErr_CheckSignals()
                     continue
@@ -1307,6 +1317,16 @@ cdef class IDA:
                 self.y_tstop.append(np.copy(y_last))
                 self.yp_tstop.append(np.copy(yp_last))
                 tstop_flag = ontstop.evaluate(t_out, y_last, yp_last, self)
+                if (t_out == t):
+                    #a tstop at our wanted output, and we continue comp
+                    t_retn[idx]    = t_out
+                    y_retn[idx, :] = y_last
+                    yp_retn[idx, :] = yp_last
+                    idx = idx + 1
+                    if idx < last_idx:
+                        t = tspan[idx]
+                    else:
+                        break
                 if tstop_flag == 0:
                     PyErr_CheckSignals()
                     continue
