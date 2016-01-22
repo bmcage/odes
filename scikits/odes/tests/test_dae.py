@@ -17,20 +17,25 @@ class TestDae(TestCase):
     """
     Check integrate.dae
     """
-    def _do_problem(self, problem, integrator,  **integrator_params):
+    def _do_problem(self, problem, integrator, old_api=True, **integrator_params):
         jac = None
         if hasattr(problem, 'jac'):
             jac = problem.jac
         res = problem.res
 
-        ig = dae(integrator, res, jacfn=jac)
-        ig.set_options(**integrator_params)
+        ig = dae(integrator, res, jacfn=jac, old_api=old_api)
+        ig.set_options(old_api=old_api, **integrator_params)
         z = empty((1+len(problem.stop_t),alen(problem.z0)), float)
         zprime = empty((1+len(problem.stop_t),alen(problem.z0)), float)
-        ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
+        ist = ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
         i=1
         for time in problem.stop_t:
-            flag, rt = ig.step(time, z[i], zprime[i])
+            soln = ig.step(time, z[i], zprime[i])
+            if old_api:
+                flag, rt = soln
+            else:
+                flag = soln.flag
+                rt = soln.values.t
             i += 1
             if integrator == 'ida':
                 assert flag==0, (problem.info(), flag)
@@ -52,11 +57,17 @@ class TestDae(TestCase):
             problem = problem_cls()
             self._do_problem(problem, 'lsodi', **problem.lsodi_pars)
 
+    def test_ida_old_api(self):
+        """Check the ida solver"""
+        for problem_cls in PROBLEMS:
+            problem = problem_cls()
+            self._do_problem(problem, 'ida', old_api=True, **problem.ida_pars)
+
     def test_ida(self):
         """Check the ida solver"""
         for problem_cls in PROBLEMS:
             problem = problem_cls()
-            self._do_problem(problem, 'ida', **problem.ida_pars)
+            self._do_problem(problem, 'ida', old_api=False, **problem.ida_pars)
 
 #------------------------------------------------------------------------------
 # Test problems
@@ -232,4 +243,5 @@ if __name__ == "__main__":
         test = TestDae()
         test.test_ddaspk()
         test.test_lsodi()
+        test.test_ida_old_api()
         test.test_ida()
