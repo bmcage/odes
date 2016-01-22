@@ -1076,7 +1076,7 @@ cdef class CVODE:
         else:
             y_retn  = np.empty(np.alen(np_y0), float)
             y_retn[:] = np_y0[:]
-            return SolverReturn(
+            soln = SolverReturn(
                 flag=flag,
                 values=SolverVariables(t=time, y=y_retn),
                 errors=SolverVariables(t=None, y=None),
@@ -1084,6 +1084,9 @@ cdef class CVODE:
                 tstop=SolverVariables(t=None, y=None),
                 message=STATUS_MESSAGE[StatusEnum.SUCCESS]
             )
+            if self._validate_flags:
+                return self.validate_flags(soln)
+            return soln
 
     cpdef _init_step(self, DTYPE_t t0,
                      np.ndarray[DTYPE_t, ndim=1] y0):
@@ -1501,7 +1504,6 @@ cdef class CVODE:
         cdef N_Vector y  = self.y
         cdef CV_ContinuationFunction onroot = self.options['onroot']
         cdef CV_ContinuationFunction ontstop = self.options['ontstop']
-        cdef dict user_data = self.options['user_data']
 
         y_last   = np.empty(np.shape(y0), float)
         t = tspan[idx]
@@ -1647,14 +1649,6 @@ cdef class CVODE:
             message=STATUS_MESSAGE[flag]
         )
 
-    def __dealloc__(self):
-        if not self._cv_mem is NULL: CVodeFree(&self._cv_mem)
-        #TODO: when implementing parallel, does N_VDestroy be called separately
-        #      for parallel version or it's a generic one?
-        if not self.y0   is NULL: N_VDestroy(self.y0)
-        if not self.y    is NULL: N_VDestroy(self.y)
-        if not self.atol is NULL: N_VDestroy(self.atol)
-
     def validate_flags(self, soln):
         """
         Validates the flag returned by `CVODE.solve`.
@@ -1679,3 +1673,11 @@ cdef class CVODE:
             raise CVODESolveFoundRoot(soln)
         warn(WARNING_STR.format(soln.flag, *soln.err_values))
         return soln
+
+    def __dealloc__(self):
+        if not self._cv_mem is NULL: CVodeFree(&self._cv_mem)
+        #TODO: when implementing parallel, does N_VDestroy be called separately
+        #      for parallel version or it's a generic one?
+        if not self.y0   is NULL: N_VDestroy(self.y0)
+        if not self.y    is NULL: N_VDestroy(self.y)
+        if not self.atol is NULL: N_VDestroy(self.atol)
