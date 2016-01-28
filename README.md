@@ -9,6 +9,22 @@ are the *Sundials* solvers.
 * ida is a Differential Algebraic Equation solver. 
 
 # Documentation
+## Example use
+Since 2.2.0, a new API is available, which will become the default. Typical usage is:
+
+> import pylab
+> import numpy as np
+> from scikits.odes import ode
+> 
+> t0, y0 = 1, np.array([0.5, 0.5])  # initial condition
+> def van_der_pol(t, y, ydot):
+>     """ we create rhs equations for the problem"""
+>     ydot[0] = y[1]
+>     ydot[1] = 1000*(1.0-y[0]**2)*y[1]-y[0]
+> 
+> solution = ode('cvode', van_der_pol, old_api=False).solve(np.linspace(t0,500,200), y0)
+> pylab.plot(solution.values.t, solution.values.y[:,0], label='Van der Pol oscillator')
+> pylab.show()
 
 ## Notebook examples
 Basic use:
@@ -67,6 +83,26 @@ In the top directory (the same as the file you are reading now), just do as root
 ```
 This builds the packages in the build directory. Libraries are searched in /usr/lib 
 and /usr/local/lib, edit setup.py for other locations.
+
+For a working scikit compile, LAPACK, ATLAS and BLAS must be found. A typical output of the build is:
+> lapack_info:
+>   FOUND:
+>     libraries = ['lapack']
+>     library_dirs = ['/usr/lib']
+>     language = f77
+> 
+> blas_info:
+>   FOUND:
+>     libraries = ['blas']
+>     library_dirs = ['/usr/lib']
+>     language = f77
+> 
+>   FOUND:
+>     libraries = ['lapack', 'blas']
+>     library_dirs = ['/usr/lib']
+>     define_macros = [('NO_ATLAS_INFO', 1)]
+>     language = f77
+
 
 You can try it without installation by using PYTHONPATH. For example:
 On my box, the build libs are in odes/build/lib.linux-x86_64-2.7/, hence I can
