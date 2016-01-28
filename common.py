@@ -1,6 +1,6 @@
 descr   = """
-Odes is a scikit toolkit for scipy to add some extra ode solvers. 
-At present it provides dae solvers you can use, extending the capabilities 
+Odes is a scikit toolkit for scipy to add some extra ode solvers.
+At present it provides dae solvers you can use, extending the capabilities
 offered in scipy.integrade.ode.
 
 LICENSE: the license of odes is the same as scipy, new BSD.
@@ -20,9 +20,9 @@ DOWNLOAD_URL        = URL
 INSTALL_REQUIRES = ['scipy']
 
 MAJOR = 2
-MINOR = 1
-MICRO = 99
-DEV = True
+MINOR = 2
+MICRO = 0
+DEV = False
 
 CLASSIFIERS = [
         'Development Status :: 5 - Production/Stable',
