@@ -1383,12 +1383,46 @@ cdef class CVODE:
         """
         Re-initialize (only) the initial condition IC without re-setting also
         all the remaining solver options. See also 'init_step()' funtion.
+        Typically, an exception is raised with wrong input.
+
+        Return values:
+         if old_api:
+            flag  - boolean status of the computation (successful or error occured)
+            t_out - initial time
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries t and y and ydot. y will
+                            correspond to y_retn value and ydot to yp_retn!
+                errors = Named tuple with entries t_err and y_err
+                roots  = Named tuple with entries t_roots and y_roots
+                tstop  = Named tuple with entries t_stop and y_tstop
+                message= String with message in case of an error
+
         """
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         np_y0 = np.asarray(y0)
 
-        return self._reinit_IC(t0, np_y0)
+        flag, time = self._reinit_IC(t0, np_y0)
+
+        if self._old_api:
+            return (flag, time)
+        else:
+            y_retn  = np.empty(np.alen(np_y0), float)
+            y_retn[:] = np_y0[:]
+            soln = SolverReturn(
+                flag=flag,
+                values=SolverVariables(t=time, y=y_retn),
+                errors=SolverVariables(t=None, y=None),
+                roots=SolverVariables(t=None, y=None),
+                tstop=SolverVariables(t=None, y=None),
+                message=STATUS_MESSAGE[StatusEnum.SUCCESS]
+            )
+            if self._validate_flags:
+                return self.validate_flags(soln)
+            return soln
 
     cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0):
         # If not yet initialized, run full initialization

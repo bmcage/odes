@@ -98,6 +98,9 @@ cdef class IDA:
                     np.ndarray[DTYPE_t, ndim=1] yp0,
                     np.ndarray y_ic0_retn = ?,
                     np.ndarray yp_ic0_retn = ?)
+    cpdef _reinit_IC(self, double t0,
+                     np.ndarray[DTYPE_t, ndim=1] y0,
+                     np.ndarray[DTYPE_t, ndim=1] yp0)
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                        np.ndarray[DTYPE_t, ndim=1] y0,
                        np.ndarray[DTYPE_t, ndim=1] yp0)

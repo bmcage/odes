@@ -1159,6 +1159,85 @@ cdef class IDA:
 
         return (flag, t0)
 
+    def reinit_IC(self, double t0, object y0, object yp0):
+        """
+        Re-initialize (only) the initial condition IC without re-setting also
+        all the remaining solver options. See also 'init_step()' funtion.
+        This does not allow to recompute a valid IC condition, use init_step for that.
+        Typically, an exception is raised with wrong input.
+
+        Return values:
+         if old_api:
+            flag  - status of the computation (successful or error occured)
+            t_out - time, where the solver stopped (when no error occured, t_out == t)
+
+         if old_api False (cvode solver):
+            A named tuple, with entries:
+                flag   = An integer flag (StatusEnumXXX)
+                values = Named tuple with entries t and y and ydot. y will
+                            correspond to y_ic0_retn value and ydot to yp_ic0_retn!
+                errors = Named tuple with entries t and y and ydot
+                roots  = Named tuple with entries t and y and ydot
+                tstop  = Named tuple with entries t and y and ydot
+                message= String with message in case of an error
+
+        """
+        cdef np.ndarray[DTYPE_t, ndim=1] np_y0
+        np_y0 = np.asarray(y0)
+        cdef np.ndarray[DTYPE_t, ndim=1] np_yp0
+        np_yp0 = np.asarray(yp0)
+
+        flag, time = self._reinit_IC(t0, np_y0, np_yp0)
+
+        if self._old_api:
+            return (flag, time)
+        else:
+            y_retn  = np.empty(np.alen(np_y0), float)
+            yp_retn = np.empty(np.alen(np_y0), float)
+            # no init cond computed, the start values are values at t=t0
+            y_retn[:] = np_y0[:]
+            yp_retn[:] = np_yp0[:]
+            soln = SolverReturn(
+                flag=flag,
+                values=SolverVariables(t=time, y=y_retn, ydot=yp_retn),
+                errors=SolverVariables(t=None, y=None, ydot=None),
+                roots=SolverVariables(t=None, y=None, ydot=None),
+                tstop=SolverVariables(t=None, y=None, ydot=None),
+                message=STATUS_MESSAGE[StatusEnumIDA.SUCCESS]
+            )
+        if self._validate_flags:
+            return self.validate_flags(soln)
+        return soln
+
+    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0,
+                     np.ndarray[DTYPE_t, ndim=1] yp0):
+        # If not yet initialized, run full initialization
+        if self.y0 is NULL:
+            self._init_step(t0, y0, yp0)
+            return
+
+        cdef long int N
+        N = <long int> np.alen(y0)
+        Np = <long int> np.alen(yp0)
+        if N == self.N and Np == N:
+            self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
+            self.yp0  = N_VMake_Serial(N, <realtype *>yp0.data)
+        else:
+            raise ValueError("Cannot re-init IC with array of unequal lenght.")
+
+        flag = IDAReInit(self._ida_mem, <realtype> t0, self.y0, self.yp0)
+
+        if flag == IDA_ILL_INPUT:
+                raise ValueError('IDA[Re]Init: Ill input')
+        elif flag == IDA_MEM_FAIL:
+            raise MemoryError('IDA[Re]Init: Memory allocation error')
+        elif flag == IDA_MEM_NULL:
+            raise MemoryError('IDACreate: Memory allocation error')
+        elif flag == IDA_NO_MALLOC:
+            raise MemoryError('IDAReInit: No memory allocated in IDAInit.')
+
+        return (True, t0)
+
     def solve(self, object tspan, object y0,  object yp0):
         """
         Runs the solver.
