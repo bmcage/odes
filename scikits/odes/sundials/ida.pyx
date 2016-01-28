@@ -1434,16 +1434,19 @@ cdef class IDA:
         if self._old_api:
             return soln
 
+        t_roots = np.array(self.t_roots) if self.t_roots else None
+        y_roots = np.array(self.y_roots) if self.y_roots else None
+        yp_roots = np.array(self.yp_roots) if self.yp_roots else None
+        t_tstop = np.array(self.t_tstop) if self.t_tstop else None
+        y_tstop = np.array(self.y_tstop) if self.y_tstop else None
+        yp_tstop = np.array(self.yp_tstop) if self.yp_tstop else None
+
         return SolverReturn(
             flag=flag,
             values=SolverVariables(t=t_retn, y=y_retn, ydot=yp_retn),
             errors=SolverVariables(t=t_err, y=y_err, ydot=yp_err),
-            roots=SolverVariables(t=self.t_roots or None,
-                                  y=self.y_roots or None,
-                                  ydot=self.yp_roots or None),
-            tstop=SolverVariables(t=self.t_tstop or None,
-                                  y=self.y_tstop or None,
-                                  ydot=self.yp_tstop or None),
+            roots=SolverVariables(t=t_roots, y=y_roots, ydot=yp_roots),
+            tstop=SolverVariables(t=t_tstop, y=y_tstop, ydot=yp_tstop),
             message=STATUS_MESSAGE[flag]
         )
 
@@ -1543,12 +1546,12 @@ cdef class IDA:
 
         PyErr_CheckSignals()
 
-        t_roots = self.t_roots if self.t_roots else None
-        y_roots = self.y_roots if self.y_roots else None
-        yp_roots = self.yp_roots if self.yp_roots else None
-        t_tstop = self.t_tstop if self.t_tstop else None
-        y_tstop = self.y_tstop if self.y_tstop else None
-        yp_tstop = self.yp_tstop if self.yp_tstop else None
+        t_roots = np.array(self.t_roots) if self.t_roots else None
+        y_roots = np.array(self.y_roots) if self.y_roots else None
+        yp_roots = np.array(self.yp_roots) if self.yp_roots else None
+        t_tstop = np.array(self.t_tstop) if self.t_tstop else None
+        y_tstop = np.array(self.y_tstop) if self.y_tstop else None
+        yp_tstop = np.array(self.yp_tstop) if self.yp_tstop else None
 
         if self._old_api:
             return flagIDA, t_out

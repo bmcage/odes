@@ -1684,10 +1684,10 @@ cdef class CVODE:
 
         PyErr_CheckSignals()
 
-        t_roots = self.t_roots if self.t_roots else None
-        y_roots = self.y_roots if self.y_roots else None
-        t_tstop = self.t_tstop if self.t_tstop else None
-        y_tstop = self.y_tstop if self.y_tstop else None
+        t_roots = np.array(self.t_roots) if self.t_roots else None
+        y_roots = np.array(self.y_roots) if self.y_roots else None
+        t_tstop = np.array(self.t_tstop) if self.t_tstop else None
+        y_tstop = np.array(self.y_tstop) if self.y_tstop else None
 
         if self._old_api:
             return flagCV, t_out
