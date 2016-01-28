@@ -1,6 +1,10 @@
-#!/usr/bin/python3
 # Test different solvers from 'scipy.integrate.ode' and 'odes'
 # with Van der Pol equation in stiff regime
+
+# Optionally use cython for the RHS evaluation. 
+#Then you need to compile van_der_pol_fun.pyx, see
+# instructions at the top of the file.
+
 from __future__ import division
 import pylab
 import numpy as np
