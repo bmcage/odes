@@ -125,7 +125,7 @@ class OdeBase(object):
         Return values:
          if old_api:
             flag  - boolean status of the computation (successful or error occured)
-            t_out - inititial time 
+            t_out - inititial time
 
          if old_api False (cvode solver):
             A named tuple, with entries:
@@ -136,7 +136,7 @@ class OdeBase(object):
                 roots  = Named tuple with entries t_roots and y_roots
                 tstop  = Named tuple with entries t_stop and y_tstop
                 message= String with message in case of an error
-            
+
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
@@ -308,7 +308,7 @@ As an easy example, consider the simple oscillator,
         Return values:
          if old_api:
             flag  - boolean status of the computation (successful or error occured)
-            t_out - inititial time 
+            t_out - inititial time
 
          if old_api False (cvode solver):
             A named tuple, with entries:
@@ -319,7 +319,7 @@ As an easy example, consider the simple oscillator,
                 roots  = Named tuple with entries t_roots and y_roots
                 tstop  = Named tuple with entries t_stop and y_tstop
                 message= String with message in case of an error
-            
+
         """
         return self._integrator.init_step(t0, y0)
 
@@ -384,6 +384,12 @@ def find_ode_integrator(name):
             OdeBase.integrator_classes.append(cvode.CVODE)
         except ValueError as msg:
             print('Could not load CVODE solver', msg)
+        except ImportError:
+            print(sys.exc_info()[1])
+
+        ## dopri
+        try:
+            from .dopri5 import dopri5
         except ImportError:
             print(sys.exc_info()[1])
 
