@@ -5,8 +5,12 @@ are the *Sundials* solvers.
 
 * You need scipy, 
 * Tested with python 2.7 and 3.2
-* cvode is an improvement on the ode (vode/dvode) solver in scipy.integrate. Use it to have modern features
-* ida is a Differential Algebraic Equation solver. 
+* Available solvers:
+    * BDF linear multistep method  for stiff problems. This is done or via *cvode*, which is an improvement on the ode (vode/dvode) solver in scipy.integrate, or for DAE systems via *ida*. Both are part of the sundials package. Use it to have modern features
+    * Adams-Moulton linear multistep method for nonstiff problems. This is done also via *cvode* or *ida* (option lmm_type='ADAMS')
+    * Explicit Runge-Kutta method of order (4)5 with stepsize control. This is done via *dopri5* from scipy.integrate.
+    * Explicit Runge-Kutta method of order 8(5,3) with stepsize control. This is done via *dop853* from scipy.integrate.
+    * Historical solvers: *lsodi* and *ddaspk* are available for comparison reasons. Use *ida* instead!
 
 # Documentation
 ## Example use
