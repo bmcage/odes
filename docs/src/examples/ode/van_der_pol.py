@@ -1,7 +1,7 @@
 # Test different solvers from 'scipy.integrate.ode' and 'odes'
 # with Van der Pol equation in stiff regime
 
-# Optionally use cython for the RHS evaluation. 
+# Optionally use cython for the RHS evaluation.
 #Then you need to compile van_der_pol_fun.pyx, see
 # instructions at the top of the file.
 
@@ -10,7 +10,7 @@ import pylab
 import numpy as np
 from numpy import array
 from scipy.integrate import ode
-from scikits.odes import ode as ode_cvode
+from scikits.odes import ode as ode_odes
 from scikits.odes.sundials.cvode import CV_RhsFunction
 
 HAS_CYTHON_RHS = True
@@ -20,7 +20,7 @@ except:
     HAS_CYTHON_RHS = False
 
 import time
-    
+
 mu = 1000
 y0 = np.array([0.5, 0.5])
 Te = 500
@@ -29,7 +29,7 @@ tt = np.linspace(1,Te,200)
 def van_der_pol(t, y):
     return np.array([y[1], mu*(1.0-y[0]**2)*y[1]-y[0]])
 
-def van_der_pol_cvode(t, y, ydot):
+def van_der_pol_odes(t, y, ydot):
     """ we create rhs equations for the problem"""
     ydot[0] = y[1]
     ydot[1] = mu*(1.0-y[0]**2)*y[1]-y[0]
@@ -39,9 +39,11 @@ class CV_Rhs_van_der_pol(CV_RhsFunction):
         ydot[0] = y[1]
         ydot[1] = mu*(1.0-y[0]**2)*y[1]-y[0]
         return 0
-        
-r1 = ode(van_der_pol).set_integrator('dop853', nsteps=1000)
-r1.set_initial_value(y0, t=tt[0])
+
+r1a = ode(van_der_pol).set_integrator('dop853', nsteps=1000)
+r1b = ode_odes('dop853', van_der_pol_odes, nsteps=1000)
+
+r1a.set_initial_value(y0, t=tt[0])
 
 r2 = ode(van_der_pol).set_integrator('vode', method='bdf', with_jacobian=True)
 r2.set_initial_value(y0, t=tt[0])
@@ -49,19 +51,30 @@ r2.set_initial_value(y0, t=tt[0])
 r3 = ode(van_der_pol).set_integrator('lsoda')
 r3.set_initial_value(y0, t=tt[0])
 
-r4 = ode_cvode('cvode', van_der_pol_cvode, old_api=False)
+r4 = ode_odes('cvode', van_der_pol_odes, old_api=False)
 
-r5 = ode_cvode('cvode', CV_Rhs_van_der_pol(), old_api=False)
+r5 = ode_odes('cvode', CV_Rhs_van_der_pol(), old_api=False)
 
 if HAS_CYTHON_RHS:
-    r6 = ode_cvode('cvode', CV_Rhs_van_der_pol_cy(), old_api=False)
+    r6 = ode_odes('cvode', CV_Rhs_van_der_pol_cy(), old_api=False)
     r7 = ode(van_der_pol_cy).set_integrator('lsoda')
     r7.set_initial_value(y0, t=tt[0])
     r8 = ode(van_der_pol_cy).set_integrator('vode', method='bdf', with_jacobian=True)
     r8.set_initial_value(y0, t=tt[0])
 
-c1 = time.clock()
-sol1 = [r1.integrate(T) for T in tt[1:]]
+c1a = time.clock()
+sol1a = [r1a.integrate(T) for T in tt[1:]]
+print ('END dop853 orig, now dop853 via odes scikit')
+c1b = time.clock()
+sol1b = r1b.solve(tt, y0)
+c1c = time.clock()
+# restart solver from the error
+print ('error reached, restart once ...')
+tt2 = np.linspace(sol1b.errors.t,Te,134)
+r1b.set_options(nsteps=100000)
+sol1c = r1b.solve(tt2, sol1b.errors.y)
+if sol1c.errors.t:
+    print ('... again error. Stop. Starting other solvers now')
 
 c2 = time.clock()
 sol2 = [r2.integrate(T) for T in tt[1:]]
@@ -84,14 +97,15 @@ if HAS_CYTHON_RHS:
     sol8 = [r8.integrate(T) for T in tt[1:]]
     c9 = time.clock()
 
-sol1 = array([[0.5, 0.5]] + sol1)
+sol1a = array([[0.5, 0.5]] + sol1a)
 sol2 = array([[0.5, 0.5]] + sol2)
 sol3 = array([[0.5, 0.5]] + sol3)
 
-print ("Time for dop853:    " + str(c2-c1))
-print ("Time for vode/BDF:  " + str(c3-c2))
-print ("Time for lsoda:     " + str(c4-c3))
-print ("Time for cvode/BDF: " + str(c5-c4))
+print ("Time for dop853 orig:" + str(c1b-c1a))
+print ("Time for dop853 odes:" + str(c1c-c1b + c2-c1c))
+print ("Time for vode/BDF:   " + str(c3-c2))
+print ("Time for lsoda:      " + str(c4-c3))
+print ("Time for cvode/BDF:  " + str(c5-c4))
 print ("Time for cvode/BDF - class:  " + str(c6-c5))
 
 if HAS_CYTHON_RHS:
@@ -103,7 +117,8 @@ if HAS_CYTHON_RHS:
 
 ##pylab.ion()
 pylab.figure()
-pylab.plot(tt, sol1[:,0], label='dop853') 
+pylab.plot(tt, sol1a[:,0], label='dop853 orig')
+pylab.plot(sol1b.values.t, sol1b.values.y[:,0], label='dop853')
 if HAS_CYTHON_RHS:
     pylab.plot(tt, sol8[:,0], label='vode/BDF  - cython')
     pylab.plot(sol6.values.t, sol6.values.y[:,0], label='cvode/BDF - cython')

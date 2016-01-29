@@ -387,9 +387,9 @@ def find_ode_integrator(name):
         except ImportError:
             print(sys.exc_info()[1])
 
-        ## dopri
+        ## dopri5 and dop853
         try:
-            from .dopri5 import dopri5
+            from .dopri5 import dopri5, dop853
         except ImportError:
             print(sys.exc_info()[1])
 

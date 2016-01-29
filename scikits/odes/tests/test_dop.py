@@ -52,3 +52,8 @@ class TestDop(TestCase):
         soln = solver.solve(tspan, prob.y0)
         assert soln.flag==StatusEnumDOP.SUCCESS, "ERROR: Error occurred"
         assert prob.verify(prob.stop_t, soln.values.y[1])
+
+        solver = ode('dop853', prob.f)
+        soln = solver.solve(tspan, prob.y0)
+        assert soln.flag==StatusEnumDOP.SUCCESS, "ERROR: Error occurred"
+        assert prob.verify(prob.stop_t, soln.values.y[1])
