@@ -38,7 +38,7 @@ dopri5
 References
 [HNW93]	(1, 2) E. Hairer, S.P. Norsett and G. Wanner, Solving Ordinary Differential Equations i. Nonstiff Problems. 2nd edition. Springer Series in Computational Mathematics, Springer-Verlag (1993)
 
-dopri5
+dop853
 ~~~~~~
     This is an explicit runge-kutta method of order 8(5,3) due to Dormand & Prince
     (with stepsize control and dense output).
