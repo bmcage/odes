@@ -92,6 +92,7 @@ cdef class CV_RhsFunction:
         return 0
 
 cdef class CV_WrapRhsFunction(CV_RhsFunction):
+    
     cpdef set_rhsfn(self, object rhsfn):
         """
         set some rhs equations as a RhsFunction executable class
@@ -1206,7 +1207,17 @@ cdef class CVODE:
             tmpfun.set_jacfn(jac)
             jac = tmpfun
             opts['jacfn'] = tmpfun
-        self.aux_data.jac = jac
+        self.aux_data.jac = jac        
+        
+        #we test if rfn call doesn't give errors due to bad coding, as
+        #cvode will ignore errors, it only checks return value (0 or 1 for error)
+        if isinstance(rfn, CV_WrapRhsFunction):
+            _test = np.empty(np.alen(y0), float)
+            if rfn.with_userdata:
+                rfn._rhsfn(t0, y0, _test, opts['user_data'])
+            else:
+                rfn._rhsfn(t0, y0, _test)
+            _test = None
 
         prec_setupfn = opts['prec_setupfn']
         if prec_setupfn is not None and not isinstance(prec_setupfn, CV_PrecSetupFunction):
@@ -1366,6 +1377,16 @@ cdef class CVODE:
 
         if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
             CVDlsSetDenseJacFn(cv_mem, _jacdense)
+
+        #we test if jac don't give errors due to bad coding, as
+        #cvode will ignore errors, it only checks return value (0 or 1 for error)
+        if jac is not None and isinstance(jac, CV_WrapJacRhsFunction):
+            if linsolver == 'lapackband' or linsolver == 'band':
+                _test = np.empty((opts['uband']+opts['lband']+1, np.alen(y0)), float)
+            else:
+                _test = np.empty((np.alen(y0), np.alen(y0)), float)
+            jac._jacfn(t0, y0, _test)
+            _test = None
 
         #now we initialize storage which is persistent over steps
         self.t_roots = []

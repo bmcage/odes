@@ -9,8 +9,8 @@ cdef class CV_RhsFunction:
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        object userdata = *)
 cdef class CV_WrapRhsFunction(CV_RhsFunction):
-    cpdef object _rhsfn
-    cdef int with_userdata
+    cpdef public object _rhsfn
+    cdef public int with_userdata
     cpdef set_rhsfn(self, object rhsfn)
 
 cdef class CV_RootFunction:
@@ -28,7 +28,7 @@ cdef class CV_JacRhsFunction:
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=2] J)
 cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
-    cpdef object _jacfn
+    cpdef public object _jacfn
     cdef int with_userdata
     cpdef set_jacfn(self, object jacfn)
 
