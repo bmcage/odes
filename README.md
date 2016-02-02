@@ -30,6 +30,8 @@ Since 2.2.0, a new API is available, which will become the default. Typical usag
     pylab.plot(solution.values.t, solution.values.y[:,0], label='Van der Pol oscillator')
     pylab.show()
 
+For simplicity there is also a convenience function *odeint* wrapping the ode solver class. See example use in [simple.py](https://github.com/bmcage/odes/blob/master/docs/src/examples/odeint/simple.py).
+
 ## Notebook examples
 Basic use:
 * [Simple oscillator](https://github.com/bmcage/odes/blob/master/docs/ipython/Simple%20Oscillator.ipynb) solved with cvode
