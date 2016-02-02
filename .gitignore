@@ -5,6 +5,7 @@
 .directory
 \#*\#
 *.c
+*.so
 *swp
 *.egg
 *.ipynb_checkpoints*
@@ -13,4 +14,6 @@ build*
 .emacs.desktop*
 docs/src/examples/scikits
 dist
+_build
+
 
