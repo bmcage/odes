@@ -13,15 +13,20 @@ from .ode import ode
 def odeint(rhsfun, tout, y0,  method='bdf', **options):
     """
     Integrate a system of ordinary differential equations.
-    *odeint* is a wrapper around the ode class, as a confenience function to 
+    *odeint* is a wrapper around the ode class, as a confenience function to
     quickly integrate a system of ode.
     Solves the initial value problem for stiff or non-stiff systems
-    of first order ode-s::
+    of first order ode's:
+
         rhs = dy/dt = fun(t, y)
+
     where y can be a vector, then rhsfun must be a function computing rhs with
     signature:
+
         rhsfun(t, y, rhs)
+
     storing the computated dy/dt in the rhs array passed to the function
+
     Parameters
     ----------
     rhsfun : callable(t, y, out)
@@ -31,48 +36,60 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
     t : array
         A sequence of time points for which to solve for y.  The initial
         value point should be the first element of this sequence.
-    method: solution  method to use. 
-        Available are all the ode class solvers as well as some convenience 
+    method : string, solution  method to use.
+        Available are all the ode class solvers as well as some convenience
         shorthands:
+
+        =======  ==============================================================
         Method   Meaning
-        =======  =============================================================
-        'bdf'    This uses the 'cvode' solver in default from, which is a
+        =======  ==============================================================
+        bdf      This uses the 'cvode' solver in default from, which is a
                  variable step, variable coefficient Backward Differentiation
                  Formula solver, good for stiff ODE. Newton iterations are
                  used to solve the nonlinear system.
-        'admo'   This uses the 'cvode' solver with option lmm_type='ADAMS',
-                 which is a variable step Adams-Moulton method (linear 
+        admo     This uses the 'cvode' solver with option lmm_type='ADAMS',
+                 which is a variable step Adams-Moulton method (linear
                  multistep method), good for non-stiff ODE. Functional
                  iterations are used to solve the nonlinear system.
-        'rk5'    This uses the 'dopri5' solver, which is a variable step 
+        rk5      This uses the 'dopri5' solver, which is a variable step
                  Runge-Kutta method of order (4)5 (use for non-stiff ODE)
-        'rk8'    This uses the 'dop853' solver, which is a variable step 
+        rk8      This uses the 'dop853' solver, which is a variable step
                  Runge-Kutta method of order 8(5,3)
-                 
+        =======  ==============================================================
+
         For educational purposes, you can also access following methods:
-        
-        'beuler' This is the Implicit Euler (backward Euler) method (order 1), 
-                 which is obtained via the 'bdf' method, setting the order 
-                 option to 1, setting large tolerances,  and fixing the stepsize.
+
+        =======  ==============================================================
+        Method   Meaning
+        =======  ==============================================================
+        beuler   This is the Implicit Euler (backward Euler) method (order 1),
+                 which is obtained via the 'bdf' method, setting the order
+                 option to 1, setting large tolerances,  and fixing the
+                 stepsize.
                  Use option 'step' to change stepsize, default: step=0.05.
                  Use option 'rtol' and 'atol' to use more strict tolerances
-                 Note: this is not completely the backward Euler method, as the
-                       cvode solver has added control options!
-        'trapz'  This is the Trapezoidal Rule method (order 2), which is
-                 obtained via the 'admo' method, setting option order to 2, 
+                 Note: this is not completely the backward Euler method, as
+                 the cvode solver has added control options!
+        trapz    This is the Trapezoidal Rule method (order 2), which is
+                 obtained via the 'admo' method, setting option order to 2,
                  setting large tolerances and fixing the stepsize.
                  Use option 'step' to change stepsize, default: step=0.05.
                  Use option 'rtol' and 'atol' to use more strict tolerances
                  Note: The cvode solver might change the order to 1 internally
-                       in which case this becomes beuler method. Set atol, rtol
-                       options as strict as possible.
-        
+                 in which case this becomes beuler method. Set atol, rtol
+                 options as strict as possible.
+        =======  ==============================================================
+
         You can also access the solvers of ode via their names:
-        
-        'cvode'  This uses the 'cvode' solver
-        'dopri5' This uses the 'dopri5' solver
-        'dop853' This uses the 'dop853' solver
-        
+
+        =======  ==============================================================
+        Method   Meaning
+        =======  ==============================================================
+        cvode    This uses the 'cvode' solver
+        dopri5   This uses the 'dopri5' solver
+        dop853   This uses the 'dop853' solver
+        =======  ==============================================================
+
     options : extra solver options, optional
         Every solver has it's own extra options, see the ode class and the
         details of the solvers available there to know the options possible per
@@ -80,55 +97,77 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
 
     Returns
     -------
-    A named tuple is returned, with  entries:
-                flag   = An integer flag
-                values = Named tuple with entries t and y
-                errors = Named tuple with entries t and y
-                roots  = Named tuple with entries t and y
-                tstop  = Named tuple with entries t and y
-                message= String with message in case of an error
+    solution : named tuple
+        A single named tuple is returned containing the result of the
+        integration.
+
+        ========  ==========================================
+        Field     Meaning
+        ========  ==========================================
+        flag      An integer flag
+        values    Named tuple with fields t and y
+        errors    Named tuple with fields t and y
+        roots     Named tuple with fields t and y
+        tstop     Named tuple with fields t and y
+        message   String with message in case of an error
+        ========  ==========================================
 
     See Also
     --------
-    ode : a more object-oriented integrator 
-    dae : a solver for differential-algebraic equations
-    quad : for finding the area under a curve.
+    ode : a more object-oriented integrator in scikits.odes
+    dae : a solver for differential-algebraic equations in scikits.odes
+    quad : for finding the area under a curve, part of scipy.
+
     Examples
     --------
     The second order differential equation for the angle `theta` of a
-    pendulum acted on by gravity with friction can be written::
-        theta''(t) + b*theta'(t) + c*sin(theta(t)) = 0
+    pendulum acted on by gravity with friction can be written:
+
+    .. math:: \\theta''(t) + b \\theta'(t) + c \\sin(\\theta(t)) = 0
+
     where `b` and `c` are positive constants, and a prime (') denotes a
     derivative.  To solve this equation with `odeint`, we must first convert
     it to a system of first order equations.  By defining the angular
-    velocity ``omega(t) = theta'(t)``, we obtain the system::
-        theta'(t) = omega(t)
-        omega'(t) = -b*omega(t) - c*sin(theta(t))
+    velocity ``omega(t) = theta'(t)``, we obtain the system:
+
+    .. math:: \\theta'(t) = \\omega(t)
+     \\omega'(t) = -b \\omega(t) - c \\sin(\\theta(t))
+
     We assume the constants are `b` = 0.25 and `c` = 5.0:
+
     >>> b = 0.25
     >>> c = 5.0
+
     Let `y` be the vector [`theta`, `omega`].  We implement this system
     in python as:
+
     >>> def pend(t, y, out):
-    ...     theta, omega = y
-    ...     out[:] = [omega, -b*omega - c*np.sin(theta)]
-    ...
-    
+     ...     theta, omega = y
+     ...     out[:] = [omega, -b*omega - c*np.sin(theta)]
+     ...
+
     In case you want b and c easily changable, make pend a class method, and
-    consider attributes b and c accessible via self.b and self.c.
+    consider attributes b and c accessible via `self.b` and `self.c`.
     For initial conditions, we assume the pendulum is nearly vertical
     with `theta(0)` = `pi` - 0.1, and it initially at rest, so
     `omega(0)` = 0.  Then the vector of initial conditions is
+
     >>> y0 = [np.pi - 0.1, 0.0]
+
     We generate a solution 101 evenly spaced samples in the interval
-    0 <= `t` <= 10.  So our array of times is:
+    0 <= `t` <= 10.  So our array of times is
+
     >>> t = np.linspace(0, 10, 101)
-    Call `odeint` to generate the solution. 
+
+    Call `odeint` to generate the solution.
+
     >>> from scikits.odes.odeint import odeint
     >>> sol = odeint(pend, t, y0)
-    The solution is a named tuple. sol.values.y is array with shape (101, 2).  
-    The first column is `theta(t)`, and the second is `omega(t)`.  
+
+    The solution is a named tuple `sol`. sol.values.y is an array with shape (101, 2).
+    The first column is `theta(t)`, and the second is `omega(t)`.
     The following code plots both components.
+
     >>> import matplotlib.pyplot as plt
     >>> plt.plot(sol.values.t, sol.values.y[:, 0], 'b', label='theta(t)')
     >>> plt.plot(sol.values.t, sol.values.y[:, 1], 'g', label='omega(t)')
@@ -139,7 +178,7 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
     """
     t = copy(tout)
     y0 = copy(y0)
-    
+
     int_name = 'cvode'
     #always use old api
     options['old_api'] = False
@@ -172,6 +211,6 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
             options['order'] = 2
     else:
         int_name = method
-    
+
     solver = ode(int_name, rhsfun, **options)
     return solver.solve(t, y0)

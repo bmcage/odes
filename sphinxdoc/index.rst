@@ -18,10 +18,10 @@ Contents:
 .. autofunction:: odeint
 
 :mod:`scikits.odes.ode` Class
----------------------------
+-----------------------------
 .. py:module:: scikits.odes.ode
 .. autoclass:: ode
-
+   :members:
 
 Indices and tables
 ==================

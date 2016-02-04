@@ -169,3 +169,13 @@ Release:
 3. push tag: `git push --tags`
 4. update to pypi repo: `python setup.py sdist --formats=gztar,zip register upload`
 5. update version string to a higher number, and DEV=True
+
+For the documentation, you need following packages
+```sudo apt-get install python-sphinx python-numpydoc
+```
+
+After local install, create the new documentation via
+
+1. go to the sphinx directory: `cd sphinxdoc`
+2. create the documentation: `make html`
+3. upload the new html doc.
