@@ -21,6 +21,7 @@ Contents:
 -----------------------------
 .. py:module:: scikits.odes.ode
 .. autoclass:: ode
+   :special-members:
    :members:
 
 Indices and tables

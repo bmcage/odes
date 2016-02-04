@@ -40,16 +40,19 @@ from __future__ import print_function
 integrator_info = \
 """
 Available integrators
----------------------
+
 cvode
 
+dopri5
+
+dop853
+
 Note:
------
-Consider also the solvers from scipy.integrate, specifically odeint and
-scipy.integrate.ode.
-At the moment of writing, these methods of scipy are based on the original
-lsoda/e and vode fortran solvers. cvode is the successor (and improvement) of
-those, with a last release in sundials 2.4.0
+    Consider also the solvers from scipy.integrate, specifically odeint and
+    scipy.integrate.ode.
+    At the moment of writing, these methods of scipy are based on the original
+    lsoda/e and vode fortran solvers. cvode is the successor (and improvement) of
+    those, with a last release in sundials 2.4.0
 
 """
 
@@ -189,8 +192,8 @@ A generic interface class to differential equation solvers.
 
 See also
 --------
-scipy.integrate.odeint : an ODE integrator with a simpler interface based on lsoda from ODEPACK
-scipy.integrate.ode : class around vode ODE integrator
+scikits.odes.odeint.odeint : an ODE integrator with a simpler interface
+scipy.integrate : Methods in scipy for ODE integration
 
 Examples
 --------
@@ -204,49 +207,63 @@ As an easy example, consider the simple oscillator,
 >>> k = 4.0
 >>> m = 1.0
 >>> initx = [1, 0.1]
->>> def rhseqn(t, x, result):
-    # we create rhs equations for the problem
-      result[0] = - k/m*x[0]
-      result[1] = x[1]
+>>> def rhseqn(t, x, xdot):
+        # we create rhs equations for the problem
+        xdot[0] = x[1]
+        xdot[1] = - k/m * x[0]
 
 >>> from scikits.odes import ode
->>> solver = ode('cvode', rhseqn)
+>>> solver = ode('cvode', rhseqn, old_api=False)
 >>> result = solver.solve([0., 1., 2.], initx)
->>> print('\n   t        Solution          Exact')
+>>> print('   t        Solution          Exact')
 >>> print('------------------------------------')
->>> for t, u in zip(result[1], result[2]):
+>>> for t, u in zip(result.values.t, result.values.y):
         print('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
 
+More examples in the Examples_ directory and IPython_ worksheets.
+
+.. _Examples: https://github.com/bmcage/odes/tree/master/docs/src/examples
+.. _IPython: https://github.com/bmcage/odes/tree/master/docs/ipython
 """
     __doc__ += integrator_info
     LOADED = False
 
     def __init__(self, integrator_name, eqsrhs, **options):
         """
-        Initialize the ODE Solver and it's default values
+        Initialize the ODE Solver and it's options.
 
+        .. math:: \\frac{dy(t)}{dt} = f(t, y(t)), \\quad y(t_0)=y_0
+        .. math:: y(t_0)[i] = y_0[i], i = 0, ..., len(y0) - 1
+
+        f(t,y) is the right hand side function and returns a vector of size len(y0).
 
         Parameters
         ----------
-        integrator_name : name of the integrator solver to use. Currently you
-            can choose cvode.
+
+        integrator_name : name of the integrator solver to use.
+            Currently you can choose `cvode`, `dopri5` and `dop853`.
+
         eqsrhs : right-hand-side function
-            right-hand-side of a first order ode. The signature of this
-            function depends on the solver used, see the solver documentation
-            for details.
-            Generally however, you can assume the following signature to work:
-                        eqsrhs(x, y, return_rhs)
+            right-hand-side of a first order ode.
+            Generally, you can assume the following signature to work:
+                eqsrhs(x, y, return_rhs)
+
             with
-            x       : independent variable, eg the time, float
-            y       : array of n unknowns in x
+
+                x: independent variable, eg the time, float
+
+                y: array of n unknowns in x
+
             return_rhs: array that must be updated with the value of the
-                      right-hand-side, so f(t,y).  The dimension is equal to
-                      dim(y)
-            return value: An integer, 0 for success. It is not guaranteed that
-                      a solver takes this status into account
+            right-hand-side, so f(t,y).  The dimension is equal to
+            dim(y)
+
+            return value: An integer, 0 for success, 1 for failure.
+                It is not guaranteed that a solver takes this status into account
 
             Some solvers will allow userdata to be passed to eqsrhs, or optional
             formats that are more performant.
+
         options :  additional options of the solver, see set_options method of
             the solver for details.
         """
@@ -263,7 +280,8 @@ As an easy example, consider the simple oscillator,
         Set specific options for the solver.
         See the solver documentation for details.
 
-        Calling set_options a second time, normally resets the solver.
+        Calling set_options a second time, is only possible for options that
+        can change during runtime.
         """
         return self._integrator.set_options(**options)
 
@@ -271,26 +289,37 @@ As an easy example, consider the simple oscillator,
         """
         Runs the solver.
 
-        Input:
-            tspan - an list/array of times at which the computed value will be
-                    returned. Must contain the start time.
-            y0    - list/numpy array of initial values
+        Parameters
+        ----------
+        tspan : a list/array of times at which the computed value will be returned. Must contain the start time.
 
-        Return values :
-         if old_api:
+        y0 : list/numpy array of initial values
+
+        Returns
+        -------
+        if old_api:
             flag   - indicating return status of the solver
+
             t      - numpy array of times at which the computations were successful
+
             y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
-            t_err  - float or None - if recoverable error occured (for example reached maximum
-                     number of allowed iterations), this is the time at which it happened
+
+            t_err  - float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened
+
             y_err  - numpy array of values corresponding to time t_err
-         if old_api False (cvode solver):
-            A named tuple, with entries:
+
+        if old_api False (cvode solver):
+            A named tuple, with fields:
                 flag   = An integer flag (StatusEnum)
+
                 values = Named tuple with entries t and y
+
                 errors = Named tuple with entries t and y
+
                 roots  = Named tuple with entries t and y
+
                 tstop  = Named tuple with entries t and y
+
                 message= String with message in case of an error
         """
         return self._integrator.solve(tspan, y0)
@@ -301,23 +330,30 @@ As an easy example, consider the simple oscillator,
         call this method if solve is used to compute the solution. In the case
         step is used, init_step must be called first.
 
-        Input:
-            t0     - initial time
-            y0     - initial condition for y (can be list or numpy array)
+        Parameters
+        ----------
+        t0 : initial time
+        y0 : initial condition for y (can be list or numpy array)
 
-        Return values:
-         if old_api:
+        Returns
+        -------
+        if old_api:
             flag  - boolean status of the computation (successful or error occured)
+
             t_out - inititial time
 
-         if old_api False (cvode solver):
-            A named tuple, with entries:
+        if old_api False (cvode solver):
+            A named tuple, with fields:
                 flag   = An integer flag (StatusEnumXXX)
-                values = Named tuple with entries t and y and ydot. y will
-                            correspond to y_retn value and ydot to yp_retn!
+
+                values = Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!
+
                 errors = Named tuple with entries t_err and y_err
+
                 roots  = Named tuple with entries t_roots and y_roots
+
                 tstop  = Named tuple with entries t_stop and y_tstop
+
                 message= String with message in case of an error
 
         """
@@ -329,8 +365,9 @@ As an easy example, consider the simple oscillator,
         more precise control over the solver. The 'init_step' method has to
         be called before the 'step' method.
 
-        Input:
-            t - A step is done towards time t, and output at t returned.
+        Parameters
+        ----------
+        t : A step is done towards time t, and output at t returned.
                 This time can be higher or lower than the previous time.
                 If option 'one_step_compute'==True, and the solver supports
                 it, only one internal solver step is done in the direction
@@ -341,19 +378,26 @@ As an easy example, consider the simple oscillator,
                           and results at this time are returned in y_retn
                  if t<0.0 only one internal step is perfomed towards time abs(t)
                          and results after this one time step are returned
-        Return values:
-         if old_api:
+
+        Returns
+        -------
+        if old_api:
             flag  - status of the computation (successful or error occured)
+
             t_out - time, where the solver stopped (when no error occured, t_out == t)
 
-         if old_api False (cvode solver):
+        if old_api False (cvode solver):
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y. y will
-                            correspond to y_retn value
+
+                values = Named tuple with entries t and y. y will correspond to y_retn value
+
                 errors = Named tuple with entries t_err and y_err
+
                 roots  = Named tuple with entries t_roots and y_roots
+
                 tstop  = Named tuple with entries t_stop and y_tstop
+
                 message= String with message in case of an error
         """
         return self._integrator.step(t, y_retn)
