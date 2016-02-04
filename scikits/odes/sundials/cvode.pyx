@@ -92,7 +92,7 @@ cdef class CV_RhsFunction:
         return 0
 
 cdef class CV_WrapRhsFunction(CV_RhsFunction):
-    
+
     cpdef set_rhsfn(self, object rhsfn):
         """
         set some rhs equations as a RhsFunction executable class
@@ -1207,8 +1207,8 @@ cdef class CVODE:
             tmpfun.set_jacfn(jac)
             jac = tmpfun
             opts['jacfn'] = tmpfun
-        self.aux_data.jac = jac        
-        
+        self.aux_data.jac = jac
+
         #we test if rfn call doesn't give errors due to bad coding, as
         #cvode will ignore errors, it only checks return value (0 or 1 for error)
         if isinstance(rfn, CV_WrapRhsFunction):

@@ -1,12 +1,12 @@
-# Authors: B. Malengier 
+# Authors: B. Malengier
 """
-This example shows the most simple way of using a solver. 
+This example shows the most simple way of using a solver.
 We solve free vibration of a simple oscillator::
         m \ddot{u} + k u = 0, u(0) = u_0, \dot{u}(0) = \dot{u}_0
 using the CVODE solver, which means we use a rhs function of \dot{u}.
 Solution::
         u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
-    
+
 """
 from __future__ import print_function
 from numpy import asarray, cos, sin, sqrt
@@ -22,14 +22,14 @@ def rhseqn(t, x, xdot):
     """ we create rhs equations for the problem"""
     xdot[0] = x[1]
     xdot[1] = - k/m * x[0]
-    
+
 #instantiate the solver
 from scikits.odes import ode
-solver = ode('cvode', rhseqn)
+solver = ode('cvode', rhseqn, old_api=True)
 #obtain solution at a required time
 result = solver.solve([0., 10., 20.], initx)
 
-print ('\n sundials cvode')
+print ('\n sundials cvode old API')
 print('\n   t        Solution          Exact')
 print('------------------------------------')
 for t, u in zip(result[1], result[2]):
@@ -43,6 +43,29 @@ print('------------------------------------')
 
 for t, u in zip(result[1], result[2]):
     print ('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
+
+
+solver = ode('cvode', rhseqn, old_api=False)
+#obtain solution at a required time
+result = solver.solve([0., 10., 20.], initx)
+print ('\n sundials cvode new API')
+print('\n   t        Solution          Exact')
+print('------------------------------------')
+for t, u in zip(result.values.t, result.values.y):
+    print('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
+
+#continue the solver
+result = solver.solve([result.values.t[-1], result.values.t[-1]+10, result.values.t[-1]+110], result.values.y[-1])
+print('------------------------------------')
+print('  ...continuation of the solution')
+print('------------------------------------')
+
+for t, u in zip(result.values.t, result.values.y):
+    print ('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
+
+if result.errors.t:
+    print ('Error at time {}, message: {}'.format(result.errors.t, result.message))
+
 
 from scipy.integrate import ode as scode
 #define function for the right-hand-side equations which has specific signature

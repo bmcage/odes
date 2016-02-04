@@ -461,11 +461,12 @@ cdef class IDA:
                             (user provided values for y0 an yp0 are considered
                              to be consistent and accurate)
             'compute_initcond_t0':
-                Values: non-negative float, 0.01 = default
+                Values: float, 0.01 = default
                 Description:
                     When calculating the initial condition, specifies the time
                     until which the solver tries to
-                    get the consistent values for either y0 or yp0.
+                    get the consistent values for either y0 or yp0 relative to
+                    the starting time. Positive if t1 > t0, negative if t1 < t0
             'one_step_compute':
                 Values: False (default) or True
                 Description:
@@ -782,6 +783,8 @@ cdef class IDA:
                 tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
+        cdef int flag
+        cdef float time
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         cdef np.ndarray[DTYPE_t, ndim=1] np_yp0
         np_y0  = np.asarray(y0, dtype=float)
@@ -1128,9 +1131,9 @@ cdef class IDA:
             flag = IDA_ILL_INPUT
 
             if compute_initcond == 'yp0':
-                flag = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, ic_t0)
+                flag = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, t0 + ic_t0)
             elif compute_initcond == 'y0':
-                flag = IDACalcIC(ida_mem, IDA_Y_INIT, ic_t0)
+                flag = IDACalcIC(ida_mem, IDA_Y_INIT, t0 + ic_t0)
 
             if not (flag == IDA_SUCCESS):
                 return (flag, t0)
@@ -1303,8 +1306,8 @@ cdef class IDA:
         #check to avoid typical error
         cdef dict opts = self.options
         cdef realtype ic_t0 = <realtype>opts['compute_initcond_t0']
-        if ((np.alen(tspan)>1 and ic_t0 > tspan[0] and tspan[1] > tspan[0]) or
-            (np.alen(tspan)>1 and ic_t0 < tspan[0] and tspan[1] < tspan[0])):
+        if ((np.alen(tspan)>1 and ic_t0 > 0. and tspan[1] > tspan[0]) or
+            (np.alen(tspan)>1 and ic_t0 < 0. and tspan[1] < tspan[0])):
             pass
         else:
             raise ValueError('InitCond: ''compute_initcond_t0'' value: %f '
@@ -1319,12 +1322,13 @@ cdef class IDA:
         if self._old_api:
             flag = ret_ic[0]
         else:
-            flag = ret_ic.flag
+            flag = (ret_ic.flag == IDA_SUCCESS)
 
-        if not (flag == IDA_SUCCESS):
+        if not flag:
             if self._old_api:
-                print('IDAInitCond: Error occured during computation'
-                      ' of initial condition, flag', flag)
+                # print done in init_step method!
+#                print('IDAInitCond: Error occured during computation'
+#                      ' of initial condition, flag', flag)
                 return (False, ret_ic[1], y0, None, None, None, None)
             else:
                 return ret_ic
