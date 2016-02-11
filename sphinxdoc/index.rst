@@ -3,26 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Odes's documentation!
-================================
+Welcome to the ODES scikit documentation!
+=========================================
+
+The ODES scikit provides access to Ordinary Differential Equation (ODE) solvers and Differential Algebraic Equation (DAE) solvers.
+
+A convenience function `odeint` is available for fast and fire and forget integration. Object oriented class solvers `ode` and `dae` are available for fine control. Finally, the low levels solvers are also directly exposed for specialised needs.
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
-
-
-:mod:`odeint` Convenience function
-----------------------------------
-.. py:module:: scikits.odes.odeint
-.. autofunction:: odeint
-
-:mod:`scikits.odes.ode` Class
------------------------------
-.. py:module:: scikits.odes.ode
-.. autoclass:: ode
-   :special-members:
-   :members:
+   
+   odeint
+   ode
 
 Indices and tables
 ==================

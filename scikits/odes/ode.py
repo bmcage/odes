@@ -39,20 +39,13 @@ from __future__ import print_function
 #the following will be extended as solvers are loaded
 integrator_info = \
 """
-Available integrators
+Available integrators:
 
 cvode
 
 dopri5
 
 dop853
-
-Note:
-    Consider also the solvers from scipy.integrate, specifically odeint and
-    scipy.integrate.ode.
-    At the moment of writing, these methods of scipy are based on the original
-    lsoda/e and vode fortran solvers. cvode is the successor (and improvement) of
-    those, with a last release in sundials 2.4.0
 
 """
 
@@ -106,7 +99,7 @@ class OdeBase(object):
             t_err  - float or None - if recoverable error occured (for example reached maximum
                      number of allowed iterations), this is the time at which it happened
             y_err  - numpy array of values corresponding to time t_err
-         if old_api False (cvode solver):
+         if old_api False:
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnum)
                 values = Named tuple with entries t and y
@@ -130,16 +123,14 @@ class OdeBase(object):
             flag  - boolean status of the computation (successful or error occured)
             t_out - inititial time
 
-         if old_api False (cvode solver):
+         if old_api False:
             A named tuple, with entries:
-                flag   = An integer flag (StatusEnumXXX)
-                values = Named tuple with entries t and y and ydot. y will
-                            correspond to y_retn value and ydot to yp_retn!
-                errors = Named tuple with entries t_err and y_err
-                roots  = Named tuple with entries t_roots and y_roots
-                tstop  = Named tuple with entries t_stop and y_tstop
+                flag   = An integer flag (StatusEnum)
+                values = Named tuple with entries t and y
+                errors = Named tuple with entries t and y
+                roots  = Named tuple with entries t and y
+                tstop  = Named tuple with entries t and y
                 message= String with message in case of an error
-
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
@@ -169,16 +160,14 @@ class OdeBase(object):
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
 
-         if old_api False (cvode solver):
+         if old_api False:
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y. y will
-                            correspond to y_retn value
-                errors = Named tuple with entries t_err and y_err
-                roots  = Named tuple with entries t_roots and y_roots
-                tstop  = Named tuple with entries t_stop and y_tstop
+                values = Named tuple with entries t and y
+                errors = Named tuple with entries t and y
+                roots  = Named tuple with entries t and y
+                tstop  = Named tuple with entries t and y
                 message= String with message in case of an error
-
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
@@ -233,9 +222,10 @@ More examples in the Examples_ directory and IPython_ worksheets.
         Initialize the ODE Solver and it's options.
 
         .. math:: \\frac{dy(t)}{dt} = f(t, y(t)), \\quad y(t_0)=y_0
-        .. math:: y(t_0)[i] = y_0[i], i = 0, ..., len(y0) - 1
+        .. math:: y(t_0)[i] = y_0[i], i = 0, ..., \mathrm{len}(y_0) - 1
 
-        f(t,y) is the right hand side function and returns a vector of size len(y0).
+        f(t,y) is the right hand side function and returns a vector of size
+        :math:`\mathrm{len}(y_0)`.
 
         Parameters
         ----------
@@ -244,8 +234,9 @@ More examples in the Examples_ directory and IPython_ worksheets.
             Currently you can choose `cvode`, `dopri5` and `dop853`.
 
         eqsrhs : right-hand-side function
-            right-hand-side of a first order ode.
+            Right-hand-side of a first order ode.
             Generally, you can assume the following signature to work:
+
                 eqsrhs(x, y, return_rhs)
 
             with
@@ -254,9 +245,9 @@ More examples in the Examples_ directory and IPython_ worksheets.
 
                 y: array of n unknowns in x
 
-            return_rhs: array that must be updated with the value of the
-            right-hand-side, so f(t,y).  The dimension is equal to
-            dim(y)
+                return_rhs : array that must be updated with the value of the
+                right-hand-side, so f(t,y).  The dimension is equal to
+                dim(y)
 
             return value: An integer, 0 for success, 1 for failure.
                 It is not guaranteed that a solver takes this status into account
@@ -264,8 +255,11 @@ More examples in the Examples_ directory and IPython_ worksheets.
             Some solvers will allow userdata to be passed to eqsrhs, or optional
             formats that are more performant.
 
-        options :  additional options of the solver, see set_options method of
-            the solver for details.
+        options :  additional options of the solver
+            See set_options method of the `integrator_name` you selected for
+            details.
+            Set option `old_api=False` to use the new API. In the future, this
+            will become the default!
         """
 
         integrator = find_ode_integrator(integrator_name)
@@ -308,7 +302,7 @@ More examples in the Examples_ directory and IPython_ worksheets.
 
             y_err  - numpy array of values corresponding to time t_err
 
-        if old_api False (cvode solver):
+        if old_api False:
             A named tuple, with fields:
                 flag   = An integer flag (StatusEnum)
 
@@ -342,20 +336,19 @@ More examples in the Examples_ directory and IPython_ worksheets.
 
             t_out - inititial time
 
-        if old_api False (cvode solver):
+        if old_api False:
             A named tuple, with fields:
-                flag   = An integer flag (StatusEnumXXX)
+                flag   = An integer flag (StatusEnum)
 
-                values = Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!
+                values = Named tuple with entries t and y
 
-                errors = Named tuple with entries t_err and y_err
+                errors = Named tuple with entries t and y
 
-                roots  = Named tuple with entries t_roots and y_roots
+                roots  = Named tuple with entries t and y
 
-                tstop  = Named tuple with entries t_stop and y_tstop
+                tstop  = Named tuple with entries t and y
 
                 message= String with message in case of an error
-
         """
         return self._integrator.init_step(t0, y0)
 
@@ -386,23 +379,36 @@ More examples in the Examples_ directory and IPython_ worksheets.
 
             t_out - time, where the solver stopped (when no error occured, t_out == t)
 
-        if old_api False (cvode solver):
-            A named tuple, with entries:
+        if old_api False:
+            A named tuple, with fields:
                 flag   = An integer flag (StatusEnum)
 
-                values = Named tuple with entries t and y. y will correspond to y_retn value
+                values = Named tuple with entries t and y
 
-                errors = Named tuple with entries t_err and y_err
+                errors = Named tuple with entries t and y
 
-                roots  = Named tuple with entries t_roots and y_roots
+                roots  = Named tuple with entries t and y
 
-                tstop  = Named tuple with entries t_stop and y_tstop
+                tstop  = Named tuple with entries t and y
 
                 message= String with message in case of an error
         """
         return self._integrator.step(t, y_retn)
 
     def set_tstop(self, tstop):
+        """
+        Add a stop time to the integrator past which he is not allowed to
+        integrate.
+
+        Parameters
+        ----------
+        tstop : float time
+            Time point in the future where the integration must stop. You can
+            indicate like this that integration past this point is not allowed,
+            in order to avoid undefined behavior.
+            You can achieve the same result with a call to
+            `set_options(tstop=tstop)`
+        """
         if hasattr(self._integrator, 'set_tstop'):
             self._integrator.set_tstop(tcrit)
         else:
