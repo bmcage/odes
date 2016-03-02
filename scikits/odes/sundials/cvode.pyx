@@ -111,10 +111,12 @@ cdef class CV_WrapRhsFunction(CV_RhsFunction):
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        object userdata = None):
         if self.with_userdata == 1:
-            self._rhsfn(t, y, ydot, userdata)
+            user_flag = self._rhsfn(t, y, ydot, userdata)
         else:
-            self._rhsfn(t, y, ydot)
-        return 0
+            user_flag = self._rhsfn(t, y, ydot)
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
 
 cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
               void *auxiliary_data):
@@ -133,14 +135,14 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
         nv_s2ndarray(yy, yy_tmp)
         #nv_s2ndarray(yp, yp_tmp)
 
-    aux_data.rfn.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
+    user_flag = aux_data.rfn.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
 
     if parallel_implementation:
         raise NotImplemented
     else:
         ndarray2nv_s(yp, yp_tmp)
 
-    return 0
+    return user_flag
 
 # Root function
 cdef class CV_RootFunction:
