@@ -44,8 +44,8 @@ cdef extern from "cvode/cvode.h":
     enum: CV_BAD_DKY           #   -26
     enum: CV_TOO_CLOSE         #   -27
 
-    ctypedef int (*CVRhsFn)(realtype t, N_Vector y, N_Vector ydot, void *user_data) except -1
-    ctypedef int (*CVRootFn)(realtype t, N_Vector y, realtype *gout, void *user_data) except -1
+    ctypedef int (*CVRhsFn)(realtype t, N_Vector y, N_Vector ydot, void *user_data) except? -1
+    ctypedef int (*CVRootFn)(realtype t, N_Vector y, realtype *gout, void *user_data) except? -1
     ctypedef int (*CVEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
     ctypedef void (*CVErrHandlerFn)(int error_code,
                                char *module, char *function,
@@ -131,7 +131,7 @@ cdef extern from "cvode/cvode_direct.h":
     ctypedef int (*CVDlsDenseJacFn)(long int N, realtype t,
                                     N_Vector y, N_Vector fy,
                                     DlsMat Jac, void *user_data,
-                                    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except -1
+                                    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1
     ctypedef int (*CVDlsBandJacFn)(long int N, long int mupper, long int mlower,
                                    realtype t, N_Vector y, N_Vector fy,
                                    DlsMat Jac, void *user_data,
@@ -212,14 +212,14 @@ cdef extern from "cvode/cvode_spils.h":
                                   booleantype jok, booleantype *jcurPtr,
                                   realtype gamma, void *user_data,
                                   N_Vector tmp1, N_Vector tmp2,
-                                  N_Vector tmp3) except -1
+                                  N_Vector tmp3) except? -1
     ctypedef int (*CVSpilsPrecSolveFn)(realtype t, N_Vector y, N_Vector fy,
                                   N_Vector r, N_Vector z,
                                   realtype gamma, realtype delta,
-                                  int lr, void *user_data, N_Vector tmp) except -1
+                                  int lr, void *user_data, N_Vector tmp) except? -1
     ctypedef int (*CVSpilsJacTimesVecFn)(N_Vector v, N_Vector Jv, realtype t,
                                     N_Vector y, N_Vector fy,
-                                    void *user_data, N_Vector tmp) except -1
+                                    void *user_data, N_Vector tmp) except? -1
 
     int CVSpilsSetPrecType(void *cvode_mem, int pretype)
     int CVSpilsSetGSType(void *cvode_mem, int gstype)

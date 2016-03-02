@@ -88,7 +88,7 @@ cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         return 0
 
 cdef class CV_WrapRhsFunction(CV_RhsFunction):
@@ -109,15 +109,17 @@ cdef class CV_WrapRhsFunction(CV_RhsFunction):
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         if self.with_userdata == 1:
-            self._rhsfn(t, y, ydot, userdata)
+            user_flag = self._rhsfn(t, y, ydot, userdata)
         else:
-            self._rhsfn(t, y, ydot)
-        return 0
+            user_flag = self._rhsfn(t, y, ydot)
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
 
 cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
-              void *auxiliary_data) except -1:
+              void *auxiliary_data) except? -1:
     """ function with the signature of CVRhsFn, that calls python Rhs """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
 
@@ -133,21 +135,21 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
         nv_s2ndarray(yy, yy_tmp)
         #nv_s2ndarray(yp, yp_tmp)
 
-    aux_data.rfn.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
+    user_flag = aux_data.rfn.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
 
     if parallel_implementation:
         raise NotImplemented
     else:
         ndarray2nv_s(yp, yp_tmp)
 
-    return 0
+    return user_flag
 
 # Root function
 cdef class CV_RootFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] g,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         return 0
 
 cdef class CV_WrapRootFunction(CV_RootFunction):
@@ -167,14 +169,16 @@ cdef class CV_WrapRootFunction(CV_RootFunction):
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] g,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         if self.with_userdata == 1:
-            self._rootfn(t, y, g, userdata)
+            user_flag = self._rootfn(t, y, g, userdata)
         else:
-            self._rootfn(t, y, g)
-        return 0
+            user_flag = self._rootfn(t, y, g)
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
 
-cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data) except -1:
+cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data) except? -1:
     """ function with the signature of CVRootFn """
 
     aux_data = <CV_data> auxiliary_data
@@ -188,7 +192,7 @@ cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data) e
 
         nv_s2ndarray(y, yy_tmp)
 
-    aux_data.rootfn.evaluate(t, yy_tmp, g_tmp, aux_data.user_data)
+    user_flag = aux_data.rootfn.evaluate(t, yy_tmp, g_tmp, aux_data.user_data)
 
     cdef int i
     if parallel_implementation:
@@ -197,13 +201,13 @@ cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data) e
         for i in np.arange(np.alen(g_tmp)):
             gout[i] = <realtype> g_tmp[i]
 
-    return 0
+    return user_flag
 
 # Jacobian function
 cdef class CV_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       np.ndarray J) except -1:
+                       np.ndarray J) except? -1:
         """
         Returns the Jacobi matrix of the right hand side function, as
             d(rhs)/d y
@@ -225,7 +229,7 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       np.ndarray J) except -1:
+                       np.ndarray J) except? -1:
         """
         Returns the Jacobi matrix (for dense the full matrix, for band only
         bands. Result has to be stored in the variable J, which is preallocated
@@ -235,12 +239,15 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 ##            self._jacfn(t, y, ydot, cj, J, userdata)
 ##        else:
 ##            self._jacfn(t, y, ydot, cj, J)
-        self._jacfn(t, y, J)
-        return 0
+        user_flag = self._jacfn(t, y, J)
+
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
 
 cdef int _jacdense(long int Neq, realtype tt,
             N_Vector yy, N_Vector ff, DlsMat Jac,
-            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except -1:
+            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1:
     """function with the signature of CVDlsDenseJacFn that calls python Jac"""
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
     cdef np.ndarray jac_tmp
@@ -257,7 +264,7 @@ cdef int _jacdense(long int Neq, realtype tt,
         jac_tmp = aux_data.jac_tmp
 
         nv_s2ndarray(yy, yy_tmp)
-    aux_data.jac.evaluate(tt, yy_tmp, jac_tmp)
+    user_flag = aux_data.jac.evaluate(tt, yy_tmp, jac_tmp)
 
     if parallel_implementation:
         raise NotImplemented
@@ -265,7 +272,7 @@ cdef int _jacdense(long int Neq, realtype tt,
         #we convert the python jac_tmp array to DslMat of sundials
         ndarray2DlsMatd(Jac, jac_tmp)
 
-    return 0
+    return user_flag
 
 # Precondioner setup funtion
 cdef class CV_PrecSetupFunction:
@@ -274,7 +281,7 @@ cdef class CV_PrecSetupFunction:
                        bint jok,
                        object jcurPtr,
                        DTYPE_t gamma,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         """
         This function preprocesses and/or evaluates Jacobian-related data
         needed by the preconditioner. Use the userdata object to expose
@@ -305,19 +312,21 @@ cdef class CV_WrapPrecSetupFunction(CV_PrecSetupFunction):
                        bint jok,
                        object jcurPtr,
                        DTYPE_t gamma,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         if self.with_userdata == 1:
-            self._prec_setupfn(t, y, jok, jcurPtr, gamma, userdata)
+            user_flag = self._prec_setupfn(t, y, jok, jcurPtr, gamma, userdata)
         else:
-            self._prec_setupfn(t, y, jok, jcurPtr, gamma)
-        return 0
+            user_flag = self._prec_setupfn(t, y, jok, jcurPtr, gamma)
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
 
 class MutableBool(object):
     def __init__(self, value):
         self.value = value
 
 cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, booleantype *jcurPtr,
-         realtype gamma, void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except -1:
+         realtype gamma, void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1:
     """ function with the signature of CVSpilsPrecSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
 
@@ -331,9 +340,9 @@ cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, b
         nv_s2ndarray(yy, yy_tmp)
 
     jcurPtr_tmp = MutableBool(jcurPtr[0])
-    aux_data.prec_setupfn.evaluate(tt, yy_tmp, jok, jcurPtr_tmp, gamma, aux_data.user_data)
+    user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, jok, jcurPtr_tmp, gamma, aux_data.user_data)
     jcurPtr[0] = jcurPtr_tmp.value
-    return 0
+    return user_flag
 
 # Precondioner solve funtion
 cdef class CV_PrecSolveFunction:
@@ -344,7 +353,7 @@ cdef class CV_PrecSolveFunction:
                        DTYPE_t gamma,
                        DTYPE_t delta,
                        int lr,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         """
         This function solves the preconditioned system P*z = r, where P may be
         either a left or right preconditioner matrix. Here P should approximate
@@ -379,15 +388,18 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
                        DTYPE_t gamma,
                        DTYPE_t delta,
                        int lr,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         if self.with_userdata == 1:
-            self._prec_solvefn(t, y, r, z, gamma, delta, lr, userdata)
+            user_flag = self._prec_solvefn(t, y, r, z, gamma, delta, lr, userdata)
         else:
-            self._prec_solvefn(t, y, r, z, gamma, delta, lr)
-        return 0
+            user_flag = self._prec_solvefn(t, y, r, z, gamma, delta, lr)
+
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
 
 cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vector z,
-         realtype gamma, realtype delta, int lr, void *auxiliary_data, N_Vector tmp) except -1:
+         realtype gamma, realtype delta, int lr, void *auxiliary_data, N_Vector tmp) except? -1:
     """ function with the signature of CVSpilsPrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
 
@@ -413,14 +425,14 @@ cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vect
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(r, r_tmp)
 
-    aux_data.prec_solvefn.evaluate(tt, yy_tmp, r_tmp, z_tmp, gamma, delta, lr, aux_data.user_data)
+    user_flag = aux_data.prec_solvefn.evaluate(tt, yy_tmp, r_tmp, z_tmp, gamma, delta, lr, aux_data.user_data)
 
     if parallel_implementation:
         raise NotImplemented
     else:
         ndarray2nv_s(z, z_tmp)
 
-    return 0
+    return user_flag
 
 # JacTimesVec function
 cdef class CV_JacTimesVecFunction:
@@ -429,7 +441,7 @@ cdef class CV_JacTimesVecFunction:
                        np.ndarray[DTYPE_t, ndim=1] Jv,
                        DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         """
         This function calculates the product of the Jacobian with a given vector v.
         Use the userdata object to expose Jacobian related data to the solve function.
@@ -462,15 +474,17 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
                        np.ndarray[DTYPE_t, ndim=1] Jv,
                        DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       object userdata = None) except -1:
+                       object userdata = None) except? -1:
         if self.with_userdata == 1:
-            self._jac_times_vecfn(v, Jv, t, y, userdata)
+            user_flag = self._jac_times_vecfn(v, Jv, t, y, userdata)
         else:
-            self._jac_times_vecfn(v, Jv, t, y)
-        return 0
+            user_flag = self._jac_times_vecfn(v, Jv, t, y)
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
 
-cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
-                          N_Vector fy, void *user_data, N_Vector tmp) except -1:
+cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
+                          N_Vector fy, void *user_data, N_Vector tmp) except? -1:
     """ function with the signature of CVSpilsJacTimesVecFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, v_tmp, Jv_tmp
 
@@ -496,14 +510,14 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
         nv_s2ndarray(y, y_tmp)
         nv_s2ndarray(v, v_tmp)
 
-    aux_data.jac_times_vecfn.evaluate(v_tmp, Jv_tmp, t, y_tmp, aux_data.user_data)
+    user_flag = aux_data.jac_times_vecfn.evaluate(v_tmp, Jv_tmp, t, y_tmp, aux_data.user_data)
 
     if parallel_implementation:
         raise NotImplemented
     else:
         ndarray2nv_s(Jv, Jv_tmp)
 
-    return 0
+    return user_flag
 
 cdef class CV_ContinuationFunction:
     """
