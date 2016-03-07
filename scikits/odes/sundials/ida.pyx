@@ -120,10 +120,13 @@ cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
                        np.ndarray[DTYPE_t, ndim=1] result,
                        object userdata = None):
         if self.with_userdata == 1:
-            self._resfn(t, y, ydot, result, userdata)
+            user_flag = self._resfn(t, y, ydot, result, userdata)
         else:
-            self._resfn(t, y, ydot, result)
-        return 0
+            user_flag = self._resfn(t, y, ydot, result)
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
+
 
 cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *auxiliary_data):
@@ -143,14 +146,14 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
 
-    aux_data.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, aux_data.user_data)
+    user_flag = aux_data.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, aux_data.user_data)
 
     if parallel_implementation:
         raise NotImplemented
     else:
         ndarray2nv_s(rr, residual_tmp)
 
-    return 0
+    return user_flag
 
 # Root function
 cdef class IDA_RootFunction:
@@ -181,10 +184,12 @@ cdef class IDA_WrapRootFunction(IDA_RootFunction):
                        np.ndarray[DTYPE_t, ndim=1] g,
                        object userdata = None):
         if self.with_userdata == 1:
-            self._rootfn(t, y, ydot, g, userdata)
+            user_flag = self._rootfn(t, y, ydot, g, userdata)
         else:
-            self._rootfn(t, y, ydot, g)
-        return 0
+            user_flag = self._rootfn(t, y, ydot, g)
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
 
 cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
                  realtype *gout, void *auxiliary_data):
@@ -203,7 +208,7 @@ cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
 
-    aux_data.rootfn.evaluate(t, yy_tmp, yp_tmp, g_tmp, aux_data.user_data)
+    user_flag = aux_data.rootfn.evaluate(t, yy_tmp, yp_tmp, g_tmp, aux_data.user_data)
 
     cdef int i
     if parallel_implementation:
@@ -212,7 +217,7 @@ cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
         for i in np.arange(np.alen(g_tmp)):
             gout[i] = <realtype> g_tmp[i]
 
-    return 0
+    return user_flag
 
 # Jacobian function
 cdef class IDA_JacRhsFunction:
@@ -254,8 +259,10 @@ cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
 ##            self._jacfn(t, y, ydot, cj, J, userdata)
 ##        else:
 ##            self._jacfn(t, y, ydot, cj, J)
-        self._jacfn(t, y, ydot, cj, J)
-        return 0
+        user_flag = self._jacfn(t, y, ydot, cj, J)
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
 
 cdef int _jacdense(long int Neq, realtype tt, realtype cj,
             N_Vector yy, N_Vector yp, N_Vector rr, DlsMat Jac,
@@ -278,7 +285,7 @@ cdef int _jacdense(long int Neq, realtype tt, realtype cj,
 
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
-    aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, cj, jac_tmp)
+    user_flag = aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, cj, jac_tmp)
 
     if parallel_implementation:
         raise NotImplemented
@@ -286,7 +293,7 @@ cdef int _jacdense(long int Neq, realtype tt, realtype cj,
         #we convert the python jac_tmp array to DslMat of sundials
         ndarray2DlsMatd(Jac, jac_tmp)
 
-    return 0
+    return user_flag
 
 cdef class IDA_ContinuationFunction:
     """
