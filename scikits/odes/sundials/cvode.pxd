@@ -7,7 +7,7 @@ cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
-                       object userdata = *)
+                       object userdata = *) except? -1
 cdef class CV_WrapRhsFunction(CV_RhsFunction):
     cpdef public object _rhsfn
     cdef public int with_userdata

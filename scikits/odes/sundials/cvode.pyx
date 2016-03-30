@@ -109,7 +109,7 @@ cdef class CV_WrapRhsFunction(CV_RhsFunction):
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
-                       object userdata = None):
+                       object userdata = None) except? -1:
         if self.with_userdata == 1:
             self._rhsfn(t, y, ydot, userdata)
         else:
@@ -117,7 +117,7 @@ cdef class CV_WrapRhsFunction(CV_RhsFunction):
         return 0
 
 cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
-              void *auxiliary_data):
+              void *auxiliary_data) except? -1:
     """ function with the signature of CVRhsFn, that calls python Rhs """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
 
