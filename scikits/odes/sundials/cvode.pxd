@@ -7,7 +7,7 @@ cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
-                       object userdata = *) except? -1
+                       object userdata = *) except -1
 cdef class CV_WrapRhsFunction(CV_RhsFunction):
     cpdef public object _rhsfn
     cdef public int with_userdata
@@ -17,7 +17,7 @@ cdef class CV_RootFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] g,
-                       object userdata = *)
+                       object userdata = *) except -1
 cdef class CV_WrapRootFunction(CV_RootFunction):
     cpdef object _rootfn
     cdef int with_userdata
@@ -26,7 +26,7 @@ cdef class CV_WrapRootFunction(CV_RootFunction):
 cdef class CV_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       np.ndarray[DTYPE_t, ndim=2] J)
+                       np.ndarray[DTYPE_t, ndim=2] J) except -1
 cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
     cpdef public object _jacfn
     cdef int with_userdata
@@ -38,7 +38,7 @@ cdef class CV_PrecSetupFunction:
                        bint jok,
                        object jcurPtr,
                        DTYPE_t gamma,
-                       object userdata = *)
+                       object userdata = *) except -1
 cdef class CV_WrapPrecSetupFunction(CV_PrecSetupFunction):
     cpdef object _prec_setupfn
     cdef int with_userdata
@@ -52,7 +52,7 @@ cdef class CV_PrecSolveFunction:
                        DTYPE_t gamma,
                        DTYPE_t delta,
                        int lr,
-                       object userdata = *)
+                       object userdata = *) except -1
 cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
     cpdef object _prec_solvefn
     cdef int with_userdata
@@ -65,7 +65,7 @@ cdef class CV_JacTimesVecFunction:
                        np.ndarray[DTYPE_t, ndim=1] Jv,
                        DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       object userdata = *)
+                       object userdata = *) except -1
 cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
     cpdef object _jac_times_vecfn
     cdef int with_userdata
