@@ -44,8 +44,7 @@ cdef extern from "cvode/cvode.h":
     enum: CV_BAD_DKY           #   -26
     enum: CV_TOO_CLOSE         #   -27
 
-    ctypedef int (*CVRhsFn)(realtype t, N_Vector y,
-                    N_Vector ydot, void *user_data)
+    ctypedef int (*CVRhsFn)(realtype t, N_Vector y, N_Vector ydot, void *user_data) except? -1
     ctypedef int (*CVRootFn)(realtype t, N_Vector y, realtype *gout, void *user_data)
     ctypedef int (*CVEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
     ctypedef void (*CVErrHandlerFn)(int error_code,
