@@ -110,7 +110,7 @@ For a working scikit compile, LAPACK, ATLAS and BLAS must be found. A typical ou
         language = f77
 
 
-You can try it without installation by using PYTHONPATH. For example:
+You can try it without installation by using `PYTHONPATH` and if needed adding local sundials install to `LD_LIBRARY_PATH`. For example:
 On my box, the build libs are in odes/build/lib.linux-x86_64-2.7/, hence I can
 use them with:
 ```
@@ -127,6 +127,8 @@ This installs the scikit, to use it in your python scripts use eg:
 ```python
 from scikits.odes import dae
 ```
+
+Note: you need to add the local sundials install to `LD_LIBRARY_PATH` if not installed in the standard locations.
 
 See the examples for more info.
 
