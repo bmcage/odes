@@ -87,8 +87,10 @@ In the top directory (the same as the file you are reading now), just do as root
 ```
  python setup.py build
 ```
-This builds the packages in the build directory. Libraries are searched in `/usr/lib` 
-and `/usr/local/lib`, edit `setup.py` in `odes/scikits/odes/sundials/` variable `LIB_DIRS_SUNDIALS` to search in another location.
+This builds the packages in the build directory.
+Libraries are searched in `/usr/lib` and `/usr/local/lib` by default.
+You can also set `$SUNDIALS_INST` in your environment to the directory you have installed SUNDIALS into.
+It should contain `lib` and `include` directories.
 
 For a working scikit compile, LAPACK, ATLAS and BLAS must be found. A typical output of the build is:
     lapack_info:
