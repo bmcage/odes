@@ -421,7 +421,8 @@ More examples in the Examples_ directory and IPython_ worksheets.
         Returns
         -------
 
-        A dictionary filled with internal data as exposed by the chosen integrator.
+        A dictionary filled with internal data as exposed by the integrator.
+        See the `get_info` method of your chosen integrator for details.
 
         """
         if hasattr(self._integrator, 'get_info'):
