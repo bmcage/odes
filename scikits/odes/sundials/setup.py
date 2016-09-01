@@ -43,6 +43,13 @@ try:
 except ImportError:
     print("pkgconfig module not found, using preset paths")
 
+if "SUNDIALS_INST" in os.environ:
+    LIB_DIRS_SUNDIALS.append(os.path.join(os.environ["SUNDIALS_INST"], "lib"))
+    INCL_DIRS_SUNDIALS.append(os.path.join(os.environ["SUNDIALS_INST"], "include"))
+    print("SUNDIALS installation path set to `{}` via $SUNDIALS_INST.".format(
+        os.environ["SUNDIALS_INST"]))
+else:
+    print("No path for SUNDIALS installation set by $SUNDIALS_INST.")
 
 use_lapack = False
 try:
