@@ -1747,6 +1747,45 @@ cdef class CVODE:
         warn(WARNING_STR.format(soln.flag, *soln.err_values))
         return soln
 
+    def get_info(self):
+        """
+        Returns a dict with information about the solver, like number
+        of calls to the user's right-hand side function.
+
+        """
+        cdef int flagCV
+        cdef long int nsteps, nfevals, nlinsetups, netfails
+        cdef int qlast, qcur
+        cdef realtype hinused, hlast, hcur, tcur
+
+        # for extra output from SPILS modules (SPGMR, SPBCG, SPTFQMR)
+        cdef long int npevals, npsolves, njvevals, nliters, nfevalsLS
+
+        flagCV = CVodeGetIntegratorStats(self._cv_mem, &nsteps, &nfevals,
+                                         &nlinsetups, &netfails, &qlast, &qcur,
+                                         &hinused, &hlast, &hcur, &tcur)
+        # following the names of the CVodeGet* optional output functions
+        # c.f. Table 4.2 of User Documentation for CVODE
+        # http://computation.llnl.gov/sites/default/files/public/cv_guide.pdf
+        info = {'NumSteps': nsteps, 'NumRhsEvals': nfevals,
+                'NumLinSolvSetups': nlinsetups, 'NumErrTestFails': netfails,
+                'LastOrder': qlast, 'CurrentOrder': qcur,
+                'ActualInitStep': hinused,
+                'LastStep': hlast, 'CurrentStep': hcur, 'CurrentStep': tcur}
+
+        linsolver = self.options['linsolver'].lower()
+        if linsolver == 'spgmr' or linsolver == 'spbcg' or linsolver == 'sptfqmr':
+            flagCV = CVSpilsGetNumPrecEvals(self._cv_mem, &npevals)
+            flagCV = CVSpilsGetNumPrecSolves(self._cv_mem, &npsolves)
+            flagCV = CVSpilsGetNumJtimesEvals(self._cv_mem, &njvevals)
+            flagCV = CVSpilsGetNumLinIters(self._cv_mem, &nliters)
+            flagCV = CVSpilsGetNumRhsEvals(self._cv_mem, &nfevalsLS)
+            info.update({'NumPrecEvals': npevals, 'NumPrecSolves': npsolves,
+                         'NumJtimesEvals': njvevals, 'NumLinIters': nliters,
+                         'NumRhsEvalsJtimesFD': nfevalsLS})
+
+        return info
+
     def __dealloc__(self):
         if not self._cv_mem is NULL: CVodeFree(&self._cv_mem)
         #TODO: when implementing parallel, does N_VDestroy be called separately

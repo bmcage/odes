@@ -414,6 +414,22 @@ More examples in the Examples_ directory and IPython_ worksheets.
         else:
             self._integrator.set_options(tstop=tstop)
 
+    def get_info(self):
+        """
+        Return additional information about the state of the integrator.
+
+        Returns
+        -------
+
+        A dictionary filled with internal data as exposed by the integrator.
+        See the `get_info` method of your chosen integrator for details.
+
+        """
+        if hasattr(self._integrator, 'get_info'):
+            return self._integrator.get_info()
+        else:
+            return {}
+
 #------------------------------------------------------------------------------
 # ODE integrators
 #------------------------------------------------------------------------------
@@ -450,4 +466,4 @@ def find_ode_integrator(name):
             return cl
         elif hasattr(cl, name) and re.match(name, cl.name, re.I):
             return cl
-    raise ValueError('Integrator name %s does not exsist' % name)
+    raise ValueError('Integrator name %s does not exist' % name)
