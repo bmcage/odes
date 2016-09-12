@@ -110,6 +110,8 @@ cdef class CV_data:
     cdef object user_data
     cdef CV_ErrHandler err_handler
     cdef object err_user_data
+    cdef void* cv_mem
+    cdef object jac_viewer
 
 cdef class CVODE:
     cdef N_Vector atol
