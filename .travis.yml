@@ -19,14 +19,9 @@ cache:
     - $HOME/sundials
 
 env:
-  - TOXENV=py26
-    PIP_VERBOSE=1
   - TOXENV=py27
-    PIP_VERBOSE=1
   - TOXENV=py33
-    PIP_VERBOSE=1
   - TOXENV=py34
-    PIP_VERBOSE=1
 #  - TOXENV=py35
 # commented out because of https://github.com/travis-ci/travis-ci/issues/4794
 
@@ -36,7 +31,6 @@ matrix:
     - python: 3.5
       env:
       - TOXENV=py35
-        PIP_VERBOSE=1
 
 install:
   - source ci_support/ensure_sundials_installed.sh
