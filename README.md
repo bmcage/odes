@@ -1,10 +1,18 @@
+[![Documentation Status](https://readthedocs.org/projects/scikits-odes/badge/?version=latest)](http://scikits-odes.readthedocs.org/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/bmcage/scikits.odes.svg?branch=master)](https://travis-ci.org/bmcage/scikits.odes)
+[![Version](https://img.shields.io/pypi/v/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
+[![License](https://img.shields.io/pypi/l/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
+[![Supported versions](https://img.shields.io/pypi/pyversions/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
+[![Supported implementations](https://img.shields.io/pypi/implementation/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
+[![PyPI](https://img.shields.io/pypi/status/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
+
 This is a scikit offering some extra ode/dae solvers, so they can mature outside of scipy. The main solvers to use
 are the *Sundials* solvers.
 
 # General info
 
 * You need scipy, 
-* Tested with python 2.7 and 3.2
+* Tested with python 2.7 and 3.2-3.5
 * Available solvers:
     * BDF linear multistep method  for stiff problems. This is done or via *cvode*, which is an improvement on the ode (vode/dvode) solver in scipy.integrate, or for DAE systems via *ida*. Both are part of the sundials package. Use it to have modern features
     * Adams-Moulton linear multistep method for nonstiff problems. This is done also via *cvode* or *ida* (option lmm_type='ADAMS')
@@ -139,7 +147,7 @@ See the examples for more info.
 
 You need nose to run the tests. Eg, to install it, run
 ```
-easy_install nose
+pip install nose
 ```
 To run the tests do in the python shell:
 
