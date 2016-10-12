@@ -1,3 +1,5 @@
+#defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 cimport numpy as np
 from .c_sundials cimport N_Vector, realtype
 

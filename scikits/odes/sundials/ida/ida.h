@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision: 4845 $
+ * $Date: 2016-08-03 15:45:09 -0700 (Wed, 03 Aug 2016) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Allan G. Taylor, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
@@ -96,6 +96,8 @@ extern "C" {
 #define IDA_BAD_K           -25
 #define IDA_BAD_T           -26
 #define IDA_BAD_DKY         -27
+
+#define IDA_UNRECOGNISED_ERROR -99
 
 /*
  * ----------------------------------------------------------------

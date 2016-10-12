@@ -20,8 +20,8 @@ DOWNLOAD_URL        = URL
 INSTALL_REQUIRES = ['scipy']
 
 MAJOR = 2
-MINOR = 2
-MICRO = 2
+MINOR = 3
+MICRO = 0
 DEV = True
 
 CLASSIFIERS = [
@@ -45,7 +45,7 @@ def build_verstring():
 
 def build_fverstring():
     if DEV:
-        return build_verstring() + 'dev'
+        return build_verstring() + '.dev0'
     else:
         return build_verstring()
 

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4491 $
- * $Date: 2015-04-30 16:56:10 -0700 (Thu, 30 Apr 2015) $
+ * $Revision: 4558 $
+ * $Date: 2015-10-05 09:04:16 -0700 (Mon, 05 Oct 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -53,7 +53,7 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-  SUNDIALS_EXPORT int CVKLU(void *cv_mem, int n, int nnz); 
+  SUNDIALS_EXPORT int CVKLU(void *cv_mem, int n, int nnz, int sparsetype); 
 
 /*
  * -----------------------------------------------------------------
@@ -120,7 +120,7 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-  SUNDIALS_EXPORT int CVKLUB(void *cvode_mem, int which, int n, int nnz);
+  SUNDIALS_EXPORT int CVKLUB(void *cvode_mem, int which, int n, int nnz, int sparsetype);
 
 
 /*

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision: 4869 $
+ * $Date: 2016-08-19 10:34:20 -0700 (Fri, 19 Aug 2016) $
  * ----------------------------------------------------------------- 
  * Programmer(s): David J. Gardner @ LLNL
  * -----------------------------------------------------------------
@@ -180,6 +180,7 @@ typedef struct _Pthreads_Data Pthreads_Data;
  *    N_VDestroy_Pthreads
  *    N_VDestroyVectorArray_Pthreads
  * OTHER:
+ *    N_VGetLength_Pthreads
  *    N_VPrint_Pthreads
  * -----------------------------------------------------------------
  */
@@ -251,6 +252,16 @@ SUNDIALS_EXPORT void N_VDestroyVectorArray_Pthreads(N_Vector *vs, int count);
 
 /*
  * -----------------------------------------------------------------
+ * Function : N_VGetLength_Pthreads
+ * -----------------------------------------------------------------
+ * This function returns number of vector elements.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT long int N_VGetLength_Pthreads(N_Vector v);
+
+/*
+ * -----------------------------------------------------------------
  * Function : N_VPrint_Pthreads
  * -----------------------------------------------------------------
  * This function prints the content of a pthreads vector to stdout.
@@ -265,6 +276,7 @@ SUNDIALS_EXPORT void N_VPrint_Pthreads(N_Vector v);
  * -----------------------------------------------------------------
  */
 
+SUNDIALS_EXPORT N_Vector_ID N_VGetVectorID_Pthreads(N_Vector v);
 SUNDIALS_EXPORT N_Vector N_VCloneEmpty_Pthreads(N_Vector w);
 SUNDIALS_EXPORT N_Vector N_VClone_Pthreads(N_Vector w);
 SUNDIALS_EXPORT void N_VDestroy_Pthreads(N_Vector v);

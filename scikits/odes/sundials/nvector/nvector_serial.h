@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision: 4867 $
+ * $Date: 2016-08-19 10:05:14 -0700 (Fri, 19 Aug 2016) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
@@ -152,6 +152,7 @@ typedef struct _N_VectorContent_Serial *N_VectorContent_Serial;
  *    N_VDestroy_Serial
  *    N_VDestroyVectorArray_Serial
  * OTHER:
+ *    N_VGetLength_Serial
  *    N_VPrint_Serial
  * -----------------------------------------------------------------
  */
@@ -223,6 +224,16 @@ SUNDIALS_EXPORT void N_VDestroyVectorArray_Serial(N_Vector *vs, int count);
 
 /*
  * -----------------------------------------------------------------
+ * Function : N_VGetLength_Serial
+ * -----------------------------------------------------------------
+ * This function returns number of vector elements.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT long int N_VGetLength_Serial(N_Vector v);
+
+/*
+ * -----------------------------------------------------------------
  * Function : N_VPrint_Serial
  * -----------------------------------------------------------------
  * This function prints the content of a serial vector to stdout.
@@ -237,6 +248,7 @@ SUNDIALS_EXPORT void N_VPrint_Serial(N_Vector v);
  * -----------------------------------------------------------------
  */
 
+SUNDIALS_EXPORT N_Vector_ID N_VGetVectorID_Serial(N_Vector v);
 SUNDIALS_EXPORT N_Vector N_VCloneEmpty_Serial(N_Vector w);
 SUNDIALS_EXPORT N_Vector N_VClone_Serial(N_Vector w);
 SUNDIALS_EXPORT void N_VDestroy_Serial(N_Vector v);

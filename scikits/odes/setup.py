@@ -9,7 +9,7 @@ def configuration(parent_package='',top_path=None):
     print("parent package is %s" % parent_package)
     print("top path is %s" % top_path)
     print("=============================================")
-    config = Configuration('odes',parent_package,top_path)
+    config = Configuration('odes', parent_package,top_path)
 
     config.add_library('daepack',
                        sources=[join('daepack','*.f')])

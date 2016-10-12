@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4558 $
+ * $Date: 2015-10-05 09:04:16 -0700 (Mon, 05 Oct 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -46,6 +46,7 @@ typedef struct KLUDataRec {
   klu_numeric  *s_Numeric;
   klu_common    s_Common;
   int           s_ordering;
+  int          (*sun_klu_solve)(klu_symbolic*, klu_numeric*, int, int, double*, klu_common*);
  
 } *KLUData;
  
