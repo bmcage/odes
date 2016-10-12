@@ -1,0 +1,41 @@
+language: python
+
+notifications:
+  email: false
+
+addons:
+  apt:
+    packages:
+      # commented as ubuntu's sundials is too old
+      #- libsundials-serial-dev
+      - gfortran
+      - liblapack-dev
+
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/sundials
+
+env:
+  - TOXENV=py27
+  - TOXENV=py33
+  - TOXENV=py34
+#  - TOXENV=py35
+# commented out because of https://github.com/travis-ci/travis-ci/issues/4794
+
+matrix:
+  include:
+    # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
+    - python: 3.5
+      env:
+      - TOXENV=py35
+
+install:
+  - source ci_support/ensure_sundials_installed.sh
+  - pip install -U pip setuptools virtualenv wheel
+  - pip install -U tox
+
+script:
+  - tox
