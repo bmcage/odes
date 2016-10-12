@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export SUNDIALS_DIR=$HOME/sundials
+export SUNDIALS_DIR=$HOME/sundials-"${SUNDIALS_VERSION:-'2.6.2'}"
 SUNDIALS_LIBDIR=$SUNDIALS_DIR/lib
 SUNDIALS_INCLUDEDIR=$SUNDIALS_DIR/include
 
