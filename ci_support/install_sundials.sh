@@ -1,12 +1,16 @@
 #!/bin/sh
 set -ex
 
-wget http://computation.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz
+SUNDIALS=sundials-"${SUNDIALS_VERSION:-'2.7.0'}"
+SUNDIALS_FILE=$SUNDIALS.tar.gz
+SUNDIALS_URL=http://computation.llnl.gov/projects/sundials-suite-nonlinear-differential-algebraic-equation-solvers/download/$SUNDIALS_FILE
 
-tar -xzvf sundials-2.7.0.tar.gz
+wget "$SUNDIALS_URL"
+
+tar -xzvf "$SUNDIALS_FILE"
 
 mkdir sundials_build
 
 cd sundials_build &&
-    cmake -DCMAKE_INSTALL_PREFIX=$SUNDIALS_DIR -DLAPACK_ENABLE=ON ../sundials-2.7.0 &&
+    cmake -DCMAKE_INSTALL_PREFIX=$SUNDIALS_DIR -DLAPACK_ENABLE=ON ../$SUNDIALS &&
     make && make install
