@@ -26,6 +26,13 @@ def configuration(parent_package='',top_path=None):
         download_url = DOWNLOAD_URL,
         long_description = LONG_DESCRIPTION,
         namespace_packages=['scikits'])
+    # Avoid non-useful msg: "Ignoring attempt to set 'name' (from ... "
+    config.set_options(
+        ignore_setup_xxx_py=True,
+        assume_default_configuration=True,
+        delegate_options_to_subpackages=True,
+        quiet=True
+    )
     config.add_subpackage(DISTNAME)
     config.add_data_files('scikits/__init__.py')
     return config

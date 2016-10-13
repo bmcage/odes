@@ -64,12 +64,67 @@ extern "C" {
 ---------------------------------------------------------------*/
 
 /* max number of overall stages allowed */
-#define ARK_S_MAX          8
+#define ARK_S_MAX          15
 #define ARK_A(A,i,j)       (A[i*ARK_S_MAX + j])
 
 /* itask */
 #define ARK_NORMAL         1
 #define ARK_ONE_STEP       2
+
+
+/* Butcher table accessors -- explicit */
+#define HEUN_EULER_2_1_2         0
+#define BOGACKI_SHAMPINE_4_2_3   1
+#define ARK324L2SA_ERK_4_2_3     2
+#define ZONNEVELD_5_3_4          3
+#define ARK436L2SA_ERK_6_3_4     4
+#define SAYFY_ABURUB_6_3_4       5
+#define CASH_KARP_6_4_5          6
+#define FEHLBERG_6_4_5           7
+#define DORMAND_PRINCE_7_4_5     8
+#define ARK548L2SA_ERK_8_4_5     9
+#define VERNER_8_5_6            10
+#define FEHLBERG_13_7_8         11
+
+#define DEFAULT_ERK_2           HEUN_EULER_2_1_2
+#define DEFAULT_ERK_3           BOGACKI_SHAMPINE_4_2_3
+#define DEFAULT_ERK_4           ZONNEVELD_5_3_4
+#define DEFAULT_ERK_5           CASH_KARP_6_4_5
+#define DEFAULT_ERK_6           VERNER_8_5_6
+#define DEFAULT_ERK_8           FEHLBERG_13_7_8
+
+#define MIN_ERK_NUM              0
+#define MAX_ERK_NUM             11
+
+/* Butcher table accessors -- implicit */
+#define SDIRK_2_1_2             12
+#define BILLINGTON_3_3_2        13
+#define TRBDF2_3_3_2            14
+#define KVAERNO_4_2_3           15
+#define ARK324L2SA_DIRK_4_2_3   16
+#define CASH_5_2_4              17
+#define CASH_5_3_4              18
+#define SDIRK_5_3_4             19
+#define KVAERNO_5_3_4           20
+#define ARK436L2SA_DIRK_6_3_4   21
+#define KVAERNO_7_4_5           22
+#define ARK548L2SA_DIRK_8_4_5   23
+
+#define DEFAULT_DIRK_2          SDIRK_2_1_2
+#define DEFAULT_DIRK_3          ARK324L2SA_DIRK_4_2_3
+#define DEFAULT_DIRK_4          SDIRK_5_3_4
+#define DEFAULT_DIRK_5          ARK548L2SA_DIRK_8_4_5
+
+#define MIN_DIRK_NUM            12
+#define MAX_DIRK_NUM            23
+
+/* Butcher table accessors -- ImEx */
+#define DEFAULT_ARK_ETABLE_3    ARK324L2SA_ERK_4_2_3
+#define DEFAULT_ARK_ETABLE_4    ARK436L2SA_ERK_6_3_4
+#define DEFAULT_ARK_ETABLE_5    ARK548L2SA_ERK_8_4_5
+#define DEFAULT_ARK_ITABLE_3    ARK324L2SA_DIRK_4_2_3
+#define DEFAULT_ARK_ITABLE_4    ARK436L2SA_DIRK_6_3_4
+#define DEFAULT_ARK_ITABLE_5    ARK548L2SA_DIRK_8_4_5
 
 
 /* ARKODE return flags */
@@ -107,6 +162,8 @@ extern "C" {
 #define ARK_BAD_T                -25
 #define ARK_BAD_DKY              -26
 #define ARK_TOO_CLOSE            -27
+
+#define ARK_POSTPROCESS_FAIL     -28
 
 
 /*===============================================================
@@ -298,6 +355,27 @@ typedef int (*ARKExpStabFn)(N_Vector y, realtype t,
 ---------------------------------------------------------------*/
 typedef int (*ARKVecResizeFn)(N_Vector y, N_Vector ytemplate, 
 			      void *user_data);
+
+/*---------------------------------------------------------------
+ Type : ARKPostProcessStepFn
+-----------------------------------------------------------------
+ A function that is used to process the results of each timestep
+ solution, in preparation for subsequent steps.  A routine of 
+ this type is designed for tasks such as inter-processor 
+ communication, computation of derived quantities, etc..
+
+ IF THIS IS USED TO MODIFY ANY OF THE ACTIVE STATE DATA, THEN ALL
+ THEORETICAL GUARANTEES OF SOLUTION ACCURACY AND STABILITY ARE 
+ LOST.
+
+ Inputs: 
+   t          current time of ARKode solution
+   y          current ARKode solution N_Vector for processing
+   user_data  the structure passed by the user to the 
+              ARKodeSetUserData routine.
+---------------------------------------------------------------*/
+typedef int (*ARKPostProcessStepFn)(realtype t, N_Vector y, 
+				    void *user_data);
 
 
 /*===============================================================
@@ -630,9 +708,11 @@ SUNDIALS_EXPORT int ARKodeSetIRKTable(void *arkode_mem, int s,
 				      realtype *A, realtype *b, 
 				      realtype *bembed);
 SUNDIALS_EXPORT int ARKodeSetARKTables(void *arkode_mem, int s, 
-				       int q, int p, realtype *c, 
+				       int q, int p, 
+				       realtype *ci, realtype *ce, 
 				       realtype *Ai, realtype *Ae, 
-				       realtype *b, realtype *bembed);
+				       realtype *bi, realtype *be, 
+				       realtype *b2i, realtype *b2e);
 SUNDIALS_EXPORT int ARKodeSetERKTableNum(void *arkode_mem, int itable);
 SUNDIALS_EXPORT int ARKodeSetIRKTableNum(void *arkode_mem, int itable);
 SUNDIALS_EXPORT int ARKodeSetARKTableNum(void *arkode_mem, 
@@ -701,6 +781,9 @@ SUNDIALS_EXPORT int ARKodeSetNonlinConvCoef(void *arkode_mem,
 SUNDIALS_EXPORT int ARKodeSetRootDirection(void *arkode_mem, 
 					   int *rootdir);
 SUNDIALS_EXPORT int ARKodeSetNoInactiveRootWarn(void *arkode_mem);
+
+SUNDIALS_EXPORT int ARKodeSetPostprocessStepFn(void *arkode_mem,
+					       ARKPostProcessStepFn ProcessStep);
 
 /*---------------------------------------------------------------
  Function : ARKodeInit
@@ -1189,10 +1272,11 @@ SUNDIALS_EXPORT int ARKodeGetCurrentStep(void *arkode_mem,
 SUNDIALS_EXPORT int ARKodeGetCurrentTime(void *arkode_mem, 
 					 realtype *tcur);
 SUNDIALS_EXPORT int ARKodeGetCurrentButcherTables(void *arkode_mem, 
-						  int *s, int *q, 
-						  int *p, realtype *Ai, 
-						  realtype *Ae, realtype *c, 
-						  realtype *b, realtype *b2);
+						  int *s, int *q, int *p, 
+						  realtype *Ai, realtype *Ae, 
+						  realtype *ci, realtype *ce, 
+						  realtype *bi, realtype *be, 
+						  realtype *b2i, realtype *b2e);
 SUNDIALS_EXPORT int ARKodeGetTolScaleFactor(void *arkode_mem, 
 					    realtype *tolsfac);
 SUNDIALS_EXPORT int ARKodeGetErrWeights(void *arkode_mem, 

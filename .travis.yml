@@ -19,9 +19,9 @@ cache:
     - $HOME/sundials
 
 env:
-  - TOXENV=py27 SUNDIALS_VERSION='2.6.2'
-  - TOXENV=py33 SUNDIALS_VERSION='2.6.2'
-  - TOXENV=py34 SUNDIALS_VERSION='2.6.2'
+  - TOXENV=py27 SUNDIALS_VERSION='2.7.0'
+  - TOXENV=py33 SUNDIALS_VERSION='2.7.0'
+  - TOXENV=py34 SUNDIALS_VERSION='2.7.0'
 #  - TOXENV=py35
 # commented out because of https://github.com/travis-ci/travis-ci/issues/4794
 
@@ -30,7 +30,7 @@ matrix:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
     - python: 3.5
       env:
-      - TOXENV=py35 SUNDIALS_VERSION='2.6.2'
+      - TOXENV=py35 SUNDIALS_VERSION='2.7.0'
 
 install:
   - source ci_support/ensure_sundials_installed.sh

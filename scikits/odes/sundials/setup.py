@@ -66,6 +66,7 @@ try:
             use_lapack = True
         else:
             raise ValueError
+        print('Found LAPACK paths via lapack_opt ...')
 except:
     print('LAPACK was not detected, disabling sundials solvers')
 

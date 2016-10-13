@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision: 4867 $
+ * $Date: 2016-08-19 10:05:14 -0700 (Fri, 19 Aug 2016) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
@@ -193,6 +193,8 @@ typedef struct _N_VectorContent_Parallel *N_VectorContent_Parallel;
  *    N_VDestroy_Parallel
  *    N_VDestroyVectorArray_Parallel
  * OTHER:
+ *    N_VGetLength_Parallel
+ *    N_VGetLocalLength_Parallel
  *    N_VPrint_Parallel
  * -----------------------------------------------------------------
  */
@@ -206,8 +208,8 @@ typedef struct _N_VectorContent_Parallel *N_VectorContent_Parallel;
  */
 
 SUNDIALS_EXPORT N_Vector N_VNew_Parallel(MPI_Comm comm, 
-					 long int local_length,
-					 long int global_length);
+                                         long int local_length,
+                                         long int global_length);
 
 /*
  * -----------------------------------------------------------------
@@ -219,8 +221,8 @@ SUNDIALS_EXPORT N_Vector N_VNew_Parallel(MPI_Comm comm,
  */
 
 SUNDIALS_EXPORT N_Vector N_VNewEmpty_Parallel(MPI_Comm comm, 
-					      long int local_length,
-					      long int global_length);
+                                              long int local_length,
+                                              long int global_length);
 
 /*
  * -----------------------------------------------------------------
@@ -232,9 +234,9 @@ SUNDIALS_EXPORT N_Vector N_VNewEmpty_Parallel(MPI_Comm comm,
  */
 
 SUNDIALS_EXPORT N_Vector N_VMake_Parallel(MPI_Comm comm, 
-					  long int local_length,
-					  long int global_length,
-					  realtype *v_data);
+                                          long int local_length,
+                                          long int global_length,
+                                          realtype *v_data);
 
 /*
  * -----------------------------------------------------------------
@@ -271,6 +273,28 @@ SUNDIALS_EXPORT void N_VDestroyVectorArray_Parallel(N_Vector *vs, int count);
 
 /*
  * -----------------------------------------------------------------
+ * Function : N_VGetLength_Parallel
+ * -----------------------------------------------------------------
+ * This function returns number of vector elements (global vector 
+ * length). It returns locally stored integer, and is therefore 
+ * a local call.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT long int N_VGetLength_Parallel(N_Vector v);
+
+/*
+ * -----------------------------------------------------------------
+ * Function : N_VGetLocalLength_Parallel
+ * -----------------------------------------------------------------
+ * This function returns local vector length.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT long int N_VGetLocalLength_Parallel(N_Vector v);
+
+/*
+ * -----------------------------------------------------------------
  * Function : N_VPrint_Parallel
  * -----------------------------------------------------------------
  * This function prints the content of a parallel vector to stdout.
@@ -285,6 +309,7 @@ SUNDIALS_EXPORT void N_VPrint_Parallel(N_Vector v);
  * -----------------------------------------------------------------
  */
 
+SUNDIALS_EXPORT N_Vector_ID N_VGetVectorID_Parallel(N_Vector v);
 SUNDIALS_EXPORT N_Vector N_VCloneEmpty_Parallel(N_Vector w);
 SUNDIALS_EXPORT N_Vector N_VClone_Parallel(N_Vector w);
 SUNDIALS_EXPORT void N_VDestroy_Parallel(N_Vector v);

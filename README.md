@@ -66,15 +66,15 @@ You have a project using odes? Do a pull request to add your project.
 3. You need python development files available (python-dev package)
 4. You need a fortran compiler to install from source.
 5. If you use python < 3.4, you need the [enum34 package](https://pypi.python.org/pypi/enum34) (eg via command: pip install enum34)  
-6. You need to have the sundials package version 2.6.2 installed, see (https://computation.llnl.gov/casc/sundials/download/download.html)
+6. You need to have the sundials package version 2.7.0 installed, see (https://computation.llnl.gov/casc/sundials/download/download.html)
 
 It is required that the Blas/Lapack interface in included in sundials, so check
 the Fortran Settings section. A typical install if sundials download package is
-extracted into directory sundials-2.6.2 is on a *nix system:
+extracted into directory sundials-2.7.0 is on a *nix system:
 ```
- mkdir build-sundials-2.6.2
- cd build-sundials-2.6.2/
- cmake -DLAPACK_ENABLE=ON ../sundials-2.6.2/
+ mkdir build-sundials-2.7.0
+ cd build-sundials-2.7.0/
+ cmake -DLAPACK_ENABLE=ON ../sundials-2.7.0/
  make
  ```
 as root: 
