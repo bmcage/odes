@@ -16,3 +16,4 @@ docs/src/examples/scikits
 dist
 _build
 .tox
+.spyderproject
