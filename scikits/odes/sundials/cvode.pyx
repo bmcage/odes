@@ -88,7 +88,7 @@ cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
-                       object userdata = None):
+                       object userdata = None) except -1:
         return 0
 
 cdef class CV_WrapRhsFunction(CV_RhsFunction):
@@ -109,7 +109,7 @@ cdef class CV_WrapRhsFunction(CV_RhsFunction):
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
-                       object userdata = None):
+                       object userdata = None) except -1:
         if self.with_userdata == 1:
             self._rhsfn(t, y, ydot, userdata)
         else:
@@ -117,7 +117,7 @@ cdef class CV_WrapRhsFunction(CV_RhsFunction):
         return 0
 
 cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
-              void *auxiliary_data):
+              void *auxiliary_data) except -1:
     """ function with the signature of CVRhsFn, that calls python Rhs """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
 
@@ -147,7 +147,7 @@ cdef class CV_RootFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] g,
-                       object userdata = None):
+                       object userdata = None) except -1:
         return 0
 
 cdef class CV_WrapRootFunction(CV_RootFunction):
@@ -167,14 +167,14 @@ cdef class CV_WrapRootFunction(CV_RootFunction):
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] g,
-                       object userdata = None):
+                       object userdata = None) except -1:
         if self.with_userdata == 1:
             self._rootfn(t, y, g, userdata)
         else:
             self._rootfn(t, y, g)
         return 0
 
-cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data):
+cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data) except -1:
     """ function with the signature of CVRootFn """
 
     aux_data = <CV_data> auxiliary_data
@@ -203,7 +203,7 @@ cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data):
 cdef class CV_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       np.ndarray J):
+                       np.ndarray J) except -1:
         """
         Returns the Jacobi matrix of the right hand side function, as
             d(rhs)/d y
@@ -225,7 +225,7 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       np.ndarray J):
+                       np.ndarray J) except -1:
         """
         Returns the Jacobi matrix (for dense the full matrix, for band only
         bands. Result has to be stored in the variable J, which is preallocated
@@ -240,7 +240,7 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 
 cdef int _jacdense(long int Neq, realtype tt,
             N_Vector yy, N_Vector ff, DlsMat Jac,
-            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
+            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except -1:
     """function with the signature of CVDlsDenseJacFn that calls python Jac"""
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
     cdef np.ndarray jac_tmp
@@ -274,7 +274,7 @@ cdef class CV_PrecSetupFunction:
                        bint jok,
                        object jcurPtr,
                        DTYPE_t gamma,
-                       object userdata = None):
+                       object userdata = None) except -1:
         """
         This function preprocesses and/or evaluates Jacobian-related data
         needed by the preconditioner. Use the userdata object to expose
@@ -305,7 +305,7 @@ cdef class CV_WrapPrecSetupFunction(CV_PrecSetupFunction):
                        bint jok,
                        object jcurPtr,
                        DTYPE_t gamma,
-                       object userdata = None):
+                       object userdata = None) except -1:
         if self.with_userdata == 1:
             self._prec_setupfn(t, y, jok, jcurPtr, gamma, userdata)
         else:
@@ -317,7 +317,7 @@ class MutableBool(object):
         self.value = value
 
 cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, booleantype *jcurPtr,
-         realtype gamma, void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
+         realtype gamma, void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except -1:
     """ function with the signature of CVSpilsPrecSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
 
@@ -344,7 +344,7 @@ cdef class CV_PrecSolveFunction:
                        DTYPE_t gamma,
                        DTYPE_t delta,
                        int lr,
-                       object userdata = None):
+                       object userdata = None) except -1:
         """
         This function solves the preconditioned system P*z = r, where P may be
         either a left or right preconditioner matrix. Here P should approximate
@@ -379,7 +379,7 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
                        DTYPE_t gamma,
                        DTYPE_t delta,
                        int lr,
-                       object userdata = None):
+                       object userdata = None) except -1:
         if self.with_userdata == 1:
             self._prec_solvefn(t, y, r, z, gamma, delta, lr, userdata)
         else:
@@ -387,7 +387,7 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
         return 0
 
 cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vector z,
-         realtype gamma, realtype delta, int lr, void *auxiliary_data, N_Vector tmp):
+         realtype gamma, realtype delta, int lr, void *auxiliary_data, N_Vector tmp) except -1:
     """ function with the signature of CVSpilsPrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
 
@@ -429,7 +429,7 @@ cdef class CV_JacTimesVecFunction:
                        np.ndarray[DTYPE_t, ndim=1] Jv,
                        DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       object userdata = None):
+                       object userdata = None) except -1:
         """
         This function calculates the product of the Jacobian with a given vector v.
         Use the userdata object to expose Jacobian related data to the solve function.
@@ -462,15 +462,15 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
                        np.ndarray[DTYPE_t, ndim=1] Jv,
                        DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
-                       object userdata = None):
+                       object userdata = None) except -1:
         if self.with_userdata == 1:
             self._jac_times_vecfn(v, Jv, t, y, userdata)
         else:
             self._jac_times_vecfn(v, Jv, t, y)
         return 0
 
-cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
-                          N_Vector fy, void *user_data, N_Vector tmp):
+cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+                          N_Vector fy, void *user_data, N_Vector tmp) except -1:
     """ function with the signature of CVSpilsJacTimesVecFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, v_tmp, Jv_tmp
 
