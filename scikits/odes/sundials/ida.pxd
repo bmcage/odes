@@ -8,7 +8,7 @@ cdef class IDA_RhsFunction:
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] result,
-                       object userdata = *)
+                       object userdata = *) except? -1
 
 cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
     cdef object _resfn
@@ -20,7 +20,7 @@ cdef class IDA_RootFunction:
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] g,
-                       object userdata = *)
+                       object userdata = *) except? -1
 
 cdef class IDA_WrapRootFunction(IDA_RootFunction):
     cpdef object _rootfn
@@ -32,7 +32,7 @@ cdef class IDA_JacRhsFunction:
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        DTYPE_t cj,
-                       np.ndarray[DTYPE_t, ndim=2] J)
+                       np.ndarray[DTYPE_t, ndim=2] J) except? -1
 
 cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
     cpdef object _jacfn

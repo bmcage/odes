@@ -293,7 +293,7 @@ class TestOn(TestCase):
                         atol=atol, rtol=rtol)
 
     def test_cvode_tstopfn_test(self):
-        #test calling sequence. tsop function continues up to a time
+        #test calling sequence. tstop function continues up to a time
         global n
         n = 0
         tspan = np.arange(0, t_end2 + 1, 1.0, np.float)
@@ -320,3 +320,8 @@ if __name__ == "__main__":
         test.test_cvode_rootfnacc()
         test.test_cvode_rootfn_stop()
         test.test_cvode_rootfn_test()
+        test.test_cvode_tstopfn()
+        test.test_cvode_tstopfn_notstop()
+        test.test_cvode_tstopfn_stop()
+        test.test_cvode_tstopfn_test()
+        test.test_cvode_tstopfnacc()
