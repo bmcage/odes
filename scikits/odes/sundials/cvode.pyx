@@ -85,6 +85,13 @@ WARNING_STR = "Solver succeeded with flag {} and finished at {} with values {}"
 
 # Right-hand side function
 cdef class CV_RhsFunction:
+    """
+    Prototype for rhs function.
+
+    Note that evaluate must return a integer, 0 for success, positive for
+    recoverable failure, negative for unrecoverable failure (as per CVODE
+    documentation).
+    """
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
@@ -146,6 +153,12 @@ cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
 
 # Root function
 cdef class CV_RootFunction:
+    """
+    Prototype for root function.
+
+    Note that evaluate must return a integer, 0 for success, non-zero if error
+    (as per CVODE documentation).
+    """
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] g,
@@ -205,6 +218,13 @@ cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data) e
 
 # Jacobian function
 cdef class CV_JacRhsFunction:
+    """
+    Prototype for jacobian function.
+
+    Note that evaluate must return a integer, 0 for success, positive for
+    recoverable failure, negative for unrecoverable failure (as per CVODE
+    documentation).
+    """
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray J) except? -1:
@@ -216,7 +236,7 @@ cdef class CV_JacRhsFunction:
         size.
 
         This is a generic class, you should subclass is for the problem specific
-        purposes."
+        purposes.
         """
         return 0
 
@@ -276,6 +296,13 @@ cdef int _jacdense(long int Neq, realtype tt,
 
 # Precondioner setup funtion
 cdef class CV_PrecSetupFunction:
+    """
+    Prototype for preconditioning setup function.
+
+    Note that evaluate must return a integer, 0 for success, positive for
+    recoverable failure, negative for unrecoverable failure (as per CVODE
+    documentation).
+    """
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        bint jok,
@@ -346,6 +373,13 @@ cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, b
 
 # Precondioner solve funtion
 cdef class CV_PrecSolveFunction:
+    """
+    Prototype for precondititioning solution function.
+
+    Note that evaluate must return a integer, 0 for success, positive for
+    recoverable failure, negative for unrecoverable failure (as per CVODE
+    documentation).
+    """
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] r,
@@ -436,6 +470,12 @@ cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vect
 
 # JacTimesVec function
 cdef class CV_JacTimesVecFunction:
+    """
+    Prototype for jacobian times vector function.
+
+    Note that evaluate must return a integer, 0 for success, non-zero for error
+    (as per CVODE documentation).
+    """
     cpdef int evaluate(self,
                        np.ndarray[DTYPE_t, ndim=1] v,
                        np.ndarray[DTYPE_t, ndim=1] Jv,

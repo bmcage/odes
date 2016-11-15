@@ -93,6 +93,13 @@ WARNING_STR = "Solver succeeded with flag {} and finished at {} with values {}"
 
 # Right-hand side function
 cdef class IDA_RhsFunction:
+    """
+    Prototype for rhs function.
+
+    Note that evaluate must return a integer, 0 for success, positive for
+    recoverable failure, negative for unrecoverable failure (as per IDA
+    documentation).
+    """
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
@@ -157,6 +164,12 @@ cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
 
 # Root function
 cdef class IDA_RootFunction:
+    """
+    Prototype for root function.
+
+    Note that evaluate must return a integer, 0 for success, non-zero for error
+    (as per IDA documentation).
+    """
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
@@ -221,6 +234,13 @@ cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
 
 # Jacobian function
 cdef class IDA_JacRhsFunction:
+    """
+    Prototype for jacobian function.
+
+    Note that evaluate must return a integer, 0 for success, positive for
+    recoverable failure, negative for unrecoverable failure (as per IDA
+    documentation).
+    """
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
