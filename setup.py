@@ -35,6 +35,7 @@ def configuration(parent_package='',top_path=None):
     )
     config.add_subpackage(DISTNAME)
     config.add_data_files('scikits/__init__.py')
+    config.add_data_files('scikits/odes/sundials/sundials_auxiliary/sundials_auxiliary.c')
     return config
 
 def setup_package():
@@ -49,7 +50,11 @@ def setup_package():
         license = LICENSE,
         configuration = configuration,
         install_requires = INSTALL_REQUIRES,
-        zip_safe = False
+        zip_safe = False,
+        package_data = {
+            # If any package contains *.pxd files, include them:
+            '': ['*.pxd'],
+        },
         )
     return
 
