@@ -191,3 +191,45 @@ After local install, create the new documentation via
 1. go to the sphinx directory: `cd sphinxdoc`
 2. create the documentation: `make html`
 3. upload the new html doc.
+
+## Troubleshooting 
+### linking errors - Lapack not found
+Most issues with using the scikit are due to incorrectly setting the lapack libraries, resulting in error, typically:
+`AttributeError: module 'scikits.odes.sundials.cvode' has no attribute 'CVODE'`
+or
+`undefined reference to `dcopy_'`
+
+This is an indication the scikit does not link correctly to the lapack directories. You can solve this as follows:
+When installing sundials, look at output of cmake. If it has:                                             
+```  -- A library with BLAS API not found. Please specify library location.                                               
+  -- LAPACK requires BLAS                                                                                              
+  -- A library with LAPACK API not found. Please specify library location.
+```
+then the scikit will not work ! First make sure you install sundials with BLAS and LAPACK found!
+Eg on ubuntu one needs `sudo apt-get install libblas-dev libatlas-base-dev libopenblas-dev liblapack-dev gfortran`
+Once installed correctly, the sundials cmake output should be
+```  -- A library with BLAS API found.
+  -- Looking for Fortran cheev
+  -- Looking for Fortran cheev - found
+  -- A library with LAPACK API found.
+  -- Looking for LAPACK libraries... OK
+  -- Checking if Lapack works... OK
+```
+You can check the CMakeCache.txt file to see which libraries are found. It should have output as eg:
+```  //Blas and Lapack libraries
+  LAPACK_LIBRARIES:STRING=/usr/lib/liblapack.so;/usr/lib/libf77blas.so;/usr/lib/libatlas.so
+  //Path to a library.
+  LAPACK_lapack_LIBRARY:FILEPATH=/usr/lib/liblapack.so
+```
+With above output, you can set the LAPACK directories and libs correctly. To force the scikit to find these directories you can set them by force by editing the file `scikits/odes/sundials/setup.py`, and passing the directories and libs as used by sundials:
+```INCL_DIRS_LAPACK = ['/usr/include', '/usr/include/atlas']
+LIB_DIRS_LAPACK  = ['/usr/lib']
+LIBS_LAPACK      = ['lapack', 'f77blas', 'atlas']
+```
+Note that on your install, these directories and libs might be different than the example above! With these variables set, installation of the scikit should be successful.
+
+### linking errors
+Verify you link to the correct sundials version. Easiest to ensure you only have one libsundials_xxx installed. If several are installed, pass the correct one via the `$SUNDIALS_INST` environment variable.
+
+### test failures
+Most common reason for errors with the tests is because they are run in the scikits.odes download directory. This is not supported. The tests must be run from a different location, passing the install location if not installed globally. See info above on how to set PYTHONPATH if needed.
