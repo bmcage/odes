@@ -47,6 +47,8 @@ Basic use:
 
 Advanced use:
 * [Double pendulum](https://github.com/bmcage/odes/blob/master/docs/ipython/Double%20Pendulum%20as%20DAE%20with%20roots.ipynb) Example of using classes to pass residual and jacobian functions to IDA, and of how to implement roots functionality.
+* [Cython to speed up integration](https://github.com/bmcage/odes/blob/master/docs/ipython/Cython%20cvode%20speedup.ipynb)
+Example of using a cython rhs to speed up the ODE integration. As sundials mostly uses internal C code, the benefits of using cython for the rhs are normally small.
 
 ## Python examples
 For examples, see the [docs/src/examples](https://github.com/bmcage/odes/blob/master/docs/src/examples) directory and [scikits/odes/tests](https://github.com/bmcage/odes/blob/master/scikits/odes/tests) directory. 
@@ -101,6 +103,7 @@ You can also set `$SUNDIALS_INST` in your environment to the directory you have 
 It should contain `lib` and `include` directories.
 
 For a working scikit compile, LAPACK, ATLAS and BLAS must be found. A typical output of the build is:
+
     lapack_info:
       FOUND:
         libraries = ['lapack']
@@ -162,15 +165,13 @@ PYTHONPATH=/path-to-build python -c 'import scikits.odes as od; od.test()'
 ```
 
 ## IPython
-Please submit extra ipython notebook examples of usage of odes scikit. To install and use ipython, typical install instructions on Ubuntu 14.04 would be:
+Please submit extra ipython notebook examples of usage of odes scikit. To install and use ipython, typical install instructions would be (use `pip` instead of `pip3` for python2):
 ```
-pip install "ipython[notebook]"
-ipython notebook
+pip3 install jupyter
+jupyter-notebook
 ```
-Which should open a browser window from the current directory to work on a python notebook. Do this in the directory  `odes/docs/ipython`. You might obtain errors due to missing dependencies. For example, common is simplegeneric missing. Again, in Ubuntu 14.04 you would install it with
-```
-sudo apt-get install python-simplegeneric
-```
+Which should open a browser window from the current directory to work on a python notebook. Do this in the directory  `odes/docs/ipython`. You might obtain errors due to missing dependencies. For example, if simplegeneric missing, install it via `pip3`. Typical problem is that several conflicting versions are installed. If so, remove the versions installed on your system, and use `pip3` to install the most recent version. For example, an old ipython install will create problems, removing it (`sudo apt-get remove --purge ipython3 ipython`) fixes those issues.
+
 
 ## Release info
 
@@ -183,7 +184,8 @@ Release:
 5. update version string to a higher number, and DEV=True
 
 For the documentation, you need following packages
-```sudo apt-get install python-sphinx python-numpydoc
+```
+sudo apt-get install python-sphinx python-numpydoc
 ```
 
 After local install, create the new documentation via
@@ -197,18 +199,20 @@ After local install, create the new documentation via
 Most issues with using the scikit are due to incorrectly setting the lapack libraries, resulting in error, typically:
 `AttributeError: module 'scikits.odes.sundials.cvode' has no attribute 'CVODE'`
 or
-`undefined reference to `dcopy_'`
+`undefined reference to dcopy_`
 
 This is an indication the scikit does not link correctly to the lapack directories. You can solve this as follows:
 When installing sundials, look at output of cmake. If it has:                                             
-```  -- A library with BLAS API not found. Please specify library location.                                               
+```
+  -- A library with BLAS API not found. Please specify library location.                                               
   -- LAPACK requires BLAS                                                                                              
   -- A library with LAPACK API not found. Please specify library location.
 ```
 then the scikit will not work ! First make sure you install sundials with BLAS and LAPACK found!
 Eg on ubuntu one needs `sudo apt-get install libblas-dev libatlas-base-dev libopenblas-dev liblapack-dev gfortran`
 Once installed correctly, the sundials cmake output should be
-```  -- A library with BLAS API found.
+```
+  -- A library with BLAS API found.
   -- Looking for Fortran cheev
   -- Looking for Fortran cheev - found
   -- A library with LAPACK API found.
@@ -216,16 +220,19 @@ Once installed correctly, the sundials cmake output should be
   -- Checking if Lapack works... OK
 ```
 You can check the CMakeCache.txt file to see which libraries are found. It should have output as eg:
-```  //Blas and Lapack libraries
+```
+  //Blas and Lapack libraries
   LAPACK_LIBRARIES:STRING=/usr/lib/liblapack.so;/usr/lib/libf77blas.so;/usr/lib/libatlas.so
   //Path to a library.
   LAPACK_lapack_LIBRARY:FILEPATH=/usr/lib/liblapack.so
 ```
 With above output, you can set the LAPACK directories and libs correctly. To force the scikit to find these directories you can set them by force by editing the file `scikits/odes/sundials/setup.py`, and passing the directories and libs as used by sundials:
-```INCL_DIRS_LAPACK = ['/usr/include', '/usr/include/atlas']
-LIB_DIRS_LAPACK  = ['/usr/lib']
-LIBS_LAPACK      = ['lapack', 'f77blas', 'atlas']
 ```
+  INCL_DIRS_LAPACK = ['/usr/include', '/usr/include/atlas']
+  LIB_DIRS_LAPACK  = ['/usr/lib']
+  LIBS_LAPACK      = ['lapack', 'f77blas', 'atlas']
+```
+
 Note that on your install, these directories and libs might be different than the example above! With these variables set, installation of the scikit should be successful.
 
 ### linking errors
