@@ -47,6 +47,8 @@ Basic use:
 
 Advanced use:
 * [Double pendulum](https://github.com/bmcage/odes/blob/master/docs/ipython/Double%20Pendulum%20as%20DAE%20with%20roots.ipynb) Example of using classes to pass residual and jacobian functions to IDA, and of how to implement roots functionality.
+* [Cython to speed up integration](https://github.com/bmcage/odes/blob/master/docs/ipython/Cython%20cvode%20speedup.ipynb)
+Example of using a cython rhs to speed up the ODE integration. As sundials mostly uses internal C code, the benefits of using cython for the rhs are normally small.
 
 ## Python examples
 For examples, see the [docs/src/examples](https://github.com/bmcage/odes/blob/master/docs/src/examples) directory and [scikits/odes/tests](https://github.com/bmcage/odes/blob/master/scikits/odes/tests) directory. 
