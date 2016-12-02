@@ -50,6 +50,13 @@ Advanced use:
 * [Cython to speed up integration](https://github.com/bmcage/odes/blob/master/docs/ipython/Cython%20cvode%20speedup.ipynb)
 Example of using a cython rhs to speed up the ODE integration. As sundials mostly uses internal C code, the benefits of using cython for the rhs are normally small.
 
+## Performance
+A comparison of different methods is given in following image. In this BDF, RK23, RK45 and Radau are [python implementations](https://github.com/scipy/scipy/pull/6326); cvode is the method cvode of this scikit odes; lsoda, odeint and vode are the scipy integrators (2016), dopxxx are the RK methods in scipy. For this problem, cvode performs fastest at a preset tolerance.
+
+![Performance graph](https://github.com/bmcage/odes/blob/master/docs/ipython/Performance%20tests.png)
+
+You can generate above graph via the [Performance notebook](https://github.com/bmcage/odes/blob/master/docs/ipython/Performance%20tests.ipynb).
+
 ## Python examples
 For examples, see the [docs/src/examples](https://github.com/bmcage/odes/blob/master/docs/src/examples) directory and [scikits/odes/tests](https://github.com/bmcage/odes/blob/master/scikits/odes/tests) directory. 
 
