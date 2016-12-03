@@ -331,10 +331,59 @@ cdef class IDA_ContinuationFunction:
 def no_continue_fn(t, y, yp, solver):
     return 1
 
+cdef class IDA_ErrHandler:
+    cpdef evaluate(self,
+                   int error_code,
+                   bytes module,
+                   bytes function,
+                   bytes msg,
+                   object user_data = None):
+        """ format that error handling functions must match """
+        pass
+
+cdef class IDA_WrapErrHandler(IDA_ErrHandler):
+    cpdef set_err_handler(self, object err_handler):
+        """
+        set some (c/p)ython function as the error handler
+        """
+        nrarg = len(inspect.getargspec(err_handler)[0])
+        self.with_userdata = (nrarg > 5) or (
+            nrarg == 5 and inspect.isfunction(err_handler)
+        )
+        self._err_handler = err_handler
+
+    cpdef evaluate(self,
+                   int error_code,
+                   bytes module,
+                   bytes function,
+                   bytes msg,
+                   object user_data = None):
+        if self.with_userdata == 1:
+            self._err_handler(error_code, module, function, msg, user_data)
+        else:
+            self._err_handler(error_code, module, function, msg)
+
+cdef void _ida_err_handler_fn(
+    int error_code, const char *module, const char *function, char *msg,
+    void *eh_data
+):
+    """
+    function with the signature of IDAErrHandlerFn, that calls python error
+    handler
+    """
+    aux_data = <IDA_data> eh_data
+    aux_data.err_handler.evaluate(error_code,
+                                  module,
+                                  function,
+                                  msg,
+                                  aux_data.err_user_data)
+
+
 cdef class IDA_data:
     def __cinit__(self, N):
         self.parallel_implementation = False
         self.user_data = None
+        self.err_user_data = None
 
         self.yy_tmp = np.empty(N, float)
         self.yp_tmp = np.empty(N, float)
@@ -379,6 +428,8 @@ cdef class IDA:
             'rootfn': None,
             'nr_rootfns': 0,
             'jacfn': None,
+            'err_handler': None,
+            'err_user_data': None,
             'old_api': None,
             'onroot': None,
             'ontstop': None,
@@ -582,6 +633,14 @@ cdef class IDA:
                              2.0 - variable has to be positive (i.e. > 0)
                             -1.0 - variable has to be non-positive (i.e. <= 0)
                             -2.0 - variable has to be negative (i.e. < 0)
+            'err_handler':
+                Values: function of class IDA_ErrHandler, default = None
+                Description:
+                    Defines a function which controls output from the IDA
+                    solver
+            'err_user_data':
+                Description:
+                    User data used by 'err_handler', defaults to 'user_data'
             'old_api':
                 Values: True (default), False
                 Description:
@@ -960,6 +1019,29 @@ cdef class IDA:
 
         # auxiliary variables
         self.aux_data = IDA_data(N)
+
+        # Set err_handler
+        err_handler = opts.get('err_handler', None)
+        if err_handler is not None:
+            if not isinstance(err_handler, IDA_ErrHandler):
+                tmpfun = IDA_WrapErrHandler()
+                tmpfun.set_err_handler(err_handler)
+                err_handler = tmpfun
+
+            self.aux_data.err_handler = err_handler
+
+            flag = IDASetErrHandlerFn(
+                ida_mem, _ida_err_handler_fn, <void*> self.aux_data)
+
+            if flag == IDA_SUCCESS:
+                pass
+            elif flag == IDA_MEM_FAIL:
+                raise MemoryError(
+                    'IDASetErrHandlerFn: Memory allocation error')
+            else:
+                raise RuntimeError('IDASetErrHandlerFn: Unknown flag raised')
+        self.aux_data.err_user_data = opts['err_user_data'] or opts['user_data']
+
         self.aux_data.parallel_implementation = self.parallel_implementation
 
         rfn = opts['rfn']
