@@ -600,10 +600,11 @@ cdef class IDA:
             'algebraic_vars_idx':
                 Values: numpy vector or None (= default)
                 Description:
-                    If given problem is of type DAE, some items of the residual
+                    If the given problem is of type DAE, some items of the residual
                     vector returned by the 'resfn' have to be treated as
-                    algebraic variables. These are denoted by the position
-                    (index) in the residual vector.
+                    algebraic equations, and algebraic variables must be defined.
+                    These algebraic variables are denoted by the position (index)
+                    in the state vector y.
                     All these indexes have to be specified in the
                     'algebraic_vars_idx' array.
             'exclude_algvar_from_error':
