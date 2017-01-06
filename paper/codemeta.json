@@ -1,0 +1,51 @@
+{
+  "@context": "https://raw.githubusercontent.com/mbjones/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+    {
+      "@id": " http://orcid.org/0000-0001-8383-8068",
+      "@type": "Person",
+      "email": "benny.malengier@gmail.com",
+      "name": "Benny Malengier",
+      "affiliation": "UGent"
+    },
+    {
+      "@id": "",
+      "@type": "Person",
+      "email": "",
+      "name": "Pavol Kišon",
+      "affiliation": "UGent"
+    },
+    {
+      "@id": "",
+      "@type": "Person",
+      "email": "aragilar@gmail.com",
+      "name": "James Tocknell",
+      "affiliation": "Macquarie University"
+    },
+    {
+      "@id": "",
+      "@type": "Person",
+      "email": "claas@cabird.de",
+      "name": "Claas Abert",
+      "affiliation": ""
+    },
+    {
+      "@id": "",
+      "@type": "Person",
+      "email": "e0425375@gmail.com",
+      "name": "Florian Bruckner",
+      "affiliation": ""
+    }
+  ],
+  "identifier": "",
+  "codeRepository": "https://github.com/bmcage/odes/",
+  "datePublished": "2017-01-06",
+  "dateModified": "2017-01-06",
+  "dateCreated": "2017-01-06",
+  "description": "ODES is a scikit offering extra ode/dae solvers, as an extension to what is available in scipy, with a high level interface.",
+  "keywords": "ode, dae, sundials, root finding",
+  "license": "BSD",
+  "title": "ODES",
+  "version": "v2.3.0"
+}
