@@ -6,15 +6,15 @@
 [![Supported implementations](https://img.shields.io/pypi/implementation/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 [![PyPI](https://img.shields.io/pypi/status/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 
-This is a scikit offering some extra ode/dae solvers, so they can mature outside of scipy. The main solvers to use
-are the *Sundials* solvers.
+ODES is a scikit offering extra ode/dae solvers, as an extension to what is available in scipy. The main solvers to use
+are the *Sundials* solvers. 
 
 # General info
 
 * You need scipy, 
 * Tested with python 2.7 and 3.3-3.5
 * Available solvers:
-    * BDF linear multistep method  for stiff problems. This is done or via *cvode*, which is an improvement on the ode (vode/dvode) solver in scipy.integrate, or for DAE systems via *ida*. Both are part of the sundials package. Use it to have modern features
+    * BDF linear multistep method  for stiff problems. This is done or via *cvode*, which is an improvement on the ode (vode/dvode) solver in scipy.integrate, or for DAE systems via *ida*. Both are part of the sundials package. Use it to have modern features: root (event) finding, error control, (Krylov-)preconditioning, and more
     * Adams-Moulton linear multistep method for nonstiff problems. This is done also via *cvode* or *ida* (option lmm_type='ADAMS')
     * Explicit Runge-Kutta method of order (4)5 with stepsize control. This is done via *dopri5* from scipy.integrate.
     * Explicit Runge-Kutta method of order 8(5,3) with stepsize control. This is done via *dop853* from scipy.integrate.
