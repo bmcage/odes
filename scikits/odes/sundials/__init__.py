@@ -2,6 +2,8 @@
 # odes - Extra ode integrators
 #
 
+import inspect
+
 class CVODESolveException(Exception):
     """Base class for exceptions raised by `CVODE.validate_flags`."""
     def __init__(self, soln):
@@ -43,3 +45,22 @@ class IDASolveFoundRoot(IDASolveException):
 class IDASolveReachedTSTOP(IDASolveException):
     """`IDA.solve` reached the endpoint specified by tstop."""
     _message = "Solver reached tstop at {0.tstop.t[0]}."
+
+
+def _get_num_args(func):
+    """
+    Python 2/3 compatible method of getting number of args that `func` accepts
+    """
+    if hasattr(inspect, "signature"):
+        sig = inspect.signature(func)
+        numargs = 0
+        for param in sig.parameters.values():
+            if param.kind in (
+                inspect.Parameter.POSITIONAL_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.VAR_POSITIONAL,
+            ):
+                numargs += 1
+        return numargs
+    else:
+        return len(inspect.getargspec(func).args)

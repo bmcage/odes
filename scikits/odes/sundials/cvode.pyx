@@ -7,7 +7,10 @@ from warnings import warn
 import numpy as np
 cimport numpy as np
 
-from . import CVODESolveFailed, CVODESolveFoundRoot, CVODESolveReachedTSTOP
+from . import (
+    CVODESolveFailed, CVODESolveFoundRoot, CVODESolveReachedTSTOP,
+    _get_num_args,
+)
 
 from .c_sundials cimport realtype, N_Vector
 from .c_cvode cimport *
@@ -105,7 +108,7 @@ cdef class CV_WrapRhsFunction(CV_RhsFunction):
         set some rhs equations as a RhsFunction executable class
         """
         self.with_userdata = 0
-        nrarg = len(inspect.getargspec(rhsfn)[0])
+        nrarg = _get_num_args(rhsfn)
         if nrarg > 4:
             #hopefully a class method, self gives 5 arg!
             self.with_userdata = 1
@@ -171,7 +174,7 @@ cdef class CV_WrapRootFunction(CV_RootFunction):
         set root-ing condition(equations) as a RootFunction executable class
         """
         self.with_userdata = 0
-        nrarg = len(inspect.getargspec(rootfn)[0])
+        nrarg = _get_num_args(rootfn)
         if nrarg > 4:
             #hopefully a class method, self gives 4 arg!
             self.with_userdata = 1
@@ -326,7 +329,7 @@ cdef class CV_WrapPrecSetupFunction(CV_PrecSetupFunction):
         executable class
         """
         self.with_userdata = 0
-        nrarg = len(inspect.getargspec(prec_setupfn)[0])
+        nrarg = _get_num_args(prec_setupfn)
         if nrarg > 6:
             #hopefully a class method, self gives 7 arg!
             self.with_userdata = 1
@@ -407,7 +410,7 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
         executable class
         """
         self.with_userdata = 0
-        nrarg = len(inspect.getargspec(prec_solvefn)[0])
+        nrarg = _get_num_args(prec_solvefn)
         if nrarg > 8:
             #hopefully a class method, self gives 9 arg!
             self.with_userdata = 1
@@ -501,7 +504,7 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
         executable class
         """
         self.with_userdata = 0
-        nrarg = len(inspect.getargspec(jac_times_vecfn)[0])
+        nrarg = _get_num_args(jac_times_vecfn)
         if nrarg > 5:
             #hopefully a class method, self gives 6 arg!
             self.with_userdata = 1
@@ -589,7 +592,7 @@ cdef class CV_WrapErrHandler(CV_ErrHandler):
         """
         set some (c/p)ython function as the error handler
         """
-        nrarg = len(inspect.getargspec(err_handler)[0])
+        nrarg = _get_num_args(err_handler)
         self.with_userdata = (nrarg > 5) or (
             nrarg == 5 and inspect.isfunction(err_handler)
         )

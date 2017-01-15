@@ -10,7 +10,9 @@ cimport numpy as np
 from .c_sundials cimport realtype, N_Vector
 from .c_ida cimport *
 from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
-from . import IDASolveFailed, IDASolveFoundRoot, IDASolveReachedTSTOP
+from . import (
+    IDASolveFailed, IDASolveFoundRoot, IDASolveReachedTSTOP, _get_num_args,
+)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
@@ -113,7 +115,7 @@ cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
         set some residual equations as a ResFunction executable class
         """
         self.with_userdata = 0
-        nrarg = len(inspect.getargspec(resfn)[0])
+        nrarg = _get_num_args(resfn)
         if nrarg > 5:
             # hopefully a class method
             self.with_userdata = 1
@@ -183,7 +185,7 @@ cdef class IDA_WrapRootFunction(IDA_RootFunction):
         set root-ing condition(equations) as a RootFunction executable class
         """
         self.with_userdata = 0
-        nrarg = len(inspect.getargspec(rootfn)[0])
+        nrarg = _get_num_args(rootfn)
         if nrarg > 5:
             #hopefully a class method, self gives 5 arg!
             self.with_userdata = 1
@@ -346,7 +348,7 @@ cdef class IDA_WrapErrHandler(IDA_ErrHandler):
         """
         set some (c/p)ython function as the error handler
         """
-        nrarg = len(inspect.getargspec(err_handler)[0])
+        nrarg = _get_num_args(err_handler)
         self.with_userdata = (nrarg > 5) or (
             nrarg == 5 and inspect.isfunction(err_handler)
         )
