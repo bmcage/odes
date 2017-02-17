@@ -25,6 +25,9 @@ are the *Sundials* solvers.
     * Historical solvers: *lsodi* and *ddaspk* are available for comparison reasons. Use *ida* instead!
 
 # Documentation
+
+A basic API manual is available at [Read The Docs](http://scikits-odes.readthedocs.io/en/latest/). At the moment, this doc is only a barebones version.
+
 ## Example use
 Since 2.2.0, a new API is available, which will become the default. Typical usage is:
 
@@ -196,7 +199,7 @@ Release:
 
 For the documentation, you need following packages
 ```
-sudo apt-get install python-sphinx python-numpydoc
+sudo apt-get install python-sphinx python-numpydoc python-mock
 ```
 
 After local install, create the new documentation via
