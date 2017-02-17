@@ -6,6 +6,10 @@
 [![Supported implementations](https://img.shields.io/pypi/implementation/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 [![PyPI](https://img.shields.io/pypi/status/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.292988.svg)](https://doi.org/10.5281/zenodo.292988)
+
+
+
 ODES is a scikit offering extra ode/dae solvers, as an extension to what is available in scipy. The main solvers to use
 are the *Sundials* solvers. 
 
@@ -185,10 +189,10 @@ Which should open a browser window from the current directory to work on a pytho
 Release: 
 
 1. set in common.py version string and DEV=False, commit this.
-2. tag like: `git tag -a v2.2.0 -m "version 2.2.0"`
-3. push tag: `git push --tags` The tag will appear in the [releases](https://github.com/bmcage/odes/releases)
+2. In github, [draft a new release](https://github.com/bmcage/odes/releases) by clicking the appropriate button. Give correct version number, and hit release. This will upload the release for a DOI to [Zenado](https://zenodo.org) as draft
+3. Go to uploads in [Zenado](https://zenodo.org), edit the uploaded new release, save and hit the publish button. This will generate a DOI.
 4. update to pypi repo: `python setup.py sdist --formats=gztar,zip register upload`
-5. update version string to a higher number, and DEV=True
+5. update version string to a higher number in common.py, and DEV=True, next copyt the DOI badge of Zenado in the README.md, commit these two files.
 
 For the documentation, you need following packages
 ```

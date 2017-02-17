@@ -21,8 +21,8 @@ INSTALL_REQUIRES = ['scipy']
 
 MAJOR = 2
 MINOR = 3
-MICRO = 0
-DEV = False
+MICRO = 2
+DEV = True
 
 CLASSIFIERS = [
         'Development Status :: 5 - Production/Stable',
