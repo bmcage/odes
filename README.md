@@ -191,7 +191,7 @@ Release:
 1. set in common.py version string and DEV=False, commit this.
 2. In github, [draft a new release](https://github.com/bmcage/odes/releases) by clicking the appropriate button. Give correct version number, and hit release. This will upload the release for a DOI to [Zenado](https://zenodo.org) as draft
 3. Go to uploads in [Zenado](https://zenodo.org), edit the uploaded new release, save and hit the publish button. This will generate a DOI.
-4. update to pypi repo: `python setup.py sdist --formats=gztar,zip register upload`
+4. update to pypi repo: `python setup.py sdist --formats=gztar register upload`
 5. update version string to a higher number in common.py, and DEV=True, next copyt the DOI badge of Zenado in the README.md, commit these two files.
 
 For the documentation, you need following packages
