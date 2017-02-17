@@ -186,7 +186,7 @@ Release:
 
 1. set in common.py version string and DEV=False, commit this.
 2. tag like: `git tag -a v2.2.0 -m "version 2.2.0"`
-3. push tag: `git push --tags`
+3. push tag: `git push --tags` The tag will appear in the [releases](https://github.com/bmcage/odes/releases)
 4. update to pypi repo: `python setup.py sdist --formats=gztar,zip register upload`
 5. update version string to a higher number, and DEV=True
 
