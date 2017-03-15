@@ -22,9 +22,6 @@ if (sys.version_info[0] < 3) or (
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
     config = Configuration(None, parent_package, top_path,
-        license = LICENSE,
-        download_url = DOWNLOAD_URL,
-        long_description = LONG_DESCRIPTION,
         namespace_packages=['scikits'])
     # Avoid non-useful msg: "Ignoring attempt to set 'name' (from ... "
     config.set_options(
@@ -46,6 +43,7 @@ def setup_package():
         maintainer = MAINTAINER,
         maintainer_email = MAINTAINER_EMAIL,
         description = DESCRIPTION,
+        long_description = LONG_DESCRIPTION,
         url = URL,
         license = LICENSE,
         configuration = configuration,
@@ -55,6 +53,7 @@ def setup_package():
             # If any package contains *.pxd files, include them:
             '': ['*.pxd'],
         },
+        classifiers=CLASSIFIERS,
         )
     return
 
