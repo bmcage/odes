@@ -1,4 +1,4 @@
-[![Documentation Status](https://readthedocs.org/projects/scikits-odes/badge/?version=latest)](http://scikits-odes.readthedocs.org/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/scikits-odes/badge/?version=latest)](https://scikits-odes.readthedocs.org/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/bmcage/scikits.odes.svg?branch=master)](https://travis-ci.org/bmcage/scikits.odes)
 [![Version](https://img.shields.io/pypi/v/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 [![License](https://img.shields.io/pypi/l/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
