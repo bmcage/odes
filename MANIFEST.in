@@ -1,2 +1,3 @@
 include common.py scikits/odes/sundials/sundials_auxiliary/sundials_auxiliary.c
 recursive-include scikits *.pyx *.pxd *.pyf
+include pyproject.toml
