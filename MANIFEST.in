@@ -4,6 +4,7 @@ recursive-include scikits *.pyx *.pxd *.pyf *.h
 
 include CONTRIBUTING.md README.md LICENSE.txt
 include tox.ini
+include pyproject.toml
 
 prune ci_support
 prune docs
