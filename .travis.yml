@@ -22,6 +22,8 @@ env:
   - TOXENV=py27 SUNDIALS_VERSION='2.7.0'
   - TOXENV=py33 SUNDIALS_VERSION='2.7.0'
   - TOXENV=py34 SUNDIALS_VERSION='2.7.0'
+  - TOXENV=check-manifest SUNDIALS_VERSION='2.7.0'
+  - TOXENV=checkreadme SUNDIALS_VERSION='2.7.0'
 #  - TOXENV=py35
 # commented out because of https://github.com/travis-ci/travis-ci/issues/4794
 

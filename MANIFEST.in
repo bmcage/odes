@@ -1,3 +1,12 @@
 include common.py scikits/odes/sundials/sundials_auxiliary/sundials_auxiliary.c
-recursive-include scikits *.pyx *.pxd *.pyf
+exclude scikits/odes/sundials/sundials/sundials_config.in
+recursive-include scikits *.pyx *.pxd *.pyf *.h
+
+include CONTRIBUTING.md README.md LICENSE.txt
+include tox.ini
 include pyproject.toml
+
+prune ci_support
+prune docs
+prune paper
+prune sphinxdoc
