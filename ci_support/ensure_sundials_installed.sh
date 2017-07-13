@@ -1,12 +1,14 @@
 #!/bin/sh
 
-export SUNDIALS_DIR=$HOME/sundials-"${SUNDIALS_VERSION:-'2.7.0'}"
+SUNDIALS_DEFAULT_VERSION='2.7.0'
+
+export SUNDIALS_DIR=$HOME/sundials/"${SUNDIALS_VERSION:-$SUNDIALS_DEFAULT_VERSION}"
 SUNDIALS_LIBDIR=$SUNDIALS_DIR/lib
 SUNDIALS_INCLUDEDIR=$SUNDIALS_DIR/include
 
 if [ ! -d "$SUNDIALS_LIBDIR" ]; then
     mkdir -p $SUNDIALS_DIR
-    echo "Installing sundials 2.7.0"
+    echo "Installing sundials ${SUNDIALS_VERSION:-$SUNDIALS_DEFAULT_VERSION}"
     ./ci_support/install_sundials.sh
 else
     echo "Using cached sundials"

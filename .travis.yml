@@ -12,6 +12,7 @@ addons:
       - liblapack-dev
 
 sudo: false
+dist: trusty
 
 cache:
   directories:
@@ -19,20 +20,37 @@ cache:
     - $HOME/sundials
 
 env:
-  - TOXENV=py27 SUNDIALS_VERSION='2.7.0'
-  - TOXENV=py33 SUNDIALS_VERSION='2.7.0'
-  - TOXENV=py34 SUNDIALS_VERSION='2.7.0'
-  - TOXENV=check-manifest SUNDIALS_VERSION='2.7.0'
-  - TOXENV=checkreadme SUNDIALS_VERSION='2.7.0'
-#  - TOXENV=py35
-# commented out because of https://github.com/travis-ci/travis-ci/issues/4794
+      global:
+        # Doctr deploy key for aragilar/odes
+        - secure: "iw3NJw6/lfmWqIkqAVYJ8bG549y34T4atRvwy3P+Rg/xdVqh9RD1WOSf9U30chlAUTTM8ViVap6HEyq9i4CLVRNz/iIwAkbPY//9SdOJFxgBT3zwl9ms563oWAEXZo3a08X9H9T3IX6XhR7T3darKWqCTgpYJ+Y74FgMJR0EQ9M="
 
 matrix:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
+    - python: 2.7
+      env:
+      - TOXENV=py27 SUNDIALS_VERSION='2.7.0'
+    - python: 3.3
+      env:
+      - TOXENV=py33 SUNDIALS_VERSION='2.7.0'
+    - python: 3.4
+      env:
+      - TOXENV=py34 SUNDIALS_VERSION='2.7.0'
     - python: 3.5
       env:
       - TOXENV=py35 SUNDIALS_VERSION='2.7.0'
+    - python: 3.6
+      env:
+      - TOXENV=py36 SUNDIALS_VERSION='2.7.0'
+    - python: 3.5
+      env:
+      - TOXENV=doctr SUNDIALS_VERSION='2.7.0'
+    - python: 3.5
+      env:
+      - TOXENV=check-manifest SUNDIALS_VERSION='2.7.0'
+    - python: 3.5
+      env:
+      - TOXENV=checkreadme SUNDIALS_VERSION='2.7.0'
 
 install:
   - source ci_support/ensure_sundials_installed.sh
@@ -40,4 +58,4 @@ install:
   - pip install -U tox
 
 script:
-  - tox
+  - tox --workdir $HOME
