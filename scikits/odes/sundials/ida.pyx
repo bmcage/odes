@@ -10,7 +10,11 @@ cimport numpy as np
 
 from .c_sundials cimport realtype, N_Vector
 from .c_ida cimport *
-from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
+from .common_defs cimport (
+    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t,
+)
+from .common_defs import DTYPE # this is needed because we want DTYPE to be
+# accessible from python (not only in cython)
 from . import (
     IDASolveFailed, IDASolveFoundRoot, IDASolveReachedTSTOP, _get_num_args,
 )
@@ -303,7 +307,7 @@ cdef int _jacdense(long int Neq, realtype tt, realtype cj,
         yp_tmp = aux_data.yp_tmp
         if aux_data.jac_tmp is None:
             N = np.alen(yy_tmp)
-            aux_data.jac_tmp = np.empty((N,N), float)
+            aux_data.jac_tmp = np.empty((N,N), DTYPE)
         jac_tmp = aux_data.jac_tmp
 
         nv_s2ndarray(yy, yy_tmp)
@@ -388,9 +392,9 @@ cdef class IDA_data:
         self.user_data = None
         self.err_user_data = None
 
-        self.yy_tmp = np.empty(N, float)
-        self.yp_tmp = np.empty(N, float)
-        self.residual_tmp = np.empty(N, float)
+        self.yy_tmp = np.empty(N, DTYPE)
+        self.yp_tmp = np.empty(N, DTYPE)
+        self.residual_tmp = np.empty(N, DTYPE)
         self.jac_tmp = None
         self.g_tmp = None
 
@@ -726,7 +730,7 @@ cdef class IDA:
                 self.options['rootfn'] = tmpfun
 
             self.aux_data.rootfn = rootfn
-            self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
+            self.aux_data.g_tmp  = np.empty([nr_rootfns,], DTYPE)
 
             flag = IDARootInit(ida_mem, nr_rootfns, _rootfn)
 
@@ -773,7 +777,7 @@ cdef class IDA:
                 flag = IDASStolerances(ida_mem, <realtype> opts_rtol,
                                                 <realtype> opts_atol)
             else:
-                np_atol = np.asarray(opts_atol)
+                np_atol = np.asarray(opts_atol, dtype=DTYPE)
                 if np.alen(np_atol) != self.N:
                     raise ValueError("Array length inconsistency: 'atol' "
                                      "lenght (%i) differs from problem size "
@@ -842,7 +846,7 @@ cdef class IDA:
             self.options['validate_flags'] = validate_flags
             self._validate_flags = options["validate_flags"]
 
-    def init_step(self, double t0, object y0, object yp0,
+    def init_step(self, DTYPE_t t0, object y0, object yp0,
                    np.ndarray y_ic0_retn = None,
                    np.ndarray yp_ic0_retn = None):
         """
@@ -874,11 +878,11 @@ cdef class IDA:
                 message= String with message in case of an error
         """
         cdef int flag
-        cdef float time
+        cdef DTYPE_t time
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
         cdef np.ndarray[DTYPE_t, ndim=1] np_yp0
-        np_y0  = np.asarray(y0, dtype=float)
-        np_yp0 = np.asarray(yp0, dtype=float)
+        np_y0  = np.asarray(y0, dtype=DTYPE)
+        np_yp0 = np.asarray(yp0, dtype=DTYPE)
 
         flag, time = self._init_step(t0, np_y0, np_yp0, y_ic0_retn, yp_ic0_retn)
 
@@ -903,8 +907,8 @@ cdef class IDA:
             if self._old_api:
                 return (True, time)
             else:
-                y_retn  = np.empty(np.alen(np_y0), float)
-                yp_retn = np.empty(np.alen(np_y0), float)
+                y_retn  = np.empty(np.alen(np_y0), DTYPE)
+                yp_retn = np.empty(np.alen(np_y0), DTYPE)
                 # if no init cond computed, the start values are values at t=0
                 y_retn[:] = np_y0[:]
                 yp_retn[:] = np_yp0[:]
@@ -1160,7 +1164,7 @@ cdef class IDA:
 
         if not constraints_type is None:
             if not constraints_idx is None:
-                constraints_vars = np.zeros(N, float)
+                constraints_vars = np.zeros(N, DTYPE)
                 for idx in range(constraints_idx):
                     constraints_vars[constraints_idx[idx]] = constraints_type[idx]
             else:
@@ -1169,7 +1173,7 @@ cdef class IDA:
                   '  ''constraints_type'' the constraints_idx has to be of the'\
                   ' same length as y (i.e. contains constraints for EVERY '\
                   'component of y).'
-                constraints_vars = np.asarray(constraints_type, float)
+                constraints_vars = np.asarray(constraints_type, DTYPE)
 
             if not self.constraints is NULL:
                 N_VDestroy(self.constraints)
@@ -1199,7 +1203,7 @@ cdef class IDA:
             (opts['exclude_algvar_from_error'] and not alg_vars_idx is None)):
 
             # DAE variables
-            dae_vars = np.ones(N, float)
+            dae_vars = np.ones(N, DTYPE)
 
             if not alg_vars_idx is None:
                 for algvar_idx in opts['algebraic_vars_idx']:
@@ -1275,7 +1279,7 @@ cdef class IDA:
 
         return (flag, t0)
 
-    def reinit_IC(self, double t0, object y0, object yp0):
+    def reinit_IC(self, DTYPE_t t0, object y0, object yp0):
         """
         Re-initialize (only) the initial condition IC without re-setting also
         all the remaining solver options. See also 'init_step()' funtion.
@@ -1308,8 +1312,8 @@ cdef class IDA:
         if self._old_api:
             return (flag, time)
         else:
-            y_retn  = np.empty(np.alen(np_y0), float)
-            yp_retn = np.empty(np.alen(np_y0), float)
+            y_retn  = np.empty(np.alen(np_y0), DTYPE)
+            yp_retn = np.empty(np.alen(np_y0), DTYPE)
             # no init cond computed, the start values are values at t=t0
             y_retn[:] = np_y0[:]
             yp_retn[:] = np_yp0[:]
@@ -1325,7 +1329,7 @@ cdef class IDA:
             return self.validate_flags(soln)
         return soln
 
-    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0,
+    cpdef _reinit_IC(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0,
                      np.ndarray[DTYPE_t, ndim=1] yp0):
         # If not yet initialized, run full initialization
         if self.y0 is NULL:
@@ -1391,9 +1395,9 @@ cdef class IDA:
 
         cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0, np_yp0
 
-        np_tspan = np.asarray(tspan, dtype=float)
-        np_y0    = np.asarray(y0, dtype=float)
-        np_yp0   = np.asarray(yp0, dtype=float)
+        np_tspan = np.asarray(tspan, dtype=DTYPE)
+        np_y0    = np.asarray(y0, dtype=DTYPE)
+        np_yp0   = np.asarray(yp0, dtype=DTYPE)
 
         soln = self._solve(np_tspan, np_y0, np_yp0)
         if self._old_api:
@@ -1410,9 +1414,9 @@ cdef class IDA:
 
         cdef np.ndarray[DTYPE_t, ndim=1] t_retn
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn, yp_retn
-        t_retn  = np.empty([np.alen(tspan), ], float)
-        y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
-        yp_retn = np.empty([np.alen(tspan), np.alen(y0)], float)
+        t_retn  = np.empty([np.alen(tspan), ], DTYPE)
+        y_retn  = np.empty([np.alen(tspan), np.alen(y0)], DTYPE)
+        yp_retn = np.empty([np.alen(tspan), np.alen(y0)], DTYPE)
 
         cdef int flag
 
@@ -1462,8 +1466,8 @@ cdef class IDA:
         cdef IDA_ContinuationFunction onroot = self.options['onroot']
         cdef IDA_ContinuationFunction ontstop = self.options['ontstop']
 
-        y_last   = np.empty(np.shape(y0), float)
-        yp_last  = np.empty(np.shape(y0), float)
+        y_last   = np.empty(np.shape(y0), DTYPE)
+        yp_last  = np.empty(np.shape(y0), DTYPE)
 
 
         t = tspan[idx]
@@ -1627,14 +1631,14 @@ cdef class IDA:
             nv_s2ndarray(y, y_retn)
             y_out = y_retn
         else:
-            y_out  = np.empty(self.N, float)
+            y_out  = np.empty(self.N, DTYPE)
             nv_s2ndarray(y, y_out)
 
         if not yp_retn is None:
             nv_s2ndarray(yp, yp_retn)
             yp_out = yp_retn
         else:
-            yp_out  = np.empty(self.N, float)
+            yp_out  = np.empty(self.N, DTYPE)
             nv_s2ndarray(yp, yp_out)
 
         flag = StatusEnumIDA(flagIDA)

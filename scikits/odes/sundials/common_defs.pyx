@@ -8,6 +8,8 @@ from .c_sundials cimport (
     NV_LENGTH_S as nv_length_s, NV_DATA_S as nv_data_s
 )
 
+DTYPE = np.float
+
 ctypedef realtype *DlsMat_col
 ctypedef realtype *nv_content_data_s
 
@@ -137,9 +139,9 @@ cdef ensure_numpy_float_array(object value):
             or type(value) == np.int32
             or type(value) == np.int64):
 
-            return np.array([value, ], float)
+            return np.array([value, ], DTYPE)
         else:
-            return np.asarray(value, float)
+            return np.asarray(value, DTYPE)
     except:
         raise ValueError('ensure_numpy_float_array: value not a number or '
                          'sequence of numbers: %s' % value)
