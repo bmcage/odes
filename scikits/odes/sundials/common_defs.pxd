@@ -1,7 +1,21 @@
 cimport numpy as np
 from .c_sundials cimport N_Vector, DlsMat
 
-ctypedef np.float_t DTYPE_t
+include "sundials_config.pxi"
+
+IF SUNDIALS_FLOAT_TYPE == "single":
+    ctypedef np.float_t DTYPE_t
+    from numpy import float as DTYPE
+ELIF SUNDIALS_FLOAT_TYPE == "double":
+    ctypedef np.double_t DTYPE_t
+    from numpy import double as DTYPE
+ELIF SUNDIALS_FLOAT_TYPE == "extended":
+    ctypedef np.longdouble_t DTYPE_t
+    from numpy import longdouble as DTYPE
+ELSE:
+    # fall back to double
+    ctypedef np.double_t DTYPE_t
+    from numpy import double as DTYPE
 
 cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a)
 cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a)

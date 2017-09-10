@@ -15,7 +15,9 @@ from . import (
 
 from .c_sundials cimport realtype, N_Vector
 from .c_cvode cimport *
-from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
+from .common_defs cimport (
+    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE, DTYPE_t,
+)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors

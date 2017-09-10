@@ -29,6 +29,7 @@
 
 import sys
 import os
+import io
 import shutil
 import hashlib
 import subprocess
@@ -127,3 +128,12 @@ def same_cython(f0, f1):
 
     return md5sum(f0) == md5sum(f1)
 
+
+def write_pxi(filename, definitions):
+    """
+    Write a cython include file (.pxi), `filename`, with the definitions in the
+    `definitions` mapping.
+    """
+    with io.open(filename, mode='w', encoding='utf-8') as pxi_file:
+        for name, val in definitions.items():
+            pxi_file.write(u"DEF {name} = {val}\n".format(name=name, val=val))

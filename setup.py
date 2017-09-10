@@ -32,7 +32,6 @@ def configuration(parent_package='',top_path=None):
     )
     config.add_subpackage(DISTNAME)
     config.add_data_files('scikits/__init__.py')
-    config.add_data_files('scikits/odes/sundials/sundials_auxiliary/sundials_auxiliary.c')
     return config
 
 def setup_package():

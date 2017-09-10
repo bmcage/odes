@@ -8,8 +8,6 @@ from .c_sundials cimport (
     NV_LENGTH_S as nv_length_s, NV_DATA_S as nv_data_s
 )
 
-DTYPE = np.float
-
 ctypedef realtype *DlsMat_col
 ctypedef realtype *nv_content_data_s
 

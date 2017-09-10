@@ -2,8 +2,7 @@
 
 cimport numpy as np
 from .c_sundials cimport N_Vector, realtype
-
-ctypedef np.float_t DTYPE_t
+from .common_defs cimport DTYPE_t
 
 cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,

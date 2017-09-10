@@ -10,7 +10,9 @@ cimport numpy as np
 
 from .c_sundials cimport realtype, N_Vector
 from .c_ida cimport *
-from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
+from .common_defs cimport (
+    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE, DTYPE_t,
+)
 from . import (
     IDASolveFailed, IDASolveFoundRoot, IDASolveReachedTSTOP, _get_num_args,
 )
