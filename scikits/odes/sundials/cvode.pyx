@@ -24,7 +24,6 @@ from .common_defs import DTYPE # this is needed because we want DTYPE to be
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
-# TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
 
 SolverReturn = namedtuple(
