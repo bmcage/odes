@@ -92,7 +92,7 @@ except:
 
 
 def configuration(parent_package='',top_path=None):
-    from numpy.distutils.misc_util import Configuration, get_cmd
+    from numpy.distutils.misc_util import Configuration
     info("=============================================")
     info("parent package is %s" % parent_package)
     info("top path is %s" % top_path)

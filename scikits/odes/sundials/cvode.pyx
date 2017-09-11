@@ -21,7 +21,6 @@ from .common_defs cimport (
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
-# TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
 
 DTYPE = np.float
