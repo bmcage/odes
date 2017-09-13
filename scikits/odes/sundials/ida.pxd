@@ -84,10 +84,10 @@ cdef class IDA:
     cdef list yp_tstop
 
     cdef int order, nsteps
-    cdef double maxstep, first_step
+    cdef DTYPE_t maxstep, first_step
     cdef exclude_algvar_from_error, out
     cdef int compute_initcond
-    cdef double compute_initcond_t0
+    cdef DTYPE_t compute_initcond_t0
     cdef long int mupper, mlower
     # ??? lband, uband, tcrit
     # ??? constraint_type, algebraic_var
@@ -113,7 +113,7 @@ cdef class IDA:
                     np.ndarray[DTYPE_t, ndim=1] yp0,
                     np.ndarray y_ic0_retn = ?,
                     np.ndarray yp_ic0_retn = ?)
-    cpdef _reinit_IC(self, double t0,
+    cpdef _reinit_IC(self, DTYPE_t t0,
                      np.ndarray[DTYPE_t, ndim=1] y0,
                      np.ndarray[DTYPE_t, ndim=1] yp0)
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,

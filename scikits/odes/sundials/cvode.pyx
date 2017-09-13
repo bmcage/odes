@@ -16,14 +16,14 @@ from . import (
 from .c_sundials cimport realtype, N_Vector
 from .c_cvode cimport *
 from .common_defs cimport (
-    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE, DTYPE_t,
+    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t,
 )
+from .common_defs import DTYPE # this is needed because we want DTYPE to be
+# accessible from python (not only in cython)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
 # TODO: optimize code for compiler
-
-DTYPE = np.float
 
 SolverReturn = namedtuple(
     "SolverReturn", [
@@ -1032,7 +1032,7 @@ cdef class CVODE:
                 flag = CVodeSStolerances(cv_mem, <realtype> opts_rtol,
                                                  <realtype> opts_atol)
             else:
-                np_atol = np.asarray(opts_atol)
+                np_atol = np.asarray(opts_atol, dtype=DTYPE)
                 if np.alen(np_atol) != self.N:
                     raise ValueError("Array length inconsistency: 'atol' "
                                      "lenght (%i) differs from problem size "
@@ -1102,7 +1102,7 @@ cdef class CVODE:
             self.options['validate_flags'] = validate_flags
             self._validate_flags = options["validate_flags"]
 
-    def init_step(self, double t0, object y0):
+    def init_step(self, DTYPE_t t0, object y0):
         """
         Initialize the solver and all the internal variables. This assumes
         the call to 'set_options()' to be done and hence all the information
@@ -1127,7 +1127,7 @@ cdef class CVODE:
         Note: some options can be re-set also at runtime. See 'reinit_IC()'
         """
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
-        np_y0 = np.asarray(y0)
+        np_y0 = np.asarray(y0, dtype=DTYPE)
 
         #flag is always True, as errors are exceptions for cvode init_step!
         (flag, time) = self._init_step(t0, np_y0)
@@ -1461,7 +1461,7 @@ cdef class CVODE:
 
         return (True, t0)
 
-    def reinit_IC(self, double t0, object y0):
+    def reinit_IC(self, DTYPE_t t0, object y0):
         """
         Re-initialize (only) the initial condition IC without re-setting also
         all the remaining solver options. See also 'init_step()' funtion.
@@ -1506,7 +1506,7 @@ cdef class CVODE:
                 return self.validate_flags(soln)
             return soln
 
-    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0):
+    cpdef _reinit_IC(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0):
         # If not yet initialized, run full initialization
         if self.y0 is NULL:
             self._init_step(t0, y0)

@@ -11,8 +11,10 @@ cimport numpy as np
 from .c_sundials cimport realtype, N_Vector
 from .c_ida cimport *
 from .common_defs cimport (
-    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE, DTYPE_t,
+    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t,
 )
+from .common_defs import DTYPE # this is needed because we want DTYPE to be
+# accessible from python (not only in cython)
 from . import (
     IDASolveFailed, IDASolveFoundRoot, IDASolveReachedTSTOP, _get_num_args,
 )
@@ -20,8 +22,6 @@ from . import (
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
 # TODO: optimize code for compiler
-
-DTYPE = np.float
 
 SolverReturn = namedtuple(
     "SolverReturn", [
@@ -776,7 +776,7 @@ cdef class IDA:
                 flag = IDASStolerances(ida_mem, <realtype> opts_rtol,
                                                 <realtype> opts_atol)
             else:
-                np_atol = np.asarray(opts_atol)
+                np_atol = np.asarray(opts_atol, dtype=DTYPE)
                 if np.alen(np_atol) != self.N:
                     raise ValueError("Array length inconsistency: 'atol' "
                                      "lenght (%i) differs from problem size "
@@ -845,7 +845,7 @@ cdef class IDA:
             self.options['validate_flags'] = validate_flags
             self._validate_flags = options["validate_flags"]
 
-    def init_step(self, double t0, object y0, object yp0,
+    def init_step(self, DTYPE_t t0, object y0, object yp0,
                    np.ndarray y_ic0_retn = None,
                    np.ndarray yp_ic0_retn = None):
         """
@@ -1278,7 +1278,7 @@ cdef class IDA:
 
         return (flag, t0)
 
-    def reinit_IC(self, double t0, object y0, object yp0):
+    def reinit_IC(self, DTYPE_t t0, object y0, object yp0):
         """
         Re-initialize (only) the initial condition IC without re-setting also
         all the remaining solver options. See also 'init_step()' funtion.
@@ -1328,7 +1328,7 @@ cdef class IDA:
             return self.validate_flags(soln)
         return soln
 
-    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0,
+    cpdef _reinit_IC(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0,
                      np.ndarray[DTYPE_t, ndim=1] yp0):
         # If not yet initialized, run full initialization
         if self.y0 is NULL:
