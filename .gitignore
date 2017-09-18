@@ -15,6 +15,7 @@ build*
 docs/src/examples/scikits
 dist
 _build
+docs/_build
 .tox
 .spyderproject
 .cache

@@ -1,55 +1,22 @@
 # Authors: B. Malengier based on ode.py
-"""
+r"""
 First-order ODE solver
 
 User-friendly interface to various numerical integrators for solving a
 system of first order ODEs with prescribed initial conditions:
 
-     d y(t)
-    ---------  = f(t,y(t)),
-      d t
+.. math::
 
-    y(t=0)[i] = y0[i],
+    \frac{dy(t)}{dt} = f(t, y(t)), \quad y(t_0)=y_0
 
-where::
+    y(t_0)[i] = y_0[i], i = 0, ..., \mathrm{len}(y_0) - 1
 
-    i = 0, ..., len(y0) - 1
-    f(t,y) is a vector of size i
-
-class ode
----------
-
-A generic interface class to ordinary differential equation solvers.
-It has the following methods::
-
-    integrator = ode(integrator_name, rhsfn, **options)
-    integrator.set_options(options)
-    result = integrator.solve(times, init_val_y, user_data)
-
-Alternatively, an init_step, and step method can be used to iterate over a
-solution.
-
-For ode rhsfn is required, this is the right-hand-side equations evaluator
-function f, which must satisfy a specific signature.
+:math:`f(t,y)` is the right hand side function and returns a vector of size
+:math:`\mathrm{len}(y_0)`.
 
 """
 
 from __future__ import print_function
-
-#the following will be extended as solvers are loaded
-integrator_info = \
-"""
-Available integrators:
-
-cvode
-
-dopri5
-
-dop853
-
-"""
-
-__doc__ += integrator_info
 
 __all__ = ['ode']
 __version__ = "$Id$"
@@ -60,18 +27,24 @@ import re, sys
 from numpy import isscalar, array, asarray
 
 class OdeBase(object):
-    """ the interface which ODE solvers must implement"""
+    """
+    The interface which ODE solvers must implement.
+
+    Parameters
+    ----------
+    Rfn : function
+        A function which computes the required derivatives. The signature should
+        be:
+            func(t, y, y_dot, *args, **kwargs)
+        Note that *args and **kwargs handling are solver dependent.
+
+    options : mapping
+        Additional options for initialization, solver dependent
+    """
 
     integrator_classes = []
 
     def __init__(self, Rfn, **options):
-        """
-        Initialize the ODE Solver and it's default values
-
-        Input:
-            Rfn     - right-hand-side function
-            options - additional options for initialization
-        """
         raise NotImplementedError('all ODE solvers must implement this')
 
     def set_options(self, **options):
@@ -86,12 +59,17 @@ class OdeBase(object):
         """
         Runs the solver.
 
-        Input:
-            tspan - an list/array of times at which the computed value will be
-                    returned. Must contain the start time as first entry..
-            y0    - list/numpy array of initial values
+        Parameters
+        ----------
+        tspan : array (or similar)
+            a list of times at which the computed value will be returned. Must
+            contain the start time as first entry.
 
-        Return values:
+        y0 : array (or similar)
+            a list of initial values
+
+        Returns
+        -------
          if old_api
             flag   - indicating return status of the solver
             t      - numpy array of times at which the computations were successful
@@ -114,11 +92,13 @@ class OdeBase(object):
         """
         Initializes the solver and allocates memory.
 
-        Input:
-            t0     - initial time
-            y0     - initial condition for y (can be list or numpy array)
+        Parameters
+        ----------
+        t0     - initial time
+        y0     - initial condition for y (can be list or numpy array)
 
-        Return values:
+        Returns
+        -------
          if old_api:
             flag  - boolean status of the computation (successful or error occured)
             t_out - inititial time
@@ -140,7 +120,8 @@ class OdeBase(object):
         more precise control over the solver. The 'init_step' method has to
         be called before the 'step' method.
 
-        Input:
+        Parameters
+        ----------
             t - A step is done towards time t, and output at t returned.
                 This time can be higher or lower than the previous time.
                 If option 'one_step_compute'==True, and the solver supports
@@ -155,7 +136,8 @@ class OdeBase(object):
             y_retn - numpy vector (ndim = 1) in which the computed
                      value will be stored  (needs to be preallocated).  If
                      None y_retn is not used.
-        Return values:
+        Returns
+        -------
          if old_api:
             flag  - status of the computation (successful or error occured)
             t_out - time, where the solver stopped (when no error occured, t_out == t)
@@ -176,92 +158,89 @@ class OdeBase(object):
 #------------------------------------------------------------------------------
 
 class ode(object):
-    """\
-A generic interface class to differential equation solvers.
+    """
+    A generic interface class to differential equation solvers.
 
-See also
---------
-scikits.odes.odeint.odeint : an ODE integrator with a simpler interface
-scipy.integrate : Methods in scipy for ODE integration
 
-Examples
---------
-ODE arise in many applications of dynamical systems, as well as in
-discritisations of PDE (eg moving mesh combined with method of
-lines).
-As an easy example, consider the simple oscillator,
+    Parameters
+    ----------
 
->>> from __future__ import print_function
->>> from numpy import cos, sin, sqrt
->>> k = 4.0
->>> m = 1.0
->>> initx = [1, 0.1]
->>> def rhseqn(t, x, xdot):
-        # we create rhs equations for the problem
-        xdot[0] = x[1]
-        xdot[1] = - k/m * x[0]
+    integrator_name : ``'cvode'``, ``'dopri5'`` or ``'dop853'``
+        The solver to use.
 
->>> from scikits.odes import ode
->>> solver = ode('cvode', rhseqn, old_api=False)
->>> result = solver.solve([0., 1., 2.], initx)
->>> print('   t        Solution          Exact')
->>> print('------------------------------------')
->>> for t, u in zip(result.values.t, result.values.y):
-        print('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
+        ``'cvode'`` selects the CVODE solver from the SUNDIALS package.
+        See py:class:`scikits.odes.sundials.cvode.CVODE` for solver specific
+        options.
 
-More examples in the Examples_ directory and IPython_ worksheets.
+        ``'dopri5'`` selects the Dormand & Prince Runge-Kutta order (4)5
+        solver from scipy.
 
-.. _Examples: https://github.com/bmcage/odes/tree/master/docs/src/examples
-.. _IPython: https://github.com/bmcage/odes/tree/master/docs/ipython
-"""
-    __doc__ += integrator_info
+    eqsrhs : right-hand-side function
+        Right-hand-side of a first order ode.
+        Generally, you can assume the following signature to work:
+
+            eqsrhs(x, y, return_rhs)
+
+        with
+
+            x: independent variable, eg the time, float
+
+            y: array of n unknowns in x
+
+            return_rhs : array that must be updated with the value of the
+            right-hand-side, so f(t,y).  The dimension is equal to
+            dim(y)
+
+        return value: An integer, 0 for success, 1 for failure.
+            It is not guaranteed that a solver takes this status into account
+
+        Some solvers will allow userdata to be passed to eqsrhs, or optional
+        formats that are more performant.
+
+    options :  additional options of the solver
+        See set_options method of the `integrator_name` you selected for
+        details.
+        Set option `old_api=False` to use the new API. In the future, this
+        will become the default!
+
+    See Also
+    --------
+    scikits.odes.odeint.odeint : an ODE integrator with a simpler interface
+    scipy.integrate : Methods in scipy for ODE integration
+
+    Examples
+    --------
+    ODE arise in many applications of dynamical systems, as well as in
+    discritisations of PDE (eg moving mesh combined with method of
+    lines).
+    As an easy example, consider the simple oscillator,
+
+    >>> from __future__ import print_function
+    >>> from numpy import cos, sin, sqrt
+    >>> k = 4.0
+    >>> m = 1.0
+    >>> initx = [1, 0.1]
+    >>> def rhseqn(t, x, xdot):
+            # we create rhs equations for the problem
+            xdot[0] = x[1]
+            xdot[1] = - k/m * x[0]
+
+    >>> from scikits.odes import ode
+    >>> solver = ode('cvode', rhseqn, old_api=False)
+    >>> result = solver.solve([0., 1., 2.], initx)
+    >>> print('   t        Solution          Exact')
+    >>> print('------------------------------------')
+    >>> for t, u in zip(result.values.t, result.values.y):
+            print('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
+
+    More examples in the Examples_ directory and IPython_ worksheets.
+
+    .. _Examples: https://github.com/bmcage/odes/tree/master/docs/src/examples
+    .. _IPython: https://github.com/bmcage/odes/tree/master/docs/ipython
+    """
     LOADED = False
 
     def __init__(self, integrator_name, eqsrhs, **options):
-        """
-        Initialize the ODE Solver and it's options.
-
-        .. math:: \\frac{dy(t)}{dt} = f(t, y(t)), \\quad y(t_0)=y_0
-        .. math:: y(t_0)[i] = y_0[i], i = 0, ..., \mathrm{len}(y_0) - 1
-
-        f(t,y) is the right hand side function and returns a vector of size
-        :math:`\mathrm{len}(y_0)`.
-
-        Parameters
-        ----------
-
-        integrator_name : name of the integrator solver to use.
-            Currently you can choose `cvode`, `dopri5` and `dop853`.
-
-        eqsrhs : right-hand-side function
-            Right-hand-side of a first order ode.
-            Generally, you can assume the following signature to work:
-
-                eqsrhs(x, y, return_rhs)
-
-            with
-
-                x: independent variable, eg the time, float
-
-                y: array of n unknowns in x
-
-                return_rhs : array that must be updated with the value of the
-                right-hand-side, so f(t,y).  The dimension is equal to
-                dim(y)
-
-            return value: An integer, 0 for success, 1 for failure.
-                It is not guaranteed that a solver takes this status into account
-
-            Some solvers will allow userdata to be passed to eqsrhs, or optional
-            formats that are more performant.
-
-        options :  additional options of the solver
-            See set_options method of the `integrator_name` you selected for
-            details.
-            Set option `old_api=False` to use the new API. In the future, this
-            will become the default!
-        """
-
         integrator = find_ode_integrator(integrator_name)
         if integrator is None:
             raise ValueError('No integrator name match with %s or is not available.'\
@@ -433,14 +412,6 @@ More examples in the Examples_ directory and IPython_ worksheets.
 #------------------------------------------------------------------------------
 # ODE integrators
 #------------------------------------------------------------------------------
-
-
-integrator_info_cvode = """
-CVODE solver from the SUNDIALS package. See info in
-scikits.odes.sundials.cvode.CVODE class
-"""
-__doc__ += integrator_info_cvode
-integrator_info += integrator_info_cvode
 
 def find_ode_integrator(name):
     if not ode.LOADED:

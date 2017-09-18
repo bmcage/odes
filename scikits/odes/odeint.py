@@ -13,7 +13,7 @@ from .ode import ode
 def odeint(rhsfun, tout, y0,  method='bdf', **options):
     """
     Integrate a system of ordinary differential equations.
-    *odeint* is a wrapper around the ode class, as a confenience function to
+    *odeint* is a wrapper around the ode class, as a convenience function to
     quickly integrate a system of ode.
     Solves the initial value problem for stiff or non-stiff systems
     of first order ode's:
@@ -25,7 +25,7 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
 
         rhsfun(t, y, rhs)
 
-    storing the computated dy/dt in the rhs array passed to the function
+    storing the computed dy/dt in the rhs array passed to the function
 
     Parameters
     ----------
@@ -36,7 +36,7 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
     t : array
         A sequence of time points for which to solve for y.  The initial
         value point should be the first element of this sequence.
-    method : string, solution  method to use.
+    method : string, solution method to use.
         Available are all the ode class solvers as well as some convenience
         shorthands:
 
@@ -114,9 +114,9 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
 
     See Also
     --------
-    ode : a more object-oriented integrator in scikits.odes
-    dae : a solver for differential-algebraic equations in scikits.odes
-    quad : for finding the area under a curve, part of scipy.
+    scikits.odes.ode.ode : a more object-oriented integrator
+    scikits.odes.dae.dae : a solver for differential-algebraic equations
+    scipy.integrate.quad : for finding the area under a curve
 
     Examples
     --------

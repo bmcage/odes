@@ -125,7 +125,8 @@ class dopri5(OdeBase):
         """
         Initialize the ODE Solver and it's default values
 
-        Input:
+        Parameters
+        ----------
             Rfn     - right-hand-side function
             options - additional options for initialization
         """
@@ -158,11 +159,13 @@ class dopri5(OdeBase):
         """
         Initializes the solver and allocates memory.
 
-        Input:
+        Parameters
+        ----------
             t0     - initial time
             y0     - initial condition for y (can be list or numpy array)
 
-        Return values:
+        Returns
+        -------
          if old_api:
             not supported
 
@@ -215,7 +218,8 @@ class dopri5(OdeBase):
         more precise control over the solver. The 'init_step' method has to
         be called before the 'step' method.
 
-        Input:
+        Parameters
+        ----------
             t - A step is done towards time t, and output at t returned.
                 This time can be higher or lower than the previous time.
                 If option 'one_step_compute'==True, and the solver supports
@@ -230,7 +234,8 @@ class dopri5(OdeBase):
             y_retn - numpy vector (ndim = 1) in which the computed
                      value will be stored  (needs to be preallocated).  If
                      None y_retn is not used.
-        Return values:
+        Returns
+        -------
          if old_api:
              not supported
 
@@ -274,12 +279,14 @@ class dopri5(OdeBase):
         """
         Runs the solver.
 
-        Input:
+        Parameters
+        ----------
             tspan - an list/array of times at which the computed value will be
                     returned. Must contain the start time as first entry..
             y0    - list/numpy array of initial values
 
-        Return values:
+        Returns
+        -------
          if old_api
             Not supported
          if old_api False:
