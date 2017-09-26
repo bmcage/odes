@@ -12,8 +12,8 @@ tar -xzvf "$SUNDIALS_FILE"
 
 mkdir sundials_build
 
-# ARKODE is disabled as it does not support multiple precisions (will be fixed
-# in next sundials release)
+
+# ARKODE and examples are disabled as they does not support multiple precisions (will be fixed in next sundials release)
 cd sundials_build &&
-    cmake -DCMAKE_INSTALL_PREFIX=$SUNDIALS_DIR -DLAPACK_ENABLE=ON -DSUNDIALS_PRECISION="$PRECISION" -DBUILD_ARKODE:BOOL=OFF ../$SUNDIALS &&
+    cmake -DCMAKE_INSTALL_PREFIX=$SUNDIALS_DIR -DLAPACK_ENABLE=ON -DSUNDIALS_PRECISION="$PRECISION" -DBUILD_ARKODE:BOOL=OFF -DEXAMPLES_ENABLE:BOOL=OFF -DEXAMPLES_INSTALL:BOOL=OFF ../$SUNDIALS &&
     make && make install
