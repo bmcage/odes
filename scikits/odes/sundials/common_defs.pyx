@@ -12,7 +12,7 @@ include "sundials_config.pxi"
 
 precision = SUNDIALS_FLOAT_TYPE
 IF SUNDIALS_FLOAT_TYPE == "single":
-    from numpy import float as DTYPE
+    from numpy import single as DTYPE
 ELIF SUNDIALS_FLOAT_TYPE == "double":
     from numpy import double as DTYPE
 ELIF SUNDIALS_FLOAT_TYPE == "extended":
