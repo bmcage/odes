@@ -15,13 +15,15 @@ from . import (
 
 from .c_sundials cimport realtype, N_Vector
 from .c_cvode cimport *
-from .common_defs cimport (nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd)
+from .common_defs cimport (
+    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t,
+)
+from .common_defs import DTYPE # this is needed because we want DTYPE to be
+# accessible from python (not only in cython)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
-# TODO: unify using float/double/realtype variable
 # TODO: optimize code for compiler
-
 
 SolverReturn = namedtuple(
     "SolverReturn", [
@@ -284,7 +286,7 @@ cdef int _jacdense(long int Neq, realtype tt,
         yy_tmp = aux_data.yy_tmp
         if aux_data.jac_tmp is None:
             N = np.alen(yy_tmp)
-            aux_data.jac_tmp = np.empty((N,N), float)
+            aux_data.jac_tmp = np.empty((N,N), DTYPE)
         jac_tmp = aux_data.jac_tmp
 
         nv_s2ndarray(yy, yy_tmp)
@@ -451,11 +453,11 @@ cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vect
 
         if aux_data.r_tmp is None:
             N = np.alen(yy_tmp)
-            aux_data.r_tmp = np.empty(N, float)
+            aux_data.r_tmp = np.empty(N, DTYPE)
 
         if aux_data.z_tmp is None:
             N = np.alen(yy_tmp)
-            aux_data.z_tmp = np.empty(N, float)
+            aux_data.z_tmp = np.empty(N, DTYPE)
 
         r_tmp = aux_data.r_tmp
         z_tmp = aux_data.z_tmp
@@ -542,11 +544,11 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
 
         if aux_data.r_tmp is None:
             N = np.alen(y_tmp)
-            aux_data.r_tmp = np.empty(N, float)
+            aux_data.r_tmp = np.empty(N, DTYPE)
 
         if aux_data.z_tmp is None:
             N = np.alen(y_tmp)
-            aux_data.z_tmp = np.empty(N, float)
+            aux_data.z_tmp = np.empty(N, DTYPE)
 
         v_tmp = aux_data.r_tmp
         Jv_tmp = aux_data.z_tmp
@@ -632,8 +634,8 @@ cdef class CV_data:
         self.user_data = None
         self.err_user_data = None
 
-        self.yy_tmp = np.empty(N, float)
-        self.yp_tmp = np.empty(N, float)
+        self.yy_tmp = np.empty(N, DTYPE)
+        self.yp_tmp = np.empty(N, DTYPE)
         self.jac_tmp = None
         self.g_tmp = None
         self.r_tmp = None
@@ -983,7 +985,7 @@ cdef class CVODE:
 
             # ...and to the auxiliary data object (holding runtime data)
             self.aux_data.rootfn = rootfn
-            self.aux_data.g_tmp  = np.empty([nr_rootfns,], float)
+            self.aux_data.g_tmp  = np.empty([nr_rootfns,], DTYPE)
 
             # TODO: Shouldn't be the rootn in the cvode obj unset first?
             flag = CVodeRootInit(cv_mem, nr_rootfns, _rootfn)
@@ -1030,7 +1032,7 @@ cdef class CVODE:
                 flag = CVodeSStolerances(cv_mem, <realtype> opts_rtol,
                                                  <realtype> opts_atol)
             else:
-                np_atol = np.asarray(opts_atol)
+                np_atol = np.asarray(opts_atol, dtype=DTYPE)
                 if np.alen(np_atol) != self.N:
                     raise ValueError("Array length inconsistency: 'atol' "
                                      "lenght (%i) differs from problem size "
@@ -1100,7 +1102,7 @@ cdef class CVODE:
             self.options['validate_flags'] = validate_flags
             self._validate_flags = options["validate_flags"]
 
-    def init_step(self, double t0, object y0):
+    def init_step(self, DTYPE_t t0, object y0):
         """
         Initialize the solver and all the internal variables. This assumes
         the call to 'set_options()' to be done and hence all the information
@@ -1125,7 +1127,7 @@ cdef class CVODE:
         Note: some options can be re-set also at runtime. See 'reinit_IC()'
         """
         cdef np.ndarray[DTYPE_t, ndim=1] np_y0
-        np_y0 = np.asarray(y0)
+        np_y0 = np.asarray(y0, dtype=DTYPE)
 
         #flag is always True, as errors are exceptions for cvode init_step!
         (flag, time) = self._init_step(t0, np_y0)
@@ -1133,7 +1135,7 @@ cdef class CVODE:
         if self._old_api:
             return (flag, time)
         else:
-            y_retn  = np.empty(np.alen(np_y0), float)
+            y_retn  = np.empty(np.alen(np_y0), DTYPE)
             y_retn[:] = np_y0[:]
             soln = SolverReturn(
                 flag=flag,
@@ -1270,7 +1272,7 @@ cdef class CVODE:
         #we test if rfn call doesn't give errors due to bad coding, as
         #cvode will ignore errors, it only checks return value (0 or 1 for error)
         if isinstance(rfn, CV_WrapRhsFunction):
-            _test = np.empty(np.alen(y0), float)
+            _test = np.empty(np.alen(y0), DTYPE)
             if rfn.with_userdata:
                 rfn._rhsfn(t0, y0, _test, opts['user_data'])
             else:
@@ -1440,9 +1442,10 @@ cdef class CVODE:
         #cvode will ignore errors, it only checks return value (0 or 1 for error)
         if jac is not None and isinstance(jac, CV_WrapJacRhsFunction):
             if linsolver == 'lapackband' or linsolver == 'band':
-                _test = np.empty((opts['uband']+opts['lband']+1, np.alen(y0)), float)
+                _test = np.empty((opts['uband']+opts['lband']+1, np.alen(y0)),
+                        DTYPE)
             else:
-                _test = np.empty((np.alen(y0), np.alen(y0)), float)
+                _test = np.empty((np.alen(y0), np.alen(y0)), DTYPE)
             jac._jacfn(t0, y0, _test)
             _test = None
 
@@ -1458,7 +1461,7 @@ cdef class CVODE:
 
         return (True, t0)
 
-    def reinit_IC(self, double t0, object y0):
+    def reinit_IC(self, DTYPE_t t0, object y0):
         """
         Re-initialize (only) the initial condition IC without re-setting also
         all the remaining solver options. See also 'init_step()' funtion.
@@ -1489,7 +1492,7 @@ cdef class CVODE:
         if self._old_api:
             return (flag, time)
         else:
-            y_retn  = np.empty(np.alen(np_y0), float)
+            y_retn  = np.empty(np.alen(np_y0), DTYPE)
             y_retn[:] = np_y0[:]
             soln = SolverReturn(
                 flag=flag,
@@ -1503,7 +1506,7 @@ cdef class CVODE:
                 return self.validate_flags(soln)
             return soln
 
-    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0):
+    cpdef _reinit_IC(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0):
         # If not yet initialized, run full initialization
         if self.y0 is NULL:
             self._init_step(t0, y0)
@@ -1560,8 +1563,8 @@ cdef class CVODE:
         if not np.alen(tspan) > 1:
             raise ValueError("Solve tspan must be array with minimum 2 elements,"
                              " start and end time.")
-        np_tspan = np.asarray(tspan, dtype=float)
-        np_y0    = np.asarray(y0, dtype=float)
+        np_tspan = np.asarray(tspan, dtype=DTYPE)
+        np_y0    = np.asarray(y0, dtype=DTYPE)
 
 
         soln = self._solve(np_tspan, np_y0)
@@ -1599,8 +1602,8 @@ cdef class CVODE:
 
         cdef np.ndarray[DTYPE_t, ndim=1] t_retn
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn
-        t_retn  = np.empty(np.shape(tspan), float)
-        y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
+        t_retn  = np.empty(np.shape(tspan), DTYPE)
+        y_retn  = np.empty([np.alen(tspan), np.alen(y0)], DTYPE)
 
         self._init_step(tspan[0], y0)
         PyErr_CheckSignals()
@@ -1618,7 +1621,7 @@ cdef class CVODE:
         cdef CV_ContinuationFunction onroot = self.options['onroot']
         cdef CV_ContinuationFunction ontstop = self.options['ontstop']
 
-        y_last   = np.empty(np.shape(y0), float)
+        y_last   = np.empty(np.shape(y0), DTYPE)
         t = tspan[idx]
 
         while True:
@@ -1739,7 +1742,7 @@ cdef class CVODE:
             nv_s2ndarray(y, y_retn)
             y_out = y_retn
         else:
-            y_out  = np.empty(self.N, float)
+            y_out  = np.empty(self.N, DTYPE)
             nv_s2ndarray(y, y_out)
 
         flag = StatusEnum(flagCV)

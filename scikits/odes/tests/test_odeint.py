@@ -20,6 +20,9 @@ from numpy.testing import (
     assert_raises, assert_allclose, assert_array_equal, assert_equal)
 
 from scikits.odes.odeint import odeint
+from scikits.odes.sundials.common_defs import DTYPE
+
+TEST_LAPACK = DTYPE == np.double
 
 #------------------------------------------------------------------------------
 # Test ODE integrators
@@ -320,29 +323,30 @@ def test_odeint_banded_jacobian():
                          linsolver='diag')
 
     #use lapack versions:
-    # Use the full Jacobian.
-    sol2a = odeint(func, t, y0,
-                         atol=1e-13, rtol=1e-11, max_steps=10000,
-                         linsolver='lapackdense')
-    # Use the banded Jacobian.
-    sol3a = odeint(func, t, y0,
-                         atol=1e-13, rtol=1e-11, max_steps=10000,
-                         jacfn=bjac1_rows, lband=2, uband=1, linsolver='lapackband')
+    if TEST_LAPACK:
+        # Use the full Jacobian.
+        sol2a = odeint(func, t, y0,
+                             atol=1e-13, rtol=1e-11, max_steps=10000,
+                             linsolver='lapackdense')
+        # Use the banded Jacobian.
+        sol3a = odeint(func, t, y0,
+                             atol=1e-13, rtol=1e-11, max_steps=10000,
+                             jacfn=bjac1_rows, lband=2, uband=1, linsolver='lapackband')
 
-    # Use the banded Jacobian.
-    sol4a = odeint(func, t, y0,
-                         atol=1e-13, rtol=1e-11, max_steps=10000,
-                         jacfn=bjac2_rows, lband=1, uband=1, linsolver='lapackband')
+        # Use the banded Jacobian.
+        sol4a = odeint(func, t, y0,
+                             atol=1e-13, rtol=1e-11, max_steps=10000,
+                             jacfn=bjac2_rows, lband=1, uband=1, linsolver='lapackband')
 
-    # Use the banded Jacobian.
-    sol5a = odeint(func, t, y0,
-                         atol=1e-13, rtol=1e-11, max_steps=10000,
-                         lband=2, uband=1, linsolver='lapackband')
+        # Use the banded Jacobian.
+        sol5a = odeint(func, t, y0,
+                             atol=1e-13, rtol=1e-11, max_steps=10000,
+                             lband=2, uband=1, linsolver='lapackband')
 
-    # Use the banded Jacobian.
-    sol6a = odeint(func, t, y0,
-                         atol=1e-13, rtol=1e-11, max_steps=10000,
-                         lband=1, uband=1, linsolver='lapackband')
+        # Use the banded Jacobian.
+        sol6a = odeint(func, t, y0,
+                             atol=1e-13, rtol=1e-11, max_steps=10000,
+                             lband=1, uband=1, linsolver='lapackband')
 
     #finish with some other solvers
     sol10 = odeint(func, t, y0,
@@ -361,14 +365,16 @@ def test_odeint_banded_jacobian():
     assert_allclose(sol1.values.y, sol5.values.y, atol=1e-12, err_msg="sol1 != sol5")
     assert_allclose(sol1.values.y, sol6.values.y, atol=1e-12, err_msg="sol1 != sol6")
     assert_allclose(sol1.values.y, sol7.values.y, atol=1e-12, err_msg="sol1 != sol7")
-    assert_allclose(sol1.values.y, sol2a.values.y, atol=1e-12, err_msg="sol1 != sol2a")
-    assert_allclose(sol1.values.y, sol3a.values.y, atol=1e-12, err_msg="sol1 != sol3a")
-    assert_allclose(sol1.values.y, sol4a.values.y, atol=1e-12, err_msg="sol1 != sol4a")
-    assert_allclose(sol1.values.y, sol5a.values.y, atol=1e-12, err_msg="sol1 != sol5a")
-    assert_allclose(sol1.values.y, sol6a.values.y, atol=1e-12, err_msg="sol1 != sol6a")
     assert_allclose(sol1.values.y, sol10.values.y, atol=1e-12, err_msg="sol1 != sol10")
     assert_allclose(sol1.values.y, sol11.values.y, atol=1e-12, err_msg="sol1 != sol11")
     assert_allclose(sol1.values.y, sol12.values.y, atol=1e-12, err_msg="sol1 != sol12")
+
+    if TEST_LAPACK:
+        assert_allclose(sol1.values.y, sol2a.values.y, atol=1e-12, err_msg="sol1 != sol2a")
+        assert_allclose(sol1.values.y, sol3a.values.y, atol=1e-12, err_msg="sol1 != sol3a")
+        assert_allclose(sol1.values.y, sol4a.values.y, atol=1e-12, err_msg="sol1 != sol4a")
+        assert_allclose(sol1.values.y, sol5a.values.y, atol=1e-12, err_msg="sol1 != sol5a")
+        assert_allclose(sol1.values.y, sol6a.values.y, atol=1e-12, err_msg="sol1 != sol6a")
 
 
 def test_odeint_errors():

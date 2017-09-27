@@ -12,6 +12,7 @@ from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
 from numpy.testing import TestCase, run_module_suite
 from scipy.integrate import ode as Iode
 from scikits.odes import ode,dae
+from scikits.odes.sundials.common_defs import DTYPE
 
 class TestDae(TestCase):
     """
@@ -25,8 +26,8 @@ class TestDae(TestCase):
 
         ig = dae(integrator, res, jacfn=jac, old_api=old_api)
         ig.set_options(old_api=old_api, **integrator_params)
-        z = empty((1+len(problem.stop_t),alen(problem.z0)), float)
-        zprime = empty((1+len(problem.stop_t),alen(problem.z0)), float)
+        z = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
+        zprime = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
         ist = ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
         i=1
         for time in problem.stop_t:
@@ -109,8 +110,8 @@ class SimpleOscillator(DAE):
 
     k = 4.0
     m = 1.0
-    z0      = array([dotu0, u0], float)
-    zprime0 = array([-k*u0/m, dotu0], float)
+    z0      = array([dotu0, u0], DTYPE)
+    zprime0 = array([-k*u0/m, dotu0], DTYPE)
 
     def __init__(self):
         self.lsodi_pars = {'adda_func' : self.adda}
@@ -120,8 +121,8 @@ class SimpleOscillator(DAE):
         return doc
 
     def res(self, t, z, zp, res):
-        tmp1 = zeros((2,2), float)
-        tmp2 = zeros((2,2), float)
+        tmp1 = zeros((2,2), DTYPE)
+        tmp2 = zeros((2,2), DTYPE)
         tmp1[0,0] = self.m
         tmp1[1,1] = 1.
         tmp2[0,1] = self.k
@@ -146,7 +147,7 @@ class SimpleOscillator(DAE):
 class SimpleOscillatorJac(SimpleOscillator):
     def jac(self, t, y, yp, cj, jac):
         """Jacobian[i,j] is dRES(i)/dY(j) + CJ*dRES(i)/dYPRIME(j)"""
-        jc = zeros((len(y), len(y)), float)
+        jc = zeros((len(y), len(y)), DTYPE)
         cj_in = cj
         jac[0][0] = self.m*cj_in ;jac[0][1] = self.k
         jac[1][0] = -1       ;jac[1][1] = cj_in;
@@ -161,8 +162,8 @@ class StiffVODECompare(DAE):
      [t = 4., y0(t) = 0.905519130228504610, y1(t) = 0.0000224343714361267687,
                y2(t) = 0.0944584354000592570]
     """
-    z0      = array([1., 0., 0.], float)
-    zprime0 = array([-0.04, 0.04, 0.], float)
+    z0      = array([1., 0., 0.], DTYPE)
+    zprime0 = array([-0.04, 0.04, 0.], DTYPE)
 
     atol    = 1e-4
     rtol    = 1e-4
