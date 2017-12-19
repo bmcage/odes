@@ -1,0 +1,589 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ODE Solvers &#8212; Odes 2.3.2.dev0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.3.2.dev0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DAE Solvers" href="dae.html" />
+    <link rel="prev" title="Welcome to the ODES scikit API Documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ode-solvers">
+<h1>ODE Solvers<a class="headerlink" href="#ode-solvers" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="api.html#module-scikits.odes" title="scikits.odes"><code class="xref py py-mod docutils literal"><span class="pre">scikits.odes</span></code></a> contains two main routines for solving ODEs: the simpler
+<a class="reference internal" href="#scikits.odes.odeint.odeint" title="scikits.odes.odeint.odeint"><code class="xref py py-func docutils literal"><span class="pre">scikits.odes.odeint.odeint()</span></code></a>, and the more configurable
+<a class="reference internal" href="#scikits.odes.ode.ode" title="scikits.odes.ode.ode"><code class="xref py py-class docutils literal"><span class="pre">scikits.odes.ode.ode</span></code></a>. Both these routines allow selection of the
+solver and solution method used. Additionally, it is also possible to directly
+use the low level interface to individual solvers.</p>
+<dl class="function">
+<dt id="scikits.odes.odeint.odeint">
+<code class="descclassname">scikits.odes.odeint.</code><code class="descname">odeint</code><span class="sig-paren">(</span><em>rhsfun</em>, <em>tout</em>, <em>y0</em>, <em>method='bdf'</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/odeint.html#odeint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.odeint.odeint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integrate a system of ordinary differential equations.
+<em>odeint</em> is a wrapper around the ode class, as a convenience function to
+quickly integrate a system of ode.
+Solves the initial value problem for stiff or non-stiff systems
+of first order ode’s:</p>
+<blockquote>
+<div>rhs = dy/dt = fun(t, y)</div></blockquote>
+<p>where y can be a vector, then rhsfun must be a function computing rhs with
+signature:</p>
+<blockquote>
+<div>rhsfun(t, y, rhs)</div></blockquote>
+<p>storing the computed dy/dt in the rhs array passed to the function</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>rhsfun</strong> (<em>callable</em><em>(</em><em>t</em><em>, </em><em>y</em><em>, </em><em>out</em><em>)</em>) – Computes the derivative at dy/dt in terms of t and y, and stores in out</li>
+<li><strong>y0</strong> (<em>array</em>) – Initial condition on y (can be a vector).</li>
+<li><strong>t</strong> (<em>array</em>) – A sequence of time points for which to solve for y.  The initial
+value point should be the first element of this sequence.</li>
+<li><strong>method</strong> (<em>string</em><em>, </em><em>solution method to use.</em>) – <p>Available are all the ode class solvers as well as some convenience
+shorthands:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Method</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>bdf</td>
+<td>This uses the ‘cvode’ solver in default from, which is a
+variable step, variable coefficient Backward Differentiation
+Formula solver, good for stiff ODE. Newton iterations are
+used to solve the nonlinear system.</td>
+</tr>
+<tr class="row-odd"><td>admo</td>
+<td>This uses the ‘cvode’ solver with option lmm_type=’ADAMS’,
+which is a variable step Adams-Moulton method (linear
+multistep method), good for non-stiff ODE. Functional
+iterations are used to solve the nonlinear system.</td>
+</tr>
+<tr class="row-even"><td>rk5</td>
+<td>This uses the ‘dopri5’ solver, which is a variable step
+Runge-Kutta method of order (4)5 (use for non-stiff ODE)</td>
+</tr>
+<tr class="row-odd"><td>rk8</td>
+<td>This uses the ‘dop853’ solver, which is a variable step
+Runge-Kutta method of order 8(5,3)</td>
+</tr>
+</tbody>
+</table>
+<p>For educational purposes, you can also access following methods:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Method</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>beuler</td>
+<td>This is the Implicit Euler (backward Euler) method (order 1),
+which is obtained via the ‘bdf’ method, setting the order
+option to 1, setting large tolerances,  and fixing the
+stepsize.
+Use option ‘step’ to change stepsize, default: step=0.05.
+Use option ‘rtol’ and ‘atol’ to use more strict tolerances
+Note: this is not completely the backward Euler method, as
+the cvode solver has added control options!</td>
+</tr>
+<tr class="row-odd"><td>trapz</td>
+<td>This is the Trapezoidal Rule method (order 2), which is
+obtained via the ‘admo’ method, setting option order to 2,
+setting large tolerances and fixing the stepsize.
+Use option ‘step’ to change stepsize, default: step=0.05.
+Use option ‘rtol’ and ‘atol’ to use more strict tolerances
+Note: The cvode solver might change the order to 1 internally
+in which case this becomes beuler method. Set atol, rtol
+options as strict as possible.</td>
+</tr>
+</tbody>
+</table>
+<p>You can also access the solvers of ode via their names:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Method</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>cvode</td>
+<td>This uses the ‘cvode’ solver</td>
+</tr>
+<tr class="row-odd"><td>dopri5</td>
+<td>This uses the ‘dopri5’ solver</td>
+</tr>
+<tr class="row-even"><td>dop853</td>
+<td>This uses the ‘dop853’ solver</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><strong>options</strong> (<em>extra solver options</em><em>, </em><em>optional</em>) – Every solver has it’s own extra options, see the ode class and the
+details of the solvers available there to know the options possible per
+solver</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p><strong>solution</strong> – A single named tuple is returned containing the result of the
+integration.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>flag</td>
+<td>An integer flag</td>
+</tr>
+<tr class="row-odd"><td>values</td>
+<td>Named tuple with fields t and y</td>
+</tr>
+<tr class="row-even"><td>errors</td>
+<td>Named tuple with fields t and y</td>
+</tr>
+<tr class="row-odd"><td>roots</td>
+<td>Named tuple with fields t and y</td>
+</tr>
+<tr class="row-even"><td>tstop</td>
+<td>Named tuple with fields t and y</td>
+</tr>
+<tr class="row-odd"><td>message</td>
+<td>String with message in case of an error</td>
+</tr>
+</tbody>
+</table>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">named tuple</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#scikits.odes.ode.ode" title="scikits.odes.ode.ode"><code class="xref py py-func docutils literal"><span class="pre">scikits.odes.ode.ode()</span></code></a></dt>
+<dd>a more object-oriented integrator</dd>
+<dt><a class="reference internal" href="dae.html#scikits.odes.dae.dae" title="scikits.odes.dae.dae"><code class="xref py py-func docutils literal"><span class="pre">scikits.odes.dae.dae()</span></code></a></dt>
+<dd>a solver for differential-algebraic equations</dd>
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.quad.html#scipy.integrate.quad" title="(in SciPy v1.0.0)"><code class="xref py py-func docutils literal"><span class="pre">scipy.integrate.quad()</span></code></a></dt>
+<dd>for finding the area under a curve</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<p>The second order differential equation for the angle <cite>theta</cite> of a
+pendulum acted on by gravity with friction can be written:</p>
+<div class="math">
+\[\theta''(t) + b \theta'(t) + c \sin(\theta(t)) = 0\]</div>
+<p>where <cite>b</cite> and <cite>c</cite> are positive constants, and a prime (‘) denotes a
+derivative.  To solve this equation with <cite>odeint</cite>, we must first convert
+it to a system of first order equations.  By defining the angular
+velocity <code class="docutils literal"><span class="pre">omega(t)</span> <span class="pre">=</span> <span class="pre">theta'(t)</span></code>, we obtain the system:</p>
+<div class="math">
+\[\theta'(t) = \omega(t)
+\omega'(t) = -b \omega(t) - c \sin(\theta(t))\]</div>
+<p>We assume the constants are <cite>b</cite> = 0.25 and <cite>c</cite> = 5.0:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="mf">5.0</span>
+</pre></div>
+</div>
+<p>Let <cite>y</cite> be the vector [<cite>theta</cite>, <cite>omega</cite>].  We implement this system
+in python as:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">pend</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+<span class="go"> ...     theta, omega = y</span>
+<span class="go"> ...     out[:] = [omega, -b*omega - c*np.sin(theta)]</span>
+<span class="go"> ...</span>
+</pre></div>
+</div>
+<p>In case you want b and c easily changable, make pend a class method, and
+consider attributes b and c accessible via <cite>self.b</cite> and <cite>self.c</cite>.
+For initial conditions, we assume the pendulum is nearly vertical
+with <cite>theta(0)</cite> = <cite>pi</cite> - 0.1, and it initially at rest, so
+<cite>omega(0)</cite> = 0.  Then the vector of initial conditions is</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">y0</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>We generate a solution 101 evenly spaced samples in the interval
+0 &lt;= <cite>t</cite> &lt;= 10.  So our array of times is</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Call <cite>odeint</cite> to generate the solution.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits.odes.odeint</span> <span class="k">import</span> <span class="n">odeint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sol</span> <span class="o">=</span> <span class="n">odeint</span><span class="p">(</span><span class="n">pend</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The solution is a named tuple <cite>sol</cite>. sol.values.y is an array with shape (101, 2).
+The first column is <cite>theta(t)</cite>, and the second is <cite>omega(t)</cite>.
+The following code plots both components.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">sol</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;theta(t)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">sol</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;omega(t)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.ode.ode">
+<em class="property">class </em><code class="descclassname">scikits.odes.ode.</code><code class="descname">ode</code><span class="sig-paren">(</span><em>integrator_name</em>, <em>eqsrhs</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#ode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.ode" title="Permalink to this definition">¶</a></dt>
+<dd><p>A generic interface class to differential equation solvers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>integrator_name</strong> (<code class="docutils literal"><span class="pre">'cvode'</span></code>, <code class="docutils literal"><span class="pre">'dopri5'</span></code> or <code class="docutils literal"><span class="pre">'dop853'</span></code>) – <p>The solver to use.</p>
+<p><code class="docutils literal"><span class="pre">'cvode'</span></code> selects the CVODE solver from the SUNDIALS package.
+See py:class:<cite>scikits.odes.sundials.cvode.CVODE</cite> for solver specific
+options.</p>
+<p><code class="docutils literal"><span class="pre">'dopri5'</span></code> selects the Dormand &amp; Prince Runge-Kutta order (4)5
+solver from scipy.</p>
+</li>
+<li><strong>eqsrhs</strong> (<em>right-hand-side function</em>) – <p>Right-hand-side of a first order ode.
+Generally, you can assume the following signature to work:</p>
+<blockquote>
+<div>eqsrhs(x, y, return_rhs)</div></blockquote>
+<p>with</p>
+<blockquote>
+<div>x: independent variable, eg the time, float<p>y: array of n unknowns in x</p>
+<p>return_rhs : array that must be updated with the value of the
+right-hand-side, so f(t,y).  The dimension is equal to
+dim(y)</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>return value: An integer, 0 for success, 1 for failure.</dt>
+<dd>It is not guaranteed that a solver takes this status into account</dd>
+</dl>
+<p>Some solvers will allow userdata to be passed to eqsrhs, or optional
+formats that are more performant.</p>
+</li>
+<li><strong>options</strong> (<em>additional options of the solver</em>) – See set_options method of the <cite>integrator_name</cite> you selected for
+details.
+Set option <cite>old_api=False</cite> to use the new API. In the future, this
+will become the default!</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#scikits.odes.odeint.odeint" title="scikits.odes.odeint.odeint"><code class="xref py py-class docutils literal"><span class="pre">scikits.odes.odeint.odeint</span></code></a></dt>
+<dd>an ODE integrator with a simpler interface</dd>
+<dt><code class="xref py py-class docutils literal"><span class="pre">scipy.integrate</span></code></dt>
+<dd>Methods in scipy for ODE integration</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<p>ODE arise in many applications of dynamical systems, as well as in
+discritisations of PDE (eg moving mesh combined with method of
+lines).
+As an easy example, consider the simple oscillator,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="mf">4.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">initx</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">rhseqn</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">xdot</span><span class="p">):</span>
+<span class="go">        # we create rhs equations for the problem</span>
+<span class="go">        xdot[0] = x[1]</span>
+<span class="go">        xdot[1] = - k/m * x[0]</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits.odes</span> <span class="k">import</span> <span class="n">ode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solver</span> <span class="o">=</span> <span class="n">ode</span><span class="p">(</span><span class="s1">&#39;cvode&#39;</span><span class="p">,</span> <span class="n">rhseqn</span><span class="p">,</span> <span class="n">old_api</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">initx</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;   t        Solution          Exact&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">y</span><span class="p">):</span>
+<span class="go">        print(&#39;%4.2f %15.6g %15.6g&#39; % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))</span>
+</pre></div>
+</div>
+<p>More examples in the <a class="reference external" href="https://github.com/bmcage/odes/tree/master/docs/src/examples">Examples</a> directory and <a class="reference external" href="https://github.com/bmcage/odes/tree/master/docs/ipython">IPython</a> worksheets.</p>
+<dl class="method">
+<dt id="scikits.odes.ode.ode.get_info">
+<code class="descname">get_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#ode.get_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.ode.get_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return additional information about the state of the integrator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>A dictionary filled with internal data as exposed by the integrator.</em></li>
+<li>See the <cite>get_info</cite> method of your chosen integrator for details.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ode.ode.init_step">
+<code class="descname">init_step</code><span class="sig-paren">(</span><em>t0</em>, <em>y0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#ode.init_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.ode.init_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the solver and allocates memory. It is not needed to
+call this method if solve is used to compute the solution. In the case
+step is used, init_step must be called first.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t0</strong> (<em>initial time</em>) – </li>
+<li><strong>y0</strong> (<em>initial condition for y</em><em> (</em><em>can be list</em><em> or </em><em>numpy array</em><em>)</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – flag  - boolean status of the computation (successful or error occured)</p>
+<p>t_out - inititial time</p>
+</li>
+<li><p class="first"><em>if old_api False</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with fields:</dt>
+<dd><p class="first">flag   = An integer flag (StatusEnum)</p>
+<p>values = Named tuple with entries t and y</p>
+<p>errors = Named tuple with entries t and y</p>
+<p>roots  = Named tuple with entries t and y</p>
+<p>tstop  = Named tuple with entries t and y</p>
+<p class="last">message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ode.ode.set_options">
+<code class="descname">set_options</code><span class="sig-paren">(</span><em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#ode.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.ode.set_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set specific options for the solver.
+See the solver documentation for details.</p>
+<p>Calling set_options a second time, is only possible for options that
+can change during runtime.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ode.ode.set_tstop">
+<code class="descname">set_tstop</code><span class="sig-paren">(</span><em>tstop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#ode.set_tstop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.ode.set_tstop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a stop time to the integrator past which he is not allowed to
+integrate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tstop</strong> (<em>float time</em>) – Time point in the future where the integration must stop. You can
+indicate like this that integration past this point is not allowed,
+in order to avoid undefined behavior.
+You can achieve the same result with a call to
+<cite>set_options(tstop=tstop)</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ode.ode.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>tspan</em>, <em>y0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#ode.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.ode.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the solver.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tspan</strong> (<em>a list/array of times at which the computed value will be returned. Must contain the start time.</em>) – </li>
+<li><strong>y0</strong> (<em>list/numpy array of initial values</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – flag   - indicating return status of the solver</p>
+<p>t      - numpy array of times at which the computations were successful</p>
+<p>y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</p>
+<p>t_err  - float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</p>
+<p>y_err  - numpy array of values corresponding to time t_err</p>
+</li>
+<li><p class="first"><em>if old_api False</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with fields:</dt>
+<dd><p class="first">flag   = An integer flag (StatusEnum)</p>
+<p>values = Named tuple with entries t and y</p>
+<p>errors = Named tuple with entries t and y</p>
+<p>roots  = Named tuple with entries t and y</p>
+<p>tstop  = Named tuple with entries t and y</p>
+<p class="last">message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ode.ode.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>t</em>, <em>y_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#ode.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.ode.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for calling successive next step of the ODE solver to allow
+more precise control over the solver. The ‘init_step’ method has to
+be called before the ‘step’ method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> (<em>A step is done towards time t</em><em>, </em><em>and output at t returned.</em>) – <p>This time can be higher or lower than the previous time.
+If option ‘one_step_compute’==True, and the solver supports
+it, only one internal solver step is done in the direction
+of t starting at the current step.</p>
+<dl class="docutils">
+<dt>If old_api=True, the old behavior is used:</dt>
+<dd><dl class="first last docutils">
+<dt>if t&gt;0.0 then integration is performed until this time</dt>
+<dd>and results at this time are returned in y_retn</dd>
+<dt>if t&lt;0.0 only one internal step is perfomed towards time abs(t)</dt>
+<dd>and results after this one time step are returned</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ul>
+<li><em>if old_api</em> – flag  - status of the computation (successful or error occured)<p>t_out - time, where the solver stopped (when no error occured, t_out == t)</p>
+</li>
+<li><em>if old_api False</em> –<dl class="docutils">
+<dt>A named tuple, with fields:</dt>
+<dd>flag   = An integer flag (StatusEnum)<p>values = Named tuple with entries t and y</p>
+<p>errors = Named tuple with entries t and y</p>
+<p>roots  = Named tuple with entries t and y</p>
+<p>tstop  = Named tuple with entries t and y</p>
+<p class="last">message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to the ODES scikit API Documentation</a></li>
+      <li>Next: <a href="dae.html" title="next chapter">DAE Solvers</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/ode.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, B. Malengier.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/ode.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

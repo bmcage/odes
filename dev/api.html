@@ -1,0 +1,507 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Lower Level API &#8212; Odes 2.3.2.dev0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.3.2.dev0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="DAE Solvers" href="dae.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="lower-level-api">
+<h1>Lower Level API<a class="headerlink" href="#lower-level-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-scikits.odes">
+<span id="scikits-odes"></span><h2>scikits.odes<a class="headerlink" href="#module-scikits.odes" title="Permalink to this headline">¶</a></h2>
+<p>scikits.odes is a scikit offering a cython wrapper around some extra ode/dae
+solvers, so they can mature outside of scipy.</p>
+<dl class="docutils">
+<dt>It offers wrappers around the following solvers from <a class="reference external" href="https://computation.llnl.gov/casc/sundials/main.html">SUNDIALS</a></dt>
+<dd><ul class="first last simple">
+<li>CVODE</li>
+<li>IDA</li>
+</ul>
+</dd>
+<dt>It additionally offers wrappers around</dt>
+<dd><ul class="first last simple">
+<li><cite>ddaspk &lt;http://www.netlib.org/ode/ddaspk.f&gt;</cite> (included)</li>
+<li><cite>lsodi &lt;http://www.netlib.org/ode/lsodi.f&gt;</cite> (included)</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-scikits.odes.dae">
+<span id="scikits-odes-dae"></span><h2>scikits.odes.dae<a class="headerlink" href="#module-scikits.odes.dae" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="first-order-dae-solver">
+<h3>First-order DAE solver<a class="headerlink" href="#first-order-dae-solver" title="Permalink to this headline">¶</a></h3>
+<p>User-friendly interface to various numerical integrators for solving an
+algebraic system of first order ODEs with prescribed initial conditions:</p>
+<div class="math">
+\[ \begin{align}\begin{aligned}A \frac{dy(t)}{dt} = f(t,y(t)),\\y(t=0)[i] = y0[i],\\\frac{d y(t=0)}{dt}[i]  = yprime0[i],\end{aligned}\end{align} \]</div>
+<p>where:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="n">A</span> <span class="ow">is</span> <span class="n">a</span> <span class="p">(</span><span class="n">possibly</span> <span class="n">singular</span><span class="p">)</span> <span class="n">matrix</span> <span class="n">of</span> <span class="n">size</span> <span class="n">i</span> <span class="n">x</span> <span class="n">i</span>
+<span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">vector</span> <span class="n">of</span> <span class="n">size</span> <span class="n">i</span>
+</pre></div>
+</div>
+<p>or more generally, equations of the form</p>
+<blockquote>
+<div>G(t,y,y’) = 0</div></blockquote>
+<dl class="class">
+<dt id="scikits.odes.dae.DaeBase">
+<em class="property">class </em><code class="descclassname">scikits.odes.dae.</code><code class="descname">DaeBase</code><span class="sig-paren">(</span><em>Rfn</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#DaeBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.DaeBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>The interface which DAE solvers must implement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Rfn</strong> – residual function</li>
+<li><strong>options</strong> (<em>mapping</em>) – Additional options for initialization, solver dependent</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="scikits.odes.dae.DaeBase.init_step">
+<code class="descname">init_step</code><span class="sig-paren">(</span><em>t0</em>, <em>y0</em>, <em>yp0</em>, <em>y_ic0_retn=None</em>, <em>yp_ic0_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#DaeBase.init_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.DaeBase.init_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the solver and allocates memory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- initial time</strong> (<em>t0</em>) – </li>
+<li><strong>- initial condition for y</strong><strong> (</strong><strong>can be list</strong><strong> or </strong><strong>numpy array</strong><strong>)</strong> (<em>y0</em>) – </li>
+<li><strong>- initial condition for yp</strong><strong> (</strong><strong>can be list</strong><strong> or </strong><strong>numpy array</strong><strong>)</strong> (<em>yp0</em>) – </li>
+<li><strong>-</strong><strong> (</strong><strong>optional</strong><strong>) </strong><strong>returns the calculated consistent initial</strong> (<em>yp_ic0</em>) – condition for y
+It MUST be a numpy array.</li>
+<li><strong>-</strong><strong> (</strong><strong>optional</strong><strong>) </strong><strong>returns the calculated consistent initial</strong> – condition for y derivated. It MUST be a numpy array.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – flag  - status of the computation (successful or error occured)
+t_out - time, where the solver stopped (when no error occured, t_out == t)</p>
+</li>
+<li><p class="first"><em>if old_api False (ida solver)</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with entries:</dt>
+<dd><p class="first">flag   = An integer flag (StatusEnumXXX)
+values = Named tuple with entries t and y and ydot. y will</p>
+<blockquote>
+<div><p>correspond to y_retn value and ydot to yp_retn!</p>
+</div></blockquote>
+<p class="last">errors = Named tuple with entries t and y and ydot
+roots  = Named tuple with entries t and y and ydot
+tstop  = Named tuple with entries t and y and ydot
+message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.dae.DaeBase.set_options">
+<code class="descname">set_options</code><span class="sig-paren">(</span><em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#DaeBase.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.DaeBase.set_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set specific options for the solver.</p>
+<p>Calling set_options a second time, normally resets the solver.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.dae.DaeBase.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>tspan</em>, <em>y0</em>, <em>yp0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#DaeBase.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.DaeBase.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the solver.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- an list/array of times at which the computed value will be</strong> (<em>tspan</em>) – returned. Must contain the start time as first entry.</li>
+<li><strong>- list/numpy array of initial values</strong> (<em>y0</em>) – </li>
+<li><strong>- list/numpy array of initial values of derivatives</strong> (<em>yp0</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – flag   - indicating return status of the solver
+t      - numpy array of times at which the computations were successful
+y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+yp     - numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])
+t_err  - float or None - if recoverable error occured (for example reached maximum</p>
+<blockquote>
+<div><p>number of allowed iterations), this is the time at which it happened</p>
+</div></blockquote>
+<p>y_err  - numpy array of values corresponding to time t_err
+yp_err - numpy array of derivatives corresponding to time t_err</p>
+</li>
+<li><p class="first"><em>if old_api False (ida solver)</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with entries:</dt>
+<dd><p class="first">flag   = An integer flag (StatusEnumXXX)
+values = Named tuple with entries array t and array y and array</p>
+<blockquote>
+<div><p>ydot. y will correspond to y_retn value and ydot to
+yp_retn!</p>
+</div></blockquote>
+<p class="last">errors = Named tuple with entries t and y and ydot of error
+roots  = Named tuple with entries array t and array y and array ydot
+tstop  = Named tuple with entries array t and array y and array ydot
+message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.dae.DaeBase.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>t</em>, <em>y_retn=None</em>, <em>yp_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#DaeBase.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.DaeBase.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for calling successive next step of the IDA solver to allow
+more precise control over the IDA solver. The ‘init_step’ method has to
+be called before the ‘step’ method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- A step is done towards time t</strong><strong>, </strong><strong>and output at t returned.</strong> (<em>t</em>) – <p>This time can be higher or lower than the previous time.
+If option ‘one_step_compute’==True, and the solver supports
+it, only one internal solver step is done in the direction
+of t starting at the current step.</p>
+<dl class="docutils">
+<dt>If old_api=True, the old behavior is used:</dt>
+<dd><dl class="first last docutils">
+<dt>if t&gt;0.0 then integration is performed until this time</dt>
+<dd>and results at this time are returned in y_retn</dd>
+<dt>if t&lt;0.0 only one internal step is perfomed towards time abs(t)</dt>
+<dd>and results after this one time step are returned</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><strong>- numpy vector</strong><strong> (</strong><strong>ndim = 1</strong><strong>) </strong><strong>in which the computed</strong> (<em>y_retn</em>) – value will be stored  (needs to be preallocated).  If
+None y_retn is not used.</li>
+<li><strong>- numpy vector</strong><strong> (</strong><strong>ndim = 1</strong><strong>) or </strong><strong>None. If not None</strong><strong>, </strong><strong>will be</strong> (<em>yp_retn</em>) – filled (needs to be preallocated) with derivatives of y
+at time t. If None yp_retn is not used.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – flag  - status of the computation (successful or error occured)
+t_out - time, where the solver stopped (when no error occured, t_out == t)</p>
+</li>
+<li><p class="first"><em>if old_api False (ida solver)</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with entries:</dt>
+<dd><p class="first">flag   = An integer flag (StatusEnumXXX)
+values = Named tuple with entries t and y and ydot. y will</p>
+<blockquote>
+<div><p>correspond to y_retn value and ydot to yp_retn!</p>
+</div></blockquote>
+<p class="last">errors = Named tuple with entries t and y and ydot
+roots  = Named tuple with entries t and y and ydot
+tstop  = Named tuple with entries t and y and ydot
+message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-scikits.odes.ode">
+<span id="scikits-odes-ode"></span><h2>scikits.odes.ode<a class="headerlink" href="#module-scikits.odes.ode" title="Permalink to this headline">¶</a></h2>
+<p>First-order ODE solver</p>
+<p>User-friendly interface to various numerical integrators for solving a
+system of first order ODEs with prescribed initial conditions:</p>
+<div class="math">
+\[ \begin{align}\begin{aligned}\frac{dy(t)}{dt} = f(t, y(t)), \quad y(t_0)=y_0\\y(t_0)[i] = y_0[i], i = 0, ..., \mathrm{len}(y_0) - 1\end{aligned}\end{align} \]</div>
+<p><span class="math">\(f(t,y)\)</span> is the right hand side function and returns a vector of size
+<span class="math">\(\mathrm{len}(y_0)\)</span>.</p>
+<dl class="class">
+<dt id="scikits.odes.ode.OdeBase">
+<em class="property">class </em><code class="descclassname">scikits.odes.ode.</code><code class="descname">OdeBase</code><span class="sig-paren">(</span><em>Rfn</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#OdeBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.OdeBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>The interface which ODE solvers must implement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Rfn</strong> (<em>function</em>) – <p>A function which computes the required derivatives. The signature should
+be:</p>
+<blockquote>
+<div>func(t, y, y_dot, <a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs)</div></blockquote>
+<p>Note that <a href="#id5"><span class="problematic" id="id6">*</span></a>args and <a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs handling are solver dependent.</p>
+</li>
+<li><strong>options</strong> (<em>mapping</em>) – Additional options for initialization, solver dependent</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="scikits.odes.ode.OdeBase.init_step">
+<code class="descname">init_step</code><span class="sig-paren">(</span><em>t0</em>, <em>y0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#OdeBase.init_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.OdeBase.init_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the solver and allocates memory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- initial time</strong> (<em>t0</em>) – </li>
+<li><strong>- initial condition for y</strong><strong> (</strong><strong>can be list</strong><strong> or </strong><strong>numpy array</strong><strong>)</strong> (<em>y0</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – flag  - boolean status of the computation (successful or error occured)
+t_out - inititial time</p>
+</li>
+<li><p class="first"><em>if old_api False</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with entries:</dt>
+<dd><p class="first last">flag   = An integer flag (StatusEnum)
+values = Named tuple with entries t and y
+errors = Named tuple with entries t and y
+roots  = Named tuple with entries t and y
+tstop  = Named tuple with entries t and y
+message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ode.OdeBase.set_options">
+<code class="descname">set_options</code><span class="sig-paren">(</span><em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#OdeBase.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.OdeBase.set_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set specific options for the solver.</p>
+<p>Calling set_options a second time, normally resets the solver.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ode.OdeBase.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>tspan</em>, <em>y0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#OdeBase.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.OdeBase.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the solver.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tspan</strong> (<em>array</em><em> (or </em><em>similar</em><em>)</em>) – a list of times at which the computed value will be returned. Must
+contain the start time as first entry.</li>
+<li><strong>y0</strong> (<em>array</em><em> (or </em><em>similar</em><em>)</em>) – a list of initial values</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – flag   - indicating return status of the solver
+t      - numpy array of times at which the computations were successful
+y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+t_err  - float or None - if recoverable error occured (for example reached maximum</p>
+<blockquote>
+<div><p>number of allowed iterations), this is the time at which it happened</p>
+</div></blockquote>
+<p>y_err  - numpy array of values corresponding to time t_err</p>
+</li>
+<li><p class="first"><em>if old_api False</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with entries:</dt>
+<dd><p class="first last">flag   = An integer flag (StatusEnum)
+values = Named tuple with entries t and y
+errors = Named tuple with entries t and y
+roots  = Named tuple with entries t and y
+tstop  = Named tuple with entries t and y
+message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ode.OdeBase.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>t</em>, <em>y_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#OdeBase.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.OdeBase.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for calling successive next step of the ODE solver to allow
+more precise control over the solver. The ‘init_step’ method has to
+be called before the ‘step’ method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- A step is done towards time t</strong><strong>, </strong><strong>and output at t returned.</strong> (<em>t</em>) – <p>This time can be higher or lower than the previous time.
+If option ‘one_step_compute’==True, and the solver supports
+it, only one internal solver step is done in the direction
+of t starting at the current step.</p>
+<dl class="docutils">
+<dt>If old_api=True, the old behavior is used:</dt>
+<dd><dl class="first last docutils">
+<dt>if t&gt;0.0 then integration is performed until this time</dt>
+<dd>and results at this time are returned in y_retn</dd>
+<dt>if t&lt;0.0 only one internal step is perfomed towards time abs(t)</dt>
+<dd>and results after this one time step are returned</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><strong>- numpy vector</strong><strong> (</strong><strong>ndim = 1</strong><strong>) </strong><strong>in which the computed</strong> (<em>y_retn</em>) – value will be stored  (needs to be preallocated).  If
+None y_retn is not used.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – flag  - status of the computation (successful or error occured)
+t_out - time, where the solver stopped (when no error occured, t_out == t)</p>
+</li>
+<li><p class="first"><em>if old_api False</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with entries:</dt>
+<dd><p class="first last">flag   = An integer flag (StatusEnum)
+values = Named tuple with entries t and y
+errors = Named tuple with entries t and y
+roots  = Named tuple with entries t and y
+tstop  = Named tuple with entries t and y
+message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Lower Level API</a><ul>
+<li><a class="reference internal" href="#module-scikits.odes">scikits.odes</a></li>
+<li><a class="reference internal" href="#module-scikits.odes.dae">scikits.odes.dae</a><ul>
+<li><a class="reference internal" href="#first-order-dae-solver">First-order DAE solver</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-scikits.odes.ode">scikits.odes.ode</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="dae.html" title="previous chapter">DAE Solvers</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, B. Malengier.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
