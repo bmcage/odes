@@ -11,3 +11,6 @@ prune docs
 prune apidocs
 prune paper
 prune ipython_examples
+
+exclude *.enc
+exclude upload_api_docs.sh

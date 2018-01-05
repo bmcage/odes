@@ -43,7 +43,7 @@ intersphinx_mapping = {
         'https://docs.scipy.org/doc/scipy/reference/', None
     ),
     #'apidocs': (
-    #    'https://bmcage.github.io/odes/', None
+    #    'https://bmcage.github.io/odes/dev', None
     #),
 }
 
