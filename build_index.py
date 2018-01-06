@@ -32,7 +32,7 @@ HTML_TEMPLATE = """
 """
 
 VERSION_DIR_PREFIX = "version-"
-BASEURL = "https://aragilar.github.io/odes"
+BASEURL = "https://bmcage.github.io/odes"
 
 
 def render_template(versions, baseurl):
