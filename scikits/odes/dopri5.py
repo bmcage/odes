@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
+# Created on Thu Jan 28 14:59:25 2016
+# @author: benny
 """
 Making scipy ode solvers available via the ode API
-Created on Thu Jan 28 14:59:25 2016
+==================================================
 
-@author: benny
-"""
-
-from __future__ import print_function
-
-integrator_info = \
-"""
 dopri5
-~~~~~~
+------
     This is an explicit runge-kutta method of order (4)5 due to Dormand & Prince
     (with stepsize control and dense output).
     The API of this solver is as the other scikit.odes ODE solvers
@@ -39,12 +34,15 @@ References
 [HNW93]	(1, 2) E. Hairer, S.P. Norsett and G. Wanner, Solving Ordinary Differential Equations i. Nonstiff Problems. 2nd edition. Springer Series in Computational Mathematics, Springer-Verlag (1993)
 
 dop853
-~~~~~~
+------
     This is an explicit runge-kutta method of order 8(5,3) due to Dormand & Prince
     (with stepsize control and dense output).
     Options and references the same as “dopri5”.
 
 """
+
+from __future__ import print_function
+
 from collections import namedtuple
 from enum import IntEnum
 from warnings import warn
@@ -98,8 +96,6 @@ class DOPSolveFailed(DOPSolveException):
     )
 
 class dopri5(OdeBase):
-    __doc__ += integrator_info
-
     try:
         from scipy.integrate import ode as _runner
     except ImportError:

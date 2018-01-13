@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 # Authors: B. Malengier based on ode.py
 r"""
 First-order ODE solver
+======================
 
 User-friendly interface to various numerical integrators for solving a
 system of first order ODEs with prescribed initial conditions:
@@ -33,10 +35,7 @@ class OdeBase(object):
     Parameters
     ----------
     Rfn : function
-        A function which computes the required derivatives. The signature should
-        be:
-            func(t, y, y_dot, *args, **kwargs)
-        Note that *args and **kwargs handling are solver dependent.
+        A function which computes the required derivatives. The signature should be ``func(t, y, y_dot, *args, **kwargs)``. Note that *args and **kwargs handling are solver dependent.
 
     options : mapping
         Additional options for initialization, solver dependent
@@ -70,21 +69,32 @@ class OdeBase(object):
 
         Returns
         -------
-         if old_api
-            flag   - indicating return status of the solver
-            t      - numpy array of times at which the computations were successful
-            y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
-            t_err  - float or None - if recoverable error occured (for example reached maximum
-                     number of allowed iterations), this is the time at which it happened
-            y_err  - numpy array of values corresponding to time t_err
-         if old_api False:
-            A named tuple, with entries:
-                flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y
-                errors = Named tuple with entries t and y
-                roots  = Named tuple with entries t and y
-                tstop  = Named tuple with entries t and y
-                message= String with message in case of an error
+        old_api is False : namedtuple
+            namedtuple with the following attributes
+
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnum)
+            ``values``  Named tuple with entries t and y
+            ``errors``  Named tuple with entries t and y
+            ``roots``   Named tuple with entries t and y
+            ``tstop``   Named tuple with entries t and y
+            ``message`` String with message in case of an error
+            =========== ==========================================
+
+        old_api is True : tuple
+            tuple with the following elements in order
+
+            ========== ==========================================
+            Field      Meaning
+            ========== ==========================================
+            ``flag``   indicating return status of the solver
+            ``t``      numpy array of times at which the computations were successful
+            ``y``      numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+            ``t_err``  float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened
+            ``y_err``  numpy array of values corresponding to time t_err
+            ========== ==========================================
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
@@ -94,23 +104,36 @@ class OdeBase(object):
 
         Parameters
         ----------
-        t0     - initial time
-        y0     - initial condition for y (can be list or numpy array)
+        t0 : number
+            initial time
+        y0 : array
+            initial condition for y (can be list or numpy array)
 
         Returns
         -------
-         if old_api:
-            flag  - boolean status of the computation (successful or error occured)
-            t_out - inititial time
+        old_api is False : namedtuple
+            namedtuple with the following attributes
 
-         if old_api False:
-            A named tuple, with entries:
-                flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y
-                errors = Named tuple with entries t and y
-                roots  = Named tuple with entries t and y
-                tstop  = Named tuple with entries t and y
-                message= String with message in case of an error
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnum)
+            ``values``  Named tuple with entries t and y
+            ``errors``  Named tuple with entries t and y
+            ``roots``   Named tuple with entries t and y
+            ``tstop``   Named tuple with entries t and y
+            ``message`` String with message in case of an error
+            =========== ==========================================
+
+        old_api is True : tuple
+            tuple with the following elements in order
+
+            ========== ==========================================
+            Field      Meaning
+            ========== ==========================================
+            ``flag``   boolean status of the computation (successful or error occured)
+            ``t_out``  inititial time
+            ========== ==========================================
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
@@ -120,36 +143,42 @@ class OdeBase(object):
         more precise control over the solver. The 'init_step' method has to
         be called before the 'step' method.
 
+        A step is done towards time t, and output at t returned.  This time can be higher or lower than the previous time.  If option 'one_step_compute'==True, and the solver supports it, only one internal solver step is done in the direction of t starting at the current step.
+
+        If old_api=True, the old behavior is used: if t>0.0 then integration is performed until this time and results at this time are returned in y_retn if t<0.0 only one internal step is perfomed towards time abs(t) and results after this one time step are returned
+
         Parameters
         ----------
-            t - A step is done towards time t, and output at t returned.
-                This time can be higher or lower than the previous time.
-                If option 'one_step_compute'==True, and the solver supports
-                it, only one internal solver step is done in the direction
-                of t starting at the current step.
+        t : number
 
-                If old_api=True, the old behavior is used:
-                 if t>0.0 then integration is performed until this time
-                          and results at this time are returned in y_retn
-                 if t<0.0 only one internal step is perfomed towards time abs(t)
-                         and results after this one time step are returned
-            y_retn - numpy vector (ndim = 1) in which the computed
-                     value will be stored  (needs to be preallocated).  If
-                     None y_retn is not used.
+        y_retn : numpy vector (ndim = 1)
+            in which the computed value will be stored  (needs to be preallocated).  If None y_retn is not used.
+
         Returns
         -------
-         if old_api:
-            flag  - status of the computation (successful or error occured)
-            t_out - time, where the solver stopped (when no error occured, t_out == t)
+        old_api is False : namedtuple
+            namedtuple with the following attributes
 
-         if old_api False:
-            A named tuple, with entries:
-                flag   = An integer flag (StatusEnum)
-                values = Named tuple with entries t and y
-                errors = Named tuple with entries t and y
-                roots  = Named tuple with entries t and y
-                tstop  = Named tuple with entries t and y
-                message= String with message in case of an error
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnum)
+            ``values``  Named tuple with entries t and y
+            ``errors``  Named tuple with entries t and y
+            ``roots``   Named tuple with entries t and y
+            ``tstop``   Named tuple with entries t and y
+            ``message`` String with message in case of an error
+            =========== ==========================================
+
+        old_api is True : tuple
+            tuple with the following elements in order
+
+            ========== ==========================================
+            Field      Meaning
+            ========== ==========================================
+            ``flag``   status of the computation (successful or error occured)
+            ``t_out``  time, where the solver stopped (when no error occured, t_out == t)
+            ========== ==========================================
         """
         raise NotImplementedError('all ODE solvers must implement this')
 
@@ -264,36 +293,42 @@ class ode(object):
 
         Parameters
         ----------
-        tspan : a list/array of times at which the computed value will be returned. Must contain the start time.
+        tspan : array (or similar)
+            a list of times at which the computed value will be returned. Must
+            contain the start time as first entry.
 
-        y0 : list/numpy array of initial values
+        y0 : array (or similar)
+            a list of initial values
 
         Returns
         -------
-        if old_api:
-            flag   - indicating return status of the solver
+        old_api is False : namedtuple
+            namedtuple with the following attributes
 
-            t      - numpy array of times at which the computations were successful
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnum)
+            ``values``  Named tuple with entries t and y
+            ``errors``  Named tuple with entries t and y
+            ``roots``   Named tuple with entries t and y
+            ``tstop``   Named tuple with entries t and y
+            ``message`` String with message in case of an error
+            =========== ==========================================
 
-            y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+        old_api is True : tuple
+            tuple with the following elements in order
 
-            t_err  - float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened
+            ========== ==========================================
+            Field      Meaning
+            ========== ==========================================
+            ``flag``   indicating return status of the solver
+            ``t``      numpy array of times at which the computations were successful
+            ``y``      numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+            ``t_err``  float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened
+            ``y_err``  numpy array of values corresponding to time t_err
+            ========== ==========================================
 
-            y_err  - numpy array of values corresponding to time t_err
-
-        if old_api False:
-            A named tuple, with fields:
-                flag   = An integer flag (StatusEnum)
-
-                values = Named tuple with entries t and y
-
-                errors = Named tuple with entries t and y
-
-                roots  = Named tuple with entries t and y
-
-                tstop  = Named tuple with entries t and y
-
-                message= String with message in case of an error
         """
         return self._integrator.solve(tspan, y0)
 
@@ -305,29 +340,37 @@ class ode(object):
 
         Parameters
         ----------
-        t0 : initial time
-        y0 : initial condition for y (can be list or numpy array)
+        t0 : number
+            initial time
+        y0 : array
+            initial condition for y (can be list or numpy array)
 
         Returns
         -------
-        if old_api:
-            flag  - boolean status of the computation (successful or error occured)
+        old_api is False : namedtuple
+            namedtuple with the following attributes
 
-            t_out - inititial time
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnum)
+            ``values``  Named tuple with entries t and y
+            ``errors``  Named tuple with entries t and y
+            ``roots``   Named tuple with entries t and y
+            ``tstop``   Named tuple with entries t and y
+            ``message`` String with message in case of an error
+            =========== ==========================================
 
-        if old_api False:
-            A named tuple, with fields:
-                flag   = An integer flag (StatusEnum)
+        old_api is True : tuple
+            tuple with the following elements in order
 
-                values = Named tuple with entries t and y
+            ========== ==========================================
+            Field      Meaning
+            ========== ==========================================
+            ``flag``   boolean status of the computation (successful or error occured)
+            ``t_out``  inititial time
+            ========== ==========================================
 
-                errors = Named tuple with entries t and y
-
-                roots  = Named tuple with entries t and y
-
-                tstop  = Named tuple with entries t and y
-
-                message= String with message in case of an error
         """
         return self._integrator.init_step(t0, y0)
 
@@ -337,40 +380,43 @@ class ode(object):
         more precise control over the solver. The 'init_step' method has to
         be called before the 'step' method.
 
+        A step is done towards time t, and output at t returned.  This time can be higher or lower than the previous time.  If option 'one_step_compute'==True, and the solver supports it, only one internal solver step is done in the direction of t starting at the current step.
+
+        If old_api=True, the old behavior is used: if t>0.0 then integration is performed until this time and results at this time are returned in y_retn if t<0.0 only one internal step is perfomed towards time abs(t) and results after this one time step are returned
+
         Parameters
         ----------
-        t : A step is done towards time t, and output at t returned.
-                This time can be higher or lower than the previous time.
-                If option 'one_step_compute'==True, and the solver supports
-                it, only one internal solver step is done in the direction
-                of t starting at the current step.
+        t : number
 
-                If old_api=True, the old behavior is used:
-                 if t>0.0 then integration is performed until this time
-                          and results at this time are returned in y_retn
-                 if t<0.0 only one internal step is perfomed towards time abs(t)
-                         and results after this one time step are returned
+        y_retn : numpy vector (ndim = 1)
+            in which the computed value will be stored  (needs to be preallocated).  If None y_retn is not used.
 
         Returns
         -------
-        if old_api:
-            flag  - status of the computation (successful or error occured)
+        old_api is False : namedtuple
+            namedtuple with the following attributes
 
-            t_out - time, where the solver stopped (when no error occured, t_out == t)
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnum)
+            ``values``  Named tuple with entries t and y
+            ``errors``  Named tuple with entries t and y
+            ``roots``   Named tuple with entries t and y
+            ``tstop``   Named tuple with entries t and y
+            ``message`` String with message in case of an error
+            =========== ==========================================
 
-        if old_api False:
-            A named tuple, with fields:
-                flag   = An integer flag (StatusEnum)
+        old_api is True : tuple
+            tuple with the following elements in order
 
-                values = Named tuple with entries t and y
+            ========== ==========================================
+            Field      Meaning
+            ========== ==========================================
+            ``flag``   status of the computation (successful or error occured)
+            ``t_out``  time, where the solver stopped (when no error occured, t_out == t)
+            ========== ==========================================
 
-                errors = Named tuple with entries t and y
-
-                roots  = Named tuple with entries t and y
-
-                tstop  = Named tuple with entries t and y
-
-                message= String with message in case of an error
         """
         return self._integrator.step(t, y_retn)
 

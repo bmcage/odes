@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Authors: B. Malengier based on ode.py
 r"""
 First-order DAE solver
@@ -13,14 +14,10 @@ algebraic system of first order ODEs with prescribed initial conditions:
 
     \frac{d y(t=0)}{dt}[i]  = yprime0[i],
 
-where::
+where :math:`i = 0, ..., len(y0) - 1`; :math:`A` is a (possibly singular) matrix
+of size :math:`i × i`; and :math:`f(t,y)` is a vector of size :math:`i` or more generally, equations of the form
 
-    i = 0, ..., len(y0) - 1
-    A is a (possibly singular) matrix of size i x i
-    f(t,y) is a vector of size i
-
-or more generally, equations of the form
-
+.. math::
     G(t,y,y') = 0
 
 """
@@ -66,33 +63,44 @@ class DaeBase(object):
 
         Parameters
         ----------
-            tspan - an list/array of times at which the computed value will be
-                    returned. Must contain the start time as first entry.
-            y0    - list/numpy array of initial values
-            yp0   - list/numpy array of initial values of derivatives
+            tspan : list/array
+                A list of times at which the computed value will be returned. Must contain the start time as first entry.
+            y0 : list/array
+                List of initial values
+            yp0 : list/array
+                List of initial values of derivatives
 
         Returns
         -------
-         if old_api:
-            flag   - indicating return status of the solver
-            t      - numpy array of times at which the computations were successful
-            y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
-            yp     - numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])
-            t_err  - float or None - if recoverable error occured (for example reached maximum
-                     number of allowed iterations), this is the time at which it happened
-            y_err  - numpy array of values corresponding to time t_err
-            yp_err - numpy array of derivatives corresponding to time t_err
+        old_api is False : namedtuple
+            namedtuple with the following attributes
 
-         if old_api False (ida solver):
-            A named tuple, with entries:
-                flag   = An integer flag (StatusEnumXXX)
-                values = Named tuple with entries array t and array y and array
-                            ydot. y will correspond to y_retn value and ydot to
-                            yp_retn!
-                errors = Named tuple with entries t and y and ydot of error
-                roots  = Named tuple with entries array t and array y and array ydot
-                tstop  = Named tuple with entries array t and array y and array ydot
-                message= String with message in case of an error
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnumXXX)
+            ``values``  Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!
+            ``errors``  Named tuple with entries t and y and ydot of error
+            ``roots``   Named tuple with entries array t and array y and array ydot
+            ``tstop``   Named tuple with entries array t and array y and array ydot
+            ``message`` String with message in case of an error
+            =========== ==========================================
+
+        old_api is True : tuple
+            tuple with the following elements in order
+
+            ========== ==========================================
+            Field      Meaning
+            ========== ==========================================
+            ``flag``   indicating return status of the solver
+            ``t``      numpy array of times at which the computations were successful
+            ``y``      numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+            ``yp``     numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])
+            ``t_err``  float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened
+            ``y_err``  numpy array of values corresponding to time t_err
+            ``yp_err`` numpy array of derivatives corresponding to time t_err
+            ========== ==========================================
+
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
@@ -102,30 +110,43 @@ class DaeBase(object):
 
         Parameters
         ----------
-            t0     - initial time
-            y0     - initial condition for y (can be list or numpy array)
-            yp0    - initial condition for yp (can be list or numpy array)
-            y_ic0  - (optional) returns the calculated consistent initial
-                     condition for y
-                     It MUST be a numpy array.
-            yp_ic0 - (optional) returns the calculated consistent initial
-                     condition for y derivated. It MUST be a numpy array.
+        t0 : number
+            initial time
+        y0 : list/array
+            initial condition for y
+        yp0 :  list/array
+            initial condition for yp
+        y_ic0 : numpy array
+            (optional) returns the calculated consistent initial condition for y
+        yp_ic0 :  numpy array
+            (optional) returns the calculated consistent initial condition for y derivated.
 
         Returns
         -------
-         if old_api:
-            flag  - status of the computation (successful or error occured)
-            t_out - time, where the solver stopped (when no error occured, t_out == t)
+        old_api is False : namedtuple
+            namedtuple with the following attributes
 
-         if old_api False (ida solver):
-            A named tuple, with entries:
-                flag   = An integer flag (StatusEnumXXX)
-                values = Named tuple with entries t and y and ydot. y will
-                            correspond to y_retn value and ydot to yp_retn!
-                errors = Named tuple with entries t and y and ydot
-                roots  = Named tuple with entries t and y and ydot
-                tstop  = Named tuple with entries t and y and ydot
-                message= String with message in case of an error
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnumXXX)
+            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!
+            ``errors``  Named tuple with entries t and y and ydot
+            ``roots``   Named tuple with entries t and y and ydot
+            ``tstop``   Named tuple with entries t and y and ydot
+            ``message`` String with message in case of an error
+            =========== ==========================================
+
+        old_api is True : tuple
+            tuple with the following elements in order
+
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    status of the computation (successful or error occured)
+            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)
+            =========== ==========================================
+
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
@@ -135,40 +156,47 @@ class DaeBase(object):
         more precise control over the IDA solver. The 'init_step' method has to
         be called before the 'step' method.
 
+        A step is done towards time t, and output at t returned. This time can be higher or lower than the previous time. If option 'one_step_compute'==True, and the solver supports it, only one internal solver step is done in the direction of t starting at the current step.
+
+        If old_api=True, the old behavior is used: if t>0.0 then integration is
+        performed until this time and results at this time are returned in
+        y_retn; else if if t<0.0 only one internal step is perfomed towards time
+        abs(t) and results after this one time step are returned.
+
         Parameters
         ----------
-            t - A step is done towards time t, and output at t returned.
-                This time can be higher or lower than the previous time.
-                If option 'one_step_compute'==True, and the solver supports
-                it, only one internal solver step is done in the direction
-                of t starting at the current step.
+        t : number
+        y_retn : numpy array (ndim = 1) or None.
+            (Needs to be preallocated) If not None, will be filled with y at time t. If None y_retn is not used.
+        yp_retn : numpy array (ndim = 1) or None.
+            (Needs to be preallocated) If not None, will be filled with derivatives of y at time t. If None yp_retn is not used.
 
-                If old_api=True, the old behavior is used:
-                 if t>0.0 then integration is performed until this time
-                          and results at this time are returned in y_retn
-                 if t<0.0 only one internal step is perfomed towards time abs(t)
-                         and results after this one time step are returned
-            y_retn - numpy vector (ndim = 1) in which the computed
-                     value will be stored  (needs to be preallocated).  If
-                     None y_retn is not used.
-            yp_retn - numpy vector (ndim = 1) or None. If not None, will be
-                      filled (needs to be preallocated) with derivatives of y
-                      at time t. If None yp_retn is not used.
         Returns
         -------
-         if old_api:
-            flag  - status of the computation (successful or error occured)
-            t_out - time, where the solver stopped (when no error occured, t_out == t)
+        old_api is False : namedtuple
+            namedtuple with the following attributes
 
-         if old_api False (ida solver):
-            A named tuple, with entries:
-                flag   = An integer flag (StatusEnumXXX)
-                values = Named tuple with entries t and y and ydot. y will
-                            correspond to y_retn value and ydot to yp_retn!
-                errors = Named tuple with entries t and y and ydot
-                roots  = Named tuple with entries t and y and ydot
-                tstop  = Named tuple with entries t and y and ydot
-                message= String with message in case of an error
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnumXXX)
+            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!
+            ``errors``  Named tuple with entries t and y and ydot
+            ``roots``   Named tuple with entries t and y and ydot
+            ``tstop``   Named tuple with entries t and y and ydot
+            ``message`` String with message in case of an error
+            =========== ==========================================
+
+        old_api is True : tuple
+            tuple with the following elements in order
+
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    status of the computation (successful or error occured)
+            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)
+            =========== ==========================================
+
         """
         raise NotImplementedError('all DAE solvers must implement this')
 
@@ -271,34 +299,45 @@ class dae(object):
 
         Parameters
         ----------
-        tspan : an list/array of times at which the computed value will be returned. Must contain the start time as first entry.
-        y0 : list/numpy array of initial values
-        yp0 : list/numpy array of initial values of derivatives
+        tspan : list/array
+            A list of times at which the computed value will be returned. Must contain the start time as first entry.
+        y0 : list/array
+            list array of initial values
+        yp0 : list/array
+            list array of initial values of derivatives
+
+        Returns
+        -------
+        old_api is False : namedtuple
+            namedtuple with the following attributes
+
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnumXXX)
+            ``values``  Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!
+            ``errors``  Named tuple with entries t and y and ydot of error
+            ``roots``   Named tuple with entries array t and array y and array ydot
+            ``tstop``   Named tuple with entries array t and array y and array ydot
+            ``message`` String with message in case of an error
+            =========== ==========================================
+
+        old_api is True : tuple
+            tuple with the following elements in order
+
+            ========== ==========================================
+            Field      Meaning
+            ========== ==========================================
+            ``flag``   indicating return status of the solver
+            ``t``      numpy array of times at which the computations were successful
+            ``y``      numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
+            ``yp``     numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])
+            ``t_err``  float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened
+            ``y_err``  numpy array of values corresponding to time t_err
+            ``yp_err`` numpy array of derivatives corresponding to time t_err
+            ========== ==========================================
+
         """
-
-        #Returns
-        #-------
-        #if old_api
-        #    flag   - indicating return status of the solver
-        #    t      - numpy array of times at which the computations were successful
-        #    y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])
-        #    yp     - numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])
-        #    t_err  - float or None - if recoverable error occured (for example reached maximum
-        #             number of allowed iterations), this is the time at which it happened
-        #    y_err  - numpy array of values corresponding to time t_err
-        #    yp_err - numpy array of derivatives corresponding to time t_err
-
-        #if old_api False (ida solver):
-        #    A named tuple, with entries:
-        #        flag   = An integer flag (StatusEnumXXX)
-        #        values = Named tuple with entries array t and array y and array
-        #                    ydot. y will correspond to y_retn value and ydot to
-        #                    yp_retn!
-        #        errors = Named tuple with entries t and y and ydot of error
-        #        roots  = Named tuple with entries array t and array y and array ydot
-        #        tstop  = Named tuple with entries array t and array y and array ydot
-        #        message= String with message in case of an error
-        #"""
         return self._integrator.solve(tspan, y0,  yp0)
 
     def init_step(self, t0, y0, yp0, y_ic0_retn = None, yp_ic0_retn = None):
@@ -309,73 +348,94 @@ class dae(object):
 
         Parameters
         ----------
-        t0     - initial time
-        y0     - initial condition for y (can be list or numpy array)
-        yp0    - initial condition for yp (can be list or numpy array)
-        y_ic0  - (optional) returns the calculated consistent initial condition for y
-                 It MUST be a numpy array.
-        yp_ic0 - (optional) returns the calculated consistent initial
-                 condition for y derivated. It MUST be a numpy array.
+        t0 : number
+            initial time
+        y0 : list/array
+            initial condition for y
+        yp0 :  list/array
+            initial condition for yp
+        y_ic0 : numpy array
+            (optional) returns the calculated consistent initial condition for y
+        yp_ic0 :  numpy array
+            (optional) returns the calculated consistent initial condition for y derivated.
+
+        Returns
+        -------
+        old_api is False : namedtuple
+            namedtuple with the following attributes
+
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnumXXX)
+            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!
+            ``errors``  Named tuple with entries t and y and ydot
+            ``roots``   Named tuple with entries t and y and ydot
+            ``tstop``   Named tuple with entries t and y and ydot
+            ``message`` String with message in case of an error
+            =========== ==========================================
+
+        old_api is True : tuple
+            tuple with the following elements in order
+
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    status of the computation (successful or error occured)
+            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)
+            =========== ==========================================
+
         """
-
-        #Returns
-        #-------
-        #if old_api:
-        #    flag  - status of the computation (successful or error occured)
-        #    t_out - time, where the solver stopped (when no error occured, t_out == t)
-
-        #if old_api False (cvode solver):
-        #    A named tuple, with entries:
-        #        flag   = An integer flag (StatusEnumXXX)
-        #        values = Named tuple with entries t and y and ydot. y will
-        #                    correspond to y_retn value and ydot to yp_retn!
-        #        errors = Named tuple with entries t and y and ydot
-        #        roots  = Named tuple with entries t and y and ydot
-        #        tstop  = Named tuple with entries t and y and ydot
-        #        message= String with message in case of an error
-        #"""
         return self._integrator.init_step(t0, y0, yp0, y_ic0_retn, yp_ic0_retn)
 
     def step(self, t, y_retn=None, yp_retn=None):
         """
-        Method for calling successive next step of the solver to allow
-        more precise control over the solver. The 'init_step' method has to
+        Method for calling successive next step of the IDA solver to allow
+        more precise control over the IDA solver. The 'init_step' method has to
         be called before the 'step' method.
+
+        A step is done towards time t, and output at t returned. This time can be higher or lower than the previous time. If option 'one_step_compute'==True, and the solver supports it, only one internal solver step is done in the direction of t starting at the current step.
+
+        If old_api=True, the old behavior is used: if t>0.0 then integration is
+        performed until this time and results at this time are returned in
+        y_retn; else if if t<0.0 only one internal step is perfomed towards time
+        abs(t) and results after this one time step are returned.
 
         Parameters
         ----------
-        t : float
-            A step is done towards time t, and output at t returned.
-            This time can be higher or lower than the previous time.
-            If option 'one_step_compute'==True, and the solver supports
-            it, only one internal solver step is done in the direction
-            of t starting at the current step.
+        t : number
+        y_retn : numpy array (ndim = 1) or None.
+            (Needs to be preallocated) If not None, will be filled with y at time t. If None y_retn is not used.
+        yp_retn : numpy array (ndim = 1) or None.
+            (Needs to be preallocated) If not None, will be filled with derivatives of y at time t. If None yp_retn is not used.
 
-            If old_api=True, the old behavior is used:
-             * if t>0.0 then integration is performed until this time and results at this time are returned in y_retn
-             * if t<0.0 only one internal step is perfomed towards time abs(t) and results after this one time step are returned
+        Returns
+        -------
+        old_api is False : namedtuple
+            namedtuple with the following attributes
 
-        y_retn : numpy array (ndim = 1) or None
-            array in which the computed value will be stored (needs to be preallocated). If None y_retn is not used.
-        yp_retn : numpy vector (ndim = 1) or None
-            If not None, will be filled (needs to be preallocated) with derivatives of y at time t. If None yp_retn is not used.
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    An integer flag (StatusEnumXXX)
+            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!
+            ``errors``  Named tuple with entries t and y and ydot
+            ``roots``   Named tuple with entries t and y and ydot
+            ``tstop``   Named tuple with entries t and y and ydot
+            ``message`` String with message in case of an error
+            =========== ==========================================
+
+        old_api is True : tuple
+            tuple with the following elements in order
+
+            =========== ==========================================
+            Field       Meaning
+            =========== ==========================================
+            ``flag``    status of the computation (successful or error occured)
+            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)
+            =========== ==========================================
+
         """
-        #Returns
-        #-------
-        #if old_api:
-        #    flag  - status of the computation (successful or error occured)
-        #    t_out - time, where the solver stopped (when no error occured, t_out == t)
-
-        #if old_api False (ida solver):
-        #    A named tuple, with entries:
-        #        flag   = An integer flag (StatusEnumXXX)
-        #        values = Named tuple with entries t and y and ydot. y will
-        #                    correspond to y_retn value and ydot to yp_retn!
-        #        errors = Named tuple with entries t and y and ydot
-        #        roots  = Named tuple with entries t and y and ydot
-        #        tstop  = Named tuple with entries t and y and ydot
-        #        message= String with message in case of an error
-        #"""
         return self._integrator.step(t, y_retn, yp_retn)
 
     def __del__(self):
