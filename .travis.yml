@@ -49,6 +49,9 @@ matrix:
       - TOXENV=doctr SUNDIALS_VERSION='2.7.0'
     - python: 3.5
       env:
+      - TOXENV=docs SUNDIALS_VERSION='2.7.0'
+    - python: 3.5
+      env:
       - TOXENV=check-manifest SUNDIALS_VERSION='2.7.0'
     - python: 3.5
       env:
