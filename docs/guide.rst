@@ -6,10 +6,10 @@ Structure of ``odes`` and User's Guide
 There are a number of different ways of using ``odes`` to solve a system of
 ODEs/DAEs:
 
- * `scikits.odes.ode.ode` and `scikits.odes.dae.dae` classes, which provides an object oriented interface and significant amount of control of the solver.
- * `scikits.odes.odeint.odeint`, a single function alternative to the object
+ * :py:class:`scikits.odes.ode.ode` and :py:class:`scikits.odes.dae.dae` classes, which provides an object oriented interface and significant amount of control of the solver.
+ * :py:func:`scikits.odes.odeint.odeint`, a single function alternative to the object
    oriented interface.
- * Accessing the lower-level solver-specific wrappers, such as the modules in `scikits.odes.sundials`.
+ * Accessing the lower-level solver-specific wrappers, such as the modules in :py:mod:`scikits.odes.sundials`.
 
 In general, a user supplies a function with the signature::
 

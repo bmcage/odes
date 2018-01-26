@@ -1,14 +1,8 @@
+# -*- coding: utf-8 -*-
 # Authors: B. Malengier
 """
-First-order DAE solver
-"""
-
-from __future__ import print_function
-
-integrator_info = \
-"""
 ddaspk
-~~~~~~
+======
 Solver developed 1989 to 1996, with some corrections from 2000 - Fortran
 
 This code solves a system of differential/algebraic equations of the form 
@@ -115,7 +109,7 @@ set_options method of the dae class:
                     'algebraic_vars_idx' array.
 """
 
-__doc__ += integrator_info
+from __future__ import print_function
 
 __all__ = ['ddaspk']
 __version__ = "$Id$"
@@ -127,8 +121,6 @@ from .dae import DaeBase
 import re, sys
 
 class ddaspk(DaeBase):
-    __doc__ += integrator_info
-    
     try:
         from .ddaspk import ddaspk as _runner
     except ImportError:

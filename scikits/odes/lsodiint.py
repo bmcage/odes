@@ -1,14 +1,8 @@
+# -*- coding: utf-8 -*-
 # Authors: B. Malengier 
 """
-First-order DAE solver
-"""
-
-from __future__ import print_function
-
-integrator_info = \
-"""
 lsodi
-~~~~
+=====
 Solver developed during the 1980s, this is the version from 1987 - Fortran
 
 Integrator for linearly implicit systems of first-order odes.  lsodi
@@ -78,7 +72,7 @@ Source: http://www.netlib.org/ode/lsodi.f
 
 """
 
-__doc__ += integrator_info
+from __future__ import print_function
 
 __all__ = ['lsodi']
 __version__ = "$Id$"
@@ -90,8 +84,6 @@ from .dae import DaeBase
 import re, sys
 
 class lsodi(DaeBase):
-    __doc__ += integrator_info
-
     try:
         from .lsodi import lsodi as _runner
         from .lsodi import intdy as _intdy

@@ -42,9 +42,9 @@ intersphinx_mapping = {
     'scipy': (
         'https://docs.scipy.org/doc/scipy/reference/', None
     ),
-    #'apidocs': (
-    #    'https://bmcage.github.io/odes/dev', None
-    #),
+    'apidocs': (
+        'https://bmcage.github.io/odes/dev', None
+    ),
 }
 
 # Add any paths that contain templates here, relative to this directory.
