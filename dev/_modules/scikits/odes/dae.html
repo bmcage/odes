@@ -30,6 +30,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/theme_overrides.css" type="text/css" />
+  
 
   
         <link rel="index" title="Index"
@@ -157,7 +159,8 @@
            <div itemprop="articleBody">
             
   <h1>Source code for scikits.odes.dae</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Authors: B. Malengier based on ode.py</span>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Authors: B. Malengier based on ode.py</span>
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">First-order DAE solver</span>
 <span class="sd">======================</span>
@@ -172,14 +175,10 @@
 
 <span class="sd">    \frac{d y(t=0)}{dt}[i]  = yprime0[i],</span>
 
-<span class="sd">where::</span>
+<span class="sd">where :math:`i = 0, ..., len(y0) - 1`; :math:`A` is a (possibly singular) matrix</span>
+<span class="sd">of size :math:`i × i`; and :math:`f(t,y)` is a vector of size :math:`i` or more generally, equations of the form</span>
 
-<span class="sd">    i = 0, ..., len(y0) - 1</span>
-<span class="sd">    A is a (possibly singular) matrix of size i x i</span>
-<span class="sd">    f(t,y) is a vector of size i</span>
-
-<span class="sd">or more generally, equations of the form</span>
-
+<span class="sd">.. math::</span>
 <span class="sd">    G(t,y,y&#39;) = 0</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -225,33 +224,44 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">            tspan - an list/array of times at which the computed value will be</span>
-<span class="sd">                    returned. Must contain the start time as first entry.</span>
-<span class="sd">            y0    - list/numpy array of initial values</span>
-<span class="sd">            yp0   - list/numpy array of initial values of derivatives</span>
+<span class="sd">            tspan : list/array</span>
+<span class="sd">                A list of times at which the computed value will be returned. Must contain the start time as first entry.</span>
+<span class="sd">            y0 : list/array</span>
+<span class="sd">                List of initial values</span>
+<span class="sd">            yp0 : list/array</span>
+<span class="sd">                List of initial values of derivatives</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">         if old_api:</span>
-<span class="sd">            flag   - indicating return status of the solver</span>
-<span class="sd">            t      - numpy array of times at which the computations were successful</span>
-<span class="sd">            y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</span>
-<span class="sd">            yp     - numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</span>
-<span class="sd">            t_err  - float or None - if recoverable error occured (for example reached maximum</span>
-<span class="sd">                     number of allowed iterations), this is the time at which it happened</span>
-<span class="sd">            y_err  - numpy array of values corresponding to time t_err</span>
-<span class="sd">            yp_err - numpy array of derivatives corresponding to time t_err</span>
+<span class="sd">        old_api is False : namedtuple</span>
+<span class="sd">            namedtuple with the following attributes</span>
 
-<span class="sd">         if old_api False (ida solver):</span>
-<span class="sd">            A named tuple, with entries:</span>
-<span class="sd">                flag   = An integer flag (StatusEnumXXX)</span>
-<span class="sd">                values = Named tuple with entries array t and array y and array</span>
-<span class="sd">                            ydot. y will correspond to y_retn value and ydot to</span>
-<span class="sd">                            yp_retn!</span>
-<span class="sd">                errors = Named tuple with entries t and y and ydot of error</span>
-<span class="sd">                roots  = Named tuple with entries array t and array y and array ydot</span>
-<span class="sd">                tstop  = Named tuple with entries array t and array y and array ydot</span>
-<span class="sd">                message= String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    An integer flag (StatusEnumXXX)</span>
+<span class="sd">            ``values``  Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">            ``errors``  Named tuple with entries t and y and ydot of error</span>
+<span class="sd">            ``roots``   Named tuple with entries array t and array y and array ydot</span>
+<span class="sd">            ``tstop``   Named tuple with entries array t and array y and array ydot</span>
+<span class="sd">            ``message`` String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        old_api is True : tuple</span>
+<span class="sd">            tuple with the following elements in order</span>
+
+<span class="sd">            ========== ==========================================</span>
+<span class="sd">            Field      Meaning</span>
+<span class="sd">            ========== ==========================================</span>
+<span class="sd">            ``flag``   indicating return status of the solver</span>
+<span class="sd">            ``t``      numpy array of times at which the computations were successful</span>
+<span class="sd">            ``y``      numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</span>
+<span class="sd">            ``yp``     numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</span>
+<span class="sd">            ``t_err``  float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</span>
+<span class="sd">            ``y_err``  numpy array of values corresponding to time t_err</span>
+<span class="sd">            ``yp_err`` numpy array of derivatives corresponding to time t_err</span>
+<span class="sd">            ========== ==========================================</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span></div>
 
@@ -261,30 +271,43 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">            t0     - initial time</span>
-<span class="sd">            y0     - initial condition for y (can be list or numpy array)</span>
-<span class="sd">            yp0    - initial condition for yp (can be list or numpy array)</span>
-<span class="sd">            y_ic0  - (optional) returns the calculated consistent initial</span>
-<span class="sd">                     condition for y</span>
-<span class="sd">                     It MUST be a numpy array.</span>
-<span class="sd">            yp_ic0 - (optional) returns the calculated consistent initial</span>
-<span class="sd">                     condition for y derivated. It MUST be a numpy array.</span>
+<span class="sd">        t0 : number</span>
+<span class="sd">            initial time</span>
+<span class="sd">        y0 : list/array</span>
+<span class="sd">            initial condition for y</span>
+<span class="sd">        yp0 :  list/array</span>
+<span class="sd">            initial condition for yp</span>
+<span class="sd">        y_ic0 : numpy array</span>
+<span class="sd">            (optional) returns the calculated consistent initial condition for y</span>
+<span class="sd">        yp_ic0 :  numpy array</span>
+<span class="sd">            (optional) returns the calculated consistent initial condition for y derivated.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">         if old_api:</span>
-<span class="sd">            flag  - status of the computation (successful or error occured)</span>
-<span class="sd">            t_out - time, where the solver stopped (when no error occured, t_out == t)</span>
+<span class="sd">        old_api is False : namedtuple</span>
+<span class="sd">            namedtuple with the following attributes</span>
 
-<span class="sd">         if old_api False (ida solver):</span>
-<span class="sd">            A named tuple, with entries:</span>
-<span class="sd">                flag   = An integer flag (StatusEnumXXX)</span>
-<span class="sd">                values = Named tuple with entries t and y and ydot. y will</span>
-<span class="sd">                            correspond to y_retn value and ydot to yp_retn!</span>
-<span class="sd">                errors = Named tuple with entries t and y and ydot</span>
-<span class="sd">                roots  = Named tuple with entries t and y and ydot</span>
-<span class="sd">                tstop  = Named tuple with entries t and y and ydot</span>
-<span class="sd">                message= String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    An integer flag (StatusEnumXXX)</span>
+<span class="sd">            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">            ``errors``  Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``roots``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``tstop``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``message`` String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        old_api is True : tuple</span>
+<span class="sd">            tuple with the following elements in order</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    status of the computation (successful or error occured)</span>
+<span class="sd">            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)</span>
+<span class="sd">            =========== ==========================================</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span></div>
 
@@ -294,40 +317,47 @@
 <span class="sd">        more precise control over the IDA solver. The &#39;init_step&#39; method has to</span>
 <span class="sd">        be called before the &#39;step&#39; method.</span>
 
+<span class="sd">        A step is done towards time t, and output at t returned. This time can be higher or lower than the previous time. If option &#39;one_step_compute&#39;==True, and the solver supports it, only one internal solver step is done in the direction of t starting at the current step.</span>
+
+<span class="sd">        If old_api=True, the old behavior is used: if t&gt;0.0 then integration is</span>
+<span class="sd">        performed until this time and results at this time are returned in</span>
+<span class="sd">        y_retn; else if if t&lt;0.0 only one internal step is perfomed towards time</span>
+<span class="sd">        abs(t) and results after this one time step are returned.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">            t - A step is done towards time t, and output at t returned.</span>
-<span class="sd">                This time can be higher or lower than the previous time.</span>
-<span class="sd">                If option &#39;one_step_compute&#39;==True, and the solver supports</span>
-<span class="sd">                it, only one internal solver step is done in the direction</span>
-<span class="sd">                of t starting at the current step.</span>
+<span class="sd">        t : number</span>
+<span class="sd">        y_retn : numpy array (ndim = 1) or None.</span>
+<span class="sd">            (Needs to be preallocated) If not None, will be filled with y at time t. If None y_retn is not used.</span>
+<span class="sd">        yp_retn : numpy array (ndim = 1) or None.</span>
+<span class="sd">            (Needs to be preallocated) If not None, will be filled with derivatives of y at time t. If None yp_retn is not used.</span>
 
-<span class="sd">                If old_api=True, the old behavior is used:</span>
-<span class="sd">                 if t&gt;0.0 then integration is performed until this time</span>
-<span class="sd">                          and results at this time are returned in y_retn</span>
-<span class="sd">                 if t&lt;0.0 only one internal step is perfomed towards time abs(t)</span>
-<span class="sd">                         and results after this one time step are returned</span>
-<span class="sd">            y_retn - numpy vector (ndim = 1) in which the computed</span>
-<span class="sd">                     value will be stored  (needs to be preallocated).  If</span>
-<span class="sd">                     None y_retn is not used.</span>
-<span class="sd">            yp_retn - numpy vector (ndim = 1) or None. If not None, will be</span>
-<span class="sd">                      filled (needs to be preallocated) with derivatives of y</span>
-<span class="sd">                      at time t. If None yp_retn is not used.</span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">         if old_api:</span>
-<span class="sd">            flag  - status of the computation (successful or error occured)</span>
-<span class="sd">            t_out - time, where the solver stopped (when no error occured, t_out == t)</span>
+<span class="sd">        old_api is False : namedtuple</span>
+<span class="sd">            namedtuple with the following attributes</span>
 
-<span class="sd">         if old_api False (ida solver):</span>
-<span class="sd">            A named tuple, with entries:</span>
-<span class="sd">                flag   = An integer flag (StatusEnumXXX)</span>
-<span class="sd">                values = Named tuple with entries t and y and ydot. y will</span>
-<span class="sd">                            correspond to y_retn value and ydot to yp_retn!</span>
-<span class="sd">                errors = Named tuple with entries t and y and ydot</span>
-<span class="sd">                roots  = Named tuple with entries t and y and ydot</span>
-<span class="sd">                tstop  = Named tuple with entries t and y and ydot</span>
-<span class="sd">                message= String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    An integer flag (StatusEnumXXX)</span>
+<span class="sd">            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">            ``errors``  Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``roots``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``tstop``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``message`` String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        old_api is True : tuple</span>
+<span class="sd">            tuple with the following elements in order</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    status of the computation (successful or error occured)</span>
+<span class="sd">            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)</span>
+<span class="sd">            =========== ==========================================</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span></div></div>
 
@@ -430,34 +460,45 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        tspan : an list/array of times at which the computed value will be returned. Must contain the start time as first entry.</span>
-<span class="sd">        y0 : list/numpy array of initial values</span>
-<span class="sd">        yp0 : list/numpy array of initial values of derivatives</span>
+<span class="sd">        tspan : list/array</span>
+<span class="sd">            A list of times at which the computed value will be returned. Must contain the start time as first entry.</span>
+<span class="sd">        y0 : list/array</span>
+<span class="sd">            list array of initial values</span>
+<span class="sd">        yp0 : list/array</span>
+<span class="sd">            list array of initial values of derivatives</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        old_api is False : namedtuple</span>
+<span class="sd">            namedtuple with the following attributes</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    An integer flag (StatusEnumXXX)</span>
+<span class="sd">            ``values``  Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">            ``errors``  Named tuple with entries t and y and ydot of error</span>
+<span class="sd">            ``roots``   Named tuple with entries array t and array y and array ydot</span>
+<span class="sd">            ``tstop``   Named tuple with entries array t and array y and array ydot</span>
+<span class="sd">            ``message`` String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        old_api is True : tuple</span>
+<span class="sd">            tuple with the following elements in order</span>
+
+<span class="sd">            ========== ==========================================</span>
+<span class="sd">            Field      Meaning</span>
+<span class="sd">            ========== ==========================================</span>
+<span class="sd">            ``flag``   indicating return status of the solver</span>
+<span class="sd">            ``t``      numpy array of times at which the computations were successful</span>
+<span class="sd">            ``y``      numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</span>
+<span class="sd">            ``yp``     numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</span>
+<span class="sd">            ``t_err``  float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</span>
+<span class="sd">            ``y_err``  numpy array of values corresponding to time t_err</span>
+<span class="sd">            ``yp_err`` numpy array of derivatives corresponding to time t_err</span>
+<span class="sd">            ========== ==========================================</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1">#Returns</span>
-        <span class="c1">#-------</span>
-        <span class="c1">#if old_api</span>
-        <span class="c1">#    flag   - indicating return status of the solver</span>
-        <span class="c1">#    t      - numpy array of times at which the computations were successful</span>
-        <span class="c1">#    y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</span>
-        <span class="c1">#    yp     - numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</span>
-        <span class="c1">#    t_err  - float or None - if recoverable error occured (for example reached maximum</span>
-        <span class="c1">#             number of allowed iterations), this is the time at which it happened</span>
-        <span class="c1">#    y_err  - numpy array of values corresponding to time t_err</span>
-        <span class="c1">#    yp_err - numpy array of derivatives corresponding to time t_err</span>
-
-        <span class="c1">#if old_api False (ida solver):</span>
-        <span class="c1">#    A named tuple, with entries:</span>
-        <span class="c1">#        flag   = An integer flag (StatusEnumXXX)</span>
-        <span class="c1">#        values = Named tuple with entries array t and array y and array</span>
-        <span class="c1">#                    ydot. y will correspond to y_retn value and ydot to</span>
-        <span class="c1">#                    yp_retn!</span>
-        <span class="c1">#        errors = Named tuple with entries t and y and ydot of error</span>
-        <span class="c1">#        roots  = Named tuple with entries array t and array y and array ydot</span>
-        <span class="c1">#        tstop  = Named tuple with entries array t and array y and array ydot</span>
-        <span class="c1">#        message= String with message in case of an error</span>
-        <span class="c1">#&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="dae.init_step"><a class="viewcode-back" href="../../../dae.html#scikits.odes.dae.dae.init_step">[docs]</a>    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">yp_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -468,73 +509,94 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        t0     - initial time</span>
-<span class="sd">        y0     - initial condition for y (can be list or numpy array)</span>
-<span class="sd">        yp0    - initial condition for yp (can be list or numpy array)</span>
-<span class="sd">        y_ic0  - (optional) returns the calculated consistent initial condition for y</span>
-<span class="sd">                 It MUST be a numpy array.</span>
-<span class="sd">        yp_ic0 - (optional) returns the calculated consistent initial</span>
-<span class="sd">                 condition for y derivated. It MUST be a numpy array.</span>
+<span class="sd">        t0 : number</span>
+<span class="sd">            initial time</span>
+<span class="sd">        y0 : list/array</span>
+<span class="sd">            initial condition for y</span>
+<span class="sd">        yp0 :  list/array</span>
+<span class="sd">            initial condition for yp</span>
+<span class="sd">        y_ic0 : numpy array</span>
+<span class="sd">            (optional) returns the calculated consistent initial condition for y</span>
+<span class="sd">        yp_ic0 :  numpy array</span>
+<span class="sd">            (optional) returns the calculated consistent initial condition for y derivated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        old_api is False : namedtuple</span>
+<span class="sd">            namedtuple with the following attributes</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    An integer flag (StatusEnumXXX)</span>
+<span class="sd">            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">            ``errors``  Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``roots``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``tstop``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``message`` String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        old_api is True : tuple</span>
+<span class="sd">            tuple with the following elements in order</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    status of the computation (successful or error occured)</span>
+<span class="sd">            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)</span>
+<span class="sd">            =========== ==========================================</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1">#Returns</span>
-        <span class="c1">#-------</span>
-        <span class="c1">#if old_api:</span>
-        <span class="c1">#    flag  - status of the computation (successful or error occured)</span>
-        <span class="c1">#    t_out - time, where the solver stopped (when no error occured, t_out == t)</span>
-
-        <span class="c1">#if old_api False (cvode solver):</span>
-        <span class="c1">#    A named tuple, with entries:</span>
-        <span class="c1">#        flag   = An integer flag (StatusEnumXXX)</span>
-        <span class="c1">#        values = Named tuple with entries t and y and ydot. y will</span>
-        <span class="c1">#                    correspond to y_retn value and ydot to yp_retn!</span>
-        <span class="c1">#        errors = Named tuple with entries t and y and ydot</span>
-        <span class="c1">#        roots  = Named tuple with entries t and y and ydot</span>
-        <span class="c1">#        tstop  = Named tuple with entries t and y and ydot</span>
-        <span class="c1">#        message= String with message in case of an error</span>
-        <span class="c1">#&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">init_step</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span><span class="p">,</span> <span class="n">yp_ic0_retn</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="dae.step"><a class="viewcode-back" href="../../../dae.html#scikits.odes.dae.dae.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yp_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Method for calling successive next step of the solver to allow</span>
-<span class="sd">        more precise control over the solver. The &#39;init_step&#39; method has to</span>
+<span class="sd">        Method for calling successive next step of the IDA solver to allow</span>
+<span class="sd">        more precise control over the IDA solver. The &#39;init_step&#39; method has to</span>
 <span class="sd">        be called before the &#39;step&#39; method.</span>
+
+<span class="sd">        A step is done towards time t, and output at t returned. This time can be higher or lower than the previous time. If option &#39;one_step_compute&#39;==True, and the solver supports it, only one internal solver step is done in the direction of t starting at the current step.</span>
+
+<span class="sd">        If old_api=True, the old behavior is used: if t&gt;0.0 then integration is</span>
+<span class="sd">        performed until this time and results at this time are returned in</span>
+<span class="sd">        y_retn; else if if t&lt;0.0 only one internal step is perfomed towards time</span>
+<span class="sd">        abs(t) and results after this one time step are returned.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        t : float</span>
-<span class="sd">            A step is done towards time t, and output at t returned.</span>
-<span class="sd">            This time can be higher or lower than the previous time.</span>
-<span class="sd">            If option &#39;one_step_compute&#39;==True, and the solver supports</span>
-<span class="sd">            it, only one internal solver step is done in the direction</span>
-<span class="sd">            of t starting at the current step.</span>
+<span class="sd">        t : number</span>
+<span class="sd">        y_retn : numpy array (ndim = 1) or None.</span>
+<span class="sd">            (Needs to be preallocated) If not None, will be filled with y at time t. If None y_retn is not used.</span>
+<span class="sd">        yp_retn : numpy array (ndim = 1) or None.</span>
+<span class="sd">            (Needs to be preallocated) If not None, will be filled with derivatives of y at time t. If None yp_retn is not used.</span>
 
-<span class="sd">            If old_api=True, the old behavior is used:</span>
-<span class="sd">             * if t&gt;0.0 then integration is performed until this time and results at this time are returned in y_retn</span>
-<span class="sd">             * if t&lt;0.0 only one internal step is perfomed towards time abs(t) and results after this one time step are returned</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        old_api is False : namedtuple</span>
+<span class="sd">            namedtuple with the following attributes</span>
 
-<span class="sd">        y_retn : numpy array (ndim = 1) or None</span>
-<span class="sd">            array in which the computed value will be stored (needs to be preallocated). If None y_retn is not used.</span>
-<span class="sd">        yp_retn : numpy vector (ndim = 1) or None</span>
-<span class="sd">            If not None, will be filled (needs to be preallocated) with derivatives of y at time t. If None yp_retn is not used.</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    An integer flag (StatusEnumXXX)</span>
+<span class="sd">            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">            ``errors``  Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``roots``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``tstop``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``message`` String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        old_api is True : tuple</span>
+<span class="sd">            tuple with the following elements in order</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    status of the computation (successful or error occured)</span>
+<span class="sd">            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)</span>
+<span class="sd">            =========== ==========================================</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1">#Returns</span>
-        <span class="c1">#-------</span>
-        <span class="c1">#if old_api:</span>
-        <span class="c1">#    flag  - status of the computation (successful or error occured)</span>
-        <span class="c1">#    t_out - time, where the solver stopped (when no error occured, t_out == t)</span>
-
-        <span class="c1">#if old_api False (ida solver):</span>
-        <span class="c1">#    A named tuple, with entries:</span>
-        <span class="c1">#        flag   = An integer flag (StatusEnumXXX)</span>
-        <span class="c1">#        values = Named tuple with entries t and y and ydot. y will</span>
-        <span class="c1">#                    correspond to y_retn value and ydot to yp_retn!</span>
-        <span class="c1">#        errors = Named tuple with entries t and y and ydot</span>
-        <span class="c1">#        roots  = Named tuple with entries t and y and ydot</span>
-        <span class="c1">#        tstop  = Named tuple with entries t and y and ydot</span>
-        <span class="c1">#        message= String with message in case of an error</span>
-        <span class="c1">#&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

@@ -30,6 +30,8 @@
   
 
   
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
 
   
         <link rel="index" title="Index"
@@ -236,13 +238,72 @@ step is used, init_step must be called first.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>- initial time</strong> (<em>t0</em>) – </li>
-<li><strong>- initial condition for y</strong><strong> (</strong><strong>can be list</strong><strong> or </strong><strong>numpy array</strong><strong>)</strong> (<em>y0</em>) – </li>
-<li><strong>- initial condition for yp</strong><strong> (</strong><strong>can be list</strong><strong> or </strong><strong>numpy array</strong><strong>)</strong> (<em>yp0</em>) – </li>
-<li><strong>-</strong><strong> (</strong><strong>optional</strong><strong>) </strong><strong>returns the calculated consistent initial condition for y</strong> (<em>y_ic0</em>) – It MUST be a numpy array.</li>
-<li><strong>-</strong><strong> (</strong><strong>optional</strong><strong>) </strong><strong>returns the calculated consistent initial</strong> (<em>yp_ic0</em>) – condition for y derivated. It MUST be a numpy array.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t0</strong> (<em>number</em>) – initial time</li>
+<li><strong>y0</strong> (<em>list/array</em>) – initial condition for y</li>
+<li><strong>yp0</strong> (<em>list/array</em>) – initial condition for yp</li>
+<li><strong>y_ic0</strong> (<em>numpy array</em>) – (optional) returns the calculated consistent initial condition for y</li>
+<li><strong>yp_ic0</strong> (<em>numpy array</em>) – (optional) returns the calculated consistent initial condition for y derivated.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>An integer flag (StatusEnumXXX)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<td>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<td>Named tuple with entries t and y and ydot</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<td>Named tuple with entries t and y and ydot</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<td>Named tuple with entries t and y and ydot</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<td>String with message in case of an error</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first"><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="86%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>status of the computation (successful or error occured)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<td>time, where the solver stopped (when no error occured, t_out == t)</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -265,11 +326,85 @@ See the solver documentation for details.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>tspan</strong> (<em>an list/array of times at which the computed value will be returned. Must contain the start time as first entry.</em>) – </li>
-<li><strong>y0</strong> (<em>list/numpy array of initial values</em>) – </li>
-<li><strong>yp0</strong> (<em>list/numpy array of initial values of derivatives</em>) – </li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tspan</strong> (<em>list/array</em>) – A list of times at which the computed value will be returned. Must contain the start time as first entry.</li>
+<li><strong>y0</strong> (<em>list/array</em>) – list array of initial values</li>
+<li><strong>yp0</strong> (<em>list/array</em>) – list array of initial values of derivatives</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>An integer flag (StatusEnumXXX)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<td>Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<td>Named tuple with entries t and y and ydot of error</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<td>Named tuple with entries array t and array y and array ydot</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<td>Named tuple with entries array t and array y and array ydot</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<td>String with message in case of an error</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first"><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="93%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>indicating return status of the solver</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t</span></code></td>
+<td>numpy array of times at which the computations were successful</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">y</span></code></td>
+<td>numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">yp</span></code></td>
+<td>numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">t_err</span></code></td>
+<td>float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">y_err</span></code></td>
+<td>numpy array of values corresponding to time t_err</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">yp_err</span></code></td>
+<td>numpy array of derivatives corresponding to time t_err</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -279,31 +414,82 @@ See the solver documentation for details.</p>
 <dl class="method">
 <dt id="scikits.odes.dae.dae.step">
 <code class="descname">step</code><span class="sig-paren">(</span><em>t</em>, <em>y_retn=None</em>, <em>yp_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for calling successive next step of the solver to allow
-more precise control over the solver. The ‘init_step’ method has to
+<dd><p>Method for calling successive next step of the IDA solver to allow
+more precise control over the IDA solver. The ‘init_step’ method has to
 be called before the ‘step’ method.</p>
+<p>A step is done towards time t, and output at t returned. This time can be higher or lower than the previous time. If option ‘one_step_compute’==True, and the solver supports it, only one internal solver step is done in the direction of t starting at the current step.</p>
+<p>If old_api=True, the old behavior is used: if t&gt;0.0 then integration is
+performed until this time and results at this time are returned in
+y_retn; else if if t&lt;0.0 only one internal step is perfomed towards time
+abs(t) and results after this one time step are returned.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>t</strong> (<em>float</em>) – <p>A step is done towards time t, and output at t returned.
-This time can be higher or lower than the previous time.
-If option ‘one_step_compute’==True, and the solver supports
-it, only one internal solver step is done in the direction
-of t starting at the current step.</p>
-<dl class="docutils">
-<dt>If old_api=True, the old behavior is used:</dt>
-<dd><ul class="first last">
-<li>if t&gt;0.0 then integration is performed until this time and results at this time are returned in y_retn</li>
-<li>if t&lt;0.0 only one internal step is perfomed towards time abs(t) and results after this one time step are returned</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t</strong> (<em>number</em>) – </li>
+<li><strong>y_retn</strong> (<em>numpy array</em><em> (</em><em>ndim = 1</em><em>) or </em><em>None.</em>) – (Needs to be preallocated) If not None, will be filled with y at time t. If None y_retn is not used.</li>
+<li><strong>yp_retn</strong> (<em>numpy array</em><em> (</em><em>ndim = 1</em><em>) or </em><em>None.</em>) – (Needs to be preallocated) If not None, will be filled with derivatives of y at time t. If None yp_retn is not used.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>An integer flag (StatusEnumXXX)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<td>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<td>Named tuple with entries t and y and ydot</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<td>Named tuple with entries t and y and ydot</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<td>Named tuple with entries t and y and ydot</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<td>String with message in case of an error</td>
+</tr>
+</tbody>
+</table>
 </li>
-<li><strong>y_retn</strong> (<em>numpy array</em><em> (</em><em>ndim = 1</em><em>) or </em><em>None</em>) – array in which the computed value will be stored (needs to be preallocated). If None y_retn is not used.</li>
-<li><strong>yp_retn</strong> (<em>numpy vector</em><em> (</em><em>ndim = 1</em><em>) or </em><em>None</em>) – If not None, will be filled (needs to be preallocated) with derivatives of y at time t. If None yp_retn is not used.</li>
+<li><p class="first"><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="86%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>status of the computation (successful or error occured)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<td>time, where the solver stopped (when no error occured, t_out == t)</td>
+</tr>
+</tbody>
+</table>
+</li>
 </ul>
+</p>
 </td>
 </tr>
 </tbody>

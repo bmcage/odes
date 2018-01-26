@@ -30,6 +30,8 @@
   
 
   
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
 
   
         <link rel="index" title="Index"
@@ -184,7 +186,7 @@ signature:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>rhsfun</strong> (<em>callable</em><em>(</em><em>t</em><em>, </em><em>y</em><em>, </em><em>out</em><em>)</em>) – Computes the derivative at dy/dt in terms of t and y, and stores in out</li>
+<li><strong>rhsfun</strong> (<em>callable</em><em>(</em><a class="reference internal" href="api.html#scikits.odes.dopri5.SolverVariables.t" title="scikits.odes.dopri5.SolverVariables.t"><em>t</em></a><em>, </em><a class="reference internal" href="api.html#scikits.odes.dopri5.SolverVariables.y" title="scikits.odes.dopri5.SolverVariables.y"><em>y</em></a><em>, </em><em>out</em><em>)</em>) – Computes the derivative at dy/dt in terms of t and y, and stores in out</li>
 <li><strong>y0</strong> (<em>array</em>) – Initial condition on y (can be a vector).</li>
 <li><strong>t</strong> (<em>array</em>) – A sequence of time points for which to solve for y.  The initial
 value point should be the first element of this sequence.</li>
@@ -503,26 +505,65 @@ step is used, init_step must be called first.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>t0</strong> (<em>initial time</em>) – </li>
-<li><strong>y0</strong> (<em>initial condition for y</em><em> (</em><em>can be list</em><em> or </em><em>numpy array</em><em>)</em>) – </li>
+<li><strong>t0</strong> (<em>number</em>) – initial time</li>
+<li><strong>y0</strong> (<em>array</em>) – initial condition for y (can be list or numpy array)</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
-<li><p class="first"><em>if old_api</em> – flag  - boolean status of the computation (successful or error occured)</p>
-<p>t_out - inititial time</p>
+<li><p class="first"><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="79%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>An integer flag (StatusEnum)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<td>String with message in case of an error</td>
+</tr>
+</tbody>
+</table>
 </li>
-<li><p class="first"><em>if old_api False</em> –</p>
-<dl class="docutils">
-<dt>A named tuple, with fields:</dt>
-<dd><p class="first">flag   = An integer flag (StatusEnum)</p>
-<p>values = Named tuple with entries t and y</p>
-<p>errors = Named tuple with entries t and y</p>
-<p>roots  = Named tuple with entries t and y</p>
-<p>tstop  = Named tuple with entries t and y</p>
-<p class="last">message= String with message in case of an error</p>
-</dd>
-</dl>
+<li><p class="first"><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="86%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>boolean status of the computation (successful or error occured)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<td>inititial time</td>
+</tr>
+</tbody>
+</table>
 </li>
 </ul>
 </p>
@@ -569,29 +610,75 @@ You can achieve the same result with a call to
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>tspan</strong> (<em>a list/array of times at which the computed value will be returned. Must contain the start time.</em>) – </li>
-<li><strong>y0</strong> (<em>list/numpy array of initial values</em>) – </li>
+<li><strong>tspan</strong> (<em>array</em><em> (or </em><em>similar</em><em>)</em>) – a list of times at which the computed value will be returned. Must
+contain the start time as first entry.</li>
+<li><strong>y0</strong> (<em>array</em><em> (or </em><em>similar</em><em>)</em>) – a list of initial values</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
-<li><p class="first"><em>if old_api</em> – flag   - indicating return status of the solver</p>
-<p>t      - numpy array of times at which the computations were successful</p>
-<p>y      - numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</p>
-<p>t_err  - float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</p>
-<p>y_err  - numpy array of values corresponding to time t_err</p>
+<li><p class="first"><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="79%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>An integer flag (StatusEnum)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<td>String with message in case of an error</td>
+</tr>
+</tbody>
+</table>
 </li>
-<li><p class="first"><em>if old_api False</em> –</p>
-<dl class="docutils">
-<dt>A named tuple, with fields:</dt>
-<dd><p class="first">flag   = An integer flag (StatusEnum)</p>
-<p>values = Named tuple with entries t and y</p>
-<p>errors = Named tuple with entries t and y</p>
-<p>roots  = Named tuple with entries t and y</p>
-<p>tstop  = Named tuple with entries t and y</p>
-<p class="last">message= String with message in case of an error</p>
-</dd>
-</dl>
+<li><p class="first"><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="93%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>indicating return status of the solver</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t</span></code></td>
+<td>numpy array of times at which the computations were successful</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">y</span></code></td>
+<td>numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_err</span></code></td>
+<td>float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">y_err</span></code></td>
+<td>numpy array of values corresponding to time t_err</td>
+</tr>
+</tbody>
+</table>
 </li>
 </ul>
 </p>
@@ -607,40 +694,75 @@ You can achieve the same result with a call to
 <dd><p>Method for calling successive next step of the ODE solver to allow
 more precise control over the solver. The ‘init_step’ method has to
 be called before the ‘step’ method.</p>
+<p>A step is done towards time t, and output at t returned.  This time can be higher or lower than the previous time.  If option ‘one_step_compute’==True, and the solver supports it, only one internal solver step is done in the direction of t starting at the current step.</p>
+<p>If old_api=True, the old behavior is used: if t&gt;0.0 then integration is performed until this time and results at this time are returned in y_retn if t&lt;0.0 only one internal step is perfomed towards time abs(t) and results after this one time step are returned</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> (<em>A step is done towards time t</em><em>, </em><em>and output at t returned.</em>) – <p>This time can be higher or lower than the previous time.
-If option ‘one_step_compute’==True, and the solver supports
-it, only one internal solver step is done in the direction
-of t starting at the current step.</p>
-<dl class="docutils">
-<dt>If old_api=True, the old behavior is used:</dt>
-<dd><dl class="first last docutils">
-<dt>if t&gt;0.0 then integration is performed until this time</dt>
-<dd>and results at this time are returned in y_retn</dd>
-<dt>if t&lt;0.0 only one internal step is perfomed towards time abs(t)</dt>
-<dd>and results after this one time step are returned</dd>
-</dl>
-</dd>
-</dl>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t</strong> (<em>number</em>) – </li>
+<li><strong>y_retn</strong> (<em>numpy vector</em><em> (</em><em>ndim = 1</em><em>)</em>) – in which the computed value will be stored  (needs to be preallocated).  If None y_retn is not used.</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ul>
-<li><em>if old_api</em> – flag  - status of the computation (successful or error occured)<p>t_out - time, where the solver stopped (when no error occured, t_out == t)</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="79%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>An integer flag (StatusEnum)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<td>Named tuple with entries t and y</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<td>String with message in case of an error</td>
+</tr>
+</tbody>
+</table>
 </li>
-<li><em>if old_api False</em> –<dl class="docutils">
-<dt>A named tuple, with fields:</dt>
-<dd>flag   = An integer flag (StatusEnum)<p>values = Named tuple with entries t and y</p>
-<p>errors = Named tuple with entries t and y</p>
-<p>roots  = Named tuple with entries t and y</p>
-<p>tstop  = Named tuple with entries t and y</p>
-<p class="last">message= String with message in case of an error</p>
-</dd>
-</dl>
+<li><p class="first"><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Field</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<td>status of the computation (successful or error occured)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<td>time, where the solver stopped (when no error occured, t_out == t)</td>
+</tr>
+</tbody>
+</table>
 </li>
 </ul>
+</p>
 </td>
 </tr>
 </tbody>
