@@ -122,6 +122,8 @@ Examples
 There are a number of ``ode`` examples showing different features, including
 solver specific features. Here are some of them:
 
+ * `https://github.com/bmcage/odes/blob/master/ipython_examples/Simple%20Oscillator.ipynb`_
+
 .. _dae_guide:
 
 ``dae`` Object Oriented Interface
@@ -157,6 +159,9 @@ Examples
 ^^^^^^^^
 There are a number of ``dae`` examples showing different features, including
 solver specific features. Here are some of them:
+
+ * `https://github.com/bmcage/odes/blob/master/ipython_examples/Double%20Pendulum%20as%20DAE%20with%20roots.ipynb`_
+ * `https://github.com/bmcage/odes/blob/master/ipython_examples/Planar%20Pendulum%20as%20DAE.ipynb`_
 
 .. _lower_level_guide:
 
