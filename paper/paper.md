@@ -13,14 +13,17 @@ authors:
    orcid: 
    affiliation: 2
  - name: James Tocknell
-   orcid: 
+   orcid: 0000-0001-6637-6922
    affiliation: 3
  - name: Claas Abert
-   orcid: 
+   orcid: 0000-0002-4999-0311
    affiliation: 4
  - name: Florian Bruckner
-   orcid: 
+   orcid: 0000-0001-7778-6855
    affiliation: 5
+ - name: Marc-Antonio Bisotti
+   orcid:
+   affiliation: 6
 affiliations:
  - name: Ghent University
    index: 1
@@ -28,6 +31,12 @@ affiliations:
    index: 2
  - name: Macquarie University
    index: 3
+ - name: University of Vienna
+   index: 4
+ - name: TU Wien
+   index: 5
+ - name: University of Southampton
+   index: 6
 date: 06 January 2017
 bibliography: paper.bib
 ---
