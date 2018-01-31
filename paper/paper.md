@@ -33,7 +33,7 @@ affiliations:
    index: 3
  - name: University of Vienna
    index: 4
- - name: TU Wien
+ - name: University of Vienna
    index: 5
  - name: University of Southampton
    index: 6
