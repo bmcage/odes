@@ -37,10 +37,6 @@ cdef extern from "sundials/sundials_nvector.h":
         booleantype (*nvconstrmask)(N_Vector, N_Vector, N_Vector)
         realtype    (*nvminquotient)(N_Vector, N_Vector)
 
-    struct _generic_N_Vector:
-        void *content
-        _generic_N_Vector_Ops *ops
-
     # * FUNCTIONS *
     N_Vector N_VClone(N_Vector w)
     N_Vector N_VCloneEmpty(N_Vector w)
@@ -73,12 +69,6 @@ cdef extern from "sundials/sundials_nvector.h":
     void N_VDestroyVectorArray(N_Vector *vs, int count)
 
 cdef extern from "nvector/nvector_serial.h":
-    cdef struct _N_VectorContent_Serial:
-        long int length
-        booleantype own_data
-        realtype *data
-    ctypedef _N_VectorContent_Serial *N_VectorContent_Serial
-
     N_Vector N_VNew_Serial(long int vec_length)
     N_Vector N_VNewEmpty_Serial(long int vec_length)
     N_Vector N_VMake_Serial(long int vec_length, realtype *v_data)
@@ -112,6 +102,9 @@ cdef extern from "nvector/nvector_serial.h":
     booleantype N_VInvTest_Serial(N_Vector x, N_Vector z)
     booleantype N_VConstrMask_Serial(N_Vector c, N_Vector x, N_Vector m)
     realtype N_VMinQuotient_Serial(N_Vector num, N_Vector denom)
+    # Macros
+    long int NV_LENGTH_S(N_Vector vc_s)
+    realtype* NV_DATA_S(N_Vector vc_s)
 
 cdef extern from "sundials/sundials_lapack.h":
     pass
@@ -190,33 +183,6 @@ cdef extern from "sundials/sundials_direct.h":
     long int *newLintArray(long int n)
     realtype *newRealArray(long int m)
     void destroyArray(void *v)
-
-# functions for accessing DlsMat data fields
-cdef extern from "sundials_auxiliary/sundials_auxiliary.c":
-    ctypedef realtype *nv_content_data_s
-
-    cdef inline N_VectorContent_Serial nv_content_s(N_Vector v)
-    cdef inline long int nv_length_s(N_VectorContent_Serial vc_s)
-    cdef inline booleantype nv_own_data_s(N_VectorContent_Serial vc_s)
-    cdef inline realtype* nv_data_s(N_VectorContent_Serial vc_s)
-    cdef inline realtype get_nv_ith_s(nv_content_data_s vcd_s, int i)
-    cdef inline void set_nv_ith_s(nv_content_data_s vcd_s, int i, realtype new_value)
-
-    ctypedef realtype *DlsMat_col
-    cdef inline int get_dense_N(DlsMat A)
-    cdef inline int get_dense_M(DlsMat A)
-    cdef inline int get_band_mu(DlsMat A)
-    cdef inline int get_band_ml(DlsMat A)
-    cdef inline realtype* get_dense_col(DlsMat A, int j)
-    cdef inline void set_dense_col(DlsMat A, int j, realtype *data)
-    cdef inline realtype get_dense_element(DlsMat A, int i, int j)
-    cdef inline void set_dense_element(DlsMat A, int i, int j, realtype aij)
-    cdef inline DlsMat_col get_band_col(DlsMat A, int j)
-    cdef inline void set_band_col(DlsMat A, int j, realtype *data)
-    cdef inline realtype get_band_col_elem(DlsMat_col col_j, int i, int j)
-    cdef inline void set_band_col_elem(DlsMat_col col_j, int i, int j, realtype aij)
-    cdef inline realtype get_band_element(DlsMat A, int i, int j)
-    cdef inline void set_band_element(DlsMat A, int i, int j, realtype aij)
 
 cdef extern from "sundials/sundials_band.h":
     long int BandGBTRF(DlsMat A, long int *p)
