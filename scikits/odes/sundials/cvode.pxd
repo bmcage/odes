@@ -2,8 +2,7 @@
 
 cimport numpy as np
 from .c_sundials cimport N_Vector, realtype
-
-ctypedef np.float_t DTYPE_t
+from .common_defs cimport DTYPE_t
 
 cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
@@ -129,7 +128,7 @@ cdef class CVODE:
 
     # Functions
     cpdef _init_step(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
-    cpdef _reinit_IC(self, double t0, np.ndarray[DTYPE_t, ndim=1] y0)
+    cpdef _reinit_IC(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
 
     cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
                        np.ndarray[DTYPE_t, ndim=1] y0)
