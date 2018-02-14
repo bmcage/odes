@@ -212,8 +212,8 @@
 <span class="sd">        Set specific options for the solver.</span>
 
 <span class="sd">        Calling set_options a second time, normally resets the solver.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all ODE solvers must implement this&#39;</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all ODE solvers must implement this&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OdeBase.solve"><a class="viewcode-back" href="../../../api.html#scikits.odes.ode.OdeBase.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -256,8 +256,8 @@
 <span class="sd">            ``t_err``  float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</span>
 <span class="sd">            ``y_err``  numpy array of values corresponding to time t_err</span>
 <span class="sd">            ========== ==========================================</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all ODE solvers must implement this&#39;</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all ODE solvers must implement this&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OdeBase.init_step"><a class="viewcode-back" href="../../../api.html#scikits.odes.ode.OdeBase.init_step">[docs]</a>    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -295,8 +295,8 @@
 <span class="sd">            ``flag``   boolean status of the computation (successful or error occured)</span>
 <span class="sd">            ``t_out``  inititial time</span>
 <span class="sd">            ========== ==========================================</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all ODE solvers must implement this&#39;</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all ODE solvers must implement this&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OdeBase.step"><a class="viewcode-back" href="../../../api.html#scikits.odes.ode.OdeBase.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -340,8 +340,8 @@
 <span class="sd">            ``flag``   status of the computation (successful or error occured)</span>
 <span class="sd">            ``t_out``  time, where the solver stopped (when no error occured, t_out == t)</span>
 <span class="sd">            ========== ==========================================</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all ODE solvers must implement this&#39;</span><span class="p">)</span></div></div>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all ODE solvers must implement this&#39;</span><span class="p">)</span>
 
 <span class="c1">#------------------------------------------------------------------------------</span>
 <span class="c1"># User interface</span>
@@ -445,8 +445,8 @@
 
 <span class="sd">        Calling set_options a second time, is only possible for options that</span>
 <span class="sd">        can change during runtime.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ode.solve"><a class="viewcode-back" href="../../../ode.html#scikits.odes.ode.ode.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -490,8 +490,8 @@
 <span class="sd">            ``y_err``  numpy array of values corresponding to time t_err</span>
 <span class="sd">            ========== ==========================================</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ode.init_step"><a class="viewcode-back" href="../../../ode.html#scikits.odes.ode.ode.init_step">[docs]</a>    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -532,8 +532,8 @@
 <span class="sd">            ``t_out``  inititial time</span>
 <span class="sd">            ========== ==========================================</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">init_step</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">init_step</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ode.step"><a class="viewcode-back" href="../../../ode.html#scikits.odes.ode.ode.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -578,8 +578,8 @@
 <span class="sd">            ``t_out``  time, where the solver stopped (when no error occured, t_out == t)</span>
 <span class="sd">            ========== ==========================================</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ode.set_tstop"><a class="viewcode-back" href="../../../ode.html#scikits.odes.ode.ode.set_tstop">[docs]</a>    <span class="k">def</span> <span class="nf">set_tstop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tstop</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -597,8 +597,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="p">,</span> <span class="s1">&#39;set_tstop&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">set_tstop</span><span class="p">(</span><span class="n">tcrit</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">tstop</span><span class="o">=</span><span class="n">tstop</span><span class="p">)</span></div>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">tstop</span><span class="o">=</span><span class="n">tstop</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ode.get_info"><a class="viewcode-back" href="../../../ode.html#scikits.odes.ode.ode.get_info">[docs]</a>    <span class="k">def</span> <span class="nf">get_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -613,8 +613,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="p">,</span> <span class="s1">&#39;get_info&#39;</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">get_info</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{}</span></div></div>
+        <span class="k">else</span><span class="p">:</span></div></div>
+            <span class="k">return</span> <span class="p">{}</span>
 
 <span class="c1">#------------------------------------------------------------------------------</span>
 <span class="c1"># ODE integrators</span>

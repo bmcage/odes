@@ -161,9 +161,9 @@
             
   <div class="section" id="ode-solvers">
 <h1>ODE Solvers<a class="headerlink" href="#ode-solvers" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference internal" href="api.html#module-scikits.odes" title="scikits.odes"><code class="xref py py-mod docutils literal"><span class="pre">scikits.odes</span></code></a> contains two main routines for solving ODEs: the simpler
-<a class="reference internal" href="#scikits.odes.odeint.odeint" title="scikits.odes.odeint.odeint"><code class="xref py py-func docutils literal"><span class="pre">scikits.odes.odeint.odeint()</span></code></a>, and the more configurable
-<a class="reference internal" href="#scikits.odes.ode.ode" title="scikits.odes.ode.ode"><code class="xref py py-class docutils literal"><span class="pre">scikits.odes.ode.ode</span></code></a>. Both these routines allow selection of the
+<p><a class="reference internal" href="api.html#module-scikits.odes" title="scikits.odes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">scikits.odes</span></code></a> contains two main routines for solving ODEs: the simpler
+<a class="reference internal" href="#scikits.odes.odeint.odeint" title="scikits.odes.odeint.odeint"><code class="xref py py-func docutils literal notranslate"><span class="pre">scikits.odes.odeint.odeint()</span></code></a>, and the more configurable
+<a class="reference internal" href="#scikits.odes.ode.ode" title="scikits.odes.ode.ode"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikits.odes.ode.ode</span></code></a>. Both these routines allow selection of the
 solver and solution method used. Additionally, it is also possible to directly
 use the low level interface to individual solvers.</p>
 <dl class="function">
@@ -186,7 +186,7 @@ signature:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>rhsfun</strong> (<em>callable</em><em>(</em><a class="reference internal" href="api.html#scikits.odes.dopri5.SolverVariables.t" title="scikits.odes.dopri5.SolverVariables.t"><em>t</em></a><em>, </em><a class="reference internal" href="api.html#scikits.odes.dopri5.SolverVariables.y" title="scikits.odes.dopri5.SolverVariables.y"><em>y</em></a><em>, </em><em>out</em><em>)</em>) – Computes the derivative at dy/dt in terms of t and y, and stores in out</li>
+<li><strong>rhsfun</strong> (<em>callable</em><em>(</em><em>t</em><em>, </em><em>y</em><em>, </em><em>out</em><em>)</em>) – Computes the derivative at dy/dt in terms of t and y, and stores in out</li>
 <li><strong>y0</strong> (<em>array</em>) – Initial condition on y (can be a vector).</li>
 <li><strong>t</strong> (<em>array</em>) – A sequence of time points for which to solve for y.  The initial
 value point should be the first element of this sequence.</li>
@@ -333,34 +333,34 @@ integration.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <dl class="last docutils">
-<dt><a class="reference internal" href="#scikits.odes.ode.ode" title="scikits.odes.ode.ode"><code class="xref py py-func docutils literal"><span class="pre">scikits.odes.ode.ode()</span></code></a></dt>
+<dt><a class="reference internal" href="#scikits.odes.ode.ode" title="scikits.odes.ode.ode"><code class="xref py py-func docutils literal notranslate"><span class="pre">scikits.odes.ode.ode()</span></code></a></dt>
 <dd>a more object-oriented integrator</dd>
-<dt><a class="reference internal" href="dae.html#scikits.odes.dae.dae" title="scikits.odes.dae.dae"><code class="xref py py-func docutils literal"><span class="pre">scikits.odes.dae.dae()</span></code></a></dt>
+<dt><a class="reference internal" href="dae.html#scikits.odes.dae.dae" title="scikits.odes.dae.dae"><code class="xref py py-func docutils literal notranslate"><span class="pre">scikits.odes.dae.dae()</span></code></a></dt>
 <dd>a solver for differential-algebraic equations</dd>
-<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.quad.html#scipy.integrate.quad" title="(in SciPy v1.0.0)"><code class="xref py py-func docutils literal"><span class="pre">scipy.integrate.quad()</span></code></a></dt>
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.quad.html#scipy.integrate.quad" title="(in SciPy v1.0.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.integrate.quad()</span></code></a></dt>
 <dd>for finding the area under a curve</dd>
 </dl>
 </div>
 <p class="rubric">Examples</p>
 <p>The second order differential equation for the angle <cite>theta</cite> of a
 pendulum acted on by gravity with friction can be written:</p>
-<div class="math">
+<div class="math notranslate">
 \[\theta''(t) + b \theta'(t) + c \sin(\theta(t)) = 0\]</div>
 <p>where <cite>b</cite> and <cite>c</cite> are positive constants, and a prime (‘) denotes a
 derivative.  To solve this equation with <cite>odeint</cite>, we must first convert
 it to a system of first order equations.  By defining the angular
-velocity <code class="docutils literal"><span class="pre">omega(t)</span> <span class="pre">=</span> <span class="pre">theta'(t)</span></code>, we obtain the system:</p>
-<div class="math">
+velocity <code class="docutils literal notranslate"><span class="pre">omega(t)</span> <span class="pre">=</span> <span class="pre">theta'(t)</span></code>, we obtain the system:</p>
+<div class="math notranslate">
 \[\theta'(t) = \omega(t)
 \omega'(t) = -b \omega(t) - c \sin(\theta(t))\]</div>
 <p>We assume the constants are <cite>b</cite> = 0.25 and <cite>c</cite> = 5.0:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="mf">0.25</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="mf">0.25</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="mf">5.0</span>
 </pre></div>
 </div>
 <p>Let <cite>y</cite> be the vector [<cite>theta</cite>, <cite>omega</cite>].  We implement this system
 in python as:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">pend</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">pend</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
 <span class="go"> ...     theta, omega = y</span>
 <span class="go"> ...     out[:] = [omega, -b*omega - c*np.sin(theta)]</span>
 <span class="go"> ...</span>
@@ -371,23 +371,23 @@ consider attributes b and c accessible via <cite>self.b</cite> and <cite>self.c<
 For initial conditions, we assume the pendulum is nearly vertical
 with <cite>theta(0)</cite> = <cite>pi</cite> - 0.1, and it initially at rest, so
 <cite>omega(0)</cite> = 0.  Then the vector of initial conditions is</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">y0</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">y0</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>We generate a solution 101 evenly spaced samples in the interval
 0 &lt;= <cite>t</cite> &lt;= 10.  So our array of times is</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Call <cite>odeint</cite> to generate the solution.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits.odes.odeint</span> <span class="k">import</span> <span class="n">odeint</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits.odes.odeint</span> <span class="k">import</span> <span class="n">odeint</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sol</span> <span class="o">=</span> <span class="n">odeint</span><span class="p">(</span><span class="n">pend</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y0</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The solution is a named tuple <cite>sol</cite>. sol.values.y is an array with shape (101, 2).
 The first column is <cite>theta(t)</cite>, and the second is <cite>omega(t)</cite>.
 The following code plots both components.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">sol</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;theta(t)&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">sol</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;omega(t)&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
@@ -407,11 +407,11 @@ The following code plots both components.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>integrator_name</strong> (<code class="docutils literal"><span class="pre">'cvode'</span></code>, <code class="docutils literal"><span class="pre">'dopri5'</span></code> or <code class="docutils literal"><span class="pre">'dop853'</span></code>) – <p>The solver to use.</p>
-<p><code class="docutils literal"><span class="pre">'cvode'</span></code> selects the CVODE solver from the SUNDIALS package.
+<li><strong>integrator_name</strong> (<code class="docutils literal notranslate"><span class="pre">'cvode'</span></code>, <code class="docutils literal notranslate"><span class="pre">'dopri5'</span></code> or <code class="docutils literal notranslate"><span class="pre">'dop853'</span></code>) – <p>The solver to use.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'cvode'</span></code> selects the CVODE solver from the SUNDIALS package.
 See py:class:<cite>scikits.odes.sundials.cvode.CVODE</cite> for solver specific
 options.</p>
-<p><code class="docutils literal"><span class="pre">'dopri5'</span></code> selects the Dormand &amp; Prince Runge-Kutta order (4)5
+<p><code class="docutils literal notranslate"><span class="pre">'dopri5'</span></code> selects the Dormand &amp; Prince Runge-Kutta order (4)5
 solver from scipy.</p>
 </li>
 <li><strong>eqsrhs</strong> (<em>right-hand-side function</em>) – <p>Right-hand-side of a first order ode.
@@ -444,9 +444,9 @@ will become the default!</li>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <dl class="last docutils">
-<dt><a class="reference internal" href="#scikits.odes.odeint.odeint" title="scikits.odes.odeint.odeint"><code class="xref py py-class docutils literal"><span class="pre">scikits.odes.odeint.odeint</span></code></a></dt>
+<dt><a class="reference internal" href="#scikits.odes.odeint.odeint" title="scikits.odes.odeint.odeint"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikits.odes.odeint.odeint</span></code></a></dt>
 <dd>an ODE integrator with a simpler interface</dd>
-<dt><code class="xref py py-class docutils literal"><span class="pre">scipy.integrate</span></code></dt>
+<dt><code class="xref py py-class docutils literal notranslate"><span class="pre">scipy.integrate</span></code></dt>
 <dd>Methods in scipy for ODE integration</dd>
 </dl>
 </div>
@@ -455,7 +455,7 @@ will become the default!</li>
 discritisations of PDE (eg moving mesh combined with method of
 lines).
 As an easy example, consider the simple oscillator,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">sqrt</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="mf">4.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="mf">1.0</span>
@@ -466,7 +466,7 @@ As an easy example, consider the simple oscillator,</p>
 <span class="go">        xdot[1] = - k/m * x[0]</span>
 </pre></div>
 </div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits.odes</span> <span class="k">import</span> <span class="n">ode</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits.odes</span> <span class="k">import</span> <span class="n">ode</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">solver</span> <span class="o">=</span> <span class="n">ode</span><span class="p">(</span><span class="s1">&#39;cvode&#39;</span><span class="p">,</span> <span class="n">rhseqn</span><span class="p">,</span> <span class="n">old_api</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">initx</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;   t        Solution          Exact&#39;</span><span class="p">)</span>
@@ -523,22 +523,22 @@ step is used, init_step must be called first.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnum)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -556,10 +556,10 @@ step is used, init_step must be called first.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>boolean status of the computation (successful or error occured)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
 <td>inititial time</td>
 </tr>
 </tbody>
@@ -629,22 +629,22 @@ contain the start time as first entry.</li>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnum)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -662,19 +662,19 @@ contain the start time as first entry.</li>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>indicating return status of the solver</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t</span></code></td>
 <td>numpy array of times at which the computations were successful</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">y</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">y</span></code></td>
 <td>numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_err</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_err</span></code></td>
 <td>float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">y_err</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">y_err</span></code></td>
 <td>numpy array of values corresponding to time t_err</td>
 </tr>
 </tbody>
@@ -719,22 +719,22 @@ be called before the ‘step’ method.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnum)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -752,10 +752,10 @@ be called before the ‘step’ method.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>status of the computation (successful or error occured)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
 <td>time, where the solver stopped (when no error occured, t_out == t)</td>
 </tr>
 </tbody>

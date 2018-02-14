@@ -171,12 +171,12 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>integrator_name</strong> (<code class="docutils literal"><span class="pre">'ida'</span></code>, <code class="docutils literal"><span class="pre">'ddaspk'</span></code> or <code class="docutils literal"><span class="pre">'lsodi'</span></code>) – The integrator solver to use.</li>
+<li><strong>integrator_name</strong> (<code class="docutils literal notranslate"><span class="pre">'ida'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ddaspk'</span></code> or <code class="docutils literal notranslate"><span class="pre">'lsodi'</span></code>) – The integrator solver to use.</li>
 <li><strong>eqsres</strong> (<em>residual function</em>) – <p>Residual of the DAE. The signature of this function depends on the
 solver used, see the solver documentation for details.
 Generally however, you can assume the following signature to work:</p>
 <blockquote>
-<div><code class="docutils literal"><span class="pre">eqsres(x,</span> <span class="pre">y,</span> <span class="pre">yprime,</span> <span class="pre">return_residual)</span></code></div></blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">eqsres(x,</span> <span class="pre">y,</span> <span class="pre">yprime,</span> <span class="pre">return_residual)</span></code></div></blockquote>
 <p>with
 x       : independent variable, eg the time, float
 y       : array of n unknowns in x
@@ -197,9 +197,9 @@ details.</li>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <dl class="last docutils">
-<dt><code class="xref py py-class docutils literal"><span class="pre">odeint</span></code></dt>
+<dt><code class="xref py py-class docutils literal notranslate"><span class="pre">odeint</span></code></dt>
 <dd>an ODE integrator with a simpler interface based on lsoda from ODEPACK</dd>
-<dt><code class="xref py py-class docutils literal"><span class="pre">ode</span></code></dt>
+<dt><code class="xref py py-class docutils literal notranslate"><span class="pre">ode</span></code></dt>
 <dd>class around vode ODE integrator</dd>
 </dl>
 </div>
@@ -213,7 +213,7 @@ discritisations of PDE (eg moving mesh combined with method of
 lines).
 As an easy example, consider the simple oscillator, which we write as
 G(y,y’,t) = 0 instead of the normal ode, and solve as a DAE.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">sqrt</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="mf">4.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="mf">1.0</span>
@@ -260,22 +260,22 @@ step is used, init_step must be called first.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnumXXX)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -293,10 +293,10 @@ step is used, init_step must be called first.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>status of the computation (successful or error occured)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
 <td>time, where the solver stopped (when no error occured, t_out == t)</td>
 </tr>
 </tbody>
@@ -346,22 +346,22 @@ See the solver documentation for details.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnumXXX)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y and ydot of error</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries array t and array y and array ydot</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries array t and array y and array ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -379,25 +379,25 @@ See the solver documentation for details.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>indicating return status of the solver</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t</span></code></td>
 <td>numpy array of times at which the computations were successful</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">y</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">y</span></code></td>
 <td>numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">yp</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yp</span></code></td>
 <td>numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">t_err</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">t_err</span></code></td>
 <td>float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">y_err</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">y_err</span></code></td>
 <td>numpy array of values corresponding to time t_err</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">yp_err</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">yp_err</span></code></td>
 <td>numpy array of derivatives corresponding to time t_err</td>
 </tr>
 </tbody>
@@ -446,22 +446,22 @@ abs(t) and results after this one time step are returned.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnumXXX)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -479,10 +479,10 @@ abs(t) and results after this one time step are returned.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>status of the computation (successful or error occured)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
 <td>time, where the solver stopped (when no error occured, t_out == t)</td>
 </tr>
 </tbody>

@@ -1,0 +1,679 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>scikits.odes.ddaspkint &mdash; Odes 2.3.2.dev0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Odes 2.3.2.dev0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Odes
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3.2.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ode.html">ODE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dae.html">DAE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Lower Level API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Odes</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>scikits.odes.ddaspkint</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for scikits.odes.ddaspkint</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Authors: B. Malengier</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">ddaspk</span>
+<span class="sd">======</span>
+<span class="sd">Solver developed 1989 to 1996, with some corrections from 2000 - Fortran</span>
+
+<span class="sd">This code solves a system of differential/algebraic equations of the form </span>
+<span class="sd">G(t,y,y&#39;) = 0 , using a combination of Backward Differentiation Formula </span>
+<span class="sd">(BDF) methods and a choice of two linear system solution methods: direct </span>
+<span class="sd">(dense or band) or Krylov (iterative). </span>
+<span class="sd">Krylov is not supported from within scikits.odes. </span>
+<span class="sd">In order to support it, a new interface should be created ddaspk_krylov, </span>
+<span class="sd">with a different signature, reflecting the changes needed.</span>
+
+<span class="sd">Source: http://www.netlib.org/ode/ddaspk.f</span>
+
+<span class="sd">On construction the function calculating the residual (res) must be given and </span>
+<span class="sd">optionally also the function calculating the jacobian (jac). </span>
+<span class="sd">res has the signature: res(x, y, yprime, return_residual)</span>
+<span class="sd">with </span>
+<span class="sd">    x       : independent variable, eg the time, float</span>
+<span class="sd">    y       : array of n unknowns in x</span>
+<span class="sd">    yprime  : dy/dx array of n unknowns in x, dimension = dim(y)</span>
+<span class="sd">    return_residual: array that must be updated with the value of the residuals,</span>
+<span class="sd">              so G(t,y,y&#39;).  The dimension is equal to dim(y)</span>
+<span class="sd">    return value: Not needed. However, for use with other solvers, consider </span>
+<span class="sd">              returning 0 on success.</span>
+
+<span class="sd">jac has the signature jac(x, y, yprime, cj, return_jac)</span>
+<span class="sd">with </span>
+<span class="sd">    x       : independent variable, eg the time, float</span>
+<span class="sd">    y       : array of n unknowns in x</span>
+<span class="sd">    yprime  : dy/dx array of n unknowns in x, dimension = dim(y)</span>
+<span class="sd">    cj      : internal variable of ddaspk algorithm you can use, don&#39;t change it! </span>
+<span class="sd">              cj can be ignored, or used to rescale constraint equations in the </span>
+<span class="sd">              system</span>
+<span class="sd">    return_jac : two dimensional array of the Jacobian, as per the Jacobian </span>
+<span class="sd">              definition of the ddaspk solver. This means it should be or a </span>
+<span class="sd">                full nxn shaped array in general (n=dim(y)), or a banded shaped</span>
+<span class="sd">                array as per the definition of lband/uband. </span>
+<span class="sd">                Jac is optional and should be set with the jacfn option keyword. </span>
+<span class="sd">                Note that jac is defined as </span>
+<span class="sd">                            dres(i)/dy(j) + cj*dres(i)/dyprime(j)</span>
+<span class="sd">    return value: Not needed. However, for use with other solvers, consider </span>
+<span class="sd">              returning 0 on success.</span>
+
+<span class="sd">This integrator accepts the following parameters in the initializer or </span>
+<span class="sd">set_options method of the dae class:</span>
+
+<span class="sd">- rfn : residual function, see above for signature. This option need not be</span>
+<span class="sd">        set, as rfn will be set during initialization. If the residual function</span>
+<span class="sd">        of initialization needs to be reset, this option can be used</span>
+<span class="sd">- jacfn : jacobian function, see above for signature. Default is None.</span>
+<span class="sd">- atol : float or sequence of length i</span>
+<span class="sd">  absolute tolerance for solution</span>
+<span class="sd">- rtol : float or sequence of length i</span>
+<span class="sd">  relative tolerance for solution</span>
+<span class="sd">- lband : None or int</span>
+<span class="sd">- uband : None or int</span>
+<span class="sd">  Jacobian band width, jac[i,j] != 0 for i-lband &lt;= j &lt;= i+uband.</span>
+<span class="sd">  Setting these requires your jac routine to return the jacobian</span>
+<span class="sd">  in packed format, jac_packed[i-j+lband, j] = jac[i,j].</span>
+<span class="sd">- tstop : None or float. If given, tstop is a critical time point</span>
+<span class="sd">  beyond which no integration occurs</span>
+<span class="sd">- max_steps : int</span>
+<span class="sd">  Maximum number of (internally defined) steps allowed during one</span>
+<span class="sd">  call to the solver.</span>
+<span class="sd">- first_step : float</span>
+<span class="sd">  Set initial stepsize. DAE solver can suffer on the first step, set this</span>
+<span class="sd">  to circumvent this.</span>
+<span class="sd">- max_step_size : float</span>
+<span class="sd">  Limits for the step sizes used by the integrator. This overrides the</span>
+<span class="sd">  internal value</span>
+<span class="sd">- order : int</span>
+<span class="sd">  Maximum order used by the integrator, &gt;=1,  &lt;= 5 for BDF.</span>
+<span class="sd">  5 is the default</span>
+<span class="sd">- enforce_nonnegativity: bool</span>
+<span class="sd">  Enforce the nonnegativity of Y during integration</span>
+<span class="sd">  Note: best is to run code first with no condition</span>
+<span class="sd">- compute_initcond: None or &#39;yp0&#39; or &#39;y0&#39;</span>
+<span class="sd">  DDASPK may be able to compute the initial conditions if you do not know them</span>
+<span class="sd">  precisely. </span>
+<span class="sd">  If y0, then y0 will be calculated</span>
+<span class="sd">  If yp0, then the differential variables will be used to solve for the </span>
+<span class="sd">    algebraic variables and the derivative of the differential variables. </span>
+<span class="sd">    Which are the algebraic variables must be indicated with algebraic_var method</span>
+<span class="sd">- exclude_algvar_from_error: bool</span>
+<span class="sd">  To determine solution, do not take the algebraic variables error control into </span>
+<span class="sd">  account. Default=False</span>
+<span class="sd">- constraint_init: bool</span>
+<span class="sd">  Enforce the constraint checks of Y during initial condition computation</span>
+<span class="sd">  Note: try first with no constraints</span>
+<span class="sd">- constraint_type: if constraint_init, give an integer array with for every</span>
+<span class="sd">  unknown the specific condition to check: </span>
+<span class="sd">       1: y0[i] &gt;= 0 </span>
+<span class="sd">       2: y0[i] &gt;  0</span>
+<span class="sd">      -1: y0[i] &lt;= 0</span>
+<span class="sd">      -2: y0[i] &lt;  0</span>
+<span class="sd">       0: y0[i] not constrained</span>
+<span class="sd">  Alternatively, pass only one integer that then applies to all unknowns</span>
+<span class="sd">- algebraic_vars_idx: an array or None (= default)</span>
+<span class="sd">                Description:</span>
+<span class="sd">                    If given problem is of type DAE, some items of the residual</span>
+<span class="sd">                    vector returned by the &#39;resfn&#39; have to be treated as </span>
+<span class="sd">                    algebraic variables. These are denoted by the position </span>
+<span class="sd">                    (index) in the residual vector.</span>
+<span class="sd">                    All these indexes have to be specified in the </span>
+<span class="sd">                    &#39;algebraic_vars_idx&#39; array.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ddaspk&#39;</span><span class="p">]</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;$Id$&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s2">&quot;restructuredtext en&quot;</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">int32</span><span class="p">,</span> <span class="n">isscalar</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">alen</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">.dae</span> <span class="k">import</span> <span class="n">DaeBase</span>
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">sys</span>
+
+<div class="viewcode-block" id="ddaspk"><a class="viewcode-back" href="../../../api.html#scikits.odes.ddaspkint.ddaspk">[docs]</a><span class="k">class</span> <span class="nc">ddaspk</span><span class="p">(</span><span class="n">DaeBase</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">.ddaspk</span> <span class="k">import</span> <span class="n">ddaspk</span> <span class="k">as</span> <span class="n">_runner</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">_runner</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># _runner = getattr(_ddaspk,&#39;ddaspk&#39;,None)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;ddaspk&#39;</span>
+
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;A step was successfully taken in the &#39;</span>
+                    <span class="s1">&#39;intermediate-output mode.  The code has not &#39;</span>
+                    <span class="s1">&#39;yet reached TOUT.&#39;</span><span class="p">,</span> 
+                 <span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;The integration to TSTOP was successfully &#39;</span>
+                    <span class="s1">&#39;completed (T = TSTOP) by stepping exactly to TSTOP.&#39;</span><span class="p">,</span> 
+                 <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;The integration to TOUT was successfully &#39;</span>
+                    <span class="s1">&#39;completed (T = TOUT) by stepping past TOUT. &#39;</span>
+                    <span class="s1">&#39;Y(*) and YPRIME(*) are obtained by interpolation.&#39;</span><span class="p">,</span> 
+                 <span class="mi">4</span><span class="p">:</span> <span class="s1">&#39;The initial condition calculation, with &#39;</span>
+                    <span class="s1">&#39;INFO(11) &gt; 0, was successful, and INFO(14) = 1. &#39;</span>
+                    <span class="s1">&#39;No integration steps were taken, and the solution &#39;</span>
+                    <span class="s1">&#39;is not considered to have been started.&#39;</span><span class="p">,</span> 
+                <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;A large amount of work has been expended (about 500 steps)&#39;</span><span class="p">,</span>
+                <span class="o">-</span><span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;Excess accuracy requested. (Tolerances too small.)&#39;</span><span class="p">,</span>
+                <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;The local error test cannot be satisfied because you &#39;</span>
+                    <span class="s1">&#39;specified a zero component in ATOL and the corresponding&#39;</span>
+                    <span class="s1">&#39; computed solution component is zero.  Thus, a pure&#39;</span>
+                    <span class="s1">&#39; relative error test is impossible for this component.&#39;</span><span class="p">,</span>
+                <span class="o">-</span><span class="mi">5</span><span class="p">:</span> <span class="s1">&#39;Repeated failures in the evaluation or processing of the&#39;</span>
+                    <span class="s1">&#39; preconditioner (in JAC)&#39;</span><span class="p">,</span>
+                <span class="o">-</span><span class="mi">6</span><span class="p">:</span> <span class="s1">&#39;repeated error test failures on the last attempted step)&#39;</span><span class="p">,</span> 
+                <span class="o">-</span><span class="mi">7</span><span class="p">:</span> <span class="s1">&#39;The nonlinear system solver in the time integration could&#39;</span>
+                    <span class="s1">&#39; not converge.&#39;</span><span class="p">,</span>
+                <span class="o">-</span><span class="mi">8</span><span class="p">:</span> <span class="s1">&#39;The matrix of partial derivatives appears to be singular&#39;</span>
+                    <span class="s1">&#39; (direct method).&#39;</span><span class="p">,</span> 
+                <span class="o">-</span><span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;The nonlinear system solver in the time integration&#39;</span>
+                    <span class="s1">&#39;failed to achieve convergence, and there were repeated &#39;</span>
+                    <span class="s1">&#39;error test failures in this step.&#39;</span><span class="p">,</span> 
+                <span class="o">-</span><span class="mi">10</span><span class="p">:</span><span class="s1">&#39;The nonlinear system solver in the time integration failed&#39;</span>
+                    <span class="s1">&#39; to achieve convergence because IRES was equal to -1.&#39;</span><span class="p">,</span> 
+                <span class="o">-</span><span class="mi">11</span><span class="p">:</span><span class="s1">&#39;IRES = -2 was encountered and control is&#39;</span>
+                    <span class="s1">&#39;being returned to the calling program.&#39;</span><span class="p">,</span> 
+                <span class="o">-</span><span class="mi">12</span><span class="p">:</span><span class="s1">&#39;Failed to compute the initial Y, YPRIME.&#39;</span><span class="p">,</span> 
+                <span class="o">-</span><span class="mi">13</span><span class="p">:</span><span class="s2">&quot;Unrecoverable error encountered inside user&#39;s&quot;</span>
+                    <span class="s2">&quot;PSOL routine, and control is being returned to&quot;</span>
+                    <span class="s2">&quot;the calling program.&quot;</span><span class="p">,</span> 
+                <span class="o">-</span><span class="mi">14</span><span class="p">:</span><span class="s1">&#39;The Krylov linear system solver could not &#39;</span>
+                    <span class="s1">&#39;achieve convergence.&#39;</span><span class="p">,</span> 
+                <span class="o">-</span><span class="mi">33</span><span class="p">:</span><span class="s1">&#39;The code has encountered trouble from which&#39;</span>
+                   <span class="s1">&#39; it cannot recover.  A message is printed&#39;</span>
+                   <span class="s1">&#39; explaining the trouble and control is returned&#39;</span>
+                   <span class="s1">&#39; to the calling program.  For example, this occurs&#39;</span>
+                   <span class="s1">&#39; when invalid input is detected.&#39;</span><span class="p">,</span> 
+                <span class="p">}</span>
+    <span class="n">supports_run_relax</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">supports_step</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resfn</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;rtol&#39;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span>
+            <span class="s1">&#39;atol&#39;</span><span class="p">:</span> <span class="mf">1e-12</span><span class="p">,</span>
+            <span class="s1">&#39;lband&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;uband&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;tstop&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> 
+            <span class="s1">&#39;order&#39;</span> <span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="s1">&#39;max_steps&#39;</span> <span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+            <span class="s1">&#39;max_step_size&#39;</span> <span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="c1"># corresponds to infinite</span>
+            <span class="s1">&#39;first_step&#39;</span> <span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="c1"># determined by solver</span>
+            <span class="s1">&#39;enforce_nonnegativity&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
+            <span class="s1">&#39;nonneg_type&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> 
+            <span class="s1">&#39;compute_initcond&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;constraint_init&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
+            <span class="s1">&#39;constraint_type&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> 
+            <span class="s1">&#39;algebraic_vars_idx&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;exclude_algvar_from_error&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
+            <span class="s1">&#39;rfn&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;jacfn&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_res</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_jac</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">default_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">rfn</span><span class="o">=</span><span class="n">resfn</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ddaspk.set_options"><a class="viewcode-back" href="../../../api.html#scikits.odes.ddaspkint.ddaspk.set_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; See dae.DaeBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
+        
+    <span class="k">def</span> <span class="nf">_init_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;rtol&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;atol&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;uband&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;lband&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;jacfn&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;rfn&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;tstop&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">5</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;order should be &gt;=1, &lt;=5&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsteps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;max_steps&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;max_step_size&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;first_step&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nonneg</span> <span class="o">=</span><span class="mi">0</span> 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;enforce_nonnegativity&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;constraint_init&#39;</span><span class="p">]:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">nonneg</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;enforce_nonnegativity&#39;</span><span class="p">]:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">nonneg</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;constraint_init&#39;</span><span class="p">]:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">nonneg</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonneg</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonneg</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;constraint_type&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Give type of init cond contraint as &#39;</span>\
+                              <span class="s1">&#39;an int array (&gt;=0, &gt;0, &lt;=0, &lt;0) or as int&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;constraint_type&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;compute_initcond&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;compute_initcond&#39;</span><span class="p">],</span> <span class="sa">r</span><span class="s1">&#39;y0&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;compute_initcond&#39;</span><span class="p">],</span> <span class="sa">r</span><span class="s1">&#39;yp0&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown init cond calculation method </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;compute_initcond&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;algebraic_vars_idx&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Give array indicating which are the &#39;</span>\
+                    <span class="s1">&#39;algebraic variables with the algebraic_vars_idx option&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algvaridx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;algebraic_vars_idx&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">excl_algvar_err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;exclude_algvar_from_error&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="mi">1</span>
+    
+<div class="viewcode-block" id="ddaspk.init_step"><a class="viewcode-back" href="../../../api.html#scikits.odes.ddaspkint.ddaspk.init_step">[docs]</a>    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">yp_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; See dae.DaeBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="n">y0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yp0</span> <span class="o">=</span> <span class="n">yp0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;jacfn&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_step</span> <span class="o">&lt;=</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">first_step</span> <span class="o">=</span> <span class="mf">1e-18</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">first_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_step</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">first_step</span><span class="p">)</span>
+            <span class="n">t0_init</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">y0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yp</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">yp0</span><span class="p">)</span>
+            <span class="n">t0_init</span> <span class="o">=</span> <span class="n">t0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">y_ic0_retn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">y_ic0_retn</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[:]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">yp_ic0_retn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">yp_ic0_retn</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">[:]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">True</span></div>
+        <span class="k">return</span> <span class="n">t0_init</span>
+
+    <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">has_jac</span><span class="p">):</span>
+        <span class="c1"># Calculate parameters for Fortran subroutine ddaspk.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neq</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algebraic_var</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">neq</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algvaridx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">algvaridx</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">algebraic_var</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="mi">20</span><span class="p">,),</span> <span class="n">int32</span><span class="p">)</span>  <span class="c1"># default is all info=0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># extra output on init cond computation</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">isscalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">)</span> <span class="o">!=</span> <span class="n">isscalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span>
+               <span class="ow">not</span> <span class="n">isscalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;atol (</span><span class="si">%s</span><span class="s1">) and rtol (</span><span class="si">%s</span><span class="s1">) must be both scalar or&#39;</span>\
+                    <span class="s1">&#39; both arrays of length </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">isscalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">has_jac</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_algvar_err</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">lrw</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="o">+</span><span class="mi">4</span><span class="p">,</span><span class="mi">7</span><span class="p">)</span><span class="o">*</span><span class="n">n</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">lrw</span> <span class="o">+=</span> <span class="nb">pow</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> 
+            <span class="n">lrw</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ml</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ml</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">lrw</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ml</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">n</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="n">lrw</span> <span class="o">+=</span><span class="n">n</span>
+        <span class="n">rwork</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">lrw</span><span class="p">,),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">liw</span> <span class="o">=</span> <span class="mi">40</span> <span class="o">+</span> <span class="n">n</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonneg</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span> <span class="n">liw</span> <span class="o">+=</span> <span class="n">n</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_algvar_err</span><span class="p">:</span> <span class="n">liw</span> <span class="o">+=</span> <span class="n">n</span>
+        <span class="n">iwork</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">liw</span><span class="p">,),</span> <span class="n">int32</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">rwork</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_step</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">rwork</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_step</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_step</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">rwork</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwork</span> <span class="o">=</span> <span class="n">rwork</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iwork</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iwork</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">iwork</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span>
+        <span class="n">iwork</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsteps</span>
+        <span class="n">iwork</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>           <span class="c1"># mxhnil</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonneg</span>
+        <span class="n">lid</span> <span class="o">=</span> <span class="mi">40</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span><span class="o">==</span><span class="mi">3</span> <span class="p">:</span>
+            <span class="n">lid</span> <span class="o">=</span> <span class="mi">40</span> <span class="o">+</span> <span class="n">n</span>
+            <span class="k">if</span> <span class="n">isscalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint_type</span><span class="p">):</span> 
+                <span class="n">iwork</span><span class="p">[</span><span class="mi">40</span><span class="p">:</span><span class="n">lid</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint_type</span>
+            <span class="k">else</span><span class="p">:</span> <span class="n">iwork</span><span class="p">[</span><span class="mi">40</span><span class="p">:</span><span class="n">lid</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint_type</span><span class="p">[:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+            <span class="n">iwork</span><span class="p">[</span><span class="n">lid</span><span class="p">:</span><span class="n">lid</span><span class="o">+</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algebraic_var</span><span class="p">[:]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_algvar_err</span><span class="p">:</span>
+            <span class="n">iwork</span><span class="p">[</span><span class="n">lid</span><span class="p">:</span><span class="n">lid</span><span class="o">+</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algebraic_var</span><span class="p">[:]</span>
+        <span class="c1">## some overrides that one might want</span>
+        <span class="c1"># self.info[17] = 1  # minimal printing inside init cond calc</span>
+        <span class="c1"># self.info[17] = 2  # full printing inside init cond calc</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwork</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwork</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iwork</span> <span class="o">=</span> <span class="n">iwork</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">rwork</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">iwork</span><span class="p">]</span>        <span class="c1">#create storage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_res</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neq</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tmp_jac</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">neq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">neq</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tmp_jac</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">neq</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_resFn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wrapper around the residual as defined by user, to create</span>
+<span class="sd">         the residual needed by ddaspk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_res</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_res</span>
+
+    <span class="k">def</span> <span class="nf">_jacFn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="n">cj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wrapper around the jacobian as defined by user, to create</span>
+<span class="sd">         the jacobian needed by ddaspk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jac</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="n">cj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_jac</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_jac</span>
+
+<div class="viewcode-block" id="ddaspk.solve"><a class="viewcode-back" href="../../../api.html#scikits.odes.ddaspkint.ddaspk.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">,</span> <span class="n">hook_fn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; See dae.DaeBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">t_retn</span>  <span class="o">=</span> <span class="n">empty</span><span class="p">([</span><span class="n">alen</span><span class="p">(</span><span class="n">tspan</span><span class="p">),</span> <span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">y_retn</span>  <span class="o">=</span> <span class="n">empty</span><span class="p">([</span><span class="n">alen</span><span class="p">(</span><span class="n">tspan</span><span class="p">),</span> <span class="n">alen</span><span class="p">(</span><span class="n">y0</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">yp_retn</span> <span class="o">=</span> <span class="n">empty</span><span class="p">([</span><span class="n">alen</span><span class="p">(</span><span class="n">tspan</span><span class="p">),</span> <span class="n">alen</span><span class="p">(</span><span class="n">y0</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>
+        
+        <span class="n">y_ic0_retn</span>  <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">alen</span><span class="p">(</span><span class="n">y0</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">yp_ic0_retn</span>  <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">alen</span><span class="p">(</span><span class="n">y0</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">tinit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_step</span><span class="p">(</span><span class="n">tspan</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span><span class="p">,</span> <span class="n">yp_ic0_retn</span><span class="p">)</span>
+        
+        <span class="n">t_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">tinit</span>
+        <span class="n">y_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">y0</span><span class="p">[:]</span>
+        <span class="n">yp_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">yp0</span><span class="p">[:]</span>
+        <span class="n">indbreak</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">time</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tspan</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+                <span class="n">indbreak</span> <span class="o">=</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">break</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">y_retn</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">yp_retn</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">t_retn</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">time</span><span class="p">)</span>
+            <span class="n">t_retn</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">y_retn</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][:]</span>
+            <span class="n">yp_retn</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t_retn</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">indbreak</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t_retn</span><span class="p">[</span><span class="n">indbreak</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="p">,</span> <span class="n">t_retn</span><span class="p">[:</span><span class="n">indbreak</span><span class="p">],</span> <span class="n">y_retn</span><span class="p">[:</span><span class="n">indbreak</span><span class="p">],</span>\
+                   <span class="n">yp_retn</span><span class="p">[:</span><span class="n">indbreak</span><span class="p">],</span> <span class="n">t_retn</span><span class="p">[</span><span class="n">indbreak</span><span class="p">],</span> <span class="n">y_retn</span><span class="p">[</span><span class="n">indbreak</span><span class="p">],</span>\
+                   <span class="n">yp_retn</span><span class="p">[</span><span class="n">indbreak</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="p">,</span> <span class="n">t_retn</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="c1"># args are: y0,yprime0,t0,t1,res_params,jac_params</span>
+        <span class="n">y1</span><span class="p">,</span> <span class="n">y1prime</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runner</span><span class="p">(</span><span class="o">*</span><span class="p">(</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resFn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jacFn</span><span class="p">)</span> \
+                                           <span class="o">+</span> <span class="n">args</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ddaspk:&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">,</span>
+                                        <span class="s1">&#39;Unexpected istate=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ddaspk: Run successfull. Unexpected istate=</span><span class="si">%s</span><span class="s1">, stopping&#39;</span> <span class="o">%</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">,</span> <span class="s1">&#39;Unknown istate=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">y1</span><span class="p">,</span> <span class="n">y1prime</span><span class="p">,</span> <span class="n">t</span>
+
+<div class="viewcode-block" id="ddaspk.step"><a class="viewcode-back" href="../../../api.html#scikits.odes.ddaspkint.ddaspk.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; See dae.DaeBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Method &#39;&#39;init_step&#39;&#39; has to be called prior to the&#39;</span>
+                    <span class="s1">&#39;first call of &#39;&#39;step&#39;&#39; method, or after changing options&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="n">t</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">y_retn</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[:]</span>
+        <span class="k">if</span> <span class="n">yp_retn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">yp_retn</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">[:]</span>
+        </div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+
+<span class="k">if</span> <span class="n">ddaspk</span><span class="o">.</span><span class="n">_runner</span><span class="p">:</span>
+    <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ddaspk</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, B. Malengier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.3.2.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

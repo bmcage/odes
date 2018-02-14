@@ -215,10 +215,10 @@ solvers, so they can mature outside of scipy.</p>
 <h3>First-order ODE solver<a class="headerlink" href="#first-order-ode-solver" title="Permalink to this headline">¶</a></h3>
 <p>User-friendly interface to various numerical integrators for solving a
 system of first order ODEs with prescribed initial conditions:</p>
-<div class="math">
+<div class="math notranslate">
 \[ \begin{align}\begin{aligned}\frac{dy(t)}{dt} = f(t, y(t)), \quad y(t_0)=y_0\\y(t_0)[i] = y_0[i], i = 0, ..., \mathrm{len}(y_0) - 1\end{aligned}\end{align} \]</div>
-<p><span class="math">\(f(t,y)\)</span> is the right hand side function and returns a vector of size
-<span class="math">\(\mathrm{len}(y_0)\)</span>.</p>
+<p><span class="math notranslate">\(f(t,y)\)</span> is the right hand side function and returns a vector of size
+<span class="math notranslate">\(\mathrm{len}(y_0)\)</span>.</p>
 <dl class="class">
 <dt id="scikits.odes.ode.OdeBase">
 <em class="property">class </em><code class="descclassname">scikits.odes.ode.</code><code class="descname">OdeBase</code><span class="sig-paren">(</span><em>Rfn</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#OdeBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.OdeBase" title="Permalink to this definition">¶</a></dt>
@@ -228,7 +228,7 @@ system of first order ODEs with prescribed initial conditions:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Rfn</strong> (<em>function</em>) – A function which computes the required derivatives. The signature should be <code class="docutils literal"><span class="pre">func(t,</span> <span class="pre">y,</span> <span class="pre">y_dot,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code>. Note that <a href="#id1"><span class="problematic" id="id2">*</span></a>args and <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs handling are solver dependent.</li>
+<li><strong>Rfn</strong> (<em>function</em>) – A function which computes the required derivatives. The signature should be <code class="docutils literal notranslate"><span class="pre">func(t,</span> <span class="pre">y,</span> <span class="pre">y_dot,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code>. Note that <a href="#id1"><span class="problematic" id="id2">*</span></a>args and <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs handling are solver dependent.</li>
 <li><strong>options</strong> (<em>mapping</em>) – Additional options for initialization, solver dependent</li>
 </ul>
 </td>
@@ -262,22 +262,22 @@ system of first order ODEs with prescribed initial conditions:</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnum)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -295,10 +295,10 @@ system of first order ODEs with prescribed initial conditions:</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>boolean status of the computation (successful or error occured)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
 <td>inititial time</td>
 </tr>
 </tbody>
@@ -347,22 +347,22 @@ contain the start time as first entry.</li>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnum)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -380,19 +380,19 @@ contain the start time as first entry.</li>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>indicating return status of the solver</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t</span></code></td>
 <td>numpy array of times at which the computations were successful</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">y</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">y</span></code></td>
 <td>numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_err</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_err</span></code></td>
 <td>float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">y_err</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">y_err</span></code></td>
 <td>numpy array of values corresponding to time t_err</td>
 </tr>
 </tbody>
@@ -437,22 +437,22 @@ be called before the ‘step’ method.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnum)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -470,10 +470,10 @@ be called before the ‘step’ method.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>status of the computation (successful or error occured)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
 <td>time, where the solver stopped (when no error occured, t_out == t)</td>
 </tr>
 </tbody>
@@ -497,11 +497,11 @@ be called before the ‘step’ method.</p>
 <h3>First-order DAE solver<a class="headerlink" href="#first-order-dae-solver" title="Permalink to this headline">¶</a></h3>
 <p>User-friendly interface to various numerical integrators for solving an
 algebraic system of first order ODEs with prescribed initial conditions:</p>
-<div class="math">
+<div class="math notranslate">
 \[ \begin{align}\begin{aligned}A \frac{dy(t)}{dt} = f(t,y(t)),\\y(t=0)[i] = y0[i],\\\frac{d y(t=0)}{dt}[i]  = yprime0[i],\end{aligned}\end{align} \]</div>
-<p>where <span class="math">\(i = 0, ..., len(y0) - 1\)</span>; <span class="math">\(A\)</span> is a (possibly singular) matrix
-of size <span class="math">\(i × i\)</span>; and <span class="math">\(f(t,y)\)</span> is a vector of size <span class="math">\(i\)</span> or more generally, equations of the form</p>
-<div class="math">
+<p>where <span class="math notranslate">\(i = 0, ..., len(y0) - 1\)</span>; <span class="math notranslate">\(A\)</span> is a (possibly singular) matrix
+of size <span class="math notranslate">\(i × i\)</span>; and <span class="math notranslate">\(f(t,y)\)</span> is a vector of size <span class="math notranslate">\(i\)</span> or more generally, equations of the form</p>
+<div class="math notranslate">
 \[G(t,y,y') = 0\]</div>
 <dl class="class">
 <dt id="scikits.odes.dae.DaeBase">
@@ -549,22 +549,22 @@ of size <span class="math">\(i × i\)</span>; and <span class="math">\(f(t,y)\)<
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnumXXX)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -582,10 +582,10 @@ of size <span class="math">\(i × i\)</span>; and <span class="math">\(f(t,y)\)<
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>status of the computation (successful or error occured)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
 <td>time, where the solver stopped (when no error occured, t_out == t)</td>
 </tr>
 </tbody>
@@ -634,22 +634,22 @@ of size <span class="math">\(i × i\)</span>; and <span class="math">\(f(t,y)\)<
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnumXXX)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y and ydot of error</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries array t and array y and array ydot</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries array t and array y and array ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -667,25 +667,25 @@ of size <span class="math">\(i × i\)</span>; and <span class="math">\(f(t,y)\)<
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>indicating return status of the solver</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t</span></code></td>
 <td>numpy array of times at which the computations were successful</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">y</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">y</span></code></td>
 <td>numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">yp</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yp</span></code></td>
 <td>numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">t_err</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">t_err</span></code></td>
 <td>float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">y_err</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">y_err</span></code></td>
 <td>numpy array of values corresponding to time t_err</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">yp_err</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">yp_err</span></code></td>
 <td>numpy array of derivatives corresponding to time t_err</td>
 </tr>
 </tbody>
@@ -734,22 +734,22 @@ abs(t) and results after this one time step are returned.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>An integer flag (StatusEnumXXX)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">values</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
 <td>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">errors</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">roots</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">tstop</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
 <td>Named tuple with entries t and y and ydot</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">message</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
 <td>String with message in case of an error</td>
 </tr>
 </tbody>
@@ -767,10 +767,10 @@ abs(t) and results after this one time step are returned.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal"><span class="pre">flag</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
 <td>status of the computation (successful or error occured)</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal"><span class="pre">t_out</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
 <td>time, where the solver stopped (when no error occured, t_out == t)</td>
 </tr>
 </tbody>
@@ -901,6 +901,171 @@ Options and references the same as “dopri5”.</div></blockquote>
 <dt id="scikits.odes.dopri5.StatusEnumDOP">
 <em class="property">class </em><code class="descclassname">scikits.odes.dopri5.</code><code class="descname">StatusEnumDOP</code><a class="reference internal" href="_modules/scikits/odes/dopri5.html#StatusEnumDOP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dopri5.StatusEnumDOP" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.dopri5.dop853">
+<em class="property">class </em><code class="descclassname">scikits.odes.dopri5.</code><code class="descname">dop853</code><span class="sig-paren">(</span><em>Rfn</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dopri5.html#dop853"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dopri5.dop853" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.dopri5.dopri5">
+<em class="property">class </em><code class="descclassname">scikits.odes.dopri5.</code><code class="descname">dopri5</code><span class="sig-paren">(</span><em>Rfn</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dopri5.html#dopri5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dopri5.dopri5" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.dopri5.dopri5.init_step">
+<code class="descname">init_step</code><span class="sig-paren">(</span><em>t0</em>, <em>y0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dopri5.html#dopri5.init_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dopri5.dopri5.init_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the solver and allocates memory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- initial time</strong> (<em>t0</em>) – </li>
+<li><strong>- initial condition for y</strong><strong> (</strong><strong>can be list</strong><strong> or </strong><strong>numpy array</strong><strong>)</strong> (<em>y0</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – not supported</p>
+</li>
+<li><p class="first"><em>if old_api False</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with entries:</dt>
+<dd><p class="first">flag   = An integer flag (StatusEnumDop)
+values = Named tuple with entries t and y and ydot. y will</p>
+<blockquote>
+<div><p>correspond to y_retn value and ydot to yp_retn!</p>
+</div></blockquote>
+<p class="last">errors = Named tuple with entries t_err and y_err
+roots  = Named tuple with entries t_roots and y_roots
+tstop  = Named tuple with entries t_stop and y_tstop
+message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.dopri5.dopri5.set_options">
+<code class="descname">set_options</code><span class="sig-paren">(</span><em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dopri5.html#dopri5.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dopri5.dopri5.set_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set specific options for the solver.</p>
+<p>Calling set_options a second time, normally resets the solver.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.dopri5.dopri5.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>tspan</em>, <em>y0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dopri5.html#dopri5.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dopri5.dopri5.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the solver.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- an list/array of times at which the computed value will be</strong> (<em>tspan</em>) – returned. Must contain the start time as first entry..</li>
+<li><strong>- list/numpy array of initial values</strong> (<em>y0</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – Not supported</p>
+</li>
+<li><p class="first"><em>if old_api False</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with entries:</dt>
+<dd><p class="first last">flag   = An integer flag
+values = Named tuple with entries t and y
+errors = Named tuple with entries t and y
+roots  = Named tuple with entries t and y
+tstop  = Named tuple with entries t and y
+message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.dopri5.dopri5.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>t</em>, <em>y_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dopri5.html#dopri5.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dopri5.dopri5.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for calling successive next step of the ODE solver to allow
+more precise control over the solver. The ‘init_step’ method has to
+be called before the ‘step’ method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- A step is done towards time t</strong><strong>, </strong><strong>and output at t returned.</strong> (<em>t</em>) – <p>This time can be higher or lower than the previous time.
+If option ‘one_step_compute’==True, and the solver supports
+it, only one internal solver step is done in the direction
+of t starting at the current step.</p>
+<dl class="docutils">
+<dt>If old_api=True, the old behavior is used:</dt>
+<dd><dl class="first last docutils">
+<dt>if t&gt;0.0 then integration is performed until this time</dt>
+<dd>and results at this time are returned in y_retn</dd>
+<dt>if t&lt;0.0 only one internal step is perfomed towards time abs(t)</dt>
+<dd>and results after this one time step are returned</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><strong>- numpy vector</strong><strong> (</strong><strong>ndim = 1</strong><strong>) </strong><strong>in which the computed</strong> (<em>y_retn</em>) – value will be stored  (needs to be preallocated).  If
+None y_retn is not used.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>if old_api</em> – not supported</p>
+</li>
+<li><p class="first"><em>if old_api False</em> –</p>
+<dl class="docutils">
+<dt>A named tuple, with entries:</dt>
+<dd><p class="first">flag   = An integer flag (StatusEnumDOP)
+values = Named tuple with entries t and y. y will</p>
+<blockquote>
+<div><p>correspond to y_retn value</p>
+</div></blockquote>
+<p class="last">errors = Named tuple with entries t_err and y_err
+roots  = Named tuple with entries t_roots and y_roots
+tstop  = Named tuple with entries t_stop and y_tstop
+message= String with message in case of an error</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.dopri5.dopri5.validate_flags">
+<code class="descname">validate_flags</code><span class="sig-paren">(</span><em>soln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dopri5.html#dopri5.validate_flags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dopri5.dopri5.validate_flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates the flag returned by <cite>dopri.solve</cite>.</p>
+<dl class="docutils">
+<dt>Validation happens using the following scheme:</dt>
+<dd><ul class="first last simple">
+<li>failures (<cite>flag</cite> &lt; 0) raise <cite>DOPSolveFailed</cite> or a subclass of it;</li>
+<li>otherwise, return an instance of <cite>SolverReturn</cite>.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1059,6 +1224,35 @@ All these indexes have to be specified in the
 </dl>
 </li>
 </ul>
+<dl class="class">
+<dt id="scikits.odes.ddaspkint.ddaspk">
+<em class="property">class </em><code class="descclassname">scikits.odes.ddaspkint.</code><code class="descname">ddaspk</code><span class="sig-paren">(</span><em>resfn</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ddaspkint.html#ddaspk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ddaspkint.ddaspk" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.ddaspkint.ddaspk.init_step">
+<code class="descname">init_step</code><span class="sig-paren">(</span><em>t0</em>, <em>y0</em>, <em>yp0</em>, <em>y_ic0_retn=None</em>, <em>yp_ic0_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ddaspkint.html#ddaspk.init_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ddaspkint.ddaspk.init_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>See dae.DaeBase</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ddaspkint.ddaspk.set_options">
+<code class="descname">set_options</code><span class="sig-paren">(</span><em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ddaspkint.html#ddaspk.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ddaspkint.ddaspk.set_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>See dae.DaeBase</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ddaspkint.ddaspk.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>tspan</em>, <em>y0</em>, <em>yp0</em>, <em>hook_fn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ddaspkint.html#ddaspk.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ddaspkint.ddaspk.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>See dae.DaeBase</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.ddaspkint.ddaspk.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>t</em>, <em>y_retn</em>, <em>yp_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ddaspkint.html#ddaspk.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ddaspkint.ddaspk.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>See dae.DaeBase</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="module-scikits.odes.lsodiint">
@@ -1157,6 +1351,35 @@ so yp0 will be calculated.</p>
 </li>
 </ul>
 <p>Source: <a class="reference external" href="http://www.netlib.org/ode/lsodi.f">http://www.netlib.org/ode/lsodi.f</a></p>
+<dl class="class">
+<dt id="scikits.odes.lsodiint.lsodi">
+<em class="property">class </em><code class="descclassname">scikits.odes.lsodiint.</code><code class="descname">lsodi</code><span class="sig-paren">(</span><em>resfn</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/lsodiint.html#lsodi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.lsodiint.lsodi" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.lsodiint.lsodi.init_step">
+<code class="descname">init_step</code><span class="sig-paren">(</span><em>t0</em>, <em>y0</em>, <em>yp0</em>, <em>y_ic0_retn=None</em>, <em>yp_ic0_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/lsodiint.html#lsodi.init_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.lsodiint.lsodi.init_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>See dae.DaeBase</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.lsodiint.lsodi.set_options">
+<code class="descname">set_options</code><span class="sig-paren">(</span><em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/lsodiint.html#lsodi.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.lsodiint.lsodi.set_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>See dae.DaeBase</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.lsodiint.lsodi.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>tspan</em>, <em>y0</em>, <em>yp0</em>, <em>hook_fn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/lsodiint.html#lsodi.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.lsodiint.lsodi.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>See dae.DaeBase</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.lsodiint.lsodi.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>t</em>, <em>y_retn</em>, <em>yp_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/lsodiint.html#lsodi.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.lsodiint.lsodi.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>See dae.DaeBase</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="module-scikits.odes.sundials">
@@ -1164,49 +1387,49 @@ so yp0 will be calculated.</p>
 <dl class="exception">
 <dt id="scikits.odes.sundials.CVODESolveException">
 <em class="property">exception </em><code class="descclassname">scikits.odes.sundials.</code><code class="descname">CVODESolveException</code><span class="sig-paren">(</span><em>soln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/sundials.html#CVODESolveException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.sundials.CVODESolveException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for exceptions raised by <code class="docutils literal"><span class="pre">CVODE.validate_flags</span></code>.</p>
+<dd><p>Base class for exceptions raised by <code class="docutils literal notranslate"><span class="pre">CVODE.validate_flags</span></code>.</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="scikits.odes.sundials.CVODESolveFailed">
 <em class="property">exception </em><code class="descclassname">scikits.odes.sundials.</code><code class="descname">CVODESolveFailed</code><span class="sig-paren">(</span><em>soln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/sundials.html#CVODESolveFailed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.sundials.CVODESolveFailed" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="docutils literal"><span class="pre">CVODE.solve</span></code> failed to reach endpoint</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">CVODE.solve</span></code> failed to reach endpoint</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="scikits.odes.sundials.CVODESolveFoundRoot">
 <em class="property">exception </em><code class="descclassname">scikits.odes.sundials.</code><code class="descname">CVODESolveFoundRoot</code><span class="sig-paren">(</span><em>soln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/sundials.html#CVODESolveFoundRoot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.sundials.CVODESolveFoundRoot" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="docutils literal"><span class="pre">CVODE.solve</span></code> found a root</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">CVODE.solve</span></code> found a root</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="scikits.odes.sundials.CVODESolveReachedTSTOP">
 <em class="property">exception </em><code class="descclassname">scikits.odes.sundials.</code><code class="descname">CVODESolveReachedTSTOP</code><span class="sig-paren">(</span><em>soln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/sundials.html#CVODESolveReachedTSTOP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.sundials.CVODESolveReachedTSTOP" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="docutils literal"><span class="pre">CVODE.solve</span></code> reached the endpoint specified by tstop.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">CVODE.solve</span></code> reached the endpoint specified by tstop.</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="scikits.odes.sundials.IDASolveException">
 <em class="property">exception </em><code class="descclassname">scikits.odes.sundials.</code><code class="descname">IDASolveException</code><span class="sig-paren">(</span><em>soln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/sundials.html#IDASolveException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.sundials.IDASolveException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for exceptions raised by <code class="docutils literal"><span class="pre">IDA.validate_flags</span></code>.</p>
+<dd><p>Base class for exceptions raised by <code class="docutils literal notranslate"><span class="pre">IDA.validate_flags</span></code>.</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="scikits.odes.sundials.IDASolveFailed">
 <em class="property">exception </em><code class="descclassname">scikits.odes.sundials.</code><code class="descname">IDASolveFailed</code><span class="sig-paren">(</span><em>soln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/sundials.html#IDASolveFailed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.sundials.IDASolveFailed" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="docutils literal"><span class="pre">IDA.solve</span></code> failed to reach endpoint</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IDA.solve</span></code> failed to reach endpoint</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="scikits.odes.sundials.IDASolveFoundRoot">
 <em class="property">exception </em><code class="descclassname">scikits.odes.sundials.</code><code class="descname">IDASolveFoundRoot</code><span class="sig-paren">(</span><em>soln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/sundials.html#IDASolveFoundRoot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.sundials.IDASolveFoundRoot" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="docutils literal"><span class="pre">IDA.solve</span></code> found a root</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IDA.solve</span></code> found a root</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="scikits.odes.sundials.IDASolveReachedTSTOP">
 <em class="property">exception </em><code class="descclassname">scikits.odes.sundials.</code><code class="descname">IDASolveReachedTSTOP</code><span class="sig-paren">(</span><em>soln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/sundials.html#IDASolveReachedTSTOP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.sundials.IDASolveReachedTSTOP" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="docutils literal"><span class="pre">IDA.solve</span></code> reached the endpoint specified by tstop.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IDA.solve</span></code> reached the endpoint specified by tstop.</p>
 </dd></dl>
 
 </div>
@@ -1331,6 +1554,113 @@ documentation).</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="scikits.odes.sundials.cvode.CV_WrapJacRhsFunction">
+<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapJacRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacRhsFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray J</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Jacobi matrix (for dense the full matrix, for band only
+bands. Result has to be stored in the variable J, which is preallocated
+to the corresponding size.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.set_jacfn">
+<code class="descname">set_jacfn</code><span class="sig-paren">(</span><em>self</em>, <em>jacfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.set_jacfn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set some jacobian equations as a JacRhsFunction executable class.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction">
+<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapJacTimesVecFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>ndarray v</em>, <em>ndarray Jv</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.set_jac_times_vecfn">
+<code class="descname">set_jac_times_vecfn</code><span class="sig-paren">(</span><em>self</em>, <em>jac_times_vecfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.set_jac_times_vecfn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set some CV_JacTimesVecFn executable class.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction">
+<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapPrecSetupFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>bool jok</em>, <em>jcurPtr</em>, <em>DTYPE_t gamma</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.set_prec_setupfn">
+<code class="descname">set_prec_setupfn</code><span class="sig-paren">(</span><em>self</em>, <em>prec_setupfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.set_prec_setupfn" title="Permalink to this definition">¶</a></dt>
+<dd><p>set a precondititioning setup method as a CV_PrecSetupFunction
+executable class</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction">
+<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapPrecSolveFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray r</em>, <em>ndarray z</em>, <em>DTYPE_t gamma</em>, <em>DTYPE_t delta</em>, <em>int lr</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.set_prec_solvefn">
+<code class="descname">set_prec_solvefn</code><span class="sig-paren">(</span><em>self</em>, <em>prec_solvefn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.set_prec_solvefn" title="Permalink to this definition">¶</a></dt>
+<dd><p>set a precondititioning solve method as a CV_PrecSolveFunction
+executable class</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.sundials.cvode.CV_WrapRhsFunction">
+<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRhsFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapRhsFunction.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapRhsFunction.set_rhsfn">
+<code class="descname">set_rhsfn</code><span class="sig-paren">(</span><em>self</em>, <em>rhsfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRhsFunction.set_rhsfn" title="Permalink to this definition">¶</a></dt>
+<dd><p>set some rhs equations as a RhsFunction executable class</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scikits.odes.sundials.cvode.CV_WrapRhsFunction.with_userdata">
+<code class="descname">with_userdata</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRhsFunction.with_userdata" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>with_userdata</em> – ‘int’</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.sundials.cvode.CV_WrapRootFunction">
+<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapRootFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRootFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapRootFunction.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray g</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRootFunction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.sundials.cvode.CV_WrapRootFunction.set_rootfn">
+<code class="descname">set_rootfn</code><span class="sig-paren">(</span><em>self</em>, <em>rootfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRootFunction.set_rootfn" title="Permalink to this definition">¶</a></dt>
+<dd><p>set root-ing condition(equations) as a RootFunction executable class</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="scikits.odes.sundials.cvode.StatusEnum">
 <em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">StatusEnum</code><a class="headerlink" href="#scikits.odes.sundials.cvode.StatusEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
@@ -1402,6 +1732,57 @@ documentation).</p>
 <dt id="scikits.odes.sundials.ida.IDA_RootFunction.evaluate">
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>ndarray g</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_RootFunction.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.sundials.ida.IDA_WrapJacRhsFunction">
+<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_WrapJacRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapJacRhsFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>DTYPE_t cj</em>, <em>ndarray J</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Jacobi matrix (for dense the full matrix, for band only
+bands. Result has to be stored in the variable J, which is preallocated
+to the corresponding size.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.set_jacfn">
+<code class="descname">set_jacfn</code><span class="sig-paren">(</span><em>self</em>, <em>jacfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.set_jacfn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set some jacobian equations as a JacResFunction executable class.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.sundials.ida.IDA_WrapRhsFunction">
+<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_WrapRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRhsFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.sundials.ida.IDA_WrapRhsFunction.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>ndarray result</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.sundials.ida.IDA_WrapRhsFunction.set_resfn">
+<code class="descname">set_resfn</code><span class="sig-paren">(</span><em>self</em>, <em>resfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRhsFunction.set_resfn" title="Permalink to this definition">¶</a></dt>
+<dd><p>set some residual equations as a ResFunction executable class</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scikits.odes.sundials.ida.IDA_WrapRootFunction">
+<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_WrapRootFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRootFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="scikits.odes.sundials.ida.IDA_WrapRootFunction.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>ndarray g</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRootFunction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scikits.odes.sundials.ida.IDA_WrapRootFunction.set_rootfn">
+<code class="descname">set_rootfn</code><span class="sig-paren">(</span><em>self</em>, <em>rootfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRootFunction.set_rootfn" title="Permalink to this definition">¶</a></dt>
+<dd><p>set root-ing condition(equations) as a RootFunction executable class</p>
+</dd></dl>
 
 </dd></dl>
 

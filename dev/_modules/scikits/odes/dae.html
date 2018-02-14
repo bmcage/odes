@@ -215,8 +215,8 @@
 <span class="sd">        Set specific options for the solver.</span>
 
 <span class="sd">        Calling set_options a second time, normally resets the solver.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DaeBase.solve"><a class="viewcode-back" href="../../../api.html#scikits.odes.dae.DaeBase.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -262,8 +262,8 @@
 <span class="sd">            ``yp_err`` numpy array of derivatives corresponding to time t_err</span>
 <span class="sd">            ========== ==========================================</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DaeBase.init_step"><a class="viewcode-back" href="../../../api.html#scikits.odes.dae.DaeBase.init_step">[docs]</a>    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">yp_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -308,8 +308,8 @@
 <span class="sd">            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)</span>
 <span class="sd">            =========== ==========================================</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DaeBase.step"><a class="viewcode-back" href="../../../api.html#scikits.odes.dae.DaeBase.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yp_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -358,8 +358,8 @@
 <span class="sd">            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)</span>
 <span class="sd">            =========== ==========================================</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span></div></div>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span>
 
 <span class="c1">#------------------------------------------------------------------------------</span>
 <span class="c1"># User interface</span>
@@ -451,8 +451,8 @@
 <span class="sd">        See the solver documentation for details.</span>
 
 <span class="sd">        Calling set_options a second time, normally resets the solver.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span>
 
 <div class="viewcode-block" id="dae.solve"><a class="viewcode-back" href="../../../dae.html#scikits.odes.dae.dae.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -498,8 +498,8 @@
 <span class="sd">            ``yp_err`` numpy array of derivatives corresponding to time t_err</span>
 <span class="sd">            ========== ==========================================</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">)</span>
 
 <div class="viewcode-block" id="dae.init_step"><a class="viewcode-back" href="../../../dae.html#scikits.odes.dae.dae.init_step">[docs]</a>    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">yp_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -546,8 +546,8 @@
 <span class="sd">            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)</span>
 <span class="sd">            =========== ==========================================</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">init_step</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span><span class="p">,</span> <span class="n">yp_ic0_retn</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">init_step</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span><span class="p">,</span> <span class="n">yp_ic0_retn</span><span class="p">)</span>
 
 <div class="viewcode-block" id="dae.step"><a class="viewcode-back" href="../../../dae.html#scikits.odes.dae.dae.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yp_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -596,14 +596,14 @@
 <span class="sd">            ``t_out``   time, where the solver stopped (when no error occured, t_out == t)</span>
 <span class="sd">            =========== ==========================================</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Clean up what is needed</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span>
 
 <span class="c1">#------------------------------------------------------------------------------</span>
 <span class="c1"># DAE integrators</span>

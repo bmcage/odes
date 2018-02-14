@@ -166,6 +166,7 @@
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
@@ -173,6 +174,7 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  | <a href="#Y"><strong>Y</strong></a>
  
 </div>
@@ -189,11 +191,23 @@
 </li>
       <li><a href="api.html#scikits.odes.sundials.cvode.CV_PrecSolveFunction">CV_PrecSolveFunction (class in scikits.odes.sundials.cvode)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#scikits.odes.sundials.cvode.CV_RhsFunction">CV_RhsFunction (class in scikits.odes.sundials.cvode)</a>
 </li>
       <li><a href="api.html#scikits.odes.sundials.cvode.CV_RootFunction">CV_RootFunction (class in scikits.odes.sundials.cvode)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapJacRhsFunction">CV_WrapJacRhsFunction (class in scikits.odes.sundials.cvode)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction">CV_WrapJacTimesVecFunction (class in scikits.odes.sundials.cvode)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction">CV_WrapPrecSetupFunction (class in scikits.odes.sundials.cvode)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction">CV_WrapPrecSolveFunction (class in scikits.odes.sundials.cvode)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapRhsFunction">CV_WrapRhsFunction (class in scikits.odes.sundials.cvode)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapRootFunction">CV_WrapRootFunction (class in scikits.odes.sundials.cvode)</a>
 </li>
       <li><a href="api.html#scikits.odes.sundials.CVODESolveException">CVODESolveException</a>
 </li>
@@ -213,8 +227,14 @@
 </li>
       <li><a href="api.html#scikits.odes.dae.DaeBase">DaeBase (class in scikits.odes.dae)</a>
 </li>
+      <li><a href="api.html#scikits.odes.ddaspkint.ddaspk">ddaspk (class in scikits.odes.ddaspkint)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#scikits.odes.dopri5.dop853">dop853 (class in scikits.odes.dopri5)</a>
+</li>
+      <li><a href="api.html#scikits.odes.dopri5.dopri5">dopri5 (class in scikits.odes.dopri5)</a>
+</li>
       <li><a href="api.html#scikits.odes.dopri5.DOPSolveException">DOPSolveException</a>
 </li>
       <li><a href="api.html#scikits.odes.dopri5.DOPSolveFailed">DOPSolveFailed</a>
@@ -242,6 +262,18 @@
 </li>
         <li><a href="api.html#scikits.odes.sundials.cvode.CV_RootFunction.evaluate">(scikits.odes.sundials.cvode.CV_RootFunction method)</a>
 </li>
+        <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.evaluate">(scikits.odes.sundials.cvode.CV_WrapJacRhsFunction method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.evaluate">(scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.evaluate">(scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.evaluate">(scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapRhsFunction.evaluate">(scikits.odes.sundials.cvode.CV_WrapRhsFunction method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapRootFunction.evaluate">(scikits.odes.sundials.cvode.CV_WrapRootFunction method)</a>
+</li>
         <li><a href="api.html#scikits.odes.sundials.ida.IDA_ContinuationFunction.evaluate">(scikits.odes.sundials.ida.IDA_ContinuationFunction method)</a>
 </li>
         <li><a href="api.html#scikits.odes.sundials.ida.IDA_JacRhsFunction.evaluate">(scikits.odes.sundials.ida.IDA_JacRhsFunction method)</a>
@@ -249,6 +281,12 @@
         <li><a href="api.html#scikits.odes.sundials.ida.IDA_RhsFunction.evaluate">(scikits.odes.sundials.ida.IDA_RhsFunction method)</a>
 </li>
         <li><a href="api.html#scikits.odes.sundials.ida.IDA_RootFunction.evaluate">(scikits.odes.sundials.ida.IDA_RootFunction method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.evaluate">(scikits.odes.sundials.ida.IDA_WrapJacRhsFunction method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.sundials.ida.IDA_WrapRhsFunction.evaluate">(scikits.odes.sundials.ida.IDA_WrapRhsFunction method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.sundials.ida.IDA_WrapRootFunction.evaluate">(scikits.odes.sundials.ida.IDA_WrapRootFunction method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -281,6 +319,12 @@
 </li>
       <li><a href="api.html#scikits.odes.sundials.ida.IDA_RootFunction">IDA_RootFunction (class in scikits.odes.sundials.ida)</a>
 </li>
+      <li><a href="api.html#scikits.odes.sundials.ida.IDA_WrapJacRhsFunction">IDA_WrapJacRhsFunction (class in scikits.odes.sundials.ida)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.ida.IDA_WrapRhsFunction">IDA_WrapRhsFunction (class in scikits.odes.sundials.ida)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.ida.IDA_WrapRootFunction">IDA_WrapRootFunction (class in scikits.odes.sundials.ida)</a>
+</li>
       <li><a href="api.html#scikits.odes.sundials.IDASolveException">IDASolveException</a>
 </li>
       <li><a href="api.html#scikits.odes.sundials.IDASolveFailed">IDASolveFailed</a>
@@ -296,11 +340,25 @@
       <ul>
         <li><a href="api.html#scikits.odes.dae.DaeBase.init_step">(scikits.odes.dae.DaeBase method)</a>
 </li>
+        <li><a href="api.html#scikits.odes.ddaspkint.ddaspk.init_step">(scikits.odes.ddaspkint.ddaspk method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.dopri5.dopri5.init_step">(scikits.odes.dopri5.dopri5 method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.lsodiint.lsodi.init_step">(scikits.odes.lsodiint.lsodi method)</a>
+</li>
         <li><a href="api.html#scikits.odes.ode.OdeBase.init_step">(scikits.odes.ode.OdeBase method)</a>
 </li>
         <li><a href="ode.html#scikits.odes.ode.ode.init_step">(scikits.odes.ode.ode method)</a>
 </li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#scikits.odes.lsodiint.lsodi">lsodi (class in scikits.odes.lsodiint)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -367,24 +425,58 @@
 </li>
       <li><a href="api.html#module-scikits.odes.sundials.ida">scikits.odes.sundials.ida (module)</a>
 </li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.set_jac_times_vecfn">set_jac_times_vecfn() (scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction method)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.set_jacfn">set_jacfn() (scikits.odes.sundials.cvode.CV_WrapJacRhsFunction method)</a>
+
+      <ul>
+        <li><a href="api.html#scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.set_jacfn">(scikits.odes.sundials.ida.IDA_WrapJacRhsFunction method)</a>
+</li>
+      </ul></li>
       <li><a href="dae.html#scikits.odes.dae.dae.set_options">set_options() (scikits.odes.dae.dae method)</a>
 
       <ul>
         <li><a href="api.html#scikits.odes.dae.DaeBase.set_options">(scikits.odes.dae.DaeBase method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.ddaspkint.ddaspk.set_options">(scikits.odes.ddaspkint.ddaspk method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.dopri5.dopri5.set_options">(scikits.odes.dopri5.dopri5 method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.lsodiint.lsodi.set_options">(scikits.odes.lsodiint.lsodi method)</a>
 </li>
         <li><a href="api.html#scikits.odes.ode.OdeBase.set_options">(scikits.odes.ode.OdeBase method)</a>
 </li>
         <li><a href="ode.html#scikits.odes.ode.ode.set_options">(scikits.odes.ode.ode method)</a>
 </li>
       </ul></li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.set_prec_setupfn">set_prec_setupfn() (scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction method)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.set_prec_solvefn">set_prec_solvefn() (scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction method)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.ida.IDA_WrapRhsFunction.set_resfn">set_resfn() (scikits.odes.sundials.ida.IDA_WrapRhsFunction method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapRhsFunction.set_rhsfn">set_rhsfn() (scikits.odes.sundials.cvode.CV_WrapRhsFunction method)</a>
+</li>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapRootFunction.set_rootfn">set_rootfn() (scikits.odes.sundials.cvode.CV_WrapRootFunction method)</a>
+
+      <ul>
+        <li><a href="api.html#scikits.odes.sundials.ida.IDA_WrapRootFunction.set_rootfn">(scikits.odes.sundials.ida.IDA_WrapRootFunction method)</a>
+</li>
+      </ul></li>
       <li><a href="ode.html#scikits.odes.ode.ode.set_tstop">set_tstop() (scikits.odes.ode.ode method)</a>
 </li>
       <li><a href="dae.html#scikits.odes.dae.dae.solve">solve() (scikits.odes.dae.dae method)</a>
 
       <ul>
         <li><a href="api.html#scikits.odes.dae.DaeBase.solve">(scikits.odes.dae.DaeBase method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.ddaspkint.ddaspk.solve">(scikits.odes.ddaspkint.ddaspk method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.dopri5.dopri5.solve">(scikits.odes.dopri5.dopri5 method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.lsodiint.lsodi.solve">(scikits.odes.lsodiint.lsodi method)</a>
 </li>
         <li><a href="api.html#scikits.odes.ode.OdeBase.solve">(scikits.odes.ode.OdeBase method)</a>
 </li>
@@ -405,6 +497,12 @@
 
       <ul>
         <li><a href="api.html#scikits.odes.dae.DaeBase.step">(scikits.odes.dae.DaeBase method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.ddaspkint.ddaspk.step">(scikits.odes.ddaspkint.ddaspk method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.dopri5.dopri5.step">(scikits.odes.dopri5.dopri5 method)</a>
+</li>
+        <li><a href="api.html#scikits.odes.lsodiint.lsodi.step">(scikits.odes.lsodiint.lsodi method)</a>
 </li>
         <li><a href="api.html#scikits.odes.ode.OdeBase.step">(scikits.odes.ode.OdeBase method)</a>
 </li>
@@ -429,7 +527,19 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#scikits.odes.dopri5.dopri5.validate_flags">validate_flags() (scikits.odes.dopri5.dopri5 method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#scikits.odes.dopri5.SolverReturn.values">values (scikits.odes.dopri5.SolverReturn attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#scikits.odes.sundials.cvode.CV_WrapRhsFunction.with_userdata">with_userdata (scikits.odes.sundials.cvode.CV_WrapRhsFunction attribute)</a>
 </li>
   </ul></td>
 </tr></table>
