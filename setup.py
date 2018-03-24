@@ -10,51 +10,53 @@ LICENSE: the license of odes is the same as scipy, new BSD.
 import os
 import sys
 
-import setuptools
+from setuptools import find_packages
 
 from common import *
 
-if (sys.version_info[0] < 3) or (
-    sys.version_info[0] == 3 and sys.version_info[1] < 4
-):
-    INSTALL_REQUIRES.append('enum34')
+additional_kwargs = {}
 
-def configuration(parent_package='',top_path=None):
-    from numpy.distutils.misc_util import Configuration
-    config = Configuration(None, parent_package, top_path,
-        namespace_packages=['scikits'])
-    # Avoid non-useful msg: "Ignoring attempt to set 'name' (from ... "
-    config.set_options(
-        ignore_setup_xxx_py=True,
-        assume_default_configuration=True,
-        delegate_options_to_subpackages=True,
-        quiet=True
-    )
-    config.add_subpackage(DISTNAME)
-    config.add_data_files('scikits/__init__.py')
-    return config
+if "bdist_wheel" in sys.argv or "install" in sys.argv:
+    from os.path import join
+    from glob import glob
+    from numpy.distutils.core import setup, Extension
+    from setup_build import build_ext
 
-def setup_package():
+    # add cython build logic
+    additional_kwargs["cmdclass"] = {'build_ext': build_ext}
 
-    from numpy.distutils.core import setup
-    setup(name=DISTNAME, packages=['scikits'],
-        version = VERSION,
-        maintainer = MAINTAINER,
-        maintainer_email = MAINTAINER_EMAIL,
-        description = DESCRIPTION,
-        long_description = LONG_DESCRIPTION,
-        url = URL,
-        license = LICENSE,
-        configuration = configuration,
-        install_requires = INSTALL_REQUIRES,
-        zip_safe = False,
-        package_data = {
-            # If any package contains *.pxd files, include them:
-            '': ['*.pxd'],
-        },
-        classifiers=CLASSIFIERS,
-        )
-    return
+    # f2py requires build_src to be called
+    base_path = join('scikits', 'odes')
+    daepack_paths = glob(join(base_path, 'daepack', '*.f'))
+    additional_kwargs['ext_modules'] = [
+        Extension('scikits.odes.ddaspk',
+            sources=[join(base_path, 'ddaspk.pyf')] + daepack_paths,
+        ), Extension('scikits.odes.lsodi',
+            sources=[join(base_path, 'lsodi.pyf')] + daepack_paths,
+        ),
+    ]
 
-if __name__ == '__main__':
-    setup_package()
+else:
+    from setuptools import setup
+
+setup(
+    name = DISTNAME,
+    version = VERSION,
+    maintainer = MAINTAINER,
+    maintainer_email = MAINTAINER_EMAIL,
+    description = DESCRIPTION,
+    long_description = LONG_DESCRIPTION,
+    url = URL,
+    license = LICENSE,
+    setup_requires = BUILD_REQUIRES,
+    install_requires = INSTALL_REQUIRES,
+    packages = find_packages(),
+    namespace_packages = ['scikits'],
+    zip_safe = False,
+    package_data = {
+        # If any package contains *.pxd files, include them:
+        '': ['*.pxd'],
+    },
+    classifiers = CLASSIFIERS,
+    **additional_kwargs
+)
