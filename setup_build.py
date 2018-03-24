@@ -1,4 +1,5 @@
 
+import io
 import os
 from os.path import join
 from distutils.log import info
@@ -7,6 +8,57 @@ from numpy.distutils.command.build_ext import build_ext as _build_ext
 
 PKGCONFIG_CVODE = 'sundials-cvode-serial'
 PKGCONFIG_IDA = 'sundials-ida-serial'
+
+
+def write_pxi(filename, definitions):
+    """
+    Write a cython include file (.pxi), `filename`, with the definitions in the
+    `definitions` mapping.
+    """
+    with io.open(filename, mode='w', encoding='utf-8') as pxi_file:
+        for name, val in definitions.items():
+            pxi_file.write(u"DEF {name} = {val}\n".format(name=name, val=val))
+    return filename
+
+
+def get_sundials_config_pxi(include_dirs, dist):
+    """
+    Create pxi file containing some of sundials build config
+
+    Don't ask why this is a function, something crazy about
+    distutils/numpy not setting _setup_distribution at the right time or
+    something...
+    """
+    SUNDIALS_CONFIG_H = "sundials/sundials_config.h"
+    BASE_PATH = join('scikits', 'odes', 'sundials')
+
+    config_cmd = dist.get_command_obj("config")
+    if config_cmd.check_macro_true(
+        "SUNDIALS_DOUBLE_PRECISION", headers=[SUNDIALS_CONFIG_H],
+        include_dirs=include_dirs
+    ):
+        SUNDIALS_FLOAT_TYPE = '"double"'
+        info("Found sundials built with double precision.")
+    elif config_cmd.check_macro_true(
+        "SUNDIALS_SINGLE_PRECISION", headers=[SUNDIALS_CONFIG_H],
+        include_dirs=include_dirs
+    ):
+        SUNDIALS_FLOAT_TYPE = '"single"'
+        info("Found sundials built with single precision.")
+    elif config_cmd.check_macro_true(
+        "SUNDIALS_EXTENDED_PRECISION", headers=[SUNDIALS_CONFIG_H],
+        include_dirs=include_dirs
+    ):
+        SUNDIALS_FLOAT_TYPE = '"extended"'
+        info("Found sundials built with extended precision.")
+    else:
+        # fall back to double
+        SUNDIALS_FLOAT_TYPE = '"double"'
+        info("Failed to find sundials precision, falling back to double...")
+
+    return write_pxi(join(BASE_PATH, "sundials_config.pxi"),
+        dict(SUNDIALS_FLOAT_TYPE=SUNDIALS_FLOAT_TYPE),
+    )
 
 
 class build_ext(_build_ext):
@@ -110,6 +162,9 @@ class build_ext(_build_ext):
         IDA_INCLUDE_DIRS.extend(SUNDIALS_INCLUDE_DIRS)
         CVODE_LIBRARY_DIRS.extend(SUNDIALS_LIBRARY_DIRS)
         IDA_LIBRARY_DIRS.extend(SUNDIALS_LIBRARY_DIRS)
+
+        sundials_pxi = get_sundials_config_pxi(SUNDIALS_INCLUDE_DIRS,
+                self.distribution)
 
         return [
             Extension(
