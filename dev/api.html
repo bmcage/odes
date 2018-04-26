@@ -25,27 +25,19 @@
   
 
   
-  
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Odes 2.3.3.dev0 documentation" href="index.html"/>
-        <link rel="prev" title="DAE Solvers" href="dae.html"/> 
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="DAE Solvers" href="dae.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -136,7 +128,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">Odes</a>
@@ -144,9 +136,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -215,10 +208,10 @@ solvers, so they can mature outside of scipy.</p>
 <h3>First-order ODE solver<a class="headerlink" href="#first-order-ode-solver" title="Permalink to this headline">¶</a></h3>
 <p>User-friendly interface to various numerical integrators for solving a
 system of first order ODEs with prescribed initial conditions:</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[ \begin{align}\begin{aligned}\frac{dy(t)}{dt} = f(t, y(t)), \quad y(t_0)=y_0\\y(t_0)[i] = y_0[i], i = 0, ..., \mathrm{len}(y_0) - 1\end{aligned}\end{align} \]</div>
-<p><span class="math notranslate">\(f(t,y)\)</span> is the right hand side function and returns a vector of size
-<span class="math notranslate">\(\mathrm{len}(y_0)\)</span>.</p>
+<p><span class="math notranslate nohighlight">\(f(t,y)\)</span> is the right hand side function and returns a vector of size
+<span class="math notranslate nohighlight">\(\mathrm{len}(y_0)\)</span>.</p>
 <dl class="class">
 <dt id="scikits.odes.ode.OdeBase">
 <em class="property">class </em><code class="descclassname">scikits.odes.ode.</code><code class="descname">OdeBase</code><span class="sig-paren">(</span><em>Rfn</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/ode.html#OdeBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.ode.OdeBase" title="Permalink to this definition">¶</a></dt>
@@ -497,11 +490,11 @@ be called before the ‘step’ method.</p>
 <h3>First-order DAE solver<a class="headerlink" href="#first-order-dae-solver" title="Permalink to this headline">¶</a></h3>
 <p>User-friendly interface to various numerical integrators for solving an
 algebraic system of first order ODEs with prescribed initial conditions:</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[ \begin{align}\begin{aligned}A \frac{dy(t)}{dt} = f(t,y(t)),\\y(t=0)[i] = y0[i],\\\frac{d y(t=0)}{dt}[i]  = yprime0[i],\end{aligned}\end{align} \]</div>
-<p>where <span class="math notranslate">\(i = 0, ..., len(y0) - 1\)</span>; <span class="math notranslate">\(A\)</span> is a (possibly singular) matrix
-of size <span class="math notranslate">\(i × i\)</span>; and <span class="math notranslate">\(f(t,y)\)</span> is a vector of size <span class="math notranslate">\(i\)</span> or more generally, equations of the form</p>
-<div class="math notranslate">
+<p>where <span class="math notranslate nohighlight">\(i = 0, ..., len(y0) - 1\)</span>; <span class="math notranslate nohighlight">\(A\)</span> is a (possibly singular) matrix
+of size <span class="math notranslate nohighlight">\(i × i\)</span>; and <span class="math notranslate nohighlight">\(f(t,y)\)</span> is a vector of size <span class="math notranslate nohighlight">\(i\)</span> or more generally, equations of the form</p>
+<div class="math notranslate nohighlight">
 \[G(t,y,y') = 0\]</div>
 <dl class="class">
 <dt id="scikits.odes.dae.DaeBase">
@@ -1802,9 +1795,7 @@ to the corresponding size.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -1824,7 +1815,7 @@ to the corresponding size.</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1843,6 +1834,7 @@ to the corresponding size.</p>
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
             VERSION:'2.3.3.dev0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -1861,14 +1853,13 @@ to the corresponding size.</p>
     <script type="text/javascript" src="_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

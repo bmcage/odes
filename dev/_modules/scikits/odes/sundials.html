@@ -25,27 +25,18 @@
   
 
   
-  
     <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../../../_static/theme_overrides.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../../../genindex.html"/>
-        <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Odes 2.3.3.dev0 documentation" href="../../../index.html"/>
-        <link rel="up" title="Module code" href="../../index.html"/> 
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
 
   
   <script src="../../../_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -106,7 +97,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">Odes</a>
@@ -114,9 +105,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -146,8 +138,6 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
-        
       </li>
     
   </ul>
@@ -168,44 +158,44 @@
 <div class="viewcode-block" id="CVODESolveException"><a class="viewcode-back" href="../../../api.html#scikits.odes.sundials.CVODESolveException">[docs]</a><span class="k">class</span> <span class="nc">CVODESolveException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class for exceptions raised by ``CVODE.validate_flags``.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">soln</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">soln</span> <span class="o">=</span> <span class="n">soln</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">soln</span><span class="p">),)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soln</span> <span class="o">=</span> <span class="n">soln</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">soln</span><span class="p">),)</span></div>
 
 <div class="viewcode-block" id="CVODESolveFailed"><a class="viewcode-back" href="../../../api.html#scikits.odes.sundials.CVODESolveFailed">[docs]</a><span class="k">class</span> <span class="nc">CVODESolveFailed</span><span class="p">(</span><span class="n">CVODESolveException</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;``CVODE.solve`` failed to reach endpoint&quot;&quot;&quot;</span>
     <span class="n">_message</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;Solver failed with flag </span><span class="si">{0.flag}</span><span class="s2"> and finished at </span><span class="si">{0.errors.t}</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;with values </span><span class="si">{0.errors.y}</span><span class="s2">.&quot;</span></div>
-    <span class="p">)</span>
+        <span class="s2">&quot;with values </span><span class="si">{0.errors.y}</span><span class="s2">.&quot;</span>
+    <span class="p">)</span></div>
 
 <div class="viewcode-block" id="CVODESolveFoundRoot"><a class="viewcode-back" href="../../../api.html#scikits.odes.sundials.CVODESolveFoundRoot">[docs]</a><span class="k">class</span> <span class="nc">CVODESolveFoundRoot</span><span class="p">(</span><span class="n">CVODESolveException</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;``CVODE.solve`` found a root&quot;&quot;&quot;</span></div>
-    <span class="n">_message</span> <span class="o">=</span> <span class="s2">&quot;Solver found a root at </span><span class="si">{0.roots.t[0]}</span><span class="s2">.&quot;</span>
+    <span class="sd">&quot;&quot;&quot;``CVODE.solve`` found a root&quot;&quot;&quot;</span>
+    <span class="n">_message</span> <span class="o">=</span> <span class="s2">&quot;Solver found a root at </span><span class="si">{0.roots.t[0]}</span><span class="s2">.&quot;</span></div>
 
 <div class="viewcode-block" id="CVODESolveReachedTSTOP"><a class="viewcode-back" href="../../../api.html#scikits.odes.sundials.CVODESolveReachedTSTOP">[docs]</a><span class="k">class</span> <span class="nc">CVODESolveReachedTSTOP</span><span class="p">(</span><span class="n">CVODESolveException</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;``CVODE.solve`` reached the endpoint specified by tstop.&quot;&quot;&quot;</span></div>
-    <span class="n">_message</span> <span class="o">=</span> <span class="s2">&quot;Solver reached tstop at </span><span class="si">{0.tstop.t[0]}</span><span class="s2">.&quot;</span>
+    <span class="sd">&quot;&quot;&quot;``CVODE.solve`` reached the endpoint specified by tstop.&quot;&quot;&quot;</span>
+    <span class="n">_message</span> <span class="o">=</span> <span class="s2">&quot;Solver reached tstop at </span><span class="si">{0.tstop.t[0]}</span><span class="s2">.&quot;</span></div>
 
 <div class="viewcode-block" id="IDASolveException"><a class="viewcode-back" href="../../../api.html#scikits.odes.sundials.IDASolveException">[docs]</a><span class="k">class</span> <span class="nc">IDASolveException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class for exceptions raised by ``IDA.validate_flags``.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">soln</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">soln</span> <span class="o">=</span> <span class="n">soln</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">soln</span><span class="p">),)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soln</span> <span class="o">=</span> <span class="n">soln</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">soln</span><span class="p">),)</span></div>
 
 <div class="viewcode-block" id="IDASolveFailed"><a class="viewcode-back" href="../../../api.html#scikits.odes.sundials.IDASolveFailed">[docs]</a><span class="k">class</span> <span class="nc">IDASolveFailed</span><span class="p">(</span><span class="n">IDASolveException</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;``IDA.solve`` failed to reach endpoint&quot;&quot;&quot;</span>
     <span class="n">_message</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;Solver failed with flag </span><span class="si">{0.flag}</span><span class="s2"> and finished at </span><span class="si">{0.errors.t}</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;with values </span><span class="si">{0.errors.y}</span><span class="s2"> and derivatives </span><span class="si">{0.errors.ydot}</span><span class="s2">.&quot;</span></div>
-    <span class="p">)</span>
+        <span class="s2">&quot;with values </span><span class="si">{0.errors.y}</span><span class="s2"> and derivatives </span><span class="si">{0.errors.ydot}</span><span class="s2">.&quot;</span>
+    <span class="p">)</span></div>
 
 <div class="viewcode-block" id="IDASolveFoundRoot"><a class="viewcode-back" href="../../../api.html#scikits.odes.sundials.IDASolveFoundRoot">[docs]</a><span class="k">class</span> <span class="nc">IDASolveFoundRoot</span><span class="p">(</span><span class="n">IDASolveException</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;``IDA.solve`` found a root&quot;&quot;&quot;</span></div>
-    <span class="n">_message</span> <span class="o">=</span> <span class="s2">&quot;Solver found a root at </span><span class="si">{0.roots.t[0]}</span><span class="s2">.&quot;</span>
+    <span class="sd">&quot;&quot;&quot;``IDA.solve`` found a root&quot;&quot;&quot;</span>
+    <span class="n">_message</span> <span class="o">=</span> <span class="s2">&quot;Solver found a root at </span><span class="si">{0.roots.t[0]}</span><span class="s2">.&quot;</span></div>
 
 <div class="viewcode-block" id="IDASolveReachedTSTOP"><a class="viewcode-back" href="../../../api.html#scikits.odes.sundials.IDASolveReachedTSTOP">[docs]</a><span class="k">class</span> <span class="nc">IDASolveReachedTSTOP</span><span class="p">(</span><span class="n">IDASolveException</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;``IDA.solve`` reached the endpoint specified by tstop.&quot;&quot;&quot;</span></div>
-    <span class="n">_message</span> <span class="o">=</span> <span class="s2">&quot;Solver reached tstop at </span><span class="si">{0.tstop.t[0]}</span><span class="s2">.&quot;</span>
+    <span class="sd">&quot;&quot;&quot;``IDA.solve`` reached the endpoint specified by tstop.&quot;&quot;&quot;</span>
+    <span class="n">_message</span> <span class="o">=</span> <span class="s2">&quot;Solver reached tstop at </span><span class="si">{0.tstop.t[0]}</span><span class="s2">.&quot;</span></div>
 
 
 <span class="k">def</span> <span class="nf">_get_num_args</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
@@ -228,9 +218,7 @@
 </pre></div>
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -243,7 +231,7 @@
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -262,6 +250,7 @@
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
             VERSION:'2.3.3.dev0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -280,14 +269,13 @@
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

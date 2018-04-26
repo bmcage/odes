@@ -25,28 +25,20 @@
   
 
   
-  
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Odes 2.3.3.dev0 documentation" href="index.html"/>
-        <link rel="next" title="DAE Solvers" href="dae.html"/>
-        <link rel="prev" title="Welcome to the ODES scikit API Documentation" href="index.html"/> 
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DAE Solvers" href="dae.html" />
+    <link rel="prev" title="Welcome to the ODES scikit API Documentation" href="index.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -107,7 +99,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">Odes</a>
@@ -115,9 +107,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -344,13 +337,13 @@ integration.</p>
 <p class="rubric">Examples</p>
 <p>The second order differential equation for the angle <cite>theta</cite> of a
 pendulum acted on by gravity with friction can be written:</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[\theta''(t) + b \theta'(t) + c \sin(\theta(t)) = 0\]</div>
 <p>where <cite>b</cite> and <cite>c</cite> are positive constants, and a prime (‘) denotes a
 derivative.  To solve this equation with <cite>odeint</cite>, we must first convert
 it to a system of first order equations.  By defining the angular
 velocity <code class="docutils literal notranslate"><span class="pre">omega(t)</span> <span class="pre">=</span> <span class="pre">theta'(t)</span></code>, we obtain the system:</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[\theta'(t) = \omega(t)
 \omega'(t) = -b \omega(t) - c \sin(\theta(t))\]</div>
 <p>We assume the constants are <cite>b</cite> = 0.25 and <cite>c</cite> = 5.0:</p>
@@ -775,9 +768,7 @@ be called before the ‘step’ method.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -799,7 +790,7 @@ be called before the ‘step’ method.</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -818,6 +809,7 @@ be called before the ‘step’ method.</p>
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
             VERSION:'2.3.3.dev0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -836,14 +828,13 @@ be called before the ‘step’ method.</p>
     <script type="text/javascript" src="_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>
