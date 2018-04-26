@@ -1615,12 +1615,14 @@ cdef class CVODE:
         cdef unsigned int idx = 1 # idx == 0 is IC
         cdef unsigned int last_idx = np.alen(tspan)
         cdef DTYPE_t t
-        cdef int flag
+        cdef int flag = 0
         cdef void *cv_mem = self._cv_mem
         cdef realtype t_out
         cdef N_Vector y  = self.y
         cdef CV_ContinuationFunction onroot = self.options['onroot']
         cdef CV_ContinuationFunction ontstop = self.options['ontstop']
+        cdef object y_err
+        cdef object t_err
 
         y_last   = np.empty(np.shape(y0), DTYPE)
         t = tspan[idx]
