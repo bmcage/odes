@@ -10,17 +10,17 @@ Before building ``odes``, you need to have installed:
       distributions, ``python-devel`` on Fedora)
     * C compiler
     * Fortran compiler (e.g. gfortran)
-    * `Sundials 2.7.0 <https://computation.llnl.gov/casc/sundials/download/download.html>`_ 
+    * `Sundials 3.1.0 <https://computation.llnl.gov/casc/sundials/download/download.html>`_ 
 
 In addition, if building from a git checkout, you'll also need Cython.
 
 It is required that Sundials is built with the BLAS/LAPACK interface enabled, so check
 the Fortran Settings section. A typical install if sundials download package is
-extracted into directory sundials-2.7.0 is on a \*nix system::
+extracted into directory sundials-3.1.0 is on a \*nix system::
 
-    mkdir build-sundials-2.7.0
-    cd build-sundials-2.7.0/
-    cmake -DLAPACK_ENABLE=ON -DCMAKE_INSTALL_PREFIX=<install_path> ../sundials-2.7.0/
+    mkdir build-sundials-3.1.0
+    cd build-sundials-3.1.0/
+    cmake -DLAPACK_ENABLE=ON -DSUNDIALS_INDEX_TYPE=int32_t -DCMAKE_INSTALL_PREFIX=<install_path> ../sundials-3.1.0/
     make install
 
 .. warning::
