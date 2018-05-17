@@ -44,4 +44,7 @@ cdef extern from "nvector/nvector_serial.h":
     booleantype N_VInvTest_Serial(N_Vector x, N_Vector z)
     booleantype N_VConstrMask_Serial(N_Vector c, N_Vector x, N_Vector m)
     realtype N_VMinQuotient_Serial(N_Vector num, N_Vector denom)
+    # Macros
+    long int NV_LENGTH_S(N_Vector vc_s)
+    realtype* NV_DATA_S(N_Vector vc_s)
 
