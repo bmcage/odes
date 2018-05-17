@@ -8,7 +8,18 @@ from .c_sundials cimport (
     NV_LENGTH_S as nv_length_s, NV_DATA_S as nv_data_s
 )
 
-DTYPE = np.float
+include "sundials_config.pxi"
+
+precision = SUNDIALS_FLOAT_TYPE
+IF SUNDIALS_FLOAT_TYPE == "single":
+    from numpy import single as DTYPE
+ELIF SUNDIALS_FLOAT_TYPE == "double":
+    from numpy import double as DTYPE
+ELIF SUNDIALS_FLOAT_TYPE == "extended":
+    from numpy import longdouble as DTYPE
+ELSE:
+    # fall back to double
+    from numpy import double as DTYPE
 
 ctypedef realtype *DlsMat_col
 ctypedef realtype *nv_content_data_s

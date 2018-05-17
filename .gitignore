@@ -1,6 +1,7 @@
 *~
 *.pyc
 *.pyo
+*.pxi
 *.bak
 .directory
 \#*\#
@@ -12,10 +13,11 @@
 scikits.odes.egg-info/*
 build*
 .emacs.desktop*
-docs/src/examples/scikits
 dist
 _build
 docs/_build
 .tox
 .spyderproject
 .cache
+.eggs
+.pytest_cache

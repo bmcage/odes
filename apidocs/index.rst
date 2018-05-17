@@ -19,6 +19,7 @@ Contents:
 
    ode
    dae
+   sundials
    api
 
 Indices and tables
