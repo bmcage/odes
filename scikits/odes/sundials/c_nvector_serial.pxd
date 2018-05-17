@@ -2,23 +2,27 @@ include "c_sundials.pxd"
 
 cdef extern from "nvector/nvector_serial.h":
     cdef struct _N_VectorContent_Serial:
-        long int length
+        sunindextype length
         booleantype own_data
         realtype *data
 
     ctypedef _N_VectorContent_Serial *N_VectorContent_Serial
 
-    N_Vector N_VNew_Serial(long int vec_length)
-    N_Vector N_VNewEmpty_Serial(long int vec_length)
-    N_Vector N_VMake_Serial(long int vec_length, realtype *v_data)
+    N_Vector N_VNew_Serial(sunindextype vec_length)
+    N_Vector N_VNewEmpty_Serial(sunindextype vec_length)
+    N_Vector N_VMake_Serial(sunindextype vec_length, realtype *v_data)
     N_Vector *N_VCloneVectorArray_Serial(int count, N_Vector w)
     N_Vector *N_VCloneVectorArrayEmpty_Serial(int count, N_Vector w)
     void N_VDestroyVectorArray_Serial(N_Vector *vs, int count)
+    sunindextype N_VGetLength_Serial(N_Vector v)
     void N_VPrint_Serial(N_Vector v)
+    void N_VPrintFile_Serial(N_Vector v, FILE *outfile)
+
+    N_Vector_ID N_VGetVectorID_Serial(N_Vector v)
     N_Vector N_VCloneEmpty_Serial(N_Vector w)
     N_Vector N_VClone_Serial(N_Vector w)
     void N_VDestroy_Serial(N_Vector v)
-    void N_VSpace_Serial(N_Vector v, long int *lrw, long int *liw)
+    void N_VSpace_Serial(N_Vector v, sunindextype *lrw, sunindextype *liw)
     realtype *N_VGetArrayPointer_Serial(N_Vector v)
     void N_VSetArrayPointer_Serial(realtype *v_data, N_Vector v)
     void N_VLinearSum_Serial(realtype a, N_Vector x, realtype b, N_Vector y, N_Vector z)
