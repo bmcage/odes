@@ -10,6 +10,7 @@ dev/_sources/api.rst.txt
 dev/_sources/dae.rst.txt
 dev/_sources/index.rst.txt
 dev/_sources/ode.rst.txt
+dev/_sources/sundials.rst.txt
 dev/_static/ajax-loader.gif
 dev/_static/basic.css
 dev/_static/comment-bright.png
@@ -58,3 +59,4 @@ dev/ode.html
 dev/py-modindex.html
 dev/search.html
 dev/searchindex.js
+dev/sundials.html
