@@ -43,6 +43,15 @@ which will download the latest version from PyPI. This will handle the installat
 
 If you have installed SUNDIALS in a non-standard path (e.g. ``/usr/`` or ``/usr/local/``), you can set ``$SUNDIALS_INST`` in your environment to the installation prefix of SUNDIALS (i.e. value of ``<install_path>`` mentioned above).
 
+
+Testing your version of ``odes``
+................................
+To test the version in python, use in the python shell::
+
+    >>> import pkg_resources
+    >>> pkg_resources.get_distribution("scikits.odes").version
+
+
 Running the Tests
 .................
 You need nose to run the tests. To install nose, run::

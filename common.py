@@ -21,8 +21,8 @@ INSTALL_REQUIRES = ['scipy', 'enum34; python_version < "3.4"']
 BUILD_REQUIRES = ['numpy', 'cython'] # This is need for older pip
 
 MAJOR = 2
-MINOR = 3
-MICRO = 3
+MINOR = 4
+MICRO = 0
 DEV = True
 
 CLASSIFIERS = [
