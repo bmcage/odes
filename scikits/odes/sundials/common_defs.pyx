@@ -5,7 +5,9 @@ cimport numpy as np
 import inspect
 from .c_sundials cimport (
     realtype, N_Vector, DlsMat, booleantype, SpfgmrMem,
-    NV_LENGTH_S as nv_length_s, NV_DATA_S as nv_data_s
+)
+from .c_nvector_serial cimport (NV_LENGTH_S as nv_length_s,
+    NV_DATA_S as nv_data_s
 )
 
 include "sundials_config.pxi"

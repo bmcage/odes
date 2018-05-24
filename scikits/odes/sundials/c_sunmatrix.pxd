@@ -1,4 +1,5 @@
 include "c_sundials.pxd"
+from libc.stdio cimport FILE
 
 cdef extern from "sunmatrix/sunmatrix_dense.h":
 

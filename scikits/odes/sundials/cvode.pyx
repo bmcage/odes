@@ -14,6 +14,7 @@ from . import (
 )
 
 from .c_sundials cimport realtype, N_Vector
+from .c_nvector_serial cimport *
 from .c_cvode cimport *
 from .common_defs cimport (
     nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t,

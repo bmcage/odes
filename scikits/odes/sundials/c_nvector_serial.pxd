@@ -1,4 +1,5 @@
 include "c_sundials.pxd"
+from libc.stdio cimport FILE
 
 cdef extern from "nvector/nvector_serial.h":
     cdef struct _N_VectorContent_Serial:

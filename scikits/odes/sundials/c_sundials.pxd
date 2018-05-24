@@ -1,7 +1,9 @@
+from libc.stdio cimport FILE
+
 cdef extern from "sundials/sundials_types.h":
     ctypedef float realtype
     ctypedef unsigned int booleantype
-    ctypedef int32_t sunindextype      # TODO MAKE DEPENDING ON INDEX_TYPE FLAG !!
+    ctypedef long sunindextype      # TODO MAKE DEPENDING ON INDEX_TYPE FLAG !!
 
 cdef extern from "sundials/sundials_nvector.h":
     cdef enum N_Vector_ID:
@@ -107,9 +109,9 @@ cdef extern from "sundials/sundials_matrix.h":
         int          (*matvec)(SUNMatrix, N_Vector, N_Vector)
         int          (*space)(SUNMatrix, long int*, long int*)
 
-    struct _generic_SUNMatrix:
-        void *content
-        struct _generic_SUNMatrix_Ops *ops
+    #struct _generic_SUNMatrix:
+    #    void *content
+    #    struct _generic_SUNMatrix_Ops *ops
 
     # * FUNCTIONS *
     SUNMatrix_ID SUNMatGetID(SUNMatrix A)
@@ -184,9 +186,9 @@ cdef extern from "sundials/sundials_linearsolver.h":
         N_Vector             (*resid)(SUNLinearSolver)
         int                  (*free)(SUNLinearSolver)
 
-    struct _generic_SUNLinearSolver:
-        void *content
-        struct _generic_SUNLinearSolver_Ops *ops
+    #struct _generic_SUNLinearSolver:
+    #    void *content
+    #    struct _generic_SUNLinearSolver_Ops *ops
 
     SUNLinearSolver_Type SUNLinSolGetType(SUNLinearSolver S)
     int SUNLinSolSetATimes(SUNLinearSolver S, void* A_data,
@@ -279,7 +281,7 @@ cdef extern from "sundials/sundials_direct.h":
 
     # * Exported function prototypes (functions working on realtype**)
     realtype **newDenseMat(sunindextype m, sunindextype n)
-    realtype **newBandMat(lsunindextype n, sunindextype smu, sunindextype ml)
+    realtype **newBandMat(sunindextype n, sunindextype smu, sunindextype ml)
     void destroyMat(realtype **a)
     int *newIntArray(int n)
     sunindextype *newIndexArray(sunindextype n)
@@ -366,7 +368,7 @@ cdef extern from "sundials/sundials_sparse.h":
     enum: CSC_MAT #0
     enum: CSR_MAT #1
 
-   ctypedef struct _SlsMat:
+    ctypedef struct _SlsMat:
        int M
        int N
        int NNZ
@@ -379,19 +381,19 @@ cdef extern from "sundials/sundials_sparse.h":
        int **colptrs
        int **colvals
        int **rowptrs
-   ctypedef _SlsMat *SlsMat
+    ctypedef _SlsMat *SlsMat
 
-   SlsMat SparseNewMat(int M, int N, int NNZ, int sparsetype)
-   SlsMat SparseFromDenseMat(const DlsMat A, int sparsetype)
-   int SparseDestroyMat(SlsMat A)
-   int SparseSetMatToZero(SlsMat A)
-   int SparseCopyMat(const SlsMat A, SlsMat B)
-   int SparseScaleMat(realtype b, SlsMat A)
-   int SparseAddIdentityMat(SlsMat A)
-   int SparseAddMat(SlsMat A, const SlsMat B)
-   int SparseReallocMat(SlsMat A)
-   int SparseMatvec(const SlsMat A, const realtype *x, realtype *y)
-   void SparsePrintMat(const SlsMat A, FILE* outfile)
+    SlsMat SparseNewMat(int M, int N, int NNZ, int sparsetype)
+    SlsMat SparseFromDenseMat(const DlsMat A, int sparsetype)
+    int SparseDestroyMat(SlsMat A)
+    int SparseSetMatToZero(SlsMat A)
+    int SparseCopyMat(const SlsMat A, SlsMat B)
+    int SparseScaleMat(realtype b, SlsMat A)
+    int SparseAddIdentityMat(SlsMat A)
+    int SparseAddMat(SlsMat A, const SlsMat B)
+    int SparseReallocMat(SlsMat A)
+    int SparseMatvec(const SlsMat A, const realtype *x, realtype *y)
+    void SparsePrintMat(const SlsMat A, FILE* outfile)
 
 cdef extern from "sundials/sundials_spgmr.h":
     cdef struct _SpgmrMemRec:
