@@ -82,6 +82,132 @@ cdef extern from "sundials/sundials_nvector.h":
     N_Vector *N_VCloneVectorArray(int count, N_Vector w)
     void N_VDestroyVectorArray(N_Vector *vs, int count)
 
+cdef extern from "sundials/sundials_matrix.h":
+    cdef enum SUNMatrix_ID:
+        SUNMATRIX_DENSE,
+        SUNMATRIX_BAND,
+        SUNMATRIX_SPARSE,
+        SUNMATRIX_CUSTOM
+
+    struct _generic_SUNMatrix_Ops:
+        pass
+    struct _generic_SUNMatrix:
+        pass
+    ctypedef _generic_SUNMatrix *SUNMatrix
+    ctypedef _generic_SUNMatrix_Ops *SUNMatrix_Ops
+
+    struct _generic_SUNMatrix_Ops:
+        SUNMatrix_ID (*getid)(SUNMatrix)
+        SUNMatrix    (*clone)(SUNMatrix)
+        void         (*destroy)(SUNMatrix)
+        int          (*zero)(SUNMatrix)
+        int          (*copy)(SUNMatrix, SUNMatrix)
+        int          (*scaleadd)(realtype, SUNMatrix, SUNMatrix)
+        int          (*scaleaddi)(realtype, SUNMatrix)
+        int          (*matvec)(SUNMatrix, N_Vector, N_Vector)
+        int          (*space)(SUNMatrix, long int*, long int*)
+
+    struct _generic_SUNMatrix:
+        void *content
+        struct _generic_SUNMatrix_Ops *ops
+
+    # * FUNCTIONS *
+    SUNMatrix_ID SUNMatGetID(SUNMatrix A)
+    SUNMatrix SUNMatClone(SUNMatrix A)
+    void SUNMatDestroy(SUNMatrix A)
+    int SUNMatZero(SUNMatrix A)
+    int SUNMatCopy(SUNMatrix A, SUNMatrix B)
+    int SUNMatScaleAdd(realtype c, SUNMatrix A, SUNMatrix B)
+    int SUNMatScaleAddI(realtype c, SUNMatrix A)
+    int SUNMatMatvec(SUNMatrix A, N_Vector x, N_Vector y)
+    int SUNMatSpace(SUNMatrix A, long int *lenrw, long int *leniw)
+
+cdef extern from "sundials/sundials_iterative.h":
+    enum:
+        PREC_NONE
+        PREC_LEFT
+        PREC_RIGHT
+        PREC_BOTH
+    enum:
+        MODIFIED_GS = 1
+        CLASSICAL_GS = 2
+    ctypedef int (*ATimesFn)(void *A_data, N_Vector v, N_Vector z)
+    ctypedef int (*PSetupFn)(void *P_data)
+    ctypedef int (*PSolveFn)(void *P_data, N_Vector r, N_Vector z,
+                             realtype tol, int lr)
+
+    int ModifiedGS(N_Vector *v, realtype **h, int k, int p,
+                   realtype *new_vk_norm)
+    int ClassicalGS(N_Vector *v, realtype **h, int k, int p,
+                    realtype *new_vk_norm, N_Vector temp, realtype *s)
+    int QRfact(int n, realtype **h, realtype *q, int job)
+    int QRsol(int n, realtype **h, realtype *q, realtype *b)
+
+# We don't support KLU for now
+#cdef extern from "sundials/sundials_klu_impl.h":
+#    cdef struct KLUDataRec:
+#        klu_symbolic *s_Symbolic
+#        klu_numeric  *s_Numeric
+#        klu_common    s_Common
+#        int           s_ordering
+#    ctypedef KLUDataRec *KLUData
+
+cdef extern from "sundials/sundials_linearsolver.h":
+
+    cdef enum SUNLinearSolver_Type:
+        SUNLINEARSOLVER_DIRECT,
+        SUNLINEARSOLVER_ITERATIVE,
+        SUNLINEARSOLVER_CUSTOM
+
+    struct _generic_SUNLinearSolver_Ops:
+        pass
+    struct _generic_SUNLinearSolver:
+        pass
+    ctypedef _generic_SUNLinearSolver *SUNLinearSolver
+    ctypedef _generic_SUNLinearSolver_Ops *SUNLinearSolver_Ops
+
+    struct _generic_SUNLinearSolver_Ops:
+        SUNLinearSolver_Type (*gettype)(SUNLinearSolver)
+        int                  (*setatimes)(SUNLinearSolver, void*, ATimesFn)
+        int                  (*setpreconditioner)(SUNLinearSolver, void*,
+                                                PSetupFn, PSolveFn)
+        int                  (*setscalingvectors)(SUNLinearSolver,
+                                                N_Vector, N_Vector)
+        int                  (*initialize)(SUNLinearSolver)
+        int                  (*setup)(SUNLinearSolver, SUNMatrix)
+        int                  (*solve)(SUNLinearSolver, SUNMatrix, N_Vector,
+                                    N_Vector, realtype)
+        int                  (*numiters)(SUNLinearSolver)
+        realtype             (*resnorm)(SUNLinearSolver)
+        long int             (*lastflag)(SUNLinearSolver)
+        int                  (*space)(SUNLinearSolver, long int*, long int*)
+        N_Vector             (*resid)(SUNLinearSolver)
+        int                  (*free)(SUNLinearSolver)
+
+    struct _generic_SUNLinearSolver:
+        void *content
+        struct _generic_SUNLinearSolver_Ops *ops
+
+    SUNLinearSolver_Type SUNLinSolGetType(SUNLinearSolver S)
+    int SUNLinSolSetATimes(SUNLinearSolver S, void* A_data,
+                           ATimesFn ATimes)
+    int SUNLinSolSetPreconditioner(SUNLinearSolver S, void* P_data,
+                                   PSetupFn Pset, PSolveFn Psol)
+    int SUNLinSolSetScalingVectors(SUNLinearSolver S, N_Vector s1,
+                                   N_Vector s2)
+    int SUNLinSolInitialize(SUNLinearSolver S)
+    int SUNLinSolSetup(SUNLinearSolver S, SUNMatrix A)
+    int SUNLinSolSolve(SUNLinearSolver S, SUNMatrix A, N_Vector x,
+                       N_Vector b, realtype tol)
+    int SUNLinSolNumIters(SUNLinearSolver S)
+    realtype SUNLinSolResNorm(SUNLinearSolver S)
+    N_Vector SUNLinSolResid(SUNLinearSolver S)
+    long int SUNLinSolLastFlag(SUNLinearSolver S)
+    int SUNLinSolSpace(SUNLinearSolver S, long int *lenrwLS,
+                                       long int *leniwLS)
+    int SUNLinSolFree(SUNLinearSolver S)
+
+
 cdef extern from "sundials/sundials_lapack.h":
     pass
     # void dcopy_(int *n, double *x, int *inc_x, double *y, int *inc_y)
@@ -205,36 +331,6 @@ cdef extern from "sundials/sundials_dense.h":
     void denseAddIdentity(realtype **a, sunindextype n)
     void DenseMatvec(DlsMat A, realtype *x, realtype *y)
     void denseMatvec(realtype **a, realtype *x, realtype *y, sunindextype m, sunindextype n)
-
-cdef extern from "sundials/sundials_iterative.h":
-    enum:
-        PREC_NONE
-        PREC_LEFT
-        PREC_RIGHT
-        PREC_BOTH
-    enum:
-        MODIFIED_GS = 1
-        CLASSICAL_GS = 2
-    ctypedef int (*ATimesFn)(void *A_data, N_Vector v, N_Vector z)
-    ctypedef int (*PSetupFn)(void *P_data)
-    ctypedef int (*PSolveFn)(void *P_data, N_Vector r, N_Vector z,
-                             realtype tol, int lr)
-
-    int ModifiedGS(N_Vector *v, realtype **h, int k, int p,
-                   realtype *new_vk_norm)
-    int ClassicalGS(N_Vector *v, realtype **h, int k, int p,
-                    realtype *new_vk_norm, N_Vector temp, realtype *s)
-    int QRfact(int n, realtype **h, realtype *q, int job)
-    int QRsol(int n, realtype **h, realtype *q, realtype *b)
-
-# We don't support KLU for now
-#cdef extern from "sundials/sundials_klu_impl.h":
-#    cdef struct KLUDataRec:
-#        klu_symbolic *s_Symbolic;
-#        klu_numeric  *s_Numeric;
-#        klu_common    s_Common;
-#        int           s_ordering;
-#    ctypedef KLUDataRec *KLUData
 
 cdef extern from "sundials/sundials_pcg.h":
     ctypedef struct _PcgMemRec:
