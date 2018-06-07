@@ -65,6 +65,8 @@ class StatusEnumIDA(IntEnum):
     BAD_T = IDA_BAD_T
     BAD_DKY = IDA_BAD_DKY
 
+    UNRECOGNISED_ERROR = IDA_UNRECOGNISED_ERROR
+
 STATUS_MESSAGE = {
     StatusEnumIDA.SUCCESS: "Successful function return.",
     StatusEnumIDA.TSTOP_RETURN: "Reached specified stopping point",
@@ -92,6 +94,7 @@ STATUS_MESSAGE = {
     StatusEnumIDA.BAD_K: "Illegal value for k. If the requested k is not in the range 0,1,...,order used ",
     StatusEnumIDA.BAD_T: "Illegal value for t. If t is not within the interval of the last step taken.",
     StatusEnumIDA.BAD_DKY: "The dky vector is NULL",
+    StatusEnumIDA.UNRECOGNISED_ERROR: "Unrecognised error",
 
 }
 
