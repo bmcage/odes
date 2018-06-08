@@ -10,6 +10,8 @@ cdef extern from "sunlinsol/sunlinsol_dense.h":
 
     ctypedef _SUNLinearSolverContent_Dense *SUNLinearSolverContent_Dense
 
+    SUNLinearSolver SUNDenseLinearSolver(N_Vector y, SUNMatrix A)
+
     SUNLinearSolver_Type SUNLinSolGetType_Dense(SUNLinearSolver S)
     int SUNLinSolInitialize_Dense(SUNLinearSolver S)
     int SUNLinSolSetup_Dense(SUNLinearSolver S, SUNMatrix A)
@@ -70,7 +72,7 @@ cdef extern from "sunlinsol/sunlinsol_lapackdense.h":
 
 cdef extern from "sunlinsol/sunlinsol_lapackband.h":
 
-    struct _SUNLinearSolverContent_LapackBand {
+    struct _SUNLinearSolverContent_LapackBand:
         sunindextype N
         sunindextype *pivots
         long int last_flag
@@ -356,31 +358,32 @@ cdef extern from "sunlinsol/sunlinsol_sptfqmr.h":
     int SUNLinSolFree_SPTFQMR(SUNLinearSolver S)
 
 
-cdef extern from "sunlinsol/sunlinsol_superlumt.h":
-
-    struct _SUNLinearSolverContent_SuperLUMT:
-        long int     last_flag
-        int          first_factorize
-        SuperMatrix  *A, *AC, *L, *U, *B
-        Gstat_t      *Gstat
-        sunindextype *perm_r, *perm_c
-        sunindextype N
-        int          num_threads
-        realtype     diag_pivot_thresh
-        int          ordering
-        superlumt_options_t *options
-
-    ctypedef _SUNLinearSolverContent_SuperLUMT *SUNLinearSolverContent_SuperLUMT
-
-    SUNLinearSolver SUNSuperLUMT(N_Vector y, SUNMatrix A, int num_threads)
-
-    int SUNSuperLUMTSetOrdering(SUNLinearSolver S, int ordering_choice)
-    SUNLinearSolver_Type SUNLinSolGetType_SuperLUMT(SUNLinearSolver S)
-    int SUNLinSolInitialize_SuperLUMT(SUNLinearSolver S)
-    int SUNLinSolSetup_SuperLUMT(SUNLinearSolver S, SUNMatrix A)
-    int SUNLinSolSolve_SuperLUMT(SUNLinearSolver S, SUNMatrix A,
-                                 N_Vector x, N_Vector b, realtype tol)
-    long int SUNLinSolLastFlag_SuperLUMT(SUNLinearSolver S)
-    int SUNLinSolSpace_SuperLUMT(SUNLinearSolver S, long int *lenrwLS,
-                                 long int *leniwLS)
-    int SUNLinSolFree_SuperLUMT(SUNLinearSolver S)
+# We don't use SuperLUMT - "slu_mt_ddefs.h" required
+#cdef extern from "sunlinsol/sunlinsol_superlumt.h":
+#
+#    struct _SUNLinearSolverContent_SuperLUMT:
+#        long int     last_flag
+#        int          first_factorize
+#        SuperMatrix  *A, *AC, *L, *U, *B
+#        Gstat_t      *Gstat
+#        sunindextype *perm_r, *perm_c
+#        sunindextype N
+#        int          num_threads
+#        realtype     diag_pivot_thresh
+#        int          ordering
+#        superlumt_options_t *options
+#
+#    ctypedef _SUNLinearSolverContent_SuperLUMT *SUNLinearSolverContent_SuperLUMT
+#
+#    SUNLinearSolver SUNSuperLUMT(N_Vector y, SUNMatrix A, int num_threads)
+#
+#    int SUNSuperLUMTSetOrdering(SUNLinearSolver S, int ordering_choice)
+#    SUNLinearSolver_Type SUNLinSolGetType_SuperLUMT(SUNLinearSolver S)
+#    int SUNLinSolInitialize_SuperLUMT(SUNLinearSolver S)
+#    int SUNLinSolSetup_SuperLUMT(SUNLinearSolver S, SUNMatrix A)
+#    int SUNLinSolSolve_SuperLUMT(SUNLinearSolver S, SUNMatrix A,
+#                                 N_Vector x, N_Vector b, realtype tol)
+#    long int SUNLinSolLastFlag_SuperLUMT(SUNLinearSolver S)
+#    int SUNLinSolSpace_SuperLUMT(SUNLinearSolver S, long int *lenrwLS,
+#                                 long int *leniwLS)
+#    int SUNLinSolFree_SuperLUMT(SUNLinearSolver S)

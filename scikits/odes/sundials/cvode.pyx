@@ -16,7 +16,7 @@ from . import (
 from .c_sundials cimport realtype, N_Vector
 from .c_nvector_serial cimport *
 from .c_sunmatrix cimport *
-from .c_sunlinsol.pxd cimport *
+from .c_sunlinsol cimport *
 
 from .c_cvode cimport *
 from .common_defs cimport (
@@ -238,6 +238,7 @@ cdef class CV_JacRhsFunction:
     """
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] fy,
                        np.ndarray J) except? -1:
         """
         Returns the Jacobi matrix of the right hand side function, as
@@ -260,6 +261,7 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] fy,
                        np.ndarray J) except? -1:
         """
         Returns the Jacobi matrix (for dense the full matrix, for band only
@@ -270,19 +272,21 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 ##            self._jacfn(t, y, ydot, cj, J, userdata)
 ##        else:
 ##            self._jacfn(t, y, ydot, cj, J)
-        user_flag = self._jacfn(t, y, J)
+        user_flag = self._jacfn(t, y, fy, J)
 
         if user_flag is None:
             user_flag = 0
         return user_flag
 
-cdef int _jacdense(long int Neq, realtype tt,
-            N_Vector yy, N_Vector ff, DlsMat Jac,
+cdef int _jacdense(realtype tt,
+            N_Vector yy, N_Vector ff, SUNMatrix Jac,
             void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1:
-    """function with the signature of CVDlsDenseJacFn that calls python Jac"""
-    cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
+    """function with the signature of CVDlsJacFn that calls python Jac
+       Note: signature of Jac is SUNMatrix
+    """
+    cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, ff_tmp
     cdef np.ndarray jac_tmp
-
+            
     aux_data = <CV_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
     if parallel_implementation:
@@ -295,13 +299,18 @@ cdef int _jacdense(long int Neq, realtype tt,
         jac_tmp = aux_data.jac_tmp
 
         nv_s2ndarray(yy, yy_tmp)
-    user_flag = aux_data.jac.evaluate(tt, yy_tmp, jac_tmp)
+        ff_tmp = aux_data.z_tmp
+        nv_s2ndarray(ff, ff_tmp)
+        
+    user_flag = aux_data.jac.evaluate(tt, yy_tmp, ff_tmp, jac_tmp)
 
     if parallel_implementation:
         raise NotImplemented
     else:
-        #we convert the python jac_tmp array to DslMat of sundials
-        ndarray2DlsMatd(Jac, jac_tmp)
+        #we convert the python jac_tmp array to DlsMat of sundials (sundials_direct.h)
+        # TODO: How to convert from DlsMat to SUNMatrix required ???
+        #ndarray2DlsMatd(Jac, jac_tmp)
+        raise NotImplemented("To implement to convert user ndarray method to SUNMatrix")
 
     return user_flag
 
@@ -364,7 +373,7 @@ class MutableBool(object):
         self.value = value
 
 cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, booleantype *jcurPtr,
-         realtype gamma, void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1:
+         realtype gamma, void *auxiliary_data) except? -1:
     """ function with the signature of CVSpilsPrecSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
 
@@ -444,7 +453,7 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
         return user_flag
 
 cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vector z,
-         realtype gamma, realtype delta, int lr, void *auxiliary_data, N_Vector tmp) except? -1:
+         realtype gamma, realtype delta, int lr, void *auxiliary_data) except? -1:
     """ function with the signature of CVSpilsPrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
 
@@ -570,6 +579,90 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
 
     return user_flag
 
+# JacTimesVec function
+cdef class CV_JacTimesSetupFunction:
+    """
+    Prototype for jacobian times setup function.
+
+    Note that evaluate must return a integer, 0 for success, non-zero for error
+    (as per CVODE documentation), with >0  a recoverable error (step is retried).
+    """
+    cpdef int evaluate(self,
+                       DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] fy,
+                       object userdata = None) except? -1:
+        """
+        This function calculates the product of the Jacobian with a given vector v.
+        Use the userdata object to expose Jacobian related data to the solve function.
+
+        This is a generic class, you should subclass it for the problem specific
+        purposes.
+        """
+        return 0
+
+cdef class CV_WrapJacTimesSetupFunction(CV_JacTimesSetupFunction):
+    cpdef set_jac_times_setupfn(self, object jac_times_setupfn):
+        """
+        Set some CV_JacTimesSetupFn executable class.
+        """
+        """
+        set a jacobian-times-vector method setup as a CV_JacTimesSetupFunction
+        executable class
+        """
+        self.with_userdata = 0
+        nrarg = _get_num_args(jac_times_setupfn)
+        if nrarg > 4:
+            #hopefully a class method, self gives 5 arg!
+            self.with_userdata = 1
+        elif nrarg == 4 and inspect.isfunction(jac_times_setupfn):
+            self.with_userdata = 1
+        self._jac_times_setupfn = jac_times_setupfn
+
+    cpdef int evaluate(self,
+                       DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] fy,
+                       object userdata = None) except? -1:
+        if self.with_userdata == 1:
+            user_flag = self._jac_times_setupfn(t, y, fy, userdata)
+        else:
+            user_flag = self._jac_times_setupfn(t, y, fy)
+        if user_flag is None:
+            user_flag = 0
+        return user_flag
+
+cdef int _jac_times_setupfn(realtype t, N_Vector y, N_Vector fy,
+                            void *user_data) except? -1:
+    """ function with the signature of CVSpilsJacTimesSetupFn, that calls python function """
+    cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, fy_tmp
+
+    aux_data = <CV_data> user_data
+    cdef bint parallel_implementation = aux_data.parallel_implementation
+
+    if parallel_implementation:
+        raise NotImplemented
+    else:
+        y_tmp = aux_data.yy_tmp
+
+        if aux_data.z_tmp is None:
+            N = np.alen(y_tmp)
+            aux_data.z_tmp = np.empty(N, DTYPE)
+
+        fy_tmp = aux_data.z_tmp
+
+        nv_s2ndarray(y, y_tmp)
+        nv_s2ndarray(fy, fy_tmp)
+
+    user_flag = aux_data.jac_times_setupfn.evaluate(t, y_tmp, fy_tmp, aux_data.user_data)
+
+    #if parallel_implementation:
+    #    raise NotImplemented
+    #else:
+    #    ndarray2nv_s(fy, fy_tmp)
+
+    return user_flag
+
 cdef class CV_ContinuationFunction:
     """
     Simple wrapper for functions called when ROOT or TSTOP are returned.
@@ -687,6 +780,7 @@ cdef class CVODE:
             'prec_setupfn': None,
             'prec_solvefn': None,
             'jac_times_vecfn': None,
+            'jac_times_setupfn': None,
             'err_handler': None,
             'err_user_data': None,
             'old_api': None,
@@ -772,9 +866,11 @@ cdef class CVODE:
                     Defines the jacobian function and has to be a subclass
                     of CV_JacRhsFunction class or python function. This function
                     takes as input arguments current time t, current value of y,
+                    current value of f(t,y), and 
                     a 2D numpy array of returned jacobian and optional userdata.
                     Return value is 0 if successfull.
                     Jacobian is only used for dense or lapackdense linear solver
+                TODO: cvode supports Jacobian for band also, this is not supported.
             'rtol':
                 Values: float,  1e-6 = default
                 Description:
@@ -814,13 +910,14 @@ cdef class CVODE:
                     of 0.0 uses the solver's internal default value.
             'linsolver':
                 Values: 'dense' (= default), 'lapackdense', 'band',
-                        'lapackband', 'spgmr', 'spbcg', 'sptfqmr'
+                        'lapackband', 'spgmr', 'spbcgs', 'sptfqmr'
                 Description:
                     Specifies used linear solver.
                     Limitations: Linear solvers for dense and band matrices
                                  can be used only for serial implementation.
                                  For parallel implementation use_relaxation
                                  use lapackdense or lapackband respectively.
+                    TODO: to add new solvers: pcg, spfgmr, superlumt, klu
             'lband', 'uband':
                 Values: non-negative integer, 0 = default
                 Description:
@@ -835,7 +932,7 @@ cdef class CVODE:
                 Values: 0 (= default), 1, 2, 3, 4, 5
                 Description:
                     Dimension of the number of used Krylov subspaces
-                    (used only by 'spgmr', 'spbcg', 'sptfqmr' linsolvers)
+                    (used only by 'spgmr', 'spbcgs', 'sptfqmr' linsolvers)
             'tstop':
                 Values: float, 0.0 = default
                 Description:
@@ -887,6 +984,11 @@ cdef class CVODE:
                     This function takes as input arguments the vector v,
                     result vector Jv, current time t, current value of y,
                     and optional userdata.
+            'jac_times_setupfn':
+                Values: function of class CV_JacTimesSetupFunction
+                Description:
+                    Optional. Default is to internal finite difference with no
+                    extra setup.
             'bdf_stability_detection':
                 default = False, only used if lmm_type == 'bdf
             'max_conv_fails':
@@ -1308,6 +1410,14 @@ cdef class CVODE:
             opts['jac_times_vecfn'] = tmpfun
         self.aux_data.jac_times_vecfn = jac_times_vecfn
 
+        jac_times_setupfn = opts['jac_times_setupfn']
+        if jac_times_setupfn is not None and not isinstance(jac_times_setupfn, CV_JacTimesSetupFunction):
+            tmpfun = CV_WrapJacTimesSetupFunction()
+            tmpfun.set_jac_times_setupfn(jac_times_setupfn)
+            jac_times_setupfn = tmpfun
+            opts['jac_times_setupfn'] = tmpfun
+        self.aux_data.jac_times_vecfn = jac_times_vecfn
+
         self.aux_data.user_data = opts['user_data']
 
         # As cv_mem is now initialized, set also options changeable at runtime
@@ -1343,9 +1453,9 @@ cdef class CVODE:
         if iter_type == 'newton':
             if linsolver == 'dense':
                 A = SUNDenseMatrix(N, N)
-                LS = SUNDenseLinearSolver(y, A)
+                LS = SUNDenseLinearSolver(self.y0, A)
                 # check if memory was allocated
-                if (not A or not LS):
+                if (A == NULL or LS == NULL):
                     raise ValueError('Could not allocate matrix or linear solver')
                 # attach matrix and linear solver to cvode
                 flag = CVDlsSetLinearSolver(cv_mem, LS, A)
@@ -1359,9 +1469,9 @@ cdef class CVODE:
                                      .format(flag))
             elif linsolver == 'lapackdense':
                 A = SUNDenseMatrix(N, N)
-                LS = SUNLapackDense(y, A)
+                LS = SUNLapackDense(self.y0, A)
                 # check if memory was allocated
-                if (not A or not LS):
+                if (A == NULL or LS == NULL):
                     raise ValueError('Could not allocate matrix or linear solver')
                 # attach matrix and linear solver to cvode
                 flag = CVDlsSetLinearSolver(cv_mem, LS, A)
@@ -1376,8 +1486,8 @@ cdef class CVODE:
             elif linsolver == 'band':
                 A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
                                            <int> opts['uband'] + <int> opts['lband']);
-                LS = SUNBandLinearSolver(y, A);
-                if (not A or not LS):
+                LS = SUNBandLinearSolver(self.y0, A);
+                if (A == NULL or LS == NULL):
                     raise ValueError('Could not allocate matrix or linear solver')
                 flag = CVDlsSetLinearSolver(cv_mem, LS, A)
 
@@ -1392,8 +1502,8 @@ cdef class CVODE:
             elif linsolver == 'lapackband':
                 A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
                                            <int> opts['uband'] + <int> opts['lband'])
-                LS = SUNLapackBand(y, A)
-                if (not A or not LS):
+                LS = SUNLapackBand(self.y0, A)
+                if (A == NULL or LS == NULL):
                     raise ValueError('Could not allocate matrix or linear solver')
                 flag = CVDlsSetLinearSolver(cv_mem, LS, A)
                 if flag == CVDLS_ILL_INPUT:
@@ -1405,14 +1515,16 @@ cdef class CVODE:
                     raise ValueError('CVDlsSetLinearSolver failed with code {}'
                                      .format(flag))
             elif linsolver == 'diag':
-     ***           TODO   ***
                 flag = CVDiag(cv_mem)
                 if flag == CVDIAG_ILL_INPUT:
                         raise ValueError('CVDiag solver is not compatible with'
                                          ' the current nvector implementation.')
                 elif flag == CVDIAG_MEM_FAIL:
                         raise MemoryError('CVDiag memory allocation error.')
-            elif ((linsolver == 'spgmr') or (linsolver == 'spbcg')
+                elif flag != CVDIAG_SUCCESS:
+                    raise ValueError('CVDiag failed with code {}'
+                                     .format(flag))
+            elif ((linsolver == 'spgmr') or (linsolver == 'spbcgs')
                   or (linsolver == 'sptfqmr')):
                 precond_type = opts['precond_type'].lower()
                 if precond_type == 'none':
@@ -1428,16 +1540,32 @@ cdef class CVODE:
                                      % opts['precond_type'])
 
                 if linsolver == 'spgmr':
-                    flag = CVSpgmr(cv_mem, pretype, <int> opts['maxl'])
-                elif linsolver == 'spbcg':
-                    flag = CVSpbcg(cv_mem, pretype, <int> opts['maxl'])
+                    LS = SUNSPGMR(self.y0, pretype, <int> opts['maxl']);
+                    if LS == NULL:
+                        raise ValueError('Could not allocate linear solver')
+                elif linsolver == 'spbcgs':
+                    LS = SUNSPBCGS(self.y0, pretype, <int> opts['maxl']);
+                    if LS == NULL:
+                        raise ValueError('Could not allocate linear solver')
+                elif linsolver == 'sptfqmr':
+                    LS = SUNSPTFQMR(self.y0, pretype, <int> opts['maxl']);
+                    if LS == NULL:
+                        raise ValueError('Could not allocate linear solver')
                 else:
-                    flag = CVSptfqmr(cv_mem, pretype, <int> opts['maxl'])
-
+                    raise ValueError('Given linsolver {} not implemented in odes'.format(linsolver))
+                    
+                flag = CVSpilsSetLinearSolver(cv_mem, LS);
                 if flag == CVSPILS_MEM_FAIL:
                         raise MemoryError('LinSolver:CVSpils memory allocation '
                                           'error.')
-
+                elif flag != CVSPILS_SUCCESS:
+                    raise ValueError('CVSpilsSetLinearSolver failed with code {}'
+                                     .format(flag))
+                # TODO: make option for the Gram-Schmidt orthogonalization
+                #flag = SUNSPGMRSetGSType(LS, gstype);
+                                          
+                # TODO make option
+                #flag = CVSpilsSetEpsLin(cvode_mem, DELT);
                 if self.aux_data.prec_solvefn:
                     if self.aux_data.prec_setupfn:
                         flag = CVSpilsSetPreconditioner(cv_mem, _prec_setupfn, _prec_solvefn)
@@ -1450,19 +1578,26 @@ cdef class CVODE:
                                      'not been initialized.')
 
                 if self.aux_data.jac_times_vecfn:
-                    flag = CVSpilsSetJacTimesVecFn(cv_mem, _jac_times_vecfn)
+                    if self.aux_data.jac_times_setupfn:
+                       flag = CVSpilsSetJacTimes(cv_mem, _jac_times_setupfn, _jac_times_vecfn)
+                    else:
+                       flag = CVSpilsSetJacTimes(cv_mem, NULL, _jac_times_vecfn)
                 if flag == CVSPILS_MEM_NULL:
                     raise ValueError('LinSolver: The cvode mem pointer is NULL.')
                 elif flag == CVSPILS_LMEM_NULL:
                     raise ValueError('LinSolver: The cvspils linear solver has '
                                      'not been initialized.')
+                elif flag != CVSPILS_SUCCESS:
+                    raise ValueError('CVSpilsSetJacTimes failed with code {}'
+                                     .format(flag))
 
             else:
                 raise ValueError('LinSolver: Unknown solver type: %s'
                                      % opts['linsolver'])
 
-        if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
-            CVDlsSetDenseJacFn(cv_mem, _jacdense)
+        if (linsolver in ['dense', 'lapackdense', 'lapackband', 'band']
+            and self.aux_data.jac):
+            CVDlsSetJacFn(cv_mem, _jacdense)
 
         #we test if jac don't give errors due to bad coding, as
         #cvode will ignore errors, it only checks return value (0 or 1 for error)
@@ -1847,7 +1982,7 @@ cdef class CVODE:
         cdef int qlast, qcur
         cdef realtype hinused, hlast, hcur, tcur
 
-        # for extra output from SPILS modules (SPGMR, SPBCG, SPTFQMR)
+        # for extra output from SPILS modules (SPGMR, SPBCGS, SPTFQMR)
         cdef long int npevals, npsolves, njvevals, nliters, nfevalsLS
 
         flagCV = CVodeGetIntegratorStats(self._cv_mem, &nsteps, &nfevals,
@@ -1863,7 +1998,7 @@ cdef class CVODE:
                 'LastStep': hlast, 'CurrentStep': hcur, 'CurrentStep': tcur}
 
         linsolver = self.options['linsolver'].lower()
-        if linsolver == 'spgmr' or linsolver == 'spbcg' or linsolver == 'sptfqmr':
+        if linsolver == 'spgmr' or linsolver == 'spbcgs' or linsolver == 'sptfqmr':
             flagCV = CVSpilsGetNumPrecEvals(self._cv_mem, &npevals)
             flagCV = CVSpilsGetNumPrecSolves(self._cv_mem, &npsolves)
             flagCV = CVSpilsGetNumJtimesEvals(self._cv_mem, &njvevals)

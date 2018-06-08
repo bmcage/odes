@@ -29,6 +29,7 @@ cdef class CV_WrapRootFunction(CV_RootFunction):
 cdef class CV_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] fy,
                        np.ndarray[DTYPE_t, ndim=2] J) except? -1
 
 cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
@@ -77,6 +78,18 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
     cpdef object _jac_times_vecfn
     cdef int with_userdata
     cpdef set_jac_times_vecfn(self, object jac_times_vecfn)
+
+cdef class CV_JacTimesSetupFunction:
+    cpdef int evaluate(self,
+                       DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] fy,
+                       object userdata = *) except? -1
+
+cdef class CV_WrapJacTimesSetupFunction(CV_JacTimesSetupFunction):
+    cpdef object _jac_times_setupfn
+    cdef int with_userdata
+    cpdef set_jac_times_setupfn(self, object jac_times_setupfn)
 
 cdef class CV_ContinuationFunction:
     cpdef object _fn

@@ -539,7 +539,7 @@ cdef extern from "sundials/sundials_sptfqmr.h":
 
     void SptfqmrFree(SptfqmrMem mem)
 
-# We don't use SuperLUMT
+# We don't use SuperLUMT - "slu_mt_ddefs.h" required
 #cdef extern from "sundials/sundials_superlumt_impl.h":
 #    ctypedef struct SLUMTDataRec:
 #        SuperMatrix *s_A, *s_AC, *s_L, *s_U, *s_B
