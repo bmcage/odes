@@ -30,13 +30,43 @@ cdef class IDA_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
+                       np.ndarray[DTYPE_t, ndim=1] residual,
                        DTYPE_t cj,
                        np.ndarray[DTYPE_t, ndim=2] J) except? -1
 
 cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
     cpdef object _jacfn
     cdef int with_userdata
-    cpdef set_jacfn(self, object jacfn)
+    cpdef set_jacfn(self, object jacfn) 
+
+cdef class IDA_PrecSetupFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] yp,
+                       np.ndarray[DTYPE_t, ndim=1] rr,
+                       DTYPE_t cj,
+                       object userdata = *) except? -1
+
+cdef class IDA_WrapPrecSetupFunction(IDA_PrecSetupFunction):
+    cpdef object _prec_setupfn
+    cdef int with_userdata
+    cpdef set_prec_setupfn(self, object prec_setupfn)
+
+cdef class IDA_PrecSolveFunction:
+    cpdef int evaluate(self, DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] y,
+                       np.ndarray[DTYPE_t, ndim=1] yp,
+                       np.ndarray[DTYPE_t, ndim=1] r,
+                       np.ndarray[DTYPE_t, ndim=1] rvec,
+                       np.ndarray[DTYPE_t, ndim=1] z,
+                       DTYPE_t cj,
+                       DTYPE_t delta,
+                       object userdata = *) except? -1
+                           
+cdef class IDA_WrapPrecSolveFunction(IDA_PrecSolveFunction):
+    cpdef object _prec_solvefn
+    cdef int with_userdata
+    cpdef set_prec_solvefn(self, object prec_solvefn)
 
 cdef class IDA_ContinuationFunction:
     cpdef object _fn

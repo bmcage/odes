@@ -51,7 +51,7 @@ To test the version in python, use in the python shell::
     >>> import pkg_resources
     >>> pkg_resources.get_distribution("scikits.odes").version
 
-
+    
 Running the Tests
 .................
 You need nose to run the tests. To install nose, run::
@@ -61,6 +61,10 @@ You need nose to run the tests. To install nose, run::
 To run the tests, in the python shell::
 
     >>> import scikits.odes as od; od.test()
+    
+Note that the sundials library must be in your ``LD_LIBRARY_PATH``. So, make sure the directory ``$SUNDIALS_INST/lib`` is included. You can do this for example as follows (assuming sundials was installed in ``/usr/local``::
+
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 Installation of ODES from git checkout
 ---------------------------------------------

@@ -45,6 +45,7 @@ cdef extern from "ida/ida.h":
     enum: IDA_BAD_K           #-25
     enum: IDA_BAD_T           #-26
     enum: IDA_BAD_DKY         #-27
+    enum: IDA_UNRECOGNISED_ERROR #-99
 
     ctypedef int (*IDAResFn)(realtype tt, N_Vector yy, N_Vector yp,
                     N_Vector rr, void *user_data)

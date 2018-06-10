@@ -372,8 +372,9 @@ class MutableBool(object):
     def __init__(self, value):
         self.value = value
 
-cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, booleantype *jcurPtr,
-         realtype gamma, void *auxiliary_data) except? -1:
+cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, 
+                       booleantype *jcurPtr, realtype gamma, 
+                       void *auxiliary_data) except? -1:
     """ function with the signature of CVSpilsPrecSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
 
