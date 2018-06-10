@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Lower Level API &mdash; Odes 2.3.3.dev0 documentation</title>
+  <title>Lower Level API &mdash; Odes 2.4.0.dev0 documentation</title>
   
 
   
@@ -24,8 +24,7 @@
 
   
 
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
@@ -59,7 +58,7 @@
             
             
               <div class="version">
-                2.3.3.dev0
+                2.4.0.dev0
               </div>
             
           
@@ -114,8 +113,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-scikits.odes.sundials">scikits.odes.sundials</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-scikits.odes.sundials.cvode">scikits.odes.sundials.cvode</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-scikits.odes.sundials.ida">scikits.odes.sundials.ida</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scikits-odes-sundials-cvode">scikits.odes.sundials.cvode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scikits-odes-sundials-ida">scikits.odes.sundials.ida</a></li>
 </ul>
 </li>
 </ul>
@@ -1427,370 +1426,11 @@ so yp0 will be calculated.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-scikits.odes.sundials.cvode">
-<span id="scikits-odes-sundials-cvode"></span><h2>scikits.odes.sundials.cvode<a class="headerlink" href="#module-scikits.odes.sundials.cvode" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_ContinuationFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_ContinuationFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_ContinuationFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simple wrapper for functions called when ROOT or TSTOP are returned.</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_ContinuationFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>CVODE solver</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_ContinuationFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_JacRhsFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_JacRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_JacRhsFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prototype for jacobian function.</p>
-<p>Note that evaluate must return a integer, 0 for success, positive for
-recoverable failure, negative for unrecoverable failure (as per CVODE
-documentation).</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_JacRhsFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray J</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_JacRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Returns the Jacobi matrix of the right hand side function, as</dt>
-<dd>d(rhs)/d y</dd>
-</dl>
-<p>(for dense the full matrix, for band only bands). Result has to be
-stored in the variable J, which is preallocated to the corresponding
-size.</p>
-<p>This is a generic class, you should subclass is for the problem specific
-purposes.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_JacTimesVecFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_JacTimesVecFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_JacTimesVecFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prototype for jacobian times vector function.</p>
-<p>Note that evaluate must return a integer, 0 for success, non-zero for error
-(as per CVODE documentation).</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_JacTimesVecFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>ndarray v</em>, <em>ndarray Jv</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_JacTimesVecFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function calculates the product of the Jacobian with a given vector v.
-Use the userdata object to expose Jacobian related data to the solve function.</p>
-<p>This is a generic class, you should subclass it for the problem specific
-purposes.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_PrecSetupFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_PrecSetupFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_PrecSetupFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prototype for preconditioning setup function.</p>
-<p>Note that evaluate must return a integer, 0 for success, positive for
-recoverable failure, negative for unrecoverable failure (as per CVODE
-documentation).</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_PrecSetupFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>bool jok</em>, <em>jcurPtr</em>, <em>DTYPE_t gamma</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_PrecSetupFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function preprocesses and/or evaluates Jacobian-related data
-needed by the preconditioner. Use the userdata object to expose
-the preprocessed data to the solve function.</p>
-<p>This is a generic class, you should subclass it for the problem specific
-purposes.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_PrecSolveFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_PrecSolveFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_PrecSolveFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prototype for precondititioning solution function.</p>
-<p>Note that evaluate must return a integer, 0 for success, positive for
-recoverable failure, negative for unrecoverable failure (as per CVODE
-documentation).</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_PrecSolveFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray r</em>, <em>ndarray z</em>, <em>DTYPE_t gamma</em>, <em>DTYPE_t delta</em>, <em>int lr</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_PrecSolveFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function solves the preconditioned system P*z = r, where P may be
-either a left or right preconditioner matrix. Here P should approximate
-(at least crudely) the Newton matrix M = I − gamma*J, where J is the
-Jacobian of the system. If preconditioning is done on both sides,
-the product of the two preconditioner matrices should approximate M.</p>
-<p>This is a generic class, you should subclass it for the problem specific
-purposes.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_RhsFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_RhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_RhsFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prototype for rhs function.</p>
-<p>Note that evaluate must return a integer, 0 for success, positive for
-recoverable failure, negative for unrecoverable failure (as per CVODE
-documentation).</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_RhsFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_RhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_RootFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_RootFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_RootFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prototype for root function.</p>
-<p>Note that evaluate must return a integer, 0 for success, non-zero if error
-(as per CVODE documentation).</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_RootFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray g</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_RootFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_WrapJacRhsFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapJacRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacRhsFunction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray J</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the Jacobi matrix (for dense the full matrix, for band only
-bands. Result has to be stored in the variable J, which is preallocated
-to the corresponding size.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.set_jacfn">
-<code class="descname">set_jacfn</code><span class="sig-paren">(</span><em>self</em>, <em>jacfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacRhsFunction.set_jacfn" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set some jacobian equations as a JacRhsFunction executable class.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapJacTimesVecFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>ndarray v</em>, <em>ndarray Jv</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.set_jac_times_vecfn">
-<code class="descname">set_jac_times_vecfn</code><span class="sig-paren">(</span><em>self</em>, <em>jac_times_vecfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapJacTimesVecFunction.set_jac_times_vecfn" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set some CV_JacTimesVecFn executable class.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapPrecSetupFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>bool jok</em>, <em>jcurPtr</em>, <em>DTYPE_t gamma</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.set_prec_setupfn">
-<code class="descname">set_prec_setupfn</code><span class="sig-paren">(</span><em>self</em>, <em>prec_setupfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSetupFunction.set_prec_setupfn" title="Permalink to this definition">¶</a></dt>
-<dd><p>set a precondititioning setup method as a CV_PrecSetupFunction
-executable class</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapPrecSolveFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray r</em>, <em>ndarray z</em>, <em>DTYPE_t gamma</em>, <em>DTYPE_t delta</em>, <em>int lr</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.set_prec_solvefn">
-<code class="descname">set_prec_solvefn</code><span class="sig-paren">(</span><em>self</em>, <em>prec_solvefn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapPrecSolveFunction.set_prec_solvefn" title="Permalink to this definition">¶</a></dt>
-<dd><p>set a precondititioning solve method as a CV_PrecSolveFunction
-executable class</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_WrapRhsFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRhsFunction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapRhsFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapRhsFunction.set_rhsfn">
-<code class="descname">set_rhsfn</code><span class="sig-paren">(</span><em>self</em>, <em>rhsfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRhsFunction.set_rhsfn" title="Permalink to this definition">¶</a></dt>
-<dd><p>set some rhs equations as a RhsFunction executable class</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="scikits.odes.sundials.cvode.CV_WrapRhsFunction.with_userdata">
-<code class="descname">with_userdata</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRhsFunction.with_userdata" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>with_userdata</em> – ‘int’</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.CV_WrapRootFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">CV_WrapRootFunction</code><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRootFunction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapRootFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray g</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRootFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="scikits.odes.sundials.cvode.CV_WrapRootFunction.set_rootfn">
-<code class="descname">set_rootfn</code><span class="sig-paren">(</span><em>self</em>, <em>rootfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.CV_WrapRootFunction.set_rootfn" title="Permalink to this definition">¶</a></dt>
-<dd><p>set root-ing condition(equations) as a RootFunction executable class</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.cvode.StatusEnum">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">StatusEnum</code><a class="headerlink" href="#scikits.odes.sundials.cvode.StatusEnum" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="scikits.odes.sundials.cvode.no_continue_fn">
-<code class="descclassname">scikits.odes.sundials.cvode.</code><code class="descname">no_continue_fn</code><span class="sig-paren">(</span><em>t</em>, <em>y</em>, <em>solver</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.cvode.no_continue_fn" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<div class="section" id="scikits-odes-sundials-cvode">
+<h2>scikits.odes.sundials.cvode<a class="headerlink" href="#scikits-odes-sundials-cvode" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-scikits.odes.sundials.ida">
-<span id="scikits-odes-sundials-ida"></span><h2>scikits.odes.sundials.ida<a class="headerlink" href="#module-scikits.odes.sundials.ida" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="scikits.odes.sundials.ida.IDA_ContinuationFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_ContinuationFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_ContinuationFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simple wrapper for functions called when ROOT or TSTOP are returned.</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_ContinuationFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray yp</em>, <em>IDA solver</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_ContinuationFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.ida.IDA_JacRhsFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_JacRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_JacRhsFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prototype for jacobian function.</p>
-<p>Note that evaluate must return a integer, 0 for success, positive for
-recoverable failure, negative for unrecoverable failure (as per IDA
-documentation).</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_JacRhsFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>DTYPE_t cj</em>, <em>ndarray J</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_JacRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Returns the Jacobi matrix of the residual function, as</dt>
-<dd>d(res)/d y + cj d(res)/d ydot</dd>
-</dl>
-<p>(for dense the full matrix, for band only bands). Result has to be
-stored in the variable J, which is preallocated to the corresponding
-size.</p>
-<p>This is a generic class, you should subclass is for the problem specific
-purposes.”</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.ida.IDA_RhsFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_RhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_RhsFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prototype for rhs function.</p>
-<p>Note that evaluate must return a integer, 0 for success, positive for
-recoverable failure, negative for unrecoverable failure (as per IDA
-documentation).</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_RhsFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>ndarray result</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_RhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.ida.IDA_RootFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_RootFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_RootFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prototype for root function.</p>
-<p>Note that evaluate must return a integer, 0 for success, non-zero for error
-(as per IDA documentation).</p>
-<dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_RootFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>ndarray g</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_RootFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.ida.IDA_WrapJacRhsFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_WrapJacRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapJacRhsFunction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>DTYPE_t cj</em>, <em>ndarray J</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the Jacobi matrix (for dense the full matrix, for band only
-bands. Result has to be stored in the variable J, which is preallocated
-to the corresponding size.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.set_jacfn">
-<code class="descname">set_jacfn</code><span class="sig-paren">(</span><em>self</em>, <em>jacfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapJacRhsFunction.set_jacfn" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set some jacobian equations as a JacResFunction executable class.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.ida.IDA_WrapRhsFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_WrapRhsFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRhsFunction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_WrapRhsFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>ndarray result</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRhsFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_WrapRhsFunction.set_resfn">
-<code class="descname">set_resfn</code><span class="sig-paren">(</span><em>self</em>, <em>resfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRhsFunction.set_resfn" title="Permalink to this definition">¶</a></dt>
-<dd><p>set some residual equations as a ResFunction executable class</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.ida.IDA_WrapRootFunction">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">IDA_WrapRootFunction</code><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRootFunction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_WrapRootFunction.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>self</em>, <em>DTYPE_t t</em>, <em>ndarray y</em>, <em>ndarray ydot</em>, <em>ndarray g</em>, <em>userdata=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRootFunction.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="scikits.odes.sundials.ida.IDA_WrapRootFunction.set_rootfn">
-<code class="descname">set_rootfn</code><span class="sig-paren">(</span><em>self</em>, <em>rootfn</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.ida.IDA_WrapRootFunction.set_rootfn" title="Permalink to this definition">¶</a></dt>
-<dd><p>set root-ing condition(equations) as a RootFunction executable class</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="scikits.odes.sundials.ida.StatusEnumIDA">
-<em class="property">class </em><code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">StatusEnumIDA</code><a class="headerlink" href="#scikits.odes.sundials.ida.StatusEnumIDA" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="scikits.odes.sundials.ida.no_continue_fn">
-<code class="descclassname">scikits.odes.sundials.ida.</code><code class="descname">no_continue_fn</code><span class="sig-paren">(</span><em>t</em>, <em>y</em>, <em>yp</em>, <em>solver</em><span class="sig-paren">)</span><a class="headerlink" href="#scikits.odes.sundials.ida.no_continue_fn" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<div class="section" id="scikits-odes-sundials-ida">
+<h2>scikits.odes.sundials.ida<a class="headerlink" href="#scikits-odes-sundials-ida" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -1834,7 +1474,7 @@ to the corresponding size.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2.3.3.dev0',
+            VERSION:'2.4.0.dev0',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
@@ -1849,10 +1489,7 @@ to the corresponding size.</p>
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
   <script type="text/javascript">
       jQuery(function () {
