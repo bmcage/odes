@@ -4,9 +4,10 @@ import numpy as np
 cimport numpy as np
 import inspect
 from .c_sundials cimport (
-    realtype, N_Vector, DlsMat, booleantype, SpfgmrMem,
+    realtype, sunindextype, N_Vector, DlsMat, booleantype, SpfgmrMem,
 )
-from .c_nvector_serial cimport (NV_LENGTH_S as nv_length_s,
+from .c_nvector_serial cimport (
+    N_VGetLength_Serial as nv_length_s, # use function not macro
     NV_DATA_S as nv_data_s
 )
 
@@ -22,6 +23,14 @@ ELIF SUNDIALS_FLOAT_TYPE == "extended":
 ELSE:
     # fall back to double
     from numpy import double as DTYPE
+
+index_precision = SUNDIALS_INDEX_TYPE
+IF SUNDIALS_INDEX_TYPE == "int32":
+    from numpy import int32 as INDEX_TYPE
+ELIF SUNDIALS_INDEX_TYPE == "int64":
+    from numpy import int64 as INDEX_TYPE
+ELSE:
+    from numpy import int64 as INDEX_TYPE
 
 ctypedef realtype *DlsMat_col
 ctypedef realtype *nv_content_data_s
@@ -99,8 +108,8 @@ cdef inline N_Vector spfgmr_vtemp(SpfgmrMem mem):
 
 # Public functions
 cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a):
-    """ copy a serial N_Vector v to a nympy array a """
-    cdef unsigned int N, i
+    """ copy a serial N_Vector v to a numpy array a """
+    cdef sunindextype N, i
     N = nv_length_s(v)
     cdef nv_content_data_s v_data = nv_data_s(v)
 
@@ -117,7 +126,7 @@ cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a):
       set_nv_ith_s(v_data, i, a[i])
 
 cdef inline int DlsMatd2ndarray(DlsMat m, np.ndarray a):
-    """ copy a Dense DlsMat m to a nympy array a """
+    """ copy a Dense DlsMat m to a numpy array a """
     cdef unsigned int N, i, j
     cdef nv_content_data_s v_col
 

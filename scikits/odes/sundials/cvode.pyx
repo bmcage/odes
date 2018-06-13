@@ -20,9 +20,10 @@ from .c_sunlinsol cimport *
 
 from .c_cvode cimport *
 from .common_defs cimport (
-    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t,
+    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t, INDEX_TYPE_t,
 )
-from .common_defs import DTYPE # this is needed because we want DTYPE to be
+from .common_defs import DTYPE, INDEX_TYPE
+# this is needed because we want DTYPE and INDEX_TYPE to be
 # accessible from python (not only in cython)
 
 
@@ -1284,8 +1285,8 @@ cdef class CVODE:
           (opts['implementation'].lower() == 'parallel')
         if self.parallel_implementation:
             raise ValueError('Error: Parallel implementation not implemented !')
-        cdef long int N
-        N = <long int> np.alen(y0)
+        cdef INDEX_TYPE_t N
+        N = <INDEX_TYPE_t> np.alen(y0)
 
         if opts['rfn'] is None:
             raise ValueError('The right-hand-side function rfn not assigned '
@@ -1674,8 +1675,8 @@ cdef class CVODE:
             self._init_step(t0, y0)
             return
 
-        cdef long int N
-        N = <long int> np.alen(y0)
+        cdef INDEX_TYPE_t N
+        N = <INDEX_TYPE_t> np.alen(y0)
         if N == self.N:
             self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
         else:

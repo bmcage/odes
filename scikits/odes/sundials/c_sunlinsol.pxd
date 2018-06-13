@@ -1,5 +1,5 @@
-include "c_sundials.pxd"
-include "c_sunmatrix.pxd"
+from c_sundials cimport *
+from c_sunmatrix cimport *
 
 cdef extern from "sunlinsol/sunlinsol_dense.h":
 

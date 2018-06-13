@@ -13,6 +13,13 @@ ELSE:
     # fall back to double
     ctypedef np.double_t DTYPE_t
 
+IF SUNDIALS_INDEX_TYPE == "int32":
+    ctypedef np.int32_t INDEX_TYPE_t
+ELIF SUNDIALS_INDEX_TYPE == "int64":
+    ctypedef np.int64_t INDEX_TYPE_t
+ELSE:
+    ctypedef np.int64_t INDEX_TYPE_t
+
 cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a)
 cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a)
 
