@@ -16,7 +16,7 @@ from .c_sunlinsol cimport *
 
 from .c_ida cimport *
 from .common_defs cimport (
-    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t, INDEX_TYPE_t,
+    nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrixd, DTYPE_t, INDEX_TYPE_t,
 )
 from .common_defs import DTYPE, INDEX_TYPE
 # this is needed because we want DTYPE and INDEX_TYPE to be
@@ -330,11 +330,7 @@ cdef int _jacdense(realtype tt, realtype cj,
     if parallel_implementation:
         raise NotImplemented
     else:
-        #we convert the python jac_tmp array to DslMat of sundials
-        #we convert the python jac_tmp array to DlsMat of sundials (sundials_direct.h)
-        # TODO: How to convert from DlsMat to SUNMatrix required ???
-        #ndarray2DlsMatd(Jac, jac_tmp)
-        raise NotImplemented("To implement to convert user ndarray method to SUNMatrix")
+        ndarray2SUNMatrixd(Jac, jac_tmp)
 
     return user_flag
 
@@ -1206,22 +1202,6 @@ cdef class IDA:
                              'flagged to be computed (see ''init_cond'' for '
                              'documentation.')
 
-        prec_setupfn = opts['prec_setupfn']
-        if prec_setupfn is not None and not isinstance(prec_setupfn, IDA_PrecSetupFunction):
-            tmpfun = IDA_WrapPrecSetupFunction()
-            tmpfun.set_prec_setupfn(prec_setupfn)
-            prec_setupfn = tmpfun
-            opts['prec_setupfn'] = tmpfun
-        self.aux_data.prec_setupfn = prec_setupfn
-
-        prec_solvefn = opts['prec_solvefn']
-        if prec_solvefn is not None and not isinstance(prec_solvefn, IDA_PrecSolveFunction):
-            tmpfun = IDA_WrapPrecSolveFunction()
-            tmpfun.set_prec_solvefn(prec_solvefn)
-            prec_solvefn = tmpfun
-            opts['prec_solvefn'] = tmpfun
-        self.aux_data.prec_solvefn = prec_solvefn
-
         #TODO: when implementing parallel, does N_VDestroy be called separately
         #      for parallel version or it's a generic one?
         if not self.y0 is NULL:
@@ -1312,6 +1292,22 @@ cdef class IDA:
             opts['jacfn'] = tmpfun
         self.aux_data.jac = jac
         self.aux_data.user_data = opts['user_data']
+
+        prec_setupfn = opts['prec_setupfn']
+        if prec_setupfn is not None and not isinstance(prec_setupfn, IDA_PrecSetupFunction):
+            tmpfun = IDA_WrapPrecSetupFunction()
+            tmpfun.set_prec_setupfn(prec_setupfn)
+            prec_setupfn = tmpfun
+            opts['prec_setupfn'] = tmpfun
+        self.aux_data.prec_setupfn = prec_setupfn
+
+        prec_solvefn = opts['prec_solvefn']
+        if prec_solvefn is not None and not isinstance(prec_solvefn, IDA_PrecSolveFunction):
+            tmpfun = IDA_WrapPrecSolveFunction()
+            tmpfun.set_prec_solvefn(prec_solvefn)
+            prec_solvefn = tmpfun
+            opts['prec_solvefn'] = tmpfun
+        self.aux_data.prec_solvefn = prec_solvefn
 
         self._set_runtime_changeable_options(opts, supress_supported_check=True)
 
@@ -1468,6 +1464,7 @@ cdef class IDA:
 
 
         if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
+            self.aux_data.jac_tmp = np.empty((np.alen(y0), np.alen(y0)), DTYPE)
             flag = IDADlsSetJacFn(ida_mem, _jacdense)
             if flag == IDADLS_MEM_NULL:
                 raise MemoryError('IDA Memory NULL.')

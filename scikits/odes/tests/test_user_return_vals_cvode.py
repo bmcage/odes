@@ -53,27 +53,27 @@ def root_error_late(t, y, g):
 def root_error_immediate(t, y, g):
     return 1
 
-def normal_jac(t, y, J):
+def normal_jac(t, y, fy, J):
     J[0][0] = 0
 
-def jac_with_return(t, y, J):
+def jac_with_return(t, y, fy, J):
     J[0][0] = 0
     return 0
 
-def jac_problem_late(t, y, J):
+def jac_problem_late(t, y, fy, J):
     J[0][0] = 1
     if t > 0:
         return 1
 
-def jac_problem_immediate(t, y, J):
+def jac_problem_immediate(t, y, fy, J):
     return 1
 
-def jac_error_late(t, y, J):
+def jac_error_late(t, y, fy, J):
     J[0][0] = 1
     if t > 0:
         return -1
 
-def jac_error_immediate(t, y, J):
+def jac_error_immediate(t, y, fy, J):
     return -1
 
 

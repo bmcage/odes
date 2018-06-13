@@ -5,10 +5,14 @@ cimport numpy as np
 import inspect
 from .c_sundials cimport (
     realtype, sunindextype, N_Vector, DlsMat, booleantype, SpfgmrMem,
+    SUNMatrix,
 )
 from .c_nvector_serial cimport (
     N_VGetLength_Serial as nv_length_s, # use function not macro
     NV_DATA_S as nv_data_s
+)
+from .c_sunmatrix cimport (
+    SUNDenseMatrix_Rows, SUNDenseMatrix_Columns, SUNDenseMatrix_Column,
 )
 
 include "sundials_config.pxi"
@@ -107,7 +111,7 @@ cdef inline N_Vector spfgmr_vtemp(SpfgmrMem mem):
     return mem.vtemp
 
 # Public functions
-cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a):
+cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1:
     """ copy a serial N_Vector v to a numpy array a """
     cdef sunindextype N, i
     N = nv_length_s(v)
@@ -116,7 +120,7 @@ cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a):
     for i in range(N):
       a[i] = get_nv_ith_s(v_data, i)
 
-cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a):
+cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1:
     """ copy a numpy array a to a serial N_Vector v t"""
     cdef unsigned int N, i
     N = nv_length_s(v)
@@ -138,7 +142,7 @@ cdef inline int DlsMatd2ndarray(DlsMat m, np.ndarray a):
             a[i,j] = get_nv_ith_s(v_col, j)
 
 cdef inline int ndarray2DlsMatd(DlsMat m, np.ndarray a):
-    """ copy a nympy array a to a Dense DlsMat m"""
+    """ copy a numpy array a to a Dense DlsMat m"""
     cdef unsigned int N, i, j
     cdef nv_content_data_s v_col
 
@@ -147,6 +151,32 @@ cdef inline int ndarray2DlsMatd(DlsMat m, np.ndarray a):
     for i in range(N):
         for j in range(N):
             set_dense_element(m, i, j, a[i,j])
+
+cdef inline int SUNMatrixd2ndarray(SUNMatrix m, np.ndarray a):
+    """ copy a Dense SUNMatrix m to a numpy array a """
+    cdef sunindextype N, M, i, j
+    cdef nv_content_data_s v_col
+
+    N = SUNDenseMatrix_Columns(m)
+    M = SUNDenseMatrix_Rows(m)
+
+    for j in range(N):
+        v_col = SUNDenseMatrix_Column(m, j)
+        for i in range(M):
+            a[i,j] = get_nv_ith_s(v_col, i)
+
+cdef inline int ndarray2SUNMatrixd(SUNMatrix m, np.ndarray a):
+    """ copy a numpy array a to a Dense SUNMatrix m"""
+    cdef sunindextype N, M, i, j
+    cdef nv_content_data_s v_col
+
+    N = SUNDenseMatrix_Columns(m)
+    M = SUNDenseMatrix_Rows(m)
+
+    for j in range(N):
+        v_col = SUNDenseMatrix_Column(m, j)
+        for i in range(M):
+            v_col[i] = a[i,j]
 
 cdef ensure_numpy_float_array(object value):
     try:
