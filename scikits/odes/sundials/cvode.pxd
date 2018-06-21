@@ -2,7 +2,7 @@
 
 cimport numpy as np
 from .c_sundials cimport N_Vector, realtype
-from .common_defs cimport DTYPE_t
+from .common_defs cimport DTYPE_t, INDEX_TYPE_t
 
 cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
@@ -130,7 +130,7 @@ cdef class CVODE:
     cdef bint parallel_implementation, initialized, _old_api, _step_compute, _validate_flags
     cdef CV_data aux_data
 
-    cdef long int N #problem size, i.e. len(y0) = N
+    cdef INDEX_TYPE_t N #problem size, i.e. len(y0) = N
     cdef N_Vector y0, y, yp # for 'step' method
     cdef list t_roots
     cdef list y_roots

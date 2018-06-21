@@ -3,7 +3,7 @@ from libc.stdio cimport FILE
 cdef extern from "sundials/sundials_types.h":
     ctypedef float realtype
     ctypedef unsigned int booleantype
-    ctypedef long sunindextype      # TODO MAKE DEPENDING ON INDEX_TYPE FLAG !!
+    ctypedef long sunindextype
 
 cdef extern from "sundials/sundials_nvector.h":
     cdef enum N_Vector_ID:

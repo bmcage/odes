@@ -33,6 +33,8 @@ def get_sundials_config_pxi(include_dirs, dist):
     BASE_PATH = join('scikits', 'odes', 'sundials')
 
     config_cmd = dist.get_command_obj("config")
+
+    # Get float type
     if config_cmd.check_macro_true(
         "SUNDIALS_DOUBLE_PRECISION", headers=[SUNDIALS_CONFIG_H],
         include_dirs=include_dirs
@@ -56,9 +58,28 @@ def get_sundials_config_pxi(include_dirs, dist):
         SUNDIALS_FLOAT_TYPE = '"double"'
         info("Failed to find sundials precision, falling back to double...")
 
-    return write_pxi(join(BASE_PATH, "sundials_config.pxi"),
-        dict(SUNDIALS_FLOAT_TYPE=SUNDIALS_FLOAT_TYPE),
-    )
+    # Get index (int) type
+    if config_cmd.check_macro_true(
+        "SUNDIALS_INT32_T", headers=[SUNDIALS_CONFIG_H],
+        include_dirs=include_dirs
+    ):
+        SUNDIALS_INDEX_TYPE = '"int32"'
+        info("Found sundials built with int32.")
+    elif config_cmd.check_macro_true(
+        "SUNDIALS_INT64_T", headers=[SUNDIALS_CONFIG_H],
+        include_dirs=include_dirs
+    ):
+        SUNDIALS_INDEX_TYPE = '"int64"'
+        info("Found sundials built with int64.")
+    else:
+        # fall back to int64
+        SUNDIALS_INDEX_TYPE = '"int64"'
+        info("Failed to find sundials index type, falling back to int64...")
+
+    return write_pxi(join(BASE_PATH, "sundials_config.pxi"), dict(
+        SUNDIALS_FLOAT_TYPE=SUNDIALS_FLOAT_TYPE,
+        SUNDIALS_INDEX_TYPE=SUNDIALS_INDEX_TYPE,
+    ))
 
 
 class build_ext(_build_ext):
@@ -132,7 +153,33 @@ class build_ext(_build_ext):
                 info("pkgconfig module not found, using preset paths")
 
         if not SUNDIALS_LIBRARIES:
+            # This is where to put N_vector codes (currently only serial is
+            # supported)
             SUNDIALS_LIBRARIES.append('sundials_nvecserial')
+            # SUNDIALS_LIBRARIES.append('sundials_nvecopenmp')
+            # SUNDIALS_LIBRARIES.append('sundials_nvecparallel')
+            # SUNDIALS_LIBRARIES.append('sundials_nvecparhyp')
+            # SUNDIALS_LIBRARIES.append('sundials_nvecpetsc')
+            # SUNDIALS_LIBRARIES.append('sundials_nvecpthreads')
+
+            # This is where to put SUNLinearSolver codes (klu not supported
+            # yet)
+            SUNDIALS_LIBRARIES.append('sundials_sunlinsollapackband')
+            SUNDIALS_LIBRARIES.append('sundials_sunlinsollapackdense')
+
+            SUNDIALS_LIBRARIES.append('sundials_sunlinsolband')
+            SUNDIALS_LIBRARIES.append('sundials_sunlinsoldense')
+            SUNDIALS_LIBRARIES.append('sundials_sunlinsolpcg')
+            SUNDIALS_LIBRARIES.append('sundials_sunlinsolspbcgs')
+            SUNDIALS_LIBRARIES.append('sundials_sunlinsolspfgmr')
+            SUNDIALS_LIBRARIES.append('sundials_sunlinsolspgmr')
+            SUNDIALS_LIBRARIES.append('sundials_sunlinsolsptfqmr')
+            # SUNDIALS_LIBRARIES.append('sundials_sunlinsolklu')
+
+            # This is where to put SUNMatrix codes
+            SUNDIALS_LIBRARIES.append('sundials_sunmatrixband')
+            SUNDIALS_LIBRARIES.append('sundials_sunmatrixdense')
+            SUNDIALS_LIBRARIES.append('sundials_sunmatrixsparse')
 
         if not IDA_LIBRARIES:
             IDA_LIBRARIES.append('sundials_ida')
@@ -171,6 +218,8 @@ class build_ext(_build_ext):
                 base_module + '.' + "common_defs",
                 sources = [join(base_path, 'common_defs.pyx')],
                 include_dirs=SUNDIALS_INCLUDE_DIRS,
+                library_dirs=SUNDIALS_LIBRARY_DIRS,
+                libraries=SUNDIALS_LIBRARIES,
             ),
             Extension(
                 base_module + '.' + "cvode",
