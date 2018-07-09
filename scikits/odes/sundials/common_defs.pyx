@@ -5,15 +5,20 @@ cimport numpy as np
 import inspect
 from .c_sundials cimport (
     realtype, sunindextype, N_Vector, DlsMat, booleantype, SpfgmrMem,
-    SUNMatrix,
+    SUNMatrix, SUNMatGetID, SUNMATRIX_DENSE, SUNMATRIX_BAND, SUNMATRIX_SPARSE,
+    SUNMATRIX_CUSTOM,
 )
 from .c_nvector_serial cimport (
     N_VGetLength_Serial as nv_length_s, # use function not macro
-    NV_DATA_S as nv_data_s
+    NV_DATA_S as nv_data_s,
 )
 from .c_sunmatrix cimport (
     SUNDenseMatrix_Rows, SUNDenseMatrix_Columns, SUNDenseMatrix_Column,
+    SUNBandMatrix_Columns, SUNBandMatrix_UpperBandwidth,
+    SUNBandMatrix_LowerBandwidth, SUNBandMatrix_Column,
 )
+
+from libc.stdio cimport stderr
 
 include "sundials_config.pxi"
 
@@ -129,54 +134,59 @@ cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? 
     for i in range(N):
       set_nv_ith_s(v_data, i, a[i])
 
-cdef inline int DlsMatd2ndarray(DlsMat m, np.ndarray a):
-    """ copy a Dense DlsMat m to a numpy array a """
-    cdef unsigned int N, i, j
+cdef inline int SUNMatrix2ndarray(SUNMatrix m, np.ndarray a) except? -1:
+    """ copy a SUNMatrix m to a numpy array a """
+    cdef sunindextype N, M, i, j, ml, mu, stride
     cdef nv_content_data_s v_col
 
-    N = get_dense_N(m)
+    if SUNMatGetID(m) == SUNMATRIX_DENSE:
+        N = SUNDenseMatrix_Columns(m)
+        M = SUNDenseMatrix_Rows(m)
 
-    for i in range(N):
-        v_col = get_dense_col(m, i)
         for j in range(N):
-            a[i,j] = get_nv_ith_s(v_col, j)
+            v_col = SUNDenseMatrix_Column(m, j)
+            for i in range(M):
+                a[i,j] = get_nv_ith_s(v_col, i)
 
-cdef inline int ndarray2DlsMatd(DlsMat m, np.ndarray a):
-    """ copy a numpy array a to a Dense DlsMat m"""
-    cdef unsigned int N, i, j
-    cdef nv_content_data_s v_col
-
-    N = get_dense_N(m)
-
-    for i in range(N):
+    elif SUNMatGetID(m) == SUNMATRIX_BAND:
+        N = SUNBandMatrix_Columns(m)
+        ml = SUNBandMatrix_LowerBandwidth(m)
+        mu = SUNBandMatrix_UpperBandwidth(m)
+        stride = ml + mu + 1
         for j in range(N):
-            set_dense_element(m, i, j, a[i,j])
+            v_col = SUNBandMatrix_Column(m, j)
+            for i in range(stride):
+                a[i,j] = v_col[i - mu]
 
-cdef inline int SUNMatrixd2ndarray(SUNMatrix m, np.ndarray a):
-    """ copy a Dense SUNMatrix m to a numpy array a """
-    cdef sunindextype N, M, i, j
+    else:
+        raise NotImplementedError("SUNMatrix type not supported")
+
+cdef inline int ndarray2SUNMatrix(SUNMatrix m, np.ndarray a) except? -1:
+    """ copy a numpy array a to a SUNMatrix m"""
+    cdef sunindextype N, M, i, j, ml, mu, stride
     cdef nv_content_data_s v_col
 
-    N = SUNDenseMatrix_Columns(m)
-    M = SUNDenseMatrix_Rows(m)
+    if SUNMatGetID(m) == SUNMATRIX_DENSE:
+        N = SUNDenseMatrix_Columns(m)
+        M = SUNDenseMatrix_Rows(m)
 
-    for j in range(N):
-        v_col = SUNDenseMatrix_Column(m, j)
-        for i in range(M):
-            a[i,j] = get_nv_ith_s(v_col, i)
+        for j in range(N):
+            v_col = SUNDenseMatrix_Column(m, j)
+            for i in range(M):
+                v_col[i] = a[i,j]
 
-cdef inline int ndarray2SUNMatrixd(SUNMatrix m, np.ndarray a):
-    """ copy a numpy array a to a Dense SUNMatrix m"""
-    cdef sunindextype N, M, i, j
-    cdef nv_content_data_s v_col
+    elif SUNMatGetID(m) == SUNMATRIX_BAND:
+        N = SUNBandMatrix_Columns(m)
+        ml = SUNBandMatrix_LowerBandwidth(m)
+        mu = SUNBandMatrix_UpperBandwidth(m)
+        stride = ml + mu + 1
+        for j in range(N):
+            v_col = SUNBandMatrix_Column(m, j)
+            for i in range(stride):
+                v_col[i - mu] = a[i,j]
 
-    N = SUNDenseMatrix_Columns(m)
-    M = SUNDenseMatrix_Rows(m)
-
-    for j in range(N):
-        v_col = SUNDenseMatrix_Column(m, j)
-        for i in range(M):
-            v_col[i] = a[i,j]
+    else:
+        raise NotImplementedError("SUNMatrix type not supported")
 
 cdef ensure_numpy_float_array(object value):
     try:

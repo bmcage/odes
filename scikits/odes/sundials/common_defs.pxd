@@ -23,10 +23,7 @@ ELSE:
 cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1
 cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1
 
-cdef inline int DlsMatd2ndarray(DlsMat m, np.ndarray a)
-cdef inline int ndarray2DlsMatd(DlsMat m, np.ndarray a)
-
-cdef inline int SUNMatrixd2ndarray(SUNMatrix m, np.ndarray a)
-cdef inline int ndarray2SUNMatrixd(SUNMatrix m, np.ndarray a)
+cdef inline int SUNMatrix2ndarray(SUNMatrix m, np.ndarray a) except? -1
+cdef inline int ndarray2SUNMatrix(SUNMatrix m, np.ndarray a) except? -1
 
 cdef ensure_numpy_float_array(object value)
