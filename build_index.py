@@ -58,6 +58,7 @@ def main():
         f.write(html_contents)
     print("Created index page", file=stderr)
     print("Current working dir:", getcwd(), file=stderr)
+    run(["git", "add", "index.html"])
 
 
 main()
