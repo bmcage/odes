@@ -1,6 +1,8 @@
 from c_sundials cimport *
 from c_sunmatrix cimport *
 
+include "sundials_config.pxi"
+
 cdef extern from "sunlinsol/sunlinsol_dense.h":
 
     struct _SUNLinearSolverContent_Dense:
@@ -46,50 +48,50 @@ cdef extern from "sunlinsol/sunlinsol_band.h":
 # We don't support KLU for now
 #cdef extern from "sunlinsol/sunlinsol_klu.h":
 
+IF SUNDIALS_BLAS_LAPACK:
+    cdef extern from "sunlinsol/sunlinsol_lapackdense.h":
 
-cdef extern from "sunlinsol/sunlinsol_lapackdense.h":
+        struct _SUNLinearSolverContent_LapackDense:
+            sunindextype N
+            sunindextype *pivots
+            long int last_flag
 
-    struct _SUNLinearSolverContent_LapackDense:
-        sunindextype N
-        sunindextype *pivots
-        long int last_flag
+        ctypedef _SUNLinearSolverContent_LapackDense *SUNLinearSolverContent_LapackDense
 
-    ctypedef _SUNLinearSolverContent_LapackDense *SUNLinearSolverContent_LapackDense
+        SUNLinearSolver SUNLapackDense(N_Vector y, SUNMatrix A)
 
-    SUNLinearSolver SUNLapackDense(N_Vector y, SUNMatrix A)
-
-    SUNLinearSolver_Type SUNLinSolGetType_LapackDense(SUNLinearSolver S)
-    int SUNLinSolInitialize_LapackDense(SUNLinearSolver S)
-    int SUNLinSolSetup_LapackDense(SUNLinearSolver S, SUNMatrix A)
-    int SUNLinSolSolve_LapackDense(SUNLinearSolver S, SUNMatrix A,
-                                                   N_Vector x, N_Vector b, realtype tol)
-    long int SUNLinSolLastFlag_LapackDense(SUNLinearSolver S)
-    int SUNLinSolSpace_LapackDense(SUNLinearSolver S,
-                                                   long int *lenrwLS,
-                                                   long int *leniwLS)
-    int SUNLinSolFree_LapackDense(SUNLinearSolver S)
+        SUNLinearSolver_Type SUNLinSolGetType_LapackDense(SUNLinearSolver S)
+        int SUNLinSolInitialize_LapackDense(SUNLinearSolver S)
+        int SUNLinSolSetup_LapackDense(SUNLinearSolver S, SUNMatrix A)
+        int SUNLinSolSolve_LapackDense(SUNLinearSolver S, SUNMatrix A,
+                                                       N_Vector x, N_Vector b, realtype tol)
+        long int SUNLinSolLastFlag_LapackDense(SUNLinearSolver S)
+        int SUNLinSolSpace_LapackDense(SUNLinearSolver S,
+                                                       long int *lenrwLS,
+                                                       long int *leniwLS)
+        int SUNLinSolFree_LapackDense(SUNLinearSolver S)
 
 
-cdef extern from "sunlinsol/sunlinsol_lapackband.h":
+    cdef extern from "sunlinsol/sunlinsol_lapackband.h":
 
-    struct _SUNLinearSolverContent_LapackBand:
-        sunindextype N
-        sunindextype *pivots
-        long int last_flag
+        struct _SUNLinearSolverContent_LapackBand:
+            sunindextype N
+            sunindextype *pivots
+            long int last_flag
 
-    ctypedef _SUNLinearSolverContent_LapackBand *SUNLinearSolverContent_LapackBand
+        ctypedef _SUNLinearSolverContent_LapackBand *SUNLinearSolverContent_LapackBand
 
-    SUNLinearSolver SUNLapackBand(N_Vector y, SUNMatrix A)
+        SUNLinearSolver SUNLapackBand(N_Vector y, SUNMatrix A)
 
-    SUNLinearSolver_Type SUNLinSolGetType_LapackBand(SUNLinearSolver S)
-    int SUNLinSolInitialize_LapackBand(SUNLinearSolver S)
-    int SUNLinSolSetup_LapackBand(SUNLinearSolver S, SUNMatrix A)
-    int SUNLinSolSolve_LapackBand(SUNLinearSolver S, SUNMatrix A,
-                                  N_Vector x, N_Vector b, realtype tol)
-    long int SUNLinSolLastFlag_LapackBand(SUNLinearSolver S)
-    int SUNLinSolSpace_LapackBand(SUNLinearSolver S, long int *lenrwLS,
-                                  long int *leniwLS)
-    int SUNLinSolFree_LapackBand(SUNLinearSolver S)
+        SUNLinearSolver_Type SUNLinSolGetType_LapackBand(SUNLinearSolver S)
+        int SUNLinSolInitialize_LapackBand(SUNLinearSolver S)
+        int SUNLinSolSetup_LapackBand(SUNLinearSolver S, SUNMatrix A)
+        int SUNLinSolSolve_LapackBand(SUNLinearSolver S, SUNMatrix A,
+                                      N_Vector x, N_Vector b, realtype tol)
+        long int SUNLinSolLastFlag_LapackBand(SUNLinearSolver S)
+        int SUNLinSolSpace_LapackBand(SUNLinearSolver S, long int *lenrwLS,
+                                      long int *leniwLS)
+        int SUNLinSolFree_LapackBand(SUNLinearSolver S)
 
 
 cdef extern from "sunlinsol/sunlinsol_pcg.h":

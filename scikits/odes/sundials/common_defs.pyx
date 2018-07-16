@@ -41,6 +41,8 @@ ELIF SUNDIALS_INDEX_TYPE == "int64":
 ELSE:
     from numpy import int64 as INDEX_TYPE
 
+has_lapack = SUNDIALS_BLAS_LAPACK
+
 ctypedef realtype *DlsMat_col
 ctypedef realtype *nv_content_data_s
 

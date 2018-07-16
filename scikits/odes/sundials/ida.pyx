@@ -5,6 +5,8 @@ from enum import IntEnum
 import inspect
 from warnings import warn
 
+include "sundials_config.pxi"
+
 import numpy as np
 cimport numpy as np
 
@@ -1337,26 +1339,9 @@ cdef class IDA:
         # Linsolver
         linsolver = opts['linsolver'].lower()
 
-        if linsolver == 'dense':             
+        if linsolver == 'dense':
             A = SUNDenseMatrix(N, N)
             LS = SUNDenseLinearSolver(self.y0, A)
-            # check if memory was allocated
-            if (A == NULL or LS == NULL):
-                raise ValueError('Could not allocate matrix or linear solver')
-            # attach matrix and linear solver to cvode
-            flag = IDADlsSetLinearSolver(ida_mem, LS, A)
-            if flag == IDADLS_ILL_INPUT:
-                raise ValueError('IDADense linear solver setting failed, '
-                                'arguments incompatible')
-            elif flag == IDADLS_MEM_NULL:
-                raise MemoryError('IDADense linear solver memory allocation error.')
-            elif flag != IDADLS_SUCCESS:
-                raise ValueError('IDADlsSetLinearSolver failed with code {}'
-                                 .format(flag))
-                                     
-        elif linsolver == 'lapackdense':         
-            A = SUNDenseMatrix(N, N)
-            LS = SUNLapackDense(self.y0, A)
             # check if memory was allocated
             if (A == NULL or LS == NULL):
                 raise ValueError('Could not allocate matrix or linear solver')
@@ -1374,21 +1359,6 @@ cdef class IDA:
             A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
                                  <int> opts['uband'] + <int> opts['lband']);
             LS = SUNBandLinearSolver(self.y0, A);
-            if (A == NULL or LS == NULL):
-                raise ValueError('Could not allocate matrix or linear solver')
-            flag = IDADlsSetLinearSolver(ida_mem, LS, A)
-            if flag == IDADLS_ILL_INPUT:
-                raise ValueError('IDABand linear solver setting failed, '
-                                'arguments incompatible')
-            elif flag == IDADLS_MEM_NULL:
-                raise MemoryError('IDABand linear solver memory allocation error.')
-            elif flag != IDADLS_SUCCESS:
-                raise ValueError('IDADlsSetLinearSolver failed with code {}'
-                                 .format(flag))
-        elif linsolver == 'lapackband':
-            A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
-                                 <int> opts['uband'] + <int> opts['lband']);
-            LS = SUNLapackBand(self.y0, A)
             if (A == NULL or LS == NULL):
                 raise ValueError('Could not allocate matrix or linear solver')
             flag = IDADlsSetLinearSolver(ida_mem, LS, A)
@@ -1461,6 +1431,45 @@ cdef class IDA:
             elif flag != IDASPILS_SUCCESS:
                 raise ValueError('IDASpilsSetPreconditioner failed with code {}'
                                  .format(flag))
+        else:
+            IF SUNDIALS_BLAS_LAPACK:
+                if linsolver == 'lapackdense':
+                    A = SUNDenseMatrix(N, N)
+                    LS = SUNLapackDense(self.y0, A)
+                    # check if memory was allocated
+                    if (A == NULL or LS == NULL):
+                        raise ValueError('Could not allocate matrix or linear solver')
+                    # attach matrix and linear solver to cvode
+                    flag = IDADlsSetLinearSolver(ida_mem, LS, A)
+                    if flag == IDADLS_ILL_INPUT:
+                        raise ValueError('IDADense linear solver setting failed, '
+                                        'arguments incompatible')
+                    elif flag == IDADLS_MEM_NULL:
+                        raise MemoryError('IDADense linear solver memory allocation error.')
+                    elif flag != IDADLS_SUCCESS:
+                        raise ValueError('IDADlsSetLinearSolver failed with code {}'
+                                         .format(flag))
+                elif linsolver == 'lapackband':
+                    A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
+                                         <int> opts['uband'] + <int> opts['lband']);
+                    LS = SUNLapackBand(self.y0, A)
+                    if (A == NULL or LS == NULL):
+                        raise ValueError('Could not allocate matrix or linear solver')
+                    flag = IDADlsSetLinearSolver(ida_mem, LS, A)
+                    if flag == IDADLS_ILL_INPUT:
+                        raise ValueError('IDABand linear solver setting failed, '
+                                        'arguments incompatible')
+                    elif flag == IDADLS_MEM_NULL:
+                        raise MemoryError('IDABand linear solver memory allocation error.')
+                    elif flag != IDADLS_SUCCESS:
+                        raise ValueError('IDADlsSetLinearSolver failed with code {}'
+                                         .format(flag))
+                else:
+                    raise ValueError('LinSolver: Unknown solver type: %s'
+                                         % opts['linsolver'])
+            ELSE:
+                raise ValueError('LinSolver: Unknown solver type: %s'
+                                     % opts['linsolver'])
 
 
         if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:

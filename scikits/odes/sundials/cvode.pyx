@@ -5,6 +5,8 @@ from enum import IntEnum
 import inspect
 from warnings import warn
 
+include "sundials_config.pxi"
+
 import numpy as np
 cimport numpy as np
 
@@ -1443,22 +1445,6 @@ cdef class CVODE:
                 elif flag != CVDLS_SUCCESS:
                     raise ValueError('CVDlsSetLinearSolver failed with code {}'
                                      .format(flag))
-            elif linsolver == 'lapackdense':
-                A = SUNDenseMatrix(N, N)
-                LS = SUNLapackDense(self.y0, A)
-                # check if memory was allocated
-                if (A == NULL or LS == NULL):
-                    raise ValueError('Could not allocate matrix or linear solver')
-                # attach matrix and linear solver to cvode
-                flag = CVDlsSetLinearSolver(cv_mem, LS, A)
-                if flag == CVDLS_ILL_INPUT:
-                    raise ValueError('CVDense lapack linear solver setting failed, '
-                                    'arguments incompatible')
-                elif flag == CVDLS_MEM_FAIL:
-                    raise MemoryError('CVDense lapack linear solver memory allocation error.')
-                elif flag != CVDLS_SUCCESS:
-                    raise ValueError('CVDlsSetLinearSolver failed with code {}'
-                                     .format(flag))
             elif linsolver == 'band':
                 A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
                                            <int> opts['uband'] + <int> opts['lband']);
@@ -1472,21 +1458,6 @@ cdef class CVODE:
                                      'arguments incompatible')
                 elif flag == CVDLS_MEM_FAIL:
                     raise MemoryError('CVBand linear solver memory allocation error.')
-                elif flag != CVDLS_SUCCESS:
-                    raise ValueError('CVDlsSetLinearSolver failed with code {}'
-                                     .format(flag))
-            elif linsolver == 'lapackband':
-                A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
-                                           <int> opts['uband'] + <int> opts['lband'])
-                LS = SUNLapackBand(self.y0, A)
-                if (A == NULL or LS == NULL):
-                    raise ValueError('Could not allocate matrix or linear solver')
-                flag = CVDlsSetLinearSolver(cv_mem, LS, A)
-                if flag == CVDLS_ILL_INPUT:
-                    raise ValueError('CVLapackBand linear solver setting failed, '
-                                     'arguments incompatible')
-                elif flag == CVDLS_MEM_FAIL:
-                    raise MemoryError('CVLapackBand linear solver memory allocation error.')
                 elif flag != CVDLS_SUCCESS:
                     raise ValueError('CVDlsSetLinearSolver failed with code {}'
                                      .format(flag))
@@ -1566,10 +1537,45 @@ cdef class CVODE:
                 elif flag != CVSPILS_SUCCESS:
                     raise ValueError('CVSpilsSetJacTimes failed with code {}'
                                      .format(flag))
-
             else:
-                raise ValueError('LinSolver: Unknown solver type: %s'
-                                     % opts['linsolver'])
+                IF SUNDIALS_BLAS_LAPACK:
+                    if linsolver == 'lapackdense':
+                        A = SUNDenseMatrix(N, N)
+                        LS = SUNLapackDense(self.y0, A)
+                        # check if memory was allocated
+                        if (A == NULL or LS == NULL):
+                            raise ValueError('Could not allocate matrix or linear solver')
+                        # attach matrix and linear solver to cvode
+                        flag = CVDlsSetLinearSolver(cv_mem, LS, A)
+                        if flag == CVDLS_ILL_INPUT:
+                            raise ValueError('CVDense lapack linear solver setting failed, '
+                                            'arguments incompatible')
+                        elif flag == CVDLS_MEM_FAIL:
+                            raise MemoryError('CVDense lapack linear solver memory allocation error.')
+                        elif flag != CVDLS_SUCCESS:
+                            raise ValueError('CVDlsSetLinearSolver failed with code {}'
+                                             .format(flag))
+                    elif linsolver == 'lapackband':
+                        A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
+                                                   <int> opts['uband'] + <int> opts['lband'])
+                        LS = SUNLapackBand(self.y0, A)
+                        if (A == NULL or LS == NULL):
+                            raise ValueError('Could not allocate matrix or linear solver')
+                        flag = CVDlsSetLinearSolver(cv_mem, LS, A)
+                        if flag == CVDLS_ILL_INPUT:
+                            raise ValueError('CVLapackBand linear solver setting failed, '
+                                             'arguments incompatible')
+                        elif flag == CVDLS_MEM_FAIL:
+                            raise MemoryError('CVLapackBand linear solver memory allocation error.')
+                        elif flag != CVDLS_SUCCESS:
+                            raise ValueError('CVDlsSetLinearSolver failed with code {}'
+                                             .format(flag))
+                    else:
+                        raise ValueError('LinSolver: Unknown solver type: %s'
+                                             % opts['linsolver'])
+                ELSE:
+                    raise ValueError('LinSolver: Unknown solver type: %s'
+                                         % opts['linsolver'])
 
         if (linsolver in ['dense', 'lapackdense', 'lapackband', 'band']
             and self.aux_data.jac):

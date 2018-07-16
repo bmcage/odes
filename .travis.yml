@@ -41,9 +41,10 @@ matrix:
     - python: 3.6
       env:
       - TOXENV=py36 SUNDIALS_VERSION='3.1.1'
-    - python: 3.7
-      env:
-      - TOXENV=py37 SUNDIALS_VERSION='3.1.1'
+    # commented as 3.7 not yet on travis
+    #- python: 3.7
+    #  env:
+    #  - TOXENV=py37 SUNDIALS_VERSION='3.1.1'
     - python: 3.5
       env:
       - TOXENV=doctr SUNDIALS_VERSION='3.1.1'
