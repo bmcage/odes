@@ -153,7 +153,7 @@ class SimpleOscillatorJac(SimpleOscillator):
         jac[1][0] = -1       ;jac[1][1] = cj_in;
 
 class SimpleOscillatorJacIDA(SimpleOscillator):
-    def jac(self, t, y, yp, cj, residual, jac):
+    def jac(self, t, y, yp, residual, cj, jac):
         """Jacobian[i,j] is dRES(i)/dY(j) + CJ*dRES(i)/dYPRIME(j)"""
         jc = zeros((len(y), len(y)), DTYPE)
         cj_in = cj

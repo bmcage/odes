@@ -299,7 +299,7 @@ cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
 ##            self._jacfn(t, y, ydot, cj, J, userdata)
 ##        else:
 ##            self._jacfn(t, y, ydot, cj, J)
-        user_flag = self._jacfn(t, y, ydot, cj, residual, J)
+        user_flag = self._jacfn(t, y, ydot, residual, cj, J)
         if user_flag is None:
             user_flag = 0
         return user_flag
@@ -394,7 +394,7 @@ cdef class IDA_WrapPrecSetupFunction(IDA_PrecSetupFunction):
 cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
                        realtype cj,
                        void *auxiliary_data):
-    """ function with the signature of IDASpilsPrecSetupFn, that calls 
+    """ function with the signature of IDASpilsPrecSetupFn, that calls
         the python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, rp_tmp, residual_tmp
 
@@ -411,7 +411,7 @@ cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
         nv_s2ndarray(yp, yp_tmp)
         nv_s2ndarray(rr, residual_tmp)
 
-    user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, yp_tmp, 
+    user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, yp_tmp,
                                                residual_tmp, cj, aux_data.user_data)
     return user_flag
 
@@ -478,8 +478,8 @@ cdef class IDA_WrapPrecSolveFunction(IDA_PrecSolveFunction):
             user_flag = 0
         return user_flag
 
-cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector yp, N_Vector r, 
-                       N_Vector rvec, N_Vector z, realtype cj, 
+cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector yp, N_Vector r,
+                       N_Vector rvec, N_Vector z, realtype cj,
                        realtype delta, void *auxiliary_data):
     """ function with the signature of CVSpilsPrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
@@ -511,7 +511,7 @@ cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector yp, N_Vector r,
         nv_s2ndarray(rvec, rvec_tmp)
         nv_s2ndarray(z, z_tmp)
 
-    user_flag = aux_data.prec_solvefn.evaluate(tt, yy_tmp, residual_tmp, 
+    user_flag = aux_data.prec_solvefn.evaluate(tt, yy_tmp, residual_tmp,
                                                rvec_tmp, z_tmp, cj, delta,
                                                aux_data.user_data)
 
@@ -1373,7 +1373,7 @@ cdef class IDA:
         elif ((linsolver == 'spgmr') or (linsolver == 'spbcg')
                   or (linsolver == 'sptfqmr')):
             maxl = <int> opts['maxl']
-            
+
             precond_type = opts['precond_type'].lower()
             if precond_type == 'none':
                 pretype = PREC_NONE
@@ -1402,7 +1402,7 @@ cdef class IDA:
                     raise ValueError('Could not allocate linear solver')
             else:
                 raise ValueError('Given linsolver {} not implemented in odes'.format(linsolver))
-                
+
             flag = IDASpilsSetLinearSolver(ida_mem, LS);
             if flag == IDASPILS_MEM_NULL:
                     raise MemoryError('IDA memory was NULL')
@@ -1413,7 +1413,7 @@ cdef class IDA:
                                  .format(flag))
             # TODO: make option for the Gram-Schmidt orthogonalization
             #flag = SUNSPGMRSetGSType(LS, gstype);
-                                      
+
             # TODO make option
             #flag = IDASpilsSetEpsLin(cvode_mem, DELT);
 
