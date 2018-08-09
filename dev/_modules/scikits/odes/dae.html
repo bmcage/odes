@@ -593,7 +593,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Clean up what is needed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span></div>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_integrator&#39;</span><span class="p">):</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span></div>
 
 <span class="c1">#------------------------------------------------------------------------------</span>
 <span class="c1"># DAE integrators</span>
@@ -613,12 +614,14 @@
         <span class="c1">## ddaspk</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">.ddaspkint</span> <span class="k">import</span> <span class="n">ddaspk</span>
+            <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ddaspk</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="c1">## lsodi</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">.lsodiint</span> <span class="k">import</span> <span class="n">lsodi</span>
+            <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lsodi</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
 
