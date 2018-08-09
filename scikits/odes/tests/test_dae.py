@@ -48,7 +48,7 @@ class TestDae(TestCase):
 
     def test_ddaspk(self):
         """Check the ddaspk solver"""
-        for problem_cls in PROBLEMS:
+        for problem_cls in PROBLEMS_DDASPK:
             problem = problem_cls()
             self._do_problem(problem, 'ddaspk', **problem.ddaspk_pars)
 
@@ -60,13 +60,13 @@ class TestDae(TestCase):
 
     def test_ida_old_api(self):
         """Check the ida solver"""
-        for problem_cls in PROBLEMS:
+        for problem_cls in PROBLEMS_IDA:
             problem = problem_cls()
             self._do_problem(problem, 'ida', old_api=True, **problem.ida_pars)
 
     def test_ida(self):
         """Check the ida solver"""
-        for problem_cls in PROBLEMS:
+        for problem_cls in PROBLEMS_IDA:
             problem = problem_cls()
             self._do_problem(problem, 'ida', old_api=False, **problem.ida_pars)
 
@@ -152,6 +152,14 @@ class SimpleOscillatorJac(SimpleOscillator):
         jac[0][0] = self.m*cj_in ;jac[0][1] = self.k
         jac[1][0] = -1       ;jac[1][1] = cj_in;
 
+class SimpleOscillatorJacIDA(SimpleOscillator):
+    def jac(self, t, y, yp, cj, residual, jac):
+        """Jacobian[i,j] is dRES(i)/dY(j) + CJ*dRES(i)/dYPRIME(j)"""
+        jc = zeros((len(y), len(y)), DTYPE)
+        cj_in = cj
+        jac[0][0] = self.m*cj_in ;jac[0][1] = self.k
+        jac[1][0] = -1       ;jac[1][1] = cj_in;
+
 class StiffVODECompare(DAE):
     r"""
     We create a stiff problem, obtain the vode solution, and compare with
@@ -183,7 +191,7 @@ class StiffVODECompare(DAE):
     def f_cvode(self, t, y, ydot):
         ydot[:] = self.f_vode(t, y)
 
-    def jac_cvode(self, t, y, J):
+    def jac_cvode(self, t, y, fy, J):
         J[:,:] = self.jac_vode(t, y)
 
     def __init__(self):
@@ -248,8 +256,10 @@ class StiffVODECompare(DAE):
         return ( allclose(self.sol, y, atol=self.atol, rtol=self.rtol) and
                  allclose(self.sol2, y, atol=self.atol, rtol=self.rtol) )
 
-PROBLEMS = [SimpleOscillator, StiffVODECompare,
+PROBLEMS_DDASPK = [SimpleOscillator, StiffVODECompare,
             SimpleOscillatorJac ]
+PROBLEMS_IDA = [SimpleOscillator, StiffVODECompare,
+            SimpleOscillatorJacIDA ]
 PROBLEMS_LSODI = [SimpleOscillator, StiffVODECompare]
 #------------------------------------------------------------------------------
 

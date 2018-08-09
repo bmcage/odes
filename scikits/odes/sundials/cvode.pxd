@@ -118,6 +118,7 @@ cdef class CV_data:
     cdef CV_PrecSolveFunction prec_solvefn
     cdef CV_PrecSetupFunction prec_setupfn
     cdef CV_JacTimesVecFunction jac_times_vecfn
+    cdef CV_JacTimesSetupFunction jac_times_setupfn
     cdef bint parallel_implementation
     cdef object user_data
     cdef CV_ErrHandler err_handler

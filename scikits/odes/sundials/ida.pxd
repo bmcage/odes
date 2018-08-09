@@ -91,10 +91,12 @@ cdef class IDA_WrapErrHandler(IDA_ErrHandler):
 
 
 cdef class IDA_data:
-    cdef np.ndarray yy_tmp, yp_tmp, residual_tmp, jac_tmp, g_tmp
+    cdef np.ndarray yy_tmp, yp_tmp, residual_tmp, jac_tmp, g_tmp, z_tmp, rvec_tmp
     cdef IDA_RhsFunction res
     cdef IDA_JacRhsFunction jac
     cdef IDA_RootFunction rootfn
+    cdef IDA_PrecSetupFunction prec_setupfn
+    cdef IDA_PrecSolveFunction prec_solvefn
     cdef bint parallel_implementation
     cdef object user_data
     cdef IDA_ErrHandler err_handler

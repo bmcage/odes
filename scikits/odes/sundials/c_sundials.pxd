@@ -210,46 +210,6 @@ cdef extern from "sundials/sundials_linearsolver.h":
     int SUNLinSolFree(SUNLinearSolver S)
 
 
-cdef extern from "sundials/sundials_lapack.h":
-    pass
-    # void dcopy_(int *n, double *x, int *inc_x, double *y, int *inc_y)
-    # void dscal_(int *n, double *alpha, double *x, int *inc_x)
-
-    # # Level-2 BLAS
-    # void dgemv_(char *trans, int *m, int *n, double *alpha, double *a,
-    #             int *lda, double *x, int *inc_x, double *beta, double *y,
-    #             int *inc_y, int len_trans)
-    # void dtrsv_(char *uplo, char *trans, char *diag, int *n,
-    #             double *a, int *lda, double *x, int *inc_x,
-    #             int len_uplo, int len_trans, int len_diag)
-
-    # # Level-3 BLAS
-    # void dsyrk_(char *uplo, char *trans, int *n, int *k,
-    #             double *alpha, double *a, int *lda, double *beta,
-    #             double *c, int *ldc, int len_uplo, int len_trans)
-
-    # # LAPACK
-    # void dgbtrf_(int *m, int *n, int *kl, int *ku,
-    #              double *ab, int *ldab, int *ipiv, int *info)
-    # void dgbtrs_(char *trans, int *n, int *kl, int *ku, int *nrhs,
-    #              double *ab, int *ldab, int *ipiv, double *b, int *ldb,
-    #              int *info, int len_trans)
-    # void dgeqp3_(int *m, int *n, double *a, int *lda, int *jpvt, double *tau,
-    #              double *work, int *lwork, int *info)
-    # void dgeqrf_(int *m, int *n, double *a, int *lda, double *tau, double *work,
-    #              int *lwork, int *info)
-    # void dgetrf_(int *m, int *n, double *a, int *lda, int *ipiv, int *info)
-    # void dgetrs_(char *trans, int *n, int *nrhs, double *a, int *lda,
-    #              int *ipiv, double *b, int *ldb, int *info, int len_trans)
-
-    # void dormqr_(char *side, char *trans, int *m, int *n, int *k, double *a,
-    #              int *lda, double *tau, double *c, int *ldc, double *work,
-    #              int *lwork, int *info, int len_side, int len_trans)
-    # void dpotrf_(char *uplo, int *n, double *a, int *lda, int *info, int len_uplo)
-    # void dpotrs_(char *uplo, int *n, int *nrhs, double *a, int *lda,
-    #              double *b, int *ldb, int * info, int len_uplo)
-
-
 cdef extern from "sundials/sundials_direct.h":
     enum: SUNDIALS_DENSE
     enum: SUNDIALS_BAND

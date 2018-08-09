@@ -5,6 +5,8 @@ from enum import IntEnum
 import inspect
 from warnings import warn
 
+include "sundials_config.pxi"
+
 import numpy as np
 cimport numpy as np
 
@@ -20,7 +22,7 @@ from .c_sunlinsol cimport *
 
 from .c_cvode cimport *
 from .common_defs cimport (
-    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t, INDEX_TYPE_t,
+    nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
 )
 from .common_defs import DTYPE, INDEX_TYPE
 # this is needed because we want DTYPE and INDEX_TYPE to be
@@ -240,7 +242,7 @@ cdef class CV_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] fy,
-                       np.ndarray J) except? -1:
+                       np.ndarray[DTYPE_t, ndim=2] J) except? -1:
         """
         Returns the Jacobi matrix of the right hand side function, as
             d(rhs)/d y
@@ -286,32 +288,26 @@ cdef int _jacdense(realtype tt,
        Note: signature of Jac is SUNMatrix
     """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, ff_tmp
-    cdef np.ndarray jac_tmp
-            
+    cdef np.ndarray[DTYPE_t, ndim=2] jac_tmp
+
     aux_data = <CV_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
     if parallel_implementation:
         raise NotImplemented
     else:
         yy_tmp = aux_data.yy_tmp
-        if aux_data.jac_tmp is None:
-            N = np.alen(yy_tmp)
-            aux_data.jac_tmp = np.empty((N,N), DTYPE)
         jac_tmp = aux_data.jac_tmp
 
         nv_s2ndarray(yy, yy_tmp)
         ff_tmp = aux_data.z_tmp
         nv_s2ndarray(ff, ff_tmp)
-        
+
     user_flag = aux_data.jac.evaluate(tt, yy_tmp, ff_tmp, jac_tmp)
 
     if parallel_implementation:
         raise NotImplemented
     else:
-        #we convert the python jac_tmp array to DlsMat of sundials (sundials_direct.h)
-        # TODO: How to convert from DlsMat to SUNMatrix required ???
-        #ndarray2DlsMatd(Jac, jac_tmp)
-        raise NotImplemented("To implement to convert user ndarray method to SUNMatrix")
+        ndarray2SUNMatrix(Jac, jac_tmp)
 
     return user_flag
 
@@ -467,14 +463,6 @@ cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, N_Vect
     else:
         yy_tmp = aux_data.yy_tmp
 
-        if aux_data.r_tmp is None:
-            N = np.alen(yy_tmp)
-            aux_data.r_tmp = np.empty(N, DTYPE)
-
-        if aux_data.z_tmp is None:
-            N = np.alen(yy_tmp)
-            aux_data.z_tmp = np.empty(N, DTYPE)
-
         r_tmp = aux_data.r_tmp
         z_tmp = aux_data.z_tmp
 
@@ -558,14 +546,6 @@ cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
     else:
         y_tmp = aux_data.yy_tmp
 
-        if aux_data.r_tmp is None:
-            N = np.alen(y_tmp)
-            aux_data.r_tmp = np.empty(N, DTYPE)
-
-        if aux_data.z_tmp is None:
-            N = np.alen(y_tmp)
-            aux_data.z_tmp = np.empty(N, DTYPE)
-
         v_tmp = aux_data.r_tmp
         Jv_tmp = aux_data.z_tmp
 
@@ -646,10 +626,6 @@ cdef int _jac_times_setupfn(realtype t, N_Vector y, N_Vector fy,
         raise NotImplemented
     else:
         y_tmp = aux_data.yy_tmp
-
-        if aux_data.z_tmp is None:
-            N = np.alen(y_tmp)
-            aux_data.z_tmp = np.empty(N, DTYPE)
 
         fy_tmp = aux_data.z_tmp
 
@@ -738,8 +714,8 @@ cdef class CV_data:
         self.yp_tmp = np.empty(N, DTYPE)
         self.jac_tmp = None
         self.g_tmp = None
-        self.r_tmp = None
-        self.z_tmp = None
+        self.r_tmp = np.empty(N, DTYPE)
+        self.z_tmp = np.empty(N, DTYPE)
 
 cdef class CVODE:
 
@@ -1418,7 +1394,7 @@ cdef class CVODE:
             tmpfun.set_jac_times_setupfn(jac_times_setupfn)
             jac_times_setupfn = tmpfun
             opts['jac_times_setupfn'] = tmpfun
-        self.aux_data.jac_times_vecfn = jac_times_vecfn
+        self.aux_data.jac_times_setupfn = jac_times_setupfn
 
         self.aux_data.user_data = opts['user_data']
 
@@ -1469,22 +1445,6 @@ cdef class CVODE:
                 elif flag != CVDLS_SUCCESS:
                     raise ValueError('CVDlsSetLinearSolver failed with code {}'
                                      .format(flag))
-            elif linsolver == 'lapackdense':
-                A = SUNDenseMatrix(N, N)
-                LS = SUNLapackDense(self.y0, A)
-                # check if memory was allocated
-                if (A == NULL or LS == NULL):
-                    raise ValueError('Could not allocate matrix or linear solver')
-                # attach matrix and linear solver to cvode
-                flag = CVDlsSetLinearSolver(cv_mem, LS, A)
-                if flag == CVDLS_ILL_INPUT:
-                    raise ValueError('CVDense lapack linear solver setting failed, '
-                                    'arguments incompatible')
-                elif flag == CVDLS_MEM_FAIL:
-                    raise MemoryError('CVDense lapack linear solver memory allocation error.')
-                elif flag != CVDLS_SUCCESS:
-                    raise ValueError('CVDlsSetLinearSolver failed with code {}'
-                                     .format(flag))
             elif linsolver == 'band':
                 A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
                                            <int> opts['uband'] + <int> opts['lband']);
@@ -1498,21 +1458,6 @@ cdef class CVODE:
                                      'arguments incompatible')
                 elif flag == CVDLS_MEM_FAIL:
                     raise MemoryError('CVBand linear solver memory allocation error.')
-                elif flag != CVDLS_SUCCESS:
-                    raise ValueError('CVDlsSetLinearSolver failed with code {}'
-                                     .format(flag))
-            elif linsolver == 'lapackband':
-                A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
-                                           <int> opts['uband'] + <int> opts['lband'])
-                LS = SUNLapackBand(self.y0, A)
-                if (A == NULL or LS == NULL):
-                    raise ValueError('Could not allocate matrix or linear solver')
-                flag = CVDlsSetLinearSolver(cv_mem, LS, A)
-                if flag == CVDLS_ILL_INPUT:
-                    raise ValueError('CVLapackBand linear solver setting failed, '
-                                     'arguments incompatible')
-                elif flag == CVDLS_MEM_FAIL:
-                    raise MemoryError('CVLapackBand linear solver memory allocation error.')
                 elif flag != CVDLS_SUCCESS:
                     raise ValueError('CVDlsSetLinearSolver failed with code {}'
                                      .format(flag))
@@ -1592,13 +1537,58 @@ cdef class CVODE:
                 elif flag != CVSPILS_SUCCESS:
                     raise ValueError('CVSpilsSetJacTimes failed with code {}'
                                      .format(flag))
-
             else:
-                raise ValueError('LinSolver: Unknown solver type: %s'
-                                     % opts['linsolver'])
+                IF SUNDIALS_BLAS_LAPACK:
+                    if linsolver == 'lapackdense':
+                        A = SUNDenseMatrix(N, N)
+                        LS = SUNLapackDense(self.y0, A)
+                        # check if memory was allocated
+                        if (A == NULL or LS == NULL):
+                            raise ValueError('Could not allocate matrix or linear solver')
+                        # attach matrix and linear solver to cvode
+                        flag = CVDlsSetLinearSolver(cv_mem, LS, A)
+                        if flag == CVDLS_ILL_INPUT:
+                            raise ValueError('CVDense lapack linear solver setting failed, '
+                                            'arguments incompatible')
+                        elif flag == CVDLS_MEM_FAIL:
+                            raise MemoryError('CVDense lapack linear solver memory allocation error.')
+                        elif flag != CVDLS_SUCCESS:
+                            raise ValueError('CVDlsSetLinearSolver failed with code {}'
+                                             .format(flag))
+                    elif linsolver == 'lapackband':
+                        A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
+                                                   <int> opts['uband'] + <int> opts['lband'])
+                        LS = SUNLapackBand(self.y0, A)
+                        if (A == NULL or LS == NULL):
+                            raise ValueError('Could not allocate matrix or linear solver')
+                        flag = CVDlsSetLinearSolver(cv_mem, LS, A)
+                        if flag == CVDLS_ILL_INPUT:
+                            raise ValueError('CVLapackBand linear solver setting failed, '
+                                             'arguments incompatible')
+                        elif flag == CVDLS_MEM_FAIL:
+                            raise MemoryError('CVLapackBand linear solver memory allocation error.')
+                        elif flag != CVDLS_SUCCESS:
+                            raise ValueError('CVDlsSetLinearSolver failed with code {}'
+                                             .format(flag))
+                    else:
+                        raise ValueError('LinSolver: Unknown solver type: %s'
+                                             % opts['linsolver'])
+                ELSE:
+                    raise ValueError('LinSolver: Unknown solver type: %s'
+                                         % opts['linsolver'])
 
         if (linsolver in ['dense', 'lapackdense', 'lapackband', 'band']
             and self.aux_data.jac):
+            # we need to create the correct shape for jacobian output, here is
+            # the best place
+            if linsolver == 'lapackband' or linsolver == 'band':
+                self.aux_data.jac_tmp = np.empty((
+                        opts['uband'] + opts['lband'] + 1,
+                        np.alen(y0)
+                    ), DTYPE
+                )
+            else:
+                self.aux_data.jac_tmp = np.empty((np.alen(y0), np.alen(y0)), DTYPE)
             CVDlsSetJacFn(cv_mem, _jacdense)
 
         #we test if jac don't give errors due to bad coding, as
@@ -1609,7 +1599,8 @@ cdef class CVODE:
                         DTYPE)
             else:
                 _test = np.empty((np.alen(y0), np.alen(y0)), DTYPE)
-            jac._jacfn(t0, y0, _test)
+            _fy_test = np.zeros(np.alen(y0), DTYPE)
+            jac._jacfn(t0, y0, _fy_test, _test)
             _test = None
 
         #now we initialize storage which is persistent over steps

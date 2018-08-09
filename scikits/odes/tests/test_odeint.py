@@ -106,7 +106,7 @@ class ComplexExp(ODE):
         rhs[:] = 1j*z
         return 0
 
-    def jac(self, t, z, J):
+    def jac(self, t, z, fz, J):
         J[:,:] = 1j*eye(5)
         return 0
 
@@ -151,7 +151,7 @@ class CoupledDecay(ODE):
                          -lmbd[2]*z[2] + lmbd[1]*z[1]])
         return 0
 
-    def jac(self, t, z, J):
+    def jac(self, t, z, fz, J):
         # The full Jacobian is
         #
         #    [-lmbd[0]      0         0   ]
@@ -253,14 +253,14 @@ def test_odeint_trivial_time():
 
 c = array([[-205, 0.01, 0.00, 0.0],
            [0.1, -2.50, 0.02, 0.0],
-           [1e-3, 0.01, -2.0, 0.01],
+           [0.00, 0.01, -2.0, 0.01],
            [0.00, 0.00, 0.1, -1.0]])
 
 cband1 = array([
-           [0.  ,    0., 0.00,  0.0 ],
            [0.  ,  0.01, 0.02,  0.01],
            [-205, -2.50, -2.0, -1.0 ],
-           [0.1,   0.01,  0.1,  0.0 ]])
+           [0.1,   0.01,  0.1,  0.0 ],
+           [0.  ,    0., 0.00,  0.0 ]])
 cband2 = array([[0, 0.01, 0.02, 0.01],
            [-250, -2.50, -2., -1.],
            [0.1, 0.01, 0.1, 0.]])
@@ -273,18 +273,18 @@ def test_odeint_banded_jacobian():
         rhs[:] = c.dot(y)
         return 0
 
-    def jac(t, y, J):
+    def jac(t, y, fy, J):
         J[:,:] = c
         return 0
 
-    def bjac1_rows(t, y, J):
+    def bjac1_rows(t, y, fy, J):
         J[:,:] = cband1
-        return jac
+        return 0
 
-    def bjac2_rows(t, y, J):
+    def bjac2_rows(t, y, fy, J):
         # define BAND_ELEM(A,i,j) ((A->cols)[j][(i)-(j)+(A->s_mu)])
         J[:,:] = cband2
-        return jac
+        return 0
 
     y0 = np.ones(4)
     t = np.array([0, 5, 10, 100])
@@ -354,7 +354,7 @@ def test_odeint_banded_jacobian():
                          linsolver='spgmr')
     sol11 = odeint(func, t, y0,
                          atol=1e-13, rtol=1e-11, max_steps=10000,
-                         linsolver='spbcg')
+                         linsolver='spbcgs')
     sol12 = odeint(func, t, y0,
                          atol=1e-13, rtol=1e-11, max_steps=10000,
                          linsolver='sptfqmr')
@@ -390,11 +390,11 @@ def test_odeint_errors():
         rhs[:] = "foo"
         return 0
 
-    def bad_jac1(t, x, J):
+    def bad_jac1(t, x, fx, J):
         J[:,:] = 1.0/0
         return 0
 
-    def bad_jac2(t, x, J):
+    def bad_jac2(t, x, fx, J):
         J[:,:] = [["foo"]]
         return 0
 
@@ -402,7 +402,7 @@ def test_odeint_errors():
         rhs[:] = [-100*x[0], -0.1*x[1]]
         return 0
 
-    def sys2d_bad_jac(t, x, J):
+    def sys2d_bad_jac(t, x, fx, J):
         J[:,:] = [[1.0/0, 0], [0, -0.1]]
         return 0
 
@@ -427,7 +427,7 @@ def test_odeint_bad_shapes():
         rhs[:] = -100*x
         return 0
 
-    def badjac(t, x, J):
+    def badjac(t, x, fx, J):
         J[:,:] = [[0, 0, 0]]
         return 0
 

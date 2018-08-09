@@ -5,6 +5,8 @@ from enum import IntEnum
 import inspect
 from warnings import warn
 
+include "sundials_config.pxi"
+
 import numpy as np
 cimport numpy as np
 
@@ -16,7 +18,7 @@ from .c_sunlinsol cimport *
 
 from .c_ida cimport *
 from .common_defs cimport (
-    nv_s2ndarray, ndarray2nv_s, ndarray2DlsMatd, DTYPE_t, INDEX_TYPE_t,
+    nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
 )
 from .common_defs import DTYPE, INDEX_TYPE
 # this is needed because we want DTYPE and INDEX_TYPE to be
@@ -330,11 +332,7 @@ cdef int _jacdense(realtype tt, realtype cj,
     if parallel_implementation:
         raise NotImplemented
     else:
-        #we convert the python jac_tmp array to DslMat of sundials
-        #we convert the python jac_tmp array to DlsMat of sundials (sundials_direct.h)
-        # TODO: How to convert from DlsMat to SUNMatrix required ???
-        #ndarray2DlsMatd(Jac, jac_tmp)
-        raise NotImplemented("To implement to convert user ndarray method to SUNMatrix")
+        ndarray2SUNMatrix(Jac, jac_tmp)
 
     return user_flag
 
@@ -1206,22 +1204,6 @@ cdef class IDA:
                              'flagged to be computed (see ''init_cond'' for '
                              'documentation.')
 
-        prec_setupfn = opts['prec_setupfn']
-        if prec_setupfn is not None and not isinstance(prec_setupfn, IDA_PrecSetupFunction):
-            tmpfun = IDA_WrapPrecSetupFunction()
-            tmpfun.set_prec_setupfn(prec_setupfn)
-            prec_setupfn = tmpfun
-            opts['prec_setupfn'] = tmpfun
-        self.aux_data.prec_setupfn = prec_setupfn
-
-        prec_solvefn = opts['prec_solvefn']
-        if prec_solvefn is not None and not isinstance(prec_solvefn, IDA_PrecSolveFunction):
-            tmpfun = IDA_WrapPrecSolveFunction()
-            tmpfun.set_prec_solvefn(prec_solvefn)
-            prec_solvefn = tmpfun
-            opts['prec_solvefn'] = tmpfun
-        self.aux_data.prec_solvefn = prec_solvefn
-
         #TODO: when implementing parallel, does N_VDestroy be called separately
         #      for parallel version or it's a generic one?
         if not self.y0 is NULL:
@@ -1313,6 +1295,22 @@ cdef class IDA:
         self.aux_data.jac = jac
         self.aux_data.user_data = opts['user_data']
 
+        prec_setupfn = opts['prec_setupfn']
+        if prec_setupfn is not None and not isinstance(prec_setupfn, IDA_PrecSetupFunction):
+            tmpfun = IDA_WrapPrecSetupFunction()
+            tmpfun.set_prec_setupfn(prec_setupfn)
+            prec_setupfn = tmpfun
+            opts['prec_setupfn'] = tmpfun
+        self.aux_data.prec_setupfn = prec_setupfn
+
+        prec_solvefn = opts['prec_solvefn']
+        if prec_solvefn is not None and not isinstance(prec_solvefn, IDA_PrecSolveFunction):
+            tmpfun = IDA_WrapPrecSolveFunction()
+            tmpfun.set_prec_solvefn(prec_solvefn)
+            prec_solvefn = tmpfun
+            opts['prec_solvefn'] = tmpfun
+        self.aux_data.prec_solvefn = prec_solvefn
+
         self._set_runtime_changeable_options(opts, supress_supported_check=True)
 
         if flag == IDA_ILL_INPUT:
@@ -1341,26 +1339,9 @@ cdef class IDA:
         # Linsolver
         linsolver = opts['linsolver'].lower()
 
-        if linsolver == 'dense':             
+        if linsolver == 'dense':
             A = SUNDenseMatrix(N, N)
             LS = SUNDenseLinearSolver(self.y0, A)
-            # check if memory was allocated
-            if (A == NULL or LS == NULL):
-                raise ValueError('Could not allocate matrix or linear solver')
-            # attach matrix and linear solver to cvode
-            flag = IDADlsSetLinearSolver(ida_mem, LS, A)
-            if flag == IDADLS_ILL_INPUT:
-                raise ValueError('IDADense linear solver setting failed, '
-                                'arguments incompatible')
-            elif flag == IDADLS_MEM_NULL:
-                raise MemoryError('IDADense linear solver memory allocation error.')
-            elif flag != IDADLS_SUCCESS:
-                raise ValueError('IDADlsSetLinearSolver failed with code {}'
-                                 .format(flag))
-                                     
-        elif linsolver == 'lapackdense':         
-            A = SUNDenseMatrix(N, N)
-            LS = SUNLapackDense(self.y0, A)
             # check if memory was allocated
             if (A == NULL or LS == NULL):
                 raise ValueError('Could not allocate matrix or linear solver')
@@ -1378,21 +1359,6 @@ cdef class IDA:
             A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
                                  <int> opts['uband'] + <int> opts['lband']);
             LS = SUNBandLinearSolver(self.y0, A);
-            if (A == NULL or LS == NULL):
-                raise ValueError('Could not allocate matrix or linear solver')
-            flag = IDADlsSetLinearSolver(ida_mem, LS, A)
-            if flag == IDADLS_ILL_INPUT:
-                raise ValueError('IDABand linear solver setting failed, '
-                                'arguments incompatible')
-            elif flag == IDADLS_MEM_NULL:
-                raise MemoryError('IDABand linear solver memory allocation error.')
-            elif flag != IDADLS_SUCCESS:
-                raise ValueError('IDADlsSetLinearSolver failed with code {}'
-                                 .format(flag))
-        elif linsolver == 'lapackband':
-            A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
-                                 <int> opts['uband'] + <int> opts['lband']);
-            LS = SUNLapackBand(self.y0, A)
             if (A == NULL or LS == NULL):
                 raise ValueError('Could not allocate matrix or linear solver')
             flag = IDADlsSetLinearSolver(ida_mem, LS, A)
@@ -1465,9 +1431,49 @@ cdef class IDA:
             elif flag != IDASPILS_SUCCESS:
                 raise ValueError('IDASpilsSetPreconditioner failed with code {}'
                                  .format(flag))
+        else:
+            IF SUNDIALS_BLAS_LAPACK:
+                if linsolver == 'lapackdense':
+                    A = SUNDenseMatrix(N, N)
+                    LS = SUNLapackDense(self.y0, A)
+                    # check if memory was allocated
+                    if (A == NULL or LS == NULL):
+                        raise ValueError('Could not allocate matrix or linear solver')
+                    # attach matrix and linear solver to cvode
+                    flag = IDADlsSetLinearSolver(ida_mem, LS, A)
+                    if flag == IDADLS_ILL_INPUT:
+                        raise ValueError('IDADense linear solver setting failed, '
+                                        'arguments incompatible')
+                    elif flag == IDADLS_MEM_NULL:
+                        raise MemoryError('IDADense linear solver memory allocation error.')
+                    elif flag != IDADLS_SUCCESS:
+                        raise ValueError('IDADlsSetLinearSolver failed with code {}'
+                                         .format(flag))
+                elif linsolver == 'lapackband':
+                    A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
+                                         <int> opts['uband'] + <int> opts['lband']);
+                    LS = SUNLapackBand(self.y0, A)
+                    if (A == NULL or LS == NULL):
+                        raise ValueError('Could not allocate matrix or linear solver')
+                    flag = IDADlsSetLinearSolver(ida_mem, LS, A)
+                    if flag == IDADLS_ILL_INPUT:
+                        raise ValueError('IDABand linear solver setting failed, '
+                                        'arguments incompatible')
+                    elif flag == IDADLS_MEM_NULL:
+                        raise MemoryError('IDABand linear solver memory allocation error.')
+                    elif flag != IDADLS_SUCCESS:
+                        raise ValueError('IDADlsSetLinearSolver failed with code {}'
+                                         .format(flag))
+                else:
+                    raise ValueError('LinSolver: Unknown solver type: %s'
+                                         % opts['linsolver'])
+            ELSE:
+                raise ValueError('LinSolver: Unknown solver type: %s'
+                                     % opts['linsolver'])
 
 
         if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
+            self.aux_data.jac_tmp = np.empty((np.alen(y0), np.alen(y0)), DTYPE)
             flag = IDADlsSetJacFn(ida_mem, _jacdense)
             if flag == IDADLS_MEM_NULL:
                 raise MemoryError('IDA Memory NULL.')

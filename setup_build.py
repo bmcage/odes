@@ -21,6 +21,26 @@ def write_pxi(filename, definitions):
     return filename
 
 
+def check_macro_def(cmd, symbol, headers=None, include_dirs=None):
+    """
+    Based on numpy.distutils.command.config:config.check_macro_true, checks if
+    macro is defined or not
+    """
+    cmd._check_compiler()
+    body = """
+int main(void)
+{
+#ifdef %s
+#else
+#error undefined macro
+#endif
+    ;
+    return 0;
+}""" % (symbol,)
+
+    return cmd.try_compile(body, headers, include_dirs)
+
+
 def get_sundials_config_pxi(include_dirs, dist):
     """
     Create pxi file containing some of sundials build config
@@ -76,10 +96,27 @@ def get_sundials_config_pxi(include_dirs, dist):
         SUNDIALS_INDEX_TYPE = '"int64"'
         info("Failed to find sundials index type, falling back to int64...")
 
+    # Check for blas/lapack
+    if check_macro_def(
+        config_cmd,
+        "SUNDIALS_BLAS_LAPACK", headers=[SUNDIALS_CONFIG_H],
+        include_dirs=include_dirs
+    ):
+        has_lapack = True
+    else:
+        has_lapack = False
+
+    cfg = dict(
+        float_type = SUNDIALS_FLOAT_TYPE,
+        index_type = SUNDIALS_INDEX_TYPE,
+        has_lapack = has_lapack,
+    )
+
     return write_pxi(join(BASE_PATH, "sundials_config.pxi"), dict(
         SUNDIALS_FLOAT_TYPE=SUNDIALS_FLOAT_TYPE,
         SUNDIALS_INDEX_TYPE=SUNDIALS_INDEX_TYPE,
-    ))
+        SUNDIALS_BLAS_LAPACK=str(has_lapack),
+    )), cfg
 
 
 class build_ext(_build_ext):
@@ -152,6 +189,11 @@ class build_ext(_build_ext):
             except ImportError:
                 info("pkgconfig module not found, using preset paths")
 
+        sundials_pxi, cfg = get_sundials_config_pxi(SUNDIALS_INCLUDE_DIRS,
+                self.distribution)
+
+        has_lapack = cfg['has_lapack']
+
         if not SUNDIALS_LIBRARIES:
             # This is where to put N_vector codes (currently only serial is
             # supported)
@@ -164,8 +206,9 @@ class build_ext(_build_ext):
 
             # This is where to put SUNLinearSolver codes (klu not supported
             # yet)
-            SUNDIALS_LIBRARIES.append('sundials_sunlinsollapackband')
-            SUNDIALS_LIBRARIES.append('sundials_sunlinsollapackdense')
+            if has_lapack:
+                SUNDIALS_LIBRARIES.append('sundials_sunlinsollapackband')
+                SUNDIALS_LIBRARIES.append('sundials_sunlinsollapackdense')
 
             SUNDIALS_LIBRARIES.append('sundials_sunlinsolband')
             SUNDIALS_LIBRARIES.append('sundials_sunlinsoldense')
@@ -188,20 +231,18 @@ class build_ext(_build_ext):
             CVODE_LIBRARIES.append('sundials_cvode')
 
 
-        try:
+        if has_lapack:
             lapack_opt = get_info('lapack_opt', notfound_action=2)
 
             if lapack_opt:
                 SUNDIALS_INCLUDE_DIRS.extend(lapack_opt.get('include_dirs',[]))
                 SUNDIALS_LIBRARY_DIRS.extend(lapack_opt.get('library_dirs',[]))
                 SUNDIALS_LIBRARIES.extend(lapack_opt.get('libraries',[]))
-                use_lapack = True
+                info('Found LAPACK paths via lapack_opt ...')
             else:
-                raise ValueError
-            info('Found LAPACK paths via lapack_opt ...')
-        except:
-            info('LAPACK was not detected, disabling sundials solvers')
-            return []
+                info('LAPACK was not found, but SUNDIALS compiled against '
+                    'lapack, check your numpy installation'
+                )
 
         CVODE_LIBRARIES.extend(SUNDIALS_LIBRARIES)
         IDA_LIBRARIES.extend(SUNDIALS_LIBRARIES)
@@ -209,9 +250,6 @@ class build_ext(_build_ext):
         IDA_INCLUDE_DIRS.extend(SUNDIALS_INCLUDE_DIRS)
         CVODE_LIBRARY_DIRS.extend(SUNDIALS_LIBRARY_DIRS)
         IDA_LIBRARY_DIRS.extend(SUNDIALS_LIBRARY_DIRS)
-
-        sundials_pxi = get_sundials_config_pxi(SUNDIALS_INCLUDE_DIRS,
-                self.distribution)
 
         return [
             Extension(
