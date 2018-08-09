@@ -442,7 +442,8 @@ class dae(object):
         """
         Clean up what is needed
         """
-        del self._integrator
+        if hasattr(self, '_integrator'):
+            del self._integrator
 
 #------------------------------------------------------------------------------
 # DAE integrators
@@ -462,12 +463,14 @@ def find_dae_integrator(name):
         ## ddaspk
         try:
             from .ddaspkint import ddaspk
+            DaeBase.integrator_classes.append(ddaspk)
         except ImportError:
             print(sys.exc_info()[1])
 
         ## lsodi
         try:
             from .lsodiint import lsodi
+            DaeBase.integrator_classes.append(lsodi)
         except ImportError:
             print(sys.exc_info()[1])
 
