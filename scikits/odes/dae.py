@@ -442,7 +442,8 @@ class dae(object):
         """
         Clean up what is needed
         """
-        del self._integrator
+        if hasattr(self, '_integrator'):
+            del self._integrator
 
 #------------------------------------------------------------------------------
 # DAE integrators

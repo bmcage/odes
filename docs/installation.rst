@@ -10,17 +10,17 @@ Before building ``odes``, you need to have installed:
       distributions, ``python-devel`` on Fedora)
     * C compiler
     * Fortran compiler (e.g. gfortran)
-    * `Sundials 2.7.0 <https://computation.llnl.gov/casc/sundials/download/download.html>`_ 
+    * `Sundials 3.1.1 <https://computation.llnl.gov/casc/sundials/download/download.html>`_ 
 
 In addition, if building from a git checkout, you'll also need Cython.
 
 It is required that Sundials is built with the BLAS/LAPACK interface enabled, so check
 the Fortran Settings section. A typical install if sundials download package is
-extracted into directory sundials-2.7.0 is on a \*nix system::
+extracted into directory sundials-3.1.1 is on a \*nix system::
 
-    mkdir build-sundials-2.7.0
-    cd build-sundials-2.7.0/
-    cmake -DLAPACK_ENABLE=ON -DCMAKE_INSTALL_PREFIX=<install_path> ../sundials-2.7.0/
+    mkdir build-sundials-3.1.1
+    cd build-sundials-3.1.1/
+    cmake -DLAPACK_ENABLE=ON -DSUNDIALS_INDEX_TYPE=int32_t -DCMAKE_INSTALL_PREFIX=<install_path> ../sundials-3.1.1/
     make install
 
 .. warning::
@@ -43,6 +43,15 @@ which will download the latest version from PyPI. This will handle the installat
 
 If you have installed SUNDIALS in a non-standard path (e.g. ``/usr/`` or ``/usr/local/``), you can set ``$SUNDIALS_INST`` in your environment to the installation prefix of SUNDIALS (i.e. value of ``<install_path>`` mentioned above).
 
+
+Testing your version of ``odes``
+................................
+To test the version in python, use in the python shell::
+
+    >>> import pkg_resources
+    >>> pkg_resources.get_distribution("scikits.odes").version
+
+    
 Running the Tests
 .................
 You need nose to run the tests. To install nose, run::
@@ -52,6 +61,10 @@ You need nose to run the tests. To install nose, run::
 To run the tests, in the python shell::
 
     >>> import scikits.odes as od; od.test()
+    
+Note that the sundials library must be in your ``LD_LIBRARY_PATH``. So, make sure the directory ``$SUNDIALS_INST/lib`` is included. You can do this for example as follows (assuming sundials was installed in ``/usr/local``::
+
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 Installation of ODES from git checkout
 ---------------------------------------------

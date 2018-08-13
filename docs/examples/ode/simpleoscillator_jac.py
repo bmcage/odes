@@ -1,12 +1,12 @@
-# Authors: B. Malengier 
+# Authors: B. Malengier
 """
-This example shows the most simple way of using a solver. 
+This example shows the most simple way of using a solver.
 We solve free vibration of a simple oscillator::
         m \ddot{u} + k u = 0, u(0) = u_0, \dot{u}(0) = \dot{u}_0
 using the CVODE solver, which means we use a rhs function of \dot{u}.
 Solution::
         u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
-    
+
 """
 from __future__ import print_function
 from numpy import asarray, cos, sin, sqrt
@@ -22,11 +22,11 @@ def rhseqn(t, x, xdot):
     """ we create rhs equations for the problem"""
     xdot[0] = x[1]
     xdot[1] = - k/m * x[0]
-    
-def jaceqn(t, x, jac):
+
+def jaceqn(t, x, fx, jac):
     jac[0,1] = 1
     jac[1,0] = -k/m
-    
+
 #instantiate the solver
 from scikits.odes import ode
 solver = ode('cvode', rhseqn, jacfn=jaceqn)

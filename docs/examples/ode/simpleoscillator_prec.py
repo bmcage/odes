@@ -7,11 +7,11 @@ of the free vibration of a simple oscillator::
 using the CVODE solver. The rhs function is given by \dot{u}. The
 preconditioning is implemented in prec_solvefn which solves the
 system P = I - gamma * J, where J is the Jacobian of the rhs.
-The jac_times_vecfn calculates the Jacobian times vector product 
-using the analytic Jacobian. 
+The jac_times_vecfn calculates the Jacobian times vector product
+using the analytic Jacobian.
 Solution::
         u(t) = u_0*cos(sqrt(k/m)*t)+\dot{u}_0*sin(sqrt(k/m)*t)/sqrt(k/m)
-    
+
 """
 from __future__ import print_function
 from numpy import asarray, cos, sin, sqrt
@@ -32,17 +32,17 @@ def prec_solvefn(t, y, r, z, gamma, delta, lr):
 def jac_times_vecfn(v, Jv, t, y, user_data):
     """ Calculate Jacobian times vector product Jv = J*v"""
     Jv[0] = v[1]
-    Jv[1] = -k/m * v[0] 
+    Jv[1] = -k/m * v[0]
 
 #define function for the right-hand-side equations which has specific signature
 def rhseqn(t, x, xdot):
     """ we create rhs equations for the problem"""
     xdot[0] = x[1]
     xdot[1] = - k/m * x[0]
-    
+
 #instantiate the solver using a left-preconditioned BiCGStab as linear solver
 from scikits.odes import ode
-solver = ode('cvode', rhseqn, linsolver='spbcg', precond_type='left', prec_solvefn=prec_solvefn, jac_times_vecfn=jac_times_vecfn)
+solver = ode('cvode', rhseqn, linsolver='spbcgs', precond_type='left', prec_solvefn=prec_solvefn, jac_times_vecfn=jac_times_vecfn)
 #obtain solution at a required time
 result = solver.solve([0., 1., 2.], initx)
 

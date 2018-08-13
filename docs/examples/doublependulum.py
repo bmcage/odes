@@ -168,7 +168,7 @@ class Doublependulum():
 
     def ddaspk_jac(self, tres, yy, yp, cj, jac):
         """the jacobian function as required by ddaspk"""
-        self.jac.evaluate(tres, yy, yp, cj, jac)
+        self.jac.evaluate(tres, yy, yp, None, cj, jac)
 
 #classes for the equations, as needed for the chosen solution method
 class resindex2(ida.IDA_RhsFunction):
@@ -242,7 +242,7 @@ class jacindex1(ida.IDA_JacRhsFunction):
             the data """
         self.dblpend = dblpend
 
-    def evaluate(self, tres, yy, yp, cj, jac):
+    def evaluate(self, tres, yy, yp, residual, cj, jac):
 
         m1 = self.dblpend.m1
         m2 = self.dblpend.m2

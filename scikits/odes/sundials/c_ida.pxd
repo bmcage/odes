@@ -45,6 +45,7 @@ cdef extern from "ida/ida.h":
     enum: IDA_BAD_K           #-25
     enum: IDA_BAD_T           #-26
     enum: IDA_BAD_DKY         #-27
+    enum: IDA_UNRECOGNISED_ERROR #-99
 
     ctypedef int (*IDAResFn)(realtype tt, N_Vector yy, N_Vector yp,
                     N_Vector rr, void *user_data)
@@ -144,42 +145,21 @@ cdef extern from "ida/ida_direct.h":
     #/* Additional last_flag values */
     enum: IDADLS_JACFUNC_UNRECVR
     enum: IDADLS_JACFUNC_RECVR
-
-    ctypedef int (*IDADlsDenseJacFn)(long int N, realtype t, realtype c_j,
-                                     N_Vector y, N_Vector yp, N_Vector r,
-                                     DlsMat Jac, void *user_data, N_Vector tmp1,
-                                     N_Vector tmp2, N_Vector tmp3)
-
-    ctypedef int (*IDADlsBandJacFn)(long int N, long int mupper, long int mlower,
-                                    realtype t, realtype c_j,
-                                    N_Vector y, N_Vector yp, N_Vector r,
-                                    DlsMat Jac, void *user_data,
-                                    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-    ctypedef int (*IDADlsBandJacFn)(int N, int mupper, int mlower,
-                                    realtype t, realtype c_j,
-                                    N_Vector y, N_Vector yp, N_Vector r,
-                                    DlsMat Jac, void *user_data,
-                                    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-    int IDADlsSetDenseJacFn(void *ida_mem, IDADlsDenseJacFn jac)
-    int IDADlsSetBandJacFn(void *ida_mem, IDADlsBandJacFn jac)
+    
+    ctypedef int (*IDADlsJacFn)(realtype t, realtype c_j, N_Vector y,
+                           N_Vector yp, N_Vector r, SUNMatrix Jac,
+                           void *user_data, N_Vector tmp1,
+                           N_Vector tmp2, N_Vector tmp3)
+    int IDADlsSetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
+    int IDADlsSetJacFn(void *ida_mem, IDADlsJacFn jac)
+    
     int IDADlsGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
     int IDADlsGetNumJacEvals(void *ida_mem, long int *njevals)
     int IDADlsGetNumResEvals(void *ida_mem, long int *nfevalsLS)
     int IDADlsGetLastFlag(void *ida_mem, long int *flag)
     char *IDADlsGetReturnFlagName(long int flag)
 
-cdef extern from "ida/ida_band.h":
-    int IDABand(void *ida_mem, long int Neq, long int mupper, long int mlower)
-
-cdef extern from "ida/ida_dense.h":
-     int IDADense(void *ida_mem, long int Neq)
-
-cdef extern from "ida/ida_lapack.h":
-     int IDALapackDense(void *ida_mem, int N)
-     int IDALapackBand(void *ida_mem, int N, int mupper, int mlower)
-
 cdef extern from "ida/ida_spils.h":
-
 
     enum: IDASPILS_SUCCESS   #  0
     enum: IDASPILS_MEM_NULL  # -1
@@ -187,31 +167,30 @@ cdef extern from "ida/ida_spils.h":
     enum: IDASPILS_ILL_INPUT # -3
     enum: IDASPILS_MEM_FAIL  # -4
     enum: IDASPILS_PMEM_NULL # -5
+    enum: IDASPILS_SUNLS_FAIL # -6
 
     ctypedef int (*IDASpilsPrecSetupFn)(realtype tt,
                                         N_Vector yy, N_Vector yp, N_Vector rr,
-                                        realtype c_j, void *user_data,
-                                        N_Vector tmp1, N_Vector tmp2,
-                                        N_Vector tmp3)
+                                        realtype c_j, void *user_data)
     ctypedef int (*IDASpilsPrecSolveFn)(realtype tt,
                                         N_Vector yy, N_Vector yp, N_Vector rr,
                                         N_Vector rvec, N_Vector zvec,
-                                        realtype c_j, realtype delta, void *user_data,
-                                        N_Vector tmp)
+                                        realtype c_j, realtype delta, void *user_data)                
+    ctypedef int (*IDASpilsJacTimesSetupFn)(realtype tt, N_Vector yy,
+                                       N_Vector yp, N_Vector rr,
+                                       realtype c_j, void *user_data)
     ctypedef int (*IDASpilsJacTimesVecFn)(realtype tt,
                                           N_Vector yy, N_Vector yp, N_Vector rr,
                                           N_Vector v, N_Vector Jv,
                                           realtype c_j, void *user_data,
                                           N_Vector tmp1, N_Vector tmp2)
+
+    int IDASpilsSetLinearSolver(void *ida_mem, SUNLinearSolver LS)
     int IDASpilsSetPreconditioner(void *ida_mem,
                                   IDASpilsPrecSetupFn pset,
                                   IDASpilsPrecSolveFn psolve)
-    int IDASpilsSetJacTimesVecFn(void *ida_mem,
-                                 IDASpilsJacTimesVecFn jtv)
-
-    int IDASpilsSetGSType(void *ida_mem, int gstype)
-    int IDASpilsSetMaxRestarts(void *ida_mem, int maxrs)
-    int IDASpilsSetMaxl(void *ida_mem, int maxl)
+    int IDASpilsSetJacTimes(void *ida_mem, IDASpilsJacTimesSetupFn jtsetup,
+                            IDASpilsJacTimesVecFn jtimes)
     int IDASpilsSetEpsLin(void *ida_mem, realtype eplifac)
     int IDASpilsSetIncrementFactor(void *ida_mem, realtype dqincfac)
     int IDASpilsGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
@@ -224,30 +203,21 @@ cdef extern from "ida/ida_spils.h":
     int IDASpilsGetLastFlag(void *ida_mem, long int *flag)
     char *IDASpilsGetReturnFlagName(long int flag)
 
-cdef extern from "ida/ida_spgmr.h":
-     int IDASpgmr(void *ida_mem, int maxl)
-
-cdef extern from "ida/ida_spbcgs.h":
-     int IDASpbcg(void *ida_mem, int maxl)
-
-cdef extern from "ida/ida_sptfqmr.h":
-     int IDASptfqmr(void *ida_mem, int maxl)
-
 cdef extern from "ida/ida_bbdpre.h":
-    ctypedef int (*IDABBDLocalFn)(long int Nlocal, realtype tt,
+    ctypedef int (*IDABBDLocalFn)(sunindextype Nlocal, realtype tt,
                                   N_Vector yy, N_Vector yp, N_Vector gval,
                                   void *user_data)
-    ctypedef int (*IDABBDCommFn)(long int Nlocal, realtype tt,
+    ctypedef int (*IDABBDCommFn)(sunindextype Nlocal, realtype tt,
                                  N_Vector yy, N_Vector yp,
                                  void *user_data)
 
-    int IDABBDPrecInit(void *ida_mem, long int Nlocal,
-                       long int mudq, long int mldq,
-                       long int mukeep, long int mlkeep,
+    int IDABBDPrecInit(void *ida_mem, sunindextype Nlocal,
+                       sunindextype mudq, sunindextype mldq,
+                       sunindextype mukeep, sunindextype mlkeep,
                        realtype dq_rel_yy,
                        IDABBDLocalFn Gres, IDABBDCommFn Gcomm)
     int IDABBDPrecReInit(void *ida_mem,
-                         long int mudq, long int mldq,
+                         sunindextype mudq, sunindextype mldq,
                          realtype dq_rel_yy)
     int IDABBDPrecGetWorkSpace(void *ida_mem,
                                long int *lenrwBBDP, long int *leniwBBDP)
