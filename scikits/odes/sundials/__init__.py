@@ -3,6 +3,11 @@
 #
 
 import inspect
+from logging import getLogger
+
+logger = getLogger(__name__)
+DEFAULT_LOG_FORMAT = "SUNDIALS message in %s:%s: %s"
+
 
 class CVODESolveException(Exception):
     """Base class for exceptions raised by ``CVODE.validate_flags``."""
@@ -64,3 +69,86 @@ def _get_num_args(func):
         return numargs
     else:
         return len(inspect.getargspec(func).args)
+
+
+def drop_all_error_handler(error_code, module, func, msg, user_data):
+    """
+    Drop all CVODE/IDA messages, rather than printing them.
+
+    Examples
+    --------
+    >>> scikits.odes.ode('cvode', rhsfuc, err_handler=drop_all_error_handler)
+    """
+    # pylint: disable=unused-argument
+    pass
+
+
+def log_error_handler(error_code, module, func, msg, user_data):
+    """
+    Log all CVODE/IDA messages using the builtin python logging.
+
+    Examples
+    --------
+    >>> scikits.odes.ode('cvode', rhsfuc, err_handler=log_error_handler)
+    """
+    # pylint: disable=unused-argument
+    if error_code > 0:
+        logger.warning(DEFAULT_LOG_FORMAT, module, func, msg)
+    else:
+        logger.error(DEFAULT_LOG_FORMAT, module, func, msg)
+
+
+def onroot_continue(*args):
+    """
+    Always continue after finding root.
+
+    Examples
+    --------
+    >>> scikits.odes.ode(
+    ...     'cvode', rhsfuc, rootfn=rootfn, nr_rootfns=nroots,
+    ...     onroot=onroot_continue
+    ... )
+    """
+    # pylint: disable=unused-argument
+    return 0
+
+
+def onroot_stop(*args):
+    """
+    Always stop after finding root.
+
+    Examples
+    --------
+    >>> scikits.odes.ode(
+    ...     'cvode', rhsfuc, rootfn=rootfn, nr_rootfns=nroots,
+    ...     onroot=onroot_stop
+    ... )
+    """
+    # pylint: disable=unused-argument
+    return 1
+
+
+def ontstop_continue(*args):
+    """
+    Always continue after finding tstop.
+
+    Examples
+    --------
+    >>> scikits.odes.ode(
+    ...     'cvode', rhsfuc, tstop=tstop, ontstop=ontstop_continue
+    ... )
+    """
+    # pylint: disable=unused-argument
+    return 0
+
+
+def ontstop_stop(*args):
+    """
+    Always stop after finding tstop.
+
+    Examples
+    --------
+    >>> scikits.odes.ode('cvode', rhsfuc, tstop=tstop, ontstop=ontstop_stop)
+    """
+    # pylint: disable=unused-argument
+    return 1
