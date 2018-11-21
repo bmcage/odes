@@ -19,6 +19,7 @@ Contents:
     guide
     solvers
     contributing
+    citing
 
 
 Indices and tables
