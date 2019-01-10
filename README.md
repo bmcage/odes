@@ -8,6 +8,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2537014.svg)](https://doi.org/10.5281/zenodo.2537014)
 
+[![Paper DOI](http://joss.theoj.org/papers/10.21105/joss.00165/status.svg)](https://doi.org/10.21105/joss.00165)
 
 
 ODES is a scikit for Python 2.7 and 3.3-3.5 offering extra ode/dae solvers, as an extension to what is available in scipy.
@@ -47,3 +48,9 @@ You can learn by example from following code that uses ODES:
 * Centrifuge simulation, a wrapper around the ida solver: see [centrifuge-1d](https://github.com/bmcage/centrifuge-1d/blob/master/centrifuge1d/modules/shared/solver.py)
 
 You have a project using odes? Do a pull request to add your project.
+
+# Citing ODES
+If you use ODES as part of your research, can you please cite the
+[ODES JOSS paper](https://doi.org/10.21105/joss.00165). Additionally, if you use
+one of the SUNDIALS solvers, we strongly encourage you to cite the
+[SUNDIALS papers](https://computation.llnl.gov/projects/sundials/publications).
