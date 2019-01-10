@@ -16,6 +16,7 @@ build*
 dist
 _build
 docs/_build
+_configtest.o.d
 .tox
 .spyderproject
 .cache
