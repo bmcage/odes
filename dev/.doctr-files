@@ -23,6 +23,11 @@ dev/_static/documentation_options.js
 dev/_static/down-pressed.png
 dev/_static/down.png
 dev/_static/file.png
+dev/_static/fonts/Inconsolata-Bold.ttf
+dev/_static/fonts/Inconsolata-Regular.ttf
+dev/_static/fonts/Inconsolata.ttf
+dev/_static/fonts/Lato-Bold.ttf
+dev/_static/fonts/Lato-Regular.ttf
 dev/_static/fonts/Lato/lato-bold.eot
 dev/_static/fonts/Lato/lato-bold.ttf
 dev/_static/fonts/Lato/lato-bold.woff
@@ -39,6 +44,8 @@ dev/_static/fonts/Lato/lato-regular.eot
 dev/_static/fonts/Lato/lato-regular.ttf
 dev/_static/fonts/Lato/lato-regular.woff
 dev/_static/fonts/Lato/lato-regular.woff2
+dev/_static/fonts/RobotoSlab-Bold.ttf
+dev/_static/fonts/RobotoSlab-Regular.ttf
 dev/_static/fonts/RobotoSlab/roboto-slab-v7-bold.eot
 dev/_static/fonts/RobotoSlab/roboto-slab-v7-bold.ttf
 dev/_static/fonts/RobotoSlab/roboto-slab-v7-bold.woff
@@ -56,6 +63,7 @@ dev/_static/jquery-3.2.1.js
 dev/_static/jquery.js
 dev/_static/js/modernizr.min.js
 dev/_static/js/theme.js
+dev/_static/language_data.js
 dev/_static/minus.png
 dev/_static/plus.png
 dev/_static/pygments.css
