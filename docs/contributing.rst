@@ -71,7 +71,8 @@ There are five steps to creating a new ``odes`` release:
 
 The main docs should automatically build on readthedocs_, and the API docs should
 be built by doctr_. You should check that the docs have updated once you have
-make the release.
+make the release. If docs are not updated automatically, login to readthedocs_
+go to scikits, builds, and build latest and master manually.
 
 Making a non-development version
 ................................
