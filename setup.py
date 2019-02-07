@@ -12,6 +12,9 @@ import sys
 
 from setuptools import find_packages
 
+if '' not in sys.path:
+    sys.path.insert(0, '')
+
 from common import *
 
 additional_kwargs = {}
