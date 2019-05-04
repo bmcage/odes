@@ -178,12 +178,12 @@ cdef extern from "ida/ida_spils.h":
                                         realtype c_j, realtype delta, void *user_data)                
     ctypedef int (*IDASpilsJacTimesSetupFn)(realtype tt, N_Vector yy,
                                        N_Vector yp, N_Vector rr,
-                                       realtype c_j, void *user_data)
+                                       realtype c_j, void *user_data) except? -1
     ctypedef int (*IDASpilsJacTimesVecFn)(realtype tt,
                                           N_Vector yy, N_Vector yp, N_Vector rr,
                                           N_Vector v, N_Vector Jv,
                                           realtype c_j, void *user_data,
-                                          N_Vector tmp1, N_Vector tmp2)
+                                          N_Vector tmp1, N_Vector tmp2)  except? -1
 
     int IDASpilsSetLinearSolver(void *ida_mem, SUNLinearSolver LS)
     int IDASpilsSetPreconditioner(void *ida_mem,
