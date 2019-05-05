@@ -25,32 +25,51 @@ class TestDae(TestCase):
             jac = problem.jac
         res = problem.res
 
-        jac_tmp = None
+        class UserData:
+            def __init__(self):
+                self.J = None
 
-        def jac_times_vec(tt, yy, yp, rr, v, Jv, cj):
-            J = empty(len(yy), len(yy))
-            jac(tt, yy, yp, cj, J)
-            Js = sparse.csr_matrix(J)
-            Jv[:] = Js*v
+        my_userdata = UserData()
 
-        def jac_times_vec2(tt, yy, yp, rr, v, Jv, cj, userdata):
-            Jv[:] = userdata * v
+        jac_times_vec = None
+        jac_times_vec2 = None
+        jac_times_setupfn = None
 
-        def jac_times_setupfn(tt, yy, yp, rr, cj, userdata):
-            J = empty(len(yy), len(yy))
-            jac(tt, yy, yp, cj, J)
-            userdata = sparse.csr_matrix(J)
+        if jac is not None and integrator == 'ida':
+            def jac_times_vec(tt, yy, yp, rr, v, Jv, cj):
+                J = zeros((len(yy), len(yy)), DTYPE)
+                jac(tt, yy, yp, rr, cj, J)
+                Js = sparse.csr_matrix(J)
+                Jv[:] = Js * v
+                return 0
 
-        igs = (
-            dae(integrator, res, jacfn=jac, old_api=old_api),
-            dae(integrator, res, jac_times_vec=jac_times_vec, old_api=old_api),
-            dae(integrator, res, jac_times_vec=jac_times_vec,
-                jac_times_setupfn=jac_times_setupfn, old_api=old_api,
-                user_data=jac_tmp),
-        )
+            def jac_times_vec2(tt, yy, yp, rr, v, Jv, cj, userdata):
+                Jv[:] = userdata.J * v
+                return 0
+
+            def jac_times_setupfn(tt, yy, yp, rr, cj, userdata):
+                J = zeros((len(yy), len(yy)), DTYPE)
+                jac(tt, yy, yp, rr, cj, J)
+                userdata.J = sparse.csr_matrix(J)
+                return 0
+
+        igs = [dae(integrator, res, jacfn=jac, old_api=old_api)]
+
+        if integrator == 'ida':
+            igs.append(
+                dae(integrator, res, linsolver='spgmr',
+                    jac_times_vecfn=jac_times_vec,
+                    old_api=old_api)
+            )
+            igs.append(
+                dae(integrator, res, linsolver='spgmr',
+                    jac_times_vecfn=jac_times_vec2,
+                    jac_times_setupfn=jac_times_setupfn,
+                    old_api=old_api,
+                    user_data=my_userdata)
+            )
 
         for ig in igs:
-            ig = dae(integrator, res, jacfn=jac, old_api=old_api)
             ig.set_options(old_api=old_api, **integrator_params)
             z = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
             zprime = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
@@ -71,6 +90,7 @@ class TestDae(TestCase):
 
             assert problem.verify(array(z), array(zprime),  [0.]+problem.stop_t), \
                         (problem.info(),)
+
 
     def test_ddaspk(self):
         """Check the ddaspk solver"""

@@ -771,6 +771,8 @@ cdef class IDA_data:
         self.g_tmp = None
         self.z_tmp = None
         self.rvec_tmp = None
+        self.v_tmp = np.empty(N, DTYPE)
+        self.z_tmp = np.empty(N, DTYPE)
 
 cdef class IDA:
 
@@ -812,6 +814,8 @@ cdef class IDA:
             'precond_type': 'NONE',
             'prec_setupfn': None,
             'prec_solvefn': None,
+            'jac_times_vecfn': None,
+            'jac_times_setupfn': None,
             'err_handler': None,
             'err_user_data': None,
             'old_api': None,

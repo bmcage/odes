@@ -68,6 +68,44 @@ cdef class IDA_WrapPrecSolveFunction(IDA_PrecSolveFunction):
     cdef int with_userdata
     cpdef set_prec_solvefn(self, object prec_solvefn)
 
+cdef class IDA_JacTimesVecFunction:
+    cpdef int evaluate(self,
+                       DTYPE_t t,
+                       np.ndarray[DTYPE_t, ndim=1] yy,
+                       np.ndarray[DTYPE_t, ndim=1] yp,
+                       np.ndarray[DTYPE_t, ndim=1] rr,
+                       np.ndarray[DTYPE_t, ndim=1] v,
+                       np.ndarray[DTYPE_t, ndim=1] Jv,
+                       DTYPE_t cj,
+                       object userdata = *) except? -1
+
+cdef class IDA_WrapJacTimesVecFunction(IDA_JacTimesVecFunction):
+    cpdef object _jac_times_vecfn
+    cdef int with_userdata
+    cpdef set_jac_times_vecfn(self, object jac_times_vecfn)
+
+cdef class IDA_JacTimesSetupFunction:
+    cpdef int evaluate(self,
+                       DTYPE_t tt,
+                       np.ndarray[DTYPE_t, ndim=1] yy,
+                       np.ndarray[DTYPE_t, ndim=1] yp,
+                       np.ndarray[DTYPE_t, ndim=1] rr,
+                       DTYPE_t cj,
+                       object userdata = *) except? -1
+
+cdef class IDA_WrapJacTimesSetupFunction(IDA_JacTimesSetupFunction):
+    cpdef object _jac_times_setupfn
+    cdef int with_userdata
+    cpdef set_jac_times_setupfn(self, object jac_times_setupfn)
+
+    cpdef int evaluate(self,
+                       DTYPE_t tt,
+                       np.ndarray[DTYPE_t, ndim=1] yy,
+                       np.ndarray[DTYPE_t, ndim=1] yp,
+                       np.ndarray[DTYPE_t, ndim=1] rr,
+                       DTYPE_t cj,
+                       object userdata = *) except? -1
+
 cdef class IDA_ContinuationFunction:
     cpdef object _fn
     cpdef int evaluate(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y,
@@ -91,12 +129,15 @@ cdef class IDA_WrapErrHandler(IDA_ErrHandler):
 
 
 cdef class IDA_data:
-    cdef np.ndarray yy_tmp, yp_tmp, residual_tmp, jac_tmp, g_tmp, z_tmp, rvec_tmp
+    cdef np.ndarray yy_tmp, yp_tmp, residual_tmp, jac_tmp
+    cdef np.ndarray g_tmp, z_tmp, rvec_tmp, v_tmp
     cdef IDA_RhsFunction res
     cdef IDA_JacRhsFunction jac
     cdef IDA_RootFunction rootfn
     cdef IDA_PrecSetupFunction prec_setupfn
     cdef IDA_PrecSolveFunction prec_solvefn
+    cdef IDA_JacTimesVecFunction jac_times_vecfn
+    cdef IDA_JacTimesSetupFunction jac_times_setupfn
     cdef bint parallel_implementation
     cdef object user_data
     cdef IDA_ErrHandler err_handler
