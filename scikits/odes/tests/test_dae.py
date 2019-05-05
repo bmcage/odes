@@ -5,6 +5,7 @@ from __future__ import print_function
 Tests for differential algebraic equation solvers.
 """
 import numpy
+import scipy.sparse as sparse
 
 from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
                     empty, alen)
@@ -24,27 +25,52 @@ class TestDae(TestCase):
             jac = problem.jac
         res = problem.res
 
-        ig = dae(integrator, res, jacfn=jac, old_api=old_api)
-        ig.set_options(old_api=old_api, **integrator_params)
-        z = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
-        zprime = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
-        ist = ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
-        i=1
-        for time in problem.stop_t:
-            soln = ig.step(time, z[i], zprime[i])
-            if old_api:
-                flag, rt = soln
-            else:
-                flag = soln.flag
-                rt = soln.values.t
-            i += 1
-            if integrator == 'ida':
-                assert flag==0, (problem.info(), flag)
-            else:
-                assert flag > 0, (problem.info(), flag)
+        jac_tmp = None
 
-        assert problem.verify(array(z), array(zprime),  [0.]+problem.stop_t), \
-                    (problem.info(),)
+        def jac_times_vec(tt, yy, yp, rr, v, Jv, cj):
+            J = empty(len(yy), len(yy))
+            jac(tt, yy, yp, cj, J)
+            Js = sparse.csr_matrix(J)
+            Jv[:] = Js*v
+
+        def jac_times_vec2(tt, yy, yp, rr, v, Jv, cj, userdata):
+            Jv[:] = userdata * v
+
+        def jac_times_setupfn(tt, yy, yp, rr, cj, userdata):
+            J = empty(len(yy), len(yy))
+            jac(tt, yy, yp, cj, J)
+            userdata = sparse.csr_matrix(J)
+
+        igs = (
+            dae(integrator, res, jacfn=jac, old_api=old_api),
+            dae(integrator, res, jac_times_vec=jac_times_vec, old_api=old_api),
+            dae(integrator, res, jac_times_vec=jac_times_vec,
+                jac_times_setupfn=jac_times_setupfn, old_api=old_api,
+                user_data=jac_tmp),
+        )
+
+        for ig in igs:
+            ig = dae(integrator, res, jacfn=jac, old_api=old_api)
+            ig.set_options(old_api=old_api, **integrator_params)
+            z = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
+            zprime = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
+            ist = ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
+            i=1
+            for time in problem.stop_t:
+                soln = ig.step(time, z[i], zprime[i])
+                if old_api:
+                    flag, rt = soln
+                else:
+                    flag = soln.flag
+                    rt = soln.values.t
+                i += 1
+                if integrator == 'ida':
+                    assert flag==0, (problem.info(), flag)
+                else:
+                    assert flag > 0, (problem.info(), flag)
+
+            assert problem.verify(array(z), array(zprime),  [0.]+problem.stop_t), \
+                        (problem.info(),)
 
     def test_ddaspk(self):
         """Check the ddaspk solver"""
