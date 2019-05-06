@@ -35,6 +35,8 @@ class TestDae(TestCase):
         jac_times_vec2 = None
         jac_times_setupfn = None
 
+        # restrict to 'ida' method since jacobian function below
+        # follows the ida interface
         if jac is not None and integrator == 'ida':
             def jac_times_vec(tt, yy, yp, rr, v, Jv, cj):
                 J = zeros((len(yy), len(yy)), DTYPE)
@@ -55,6 +57,7 @@ class TestDae(TestCase):
 
         igs = [dae(integrator, res, jacfn=jac, old_api=old_api)]
 
+        # if testing 'ida' then try the iterative linsolvers as well
         if integrator == 'ida':
             igs.append(
                 dae(integrator, res, linsolver='spgmr',
