@@ -11,8 +11,8 @@ from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
 
 from numpy.testing import TestCase, run_module_suite
 from scipy.integrate import ode as Iode
-from scikits.odes import ode,dae
-from scikits.odes.sundials.common_defs import DTYPE
+from .. import ode, dae
+from ..sundials.common_defs import DTYPE
 
 class TestDae(TestCase):
     """

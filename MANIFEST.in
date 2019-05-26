@@ -2,7 +2,7 @@ include common.py setup_build.py
 recursive-include scikits *.pyx *.pxd *.pyf *.f
 
 include CONTRIBUTING.md README.md LICENSE.txt
-include tox.ini
+include tox.ini pytest.ini
 include pyproject.toml
 
 prune ci_support
