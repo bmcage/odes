@@ -11,6 +11,7 @@ the reinit_IC() method of the CVODE solver.
 from __future__ import print_function
 import numpy as np
 from scikits.odes import ode
+from scikits.odes.sundials import ontstop_stop
 
 #data
 g  = 9.81    # gravitational constant
@@ -32,7 +33,7 @@ n=0
 # On the other hand experiments 1 and 3 don't use the 'ontstop',
 # experiments 2 and 4 do and compute until the time t_end is reached
 # (function ontstop_va()). Experiment 5 stops after the first interruption
-# (function ontstop_vb()) occurs, whereas experiment 6 stops after the
+# (function ontstop_stop()) occurs, whereas experiment 6 stops after the
 # first interruption  at time t>28 (s) (function ontstop_vc()).
 # Otherwise all experiments are the same.
 
@@ -53,12 +54,6 @@ def ontstop_va(t, y, solver):
     solver.set_options(tstop=Y1+n*10)
 
     return 0
-
-def ontstop_vb(t, y, solver):
-    """
-    ontstop function to stop solver when tstop is found
-    """
-    return 1
 
 def ontstop_vc(t, y, solver):
     """
@@ -155,11 +150,11 @@ solver = ode('cvode', rhs_fn, tstop=Y1, ontstop=ontstop_va, old_api=False)
 print_results(4, solver.solve(tspan, y0))
 
 #
-# 5. Solve the problem with ontstop function ontstop_vb, which behaves similarly
+# 5. Solve the problem with ontstop function ontstop_stop, which behaves similarly
 # to the default, which is to compute until a root is found.
 #
 n = 0
-solver = ode('cvode', rhs_fn, tstop=Y1, ontstop=ontstop_vb, old_api=False)
+solver = ode('cvode', rhs_fn, tstop=Y1, ontstop=ontstop_stop, old_api=False)
 print_results(5, solver.solve(tspan, y0))
 
 #

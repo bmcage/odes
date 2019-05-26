@@ -11,6 +11,7 @@ the reinit_IC() method of the CVODE solver.
 from __future__ import print_function
 import numpy as np
 from scikits.odes import ode
+from scikits.odes.sundials import onroot_stop
 
 #data
 g  = 9.81    # gravitational constant
@@ -31,7 +32,7 @@ t_end2 = 100.0 # Time of free fall for experiments 3,4
 # On the other hand experiments 1 and 3 don't use the 'onroot',
 # experiments 2 and 4 do and compute until the time t_end is reached
 # (function onroot_va()). Experiment 5 stops after the first interruption
-# (function onroot_vb()) occurs, whereas experiment 6 stops after the
+# (function onroot_stop()) occurs, whereas experiment 6 stops after the
 # first interruption  at time t>28 (s) (function onroot_vc()).
 # Otherwise all experiments are the same.
 
@@ -65,12 +66,6 @@ def onroot_va(t, y, solver):
     solver.reinit_IC(t, [Y0, y[1]])
 
     return 0
-
-def onroot_vb(t, y, solver):
-    """
-    onroot function to stop solver when root is found
-    """
-    return 1
 
 def onroot_vc(t, y, solver):
     """
@@ -157,10 +152,10 @@ solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_va, ol
 print_results(4, solver.solve(tspan, y0))
 
 #
-# 5. Solve the problem with onroot function onroot_vb, which behaves similarly
+# 5. Solve the problem with onroot function onroot_stop, which behaves similarly
 # to the default, which is to compute until a root is found.
 #
-solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_vb, old_api=False)
+solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn, onroot=onroot_stop, old_api=False)
 print_results(5, solver.solve(tspan, y0))
 
 #
