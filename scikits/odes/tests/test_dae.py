@@ -5,6 +5,7 @@ from __future__ import print_function
 Tests for differential algebraic equation solvers.
 """
 import numpy
+import scipy.sparse as sparse
 
 from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
                     empty, alen)
@@ -24,27 +25,75 @@ class TestDae(TestCase):
             jac = problem.jac
         res = problem.res
 
-        ig = dae(integrator, res, jacfn=jac, old_api=old_api)
-        ig.set_options(old_api=old_api, **integrator_params)
-        z = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
-        zprime = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
-        ist = ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
-        i=1
-        for time in problem.stop_t:
-            soln = ig.step(time, z[i], zprime[i])
-            if old_api:
-                flag, rt = soln
-            else:
-                flag = soln.flag
-                rt = soln.values.t
-            i += 1
-            if integrator == 'ida':
-                assert flag==0, (problem.info(), flag)
-            else:
-                assert flag > 0, (problem.info(), flag)
+        class UserData:
+            def __init__(self):
+                self.J = None
 
-        assert problem.verify(array(z), array(zprime),  [0.]+problem.stop_t), \
-                    (problem.info(),)
+        my_userdata = UserData()
+
+        jac_times_vec = None
+        jac_times_vec2 = None
+        jac_times_setupfn = None
+
+        # restrict to 'ida' method since jacobian function below
+        # follows the ida interface
+        if jac is not None and integrator == 'ida':
+            def jac_times_vec(tt, yy, yp, rr, v, Jv, cj):
+                J = zeros((len(yy), len(yy)), DTYPE)
+                jac(tt, yy, yp, rr, cj, J)
+                Js = sparse.csr_matrix(J)
+                Jv[:] = Js * v
+                return 0
+
+            def jac_times_vec2(tt, yy, yp, rr, v, Jv, cj, userdata):
+                Jv[:] = userdata.J * v
+                return 0
+
+            def jac_times_setupfn(tt, yy, yp, rr, cj, userdata):
+                J = zeros((len(yy), len(yy)), DTYPE)
+                jac(tt, yy, yp, rr, cj, J)
+                userdata.J = sparse.csr_matrix(J)
+                return 0
+
+        igs = [dae(integrator, res, jacfn=jac, old_api=old_api)]
+
+        # if testing 'ida' then try the iterative linsolvers as well
+        if integrator == 'ida':
+            igs.append(
+                dae(integrator, res, linsolver='spgmr',
+                    jac_times_vecfn=jac_times_vec,
+                    old_api=old_api)
+            )
+            igs.append(
+                dae(integrator, res, linsolver='spgmr',
+                    jac_times_vecfn=jac_times_vec2,
+                    jac_times_setupfn=jac_times_setupfn,
+                    old_api=old_api,
+                    user_data=my_userdata)
+            )
+
+        for ig in igs:
+            ig.set_options(old_api=old_api, **integrator_params)
+            z = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
+            zprime = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
+            ist = ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
+            i=1
+            for time in problem.stop_t:
+                soln = ig.step(time, z[i], zprime[i])
+                if old_api:
+                    flag, rt = soln
+                else:
+                    flag = soln.flag
+                    rt = soln.values.t
+                i += 1
+                if integrator == 'ida':
+                    assert flag==0, (problem.info(), flag)
+                else:
+                    assert flag > 0, (problem.info(), flag)
+
+            assert problem.verify(array(z), array(zprime),  [0.]+problem.stop_t), \
+                        (problem.info(),)
+
 
     def test_ddaspk(self):
         """Check the ddaspk solver"""
