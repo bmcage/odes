@@ -159,20 +159,19 @@
 <h1>DAE Solvers<a class="headerlink" href="#dae-solvers" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="scikits.odes.dae.dae">
-<em class="property">class </em><code class="descclassname">scikits.odes.dae.</code><code class="descname">dae</code><span class="sig-paren">(</span><em>integrator_name</em>, <em>eqsres</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">scikits.odes.dae.</code><code class="sig-name descname">dae</code><span class="sig-paren">(</span><em class="sig-param">integrator_name</em>, <em class="sig-param">eqsres</em>, <em class="sig-param">**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae" title="Permalink to this definition">¶</a></dt>
 <dd><p>A generic interface class to differential algebraic equations.</p>
 <p>Define equation res = G(t,y,y’) which can eg be G = f(y,t) - A y’ when solving A y’ = f(y,t), and where (optional) jac is the jacobian matrix of the nonlinear system see fortran source code), so d res/dy + scaling * d res/dy’ or d res/dy depending on the backend.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>integrator_name</strong> (<code class="docutils literal notranslate"><span class="pre">'ida'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ddaspk'</span></code> or <code class="docutils literal notranslate"><span class="pre">'lsodi'</span></code>) – The integrator solver to use.</li>
-<li><strong>eqsres</strong> (<em>residual function</em>) – <p>Residual of the DAE. The signature of this function depends on the
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>integrator_name</strong> (<code class="docutils literal notranslate"><span class="pre">'ida'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ddaspk'</span></code> or <code class="docutils literal notranslate"><span class="pre">'lsodi'</span></code>) – The integrator solver to use.</p></li>
+<li><p><strong>eqsres</strong> (<em>residual function</em>) – <p>Residual of the DAE. The signature of this function depends on the
 solver used, see the solver documentation for details.
 Generally however, you can assume the following signature to work:</p>
 <blockquote>
-<div><code class="docutils literal notranslate"><span class="pre">eqsres(x,</span> <span class="pre">y,</span> <span class="pre">yprime,</span> <span class="pre">return_residual)</span></code></div></blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">eqsres(x,</span> <span class="pre">y,</span> <span class="pre">yprime,</span> <span class="pre">return_residual)</span></code></p>
+</div></blockquote>
 <p>with
 x       : independent variable, eg the time, float
 y       : array of n unknowns in x
@@ -181,22 +180,20 @@ return_residual: array that must be updated with the value of the residuals, so 
 return value: integer, 0 for success. It is not guaranteed that a solver takes this status into account</p>
 <p>Some solvers will allow userdata to be passed to eqsres, or optional
 formats that are more performant.</p>
-</li>
-<li><strong>options</strong> (<em>mapping</em>) – Additional options for initialization, solver dependent
+</p></li>
+<li><p><strong>options</strong> (<em>mapping</em>) – Additional options for initialization, solver dependent
 See set_options method of the <cite>integrator_name</cite> you selected for
-details.</li>
+details.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<dl class="last docutils">
-<dt><code class="xref py py-class docutils literal notranslate"><span class="pre">odeint</span></code></dt>
-<dd>an ODE integrator with a simpler interface based on lsoda from ODEPACK</dd>
-<dt><code class="xref py py-class docutils literal notranslate"><span class="pre">ode</span></code></dt>
-<dd>class around vode ODE integrator</dd>
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-class docutils literal notranslate"><span class="pre">odeint</span></code></dt><dd><p>an ODE integrator with a simpler interface based on lsoda from ODEPACK</p>
+</dd>
+<dt><code class="xref py py-class docutils literal notranslate"><span class="pre">ode</span></code></dt><dd><p>class around vode ODE integrator</p>
+</dd>
 </dl>
 </div>
 <p class="rubric">Notes</p>
@@ -226,89 +223,85 @@ G(y,y’,t) = 0 instead of the normal ode, and solve as a DAE.</p>
 </div>
 <dl class="method">
 <dt id="scikits.odes.dae.dae.init_step">
-<code class="descname">init_step</code><span class="sig-paren">(</span><em>t0</em>, <em>y0</em>, <em>yp0</em>, <em>y_ic0_retn=None</em>, <em>yp_ic0_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae.init_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae.init_step" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">init_step</code><span class="sig-paren">(</span><em class="sig-param">t0</em>, <em class="sig-param">y0</em>, <em class="sig-param">yp0</em>, <em class="sig-param">y_ic0_retn=None</em>, <em class="sig-param">yp_ic0_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae.init_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae.init_step" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes the solver and allocates memory. It is not needed to
 call this method if solve is used to compute the solution. In the case
 step is used, init_step must be called first.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>t0</strong> (<em>number</em>) – initial time</li>
-<li><strong>y0</strong> (<em>list/array</em>) – initial condition for y</li>
-<li><strong>yp0</strong> (<em>list/array</em>) – initial condition for yp</li>
-<li><strong>y_ic0</strong> (<em>numpy array</em>) – (optional) returns the calculated consistent initial condition for y</li>
-<li><strong>yp_ic0</strong> (<em>numpy array</em>) – (optional) returns the calculated consistent initial condition for y derivated.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t0</strong> (<em>number</em>) – initial time</p></li>
+<li><p><strong>y0</strong> (<em>list/array</em>) – initial condition for y</p></li>
+<li><p><strong>yp0</strong> (<em>list/array</em>) – initial condition for yp</p></li>
+<li><p><strong>y_ic0</strong> (<em>numpy array</em>) – (optional) returns the calculated consistent initial condition for y</p></li>
+<li><p><strong>yp_ic0</strong> (<em>numpy array</em>) – (optional) returns the calculated consistent initial condition for y derivated.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
-<li><p class="first"><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
-<table border="1" class="docutils">
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul>
+<li><p><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
+<table class="docutils align-default">
 <colgroup>
-<col width="10%" />
-<col width="90%" />
+<col style="width: 10%" />
+<col style="width: 90%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Field</th>
-<th class="head">Meaning</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
-<td>An integer flag (StatusEnumXXX)</td>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">flag</span></code></p></td>
+<td><p>An integer flag (StatusEnumXXX)</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
-<td>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">values</span></code></p></td>
+<td><p>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</p></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
-<td>Named tuple with entries t and y and ydot</td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">errors</span></code></p></td>
+<td><p>Named tuple with entries t and y and ydot</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
-<td>Named tuple with entries t and y and ydot</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">roots</span></code></p></td>
+<td><p>Named tuple with entries t and y and ydot</p></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
-<td>Named tuple with entries t and y and ydot</td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tstop</span></code></p></td>
+<td><p>Named tuple with entries t and y and ydot</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
-<td>String with message in case of an error</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">message</span></code></p></td>
+<td><p>String with message in case of an error</p></td>
 </tr>
 </tbody>
 </table>
 </li>
-<li><p class="first"><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
-<table border="1" class="docutils">
+<li><p><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
+<table class="docutils align-default">
 <colgroup>
-<col width="14%" />
-<col width="86%" />
+<col style="width: 14%" />
+<col style="width: 86%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Field</th>
-<th class="head">Meaning</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
-<td>status of the computation (successful or error occured)</td>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">flag</span></code></p></td>
+<td><p>status of the computation (successful or error occured)</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
-<td>time, where the solver stopped (when no error occured, t_out == t)</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">t_out</span></code></p></td>
+<td><p>time, where the solver stopped (when no error occured, t_out == t)</p></td>
 </tr>
 </tbody>
 </table>
 </li>
 </ul>
 </p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="scikits.odes.dae.dae.set_options">
-<code class="descname">set_options</code><span class="sig-paren">(</span><em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae.set_options" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set_options</code><span class="sig-paren">(</span><em class="sig-param">**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae.set_options" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set specific options for the solver.
 See the solver documentation for details.</p>
 <p>Calling set_options a second time, normally resets the solver.</p>
@@ -316,100 +309,96 @@ See the solver documentation for details.</p>
 
 <dl class="method">
 <dt id="scikits.odes.dae.dae.solve">
-<code class="descname">solve</code><span class="sig-paren">(</span><em>tspan</em>, <em>y0</em>, <em>yp0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae.solve" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">solve</code><span class="sig-paren">(</span><em class="sig-param">tspan</em>, <em class="sig-param">y0</em>, <em class="sig-param">yp0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae.solve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs the solver.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>tspan</strong> (<em>list/array</em>) – A list of times at which the computed value will be returned. Must contain the start time as first entry.</li>
-<li><strong>y0</strong> (<em>list/array</em>) – list array of initial values</li>
-<li><strong>yp0</strong> (<em>list/array</em>) – list array of initial values of derivatives</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tspan</strong> (<em>list/array</em>) – A list of times at which the computed value will be returned. Must contain the start time as first entry.</p></li>
+<li><p><strong>y0</strong> (<em>list/array</em>) – list array of initial values</p></li>
+<li><p><strong>yp0</strong> (<em>list/array</em>) – list array of initial values of derivatives</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
-<li><p class="first"><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
-<table border="1" class="docutils">
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul>
+<li><p><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
+<table class="docutils align-default">
 <colgroup>
-<col width="9%" />
-<col width="91%" />
+<col style="width: 9%" />
+<col style="width: 91%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Field</th>
-<th class="head">Meaning</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
-<td>An integer flag (StatusEnumXXX)</td>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">flag</span></code></p></td>
+<td><p>An integer flag (StatusEnumXXX)</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
-<td>Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">values</span></code></p></td>
+<td><p>Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!</p></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
-<td>Named tuple with entries t and y and ydot of error</td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">errors</span></code></p></td>
+<td><p>Named tuple with entries t and y and ydot of error</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
-<td>Named tuple with entries array t and array y and array ydot</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">roots</span></code></p></td>
+<td><p>Named tuple with entries array t and array y and array ydot</p></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
-<td>Named tuple with entries array t and array y and array ydot</td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tstop</span></code></p></td>
+<td><p>Named tuple with entries array t and array y and array ydot</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
-<td>String with message in case of an error</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">message</span></code></p></td>
+<td><p>String with message in case of an error</p></td>
 </tr>
 </tbody>
 </table>
 </li>
-<li><p class="first"><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
-<table border="1" class="docutils">
+<li><p><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
+<table class="docutils align-default">
 <colgroup>
-<col width="7%" />
-<col width="93%" />
+<col style="width: 7%" />
+<col style="width: 93%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Field</th>
-<th class="head">Meaning</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
-<td>indicating return status of the solver</td>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">flag</span></code></p></td>
+<td><p>indicating return status of the solver</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t</span></code></td>
-<td>numpy array of times at which the computations were successful</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">t</span></code></p></td>
+<td><p>numpy array of times at which the computations were successful</p></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">y</span></code></td>
-<td>numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">y</span></code></p></td>
+<td><p>numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yp</span></code></td>
-<td>numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">yp</span></code></p></td>
+<td><p>numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</p></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">t_err</span></code></td>
-<td>float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">t_err</span></code></p></td>
+<td><p>float or None - if recoverable error occured (for example reached maximum number of allowed iterations), this is the time at which it happened</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">y_err</span></code></td>
-<td>numpy array of values corresponding to time t_err</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_err</span></code></p></td>
+<td><p>numpy array of values corresponding to time t_err</p></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">yp_err</span></code></td>
-<td>numpy array of derivatives corresponding to time t_err</td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">yp_err</span></code></p></td>
+<td><p>numpy array of derivatives corresponding to time t_err</p></td>
 </tr>
 </tbody>
 </table>
 </li>
 </ul>
 </p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="scikits.odes.dae.dae.step">
-<code class="descname">step</code><span class="sig-paren">(</span><em>t</em>, <em>y_retn=None</em>, <em>yp_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae.step" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">y_retn=None</em>, <em class="sig-param">yp_retn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits/odes/dae.html#dae.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikits.odes.dae.dae.step" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for calling successive next step of the IDA solver to allow
 more precise control over the IDA solver. The ‘init_step’ method has to
 be called before the ‘step’ method.</p>
@@ -418,78 +407,74 @@ be called before the ‘step’ method.</p>
 performed until this time and results at this time are returned in
 y_retn; else if if t&lt;0.0 only one internal step is perfomed towards time
 abs(t) and results after this one time step are returned.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>t</strong> (<em>number</em>) – </li>
-<li><strong>y_retn</strong> (<em>numpy array</em><em> (</em><em>ndim = 1</em><em>) or </em><em>None.</em>) – (Needs to be preallocated) If not None, will be filled with y at time t. If None y_retn is not used.</li>
-<li><strong>yp_retn</strong> (<em>numpy array</em><em> (</em><em>ndim = 1</em><em>) or </em><em>None.</em>) – (Needs to be preallocated) If not None, will be filled with derivatives of y at time t. If None yp_retn is not used.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – </p></li>
+<li><p><strong>y_retn</strong> (<em>numpy array</em><em> (</em><em>ndim = 1</em><em>) or </em><em>None.</em>) – (Needs to be preallocated) If not None, will be filled with y at time t. If None y_retn is not used.</p></li>
+<li><p><strong>yp_retn</strong> (<em>numpy array</em><em> (</em><em>ndim = 1</em><em>) or </em><em>None.</em>) – (Needs to be preallocated) If not None, will be filled with derivatives of y at time t. If None yp_retn is not used.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
-<li><p class="first"><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
-<table border="1" class="docutils">
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul>
+<li><p><strong>old_api is False</strong> (<em>namedtuple</em>) – namedtuple with the following attributes</p>
+<table class="docutils align-default">
 <colgroup>
-<col width="10%" />
-<col width="90%" />
+<col style="width: 10%" />
+<col style="width: 90%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Field</th>
-<th class="head">Meaning</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
-<td>An integer flag (StatusEnumXXX)</td>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">flag</span></code></p></td>
+<td><p>An integer flag (StatusEnumXXX)</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">values</span></code></td>
-<td>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">values</span></code></p></td>
+<td><p>Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</p></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">errors</span></code></td>
-<td>Named tuple with entries t and y and ydot</td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">errors</span></code></p></td>
+<td><p>Named tuple with entries t and y and ydot</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">roots</span></code></td>
-<td>Named tuple with entries t and y and ydot</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">roots</span></code></p></td>
+<td><p>Named tuple with entries t and y and ydot</p></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tstop</span></code></td>
-<td>Named tuple with entries t and y and ydot</td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tstop</span></code></p></td>
+<td><p>Named tuple with entries t and y and ydot</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">message</span></code></td>
-<td>String with message in case of an error</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">message</span></code></p></td>
+<td><p>String with message in case of an error</p></td>
 </tr>
 </tbody>
 </table>
 </li>
-<li><p class="first"><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
-<table border="1" class="docutils">
+<li><p><strong>old_api is True</strong> (<em>tuple</em>) – tuple with the following elements in order</p>
+<table class="docutils align-default">
 <colgroup>
-<col width="14%" />
-<col width="86%" />
+<col style="width: 14%" />
+<col style="width: 86%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Field</th>
-<th class="head">Meaning</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flag</span></code></td>
-<td>status of the computation (successful or error occured)</td>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">flag</span></code></p></td>
+<td><p>status of the computation (successful or error occured)</p></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">t_out</span></code></td>
-<td>time, where the solver stopped (when no error occured, t_out == t)</td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">t_out</span></code></p></td>
+<td><p>time, where the solver stopped (when no error occured, t_out == t)</p></td>
 </tr>
 </tbody>
 </table>
 </li>
 </ul>
 </p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
