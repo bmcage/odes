@@ -20,7 +20,7 @@ ODES provides interfaces to the following solvers:
 * Adams-Moulton linear multistep method for nonstiff problems (CVODE and IDA from SUNDIALS)
 * Explicit Runge-Kutta method of order (4)5 with stepsize control (*dopri5* from `scipy.integrate`)
 * Explicit Runge-Kutta method of order 8(5,3) with stepsize control (*dop853* from `scipy.integrate`)
-* Historical solvers: *lsodi* and *ddaspk* are available for comparison reasons. Use IDA instead!
+* Historical solvers: *lsodi* and *ddaspk* are available for comparison reasons. They don't seem to work on aarch64. Use IDA instead!
 
 
 # Usage
