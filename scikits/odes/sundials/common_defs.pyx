@@ -118,7 +118,7 @@ cdef inline N_Vector spfgmr_vtemp(SpfgmrMem mem):
     return mem.vtemp
 
 # Public functions
-cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1:
+cdef int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1:
     """ copy a serial N_Vector v to a numpy array a """
     cdef sunindextype N, i
     N = nv_length_s(v)
@@ -127,7 +127,7 @@ cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? 
     for i in range(N):
       a[i] = get_nv_ith_s(v_data, i)
 
-cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1:
+cdef int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1:
     """ copy a numpy array a to a serial N_Vector v t"""
     cdef unsigned int N, i
     N = nv_length_s(v)
@@ -136,7 +136,7 @@ cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? 
     for i in range(N):
       set_nv_ith_s(v_data, i, a[i])
 
-cdef inline int SUNMatrix2ndarray(SUNMatrix m, np.ndarray a) except? -1:
+cdef int SUNMatrix2ndarray(SUNMatrix m, np.ndarray a) except? -1:
     """ copy a SUNMatrix m to a numpy array a """
     cdef sunindextype N, M, i, j, ml, mu, stride
     cdef nv_content_data_s v_col
@@ -163,7 +163,7 @@ cdef inline int SUNMatrix2ndarray(SUNMatrix m, np.ndarray a) except? -1:
     else:
         raise NotImplementedError("SUNMatrix type not supported")
 
-cdef inline int ndarray2SUNMatrix(SUNMatrix m, np.ndarray a) except? -1:
+cdef int ndarray2SUNMatrix(SUNMatrix m, np.ndarray a) except? -1:
     """ copy a numpy array a to a SUNMatrix m"""
     cdef sunindextype N, M, i, j, ml, mu, stride
     cdef nv_content_data_s v_col
