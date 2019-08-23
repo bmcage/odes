@@ -5,6 +5,7 @@ from __future__ import print_function
 Tests for differential algebraic equation solvers.
 """
 import numpy
+import platform
 import scipy.sparse as sparse
 
 from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
@@ -103,6 +104,9 @@ class TestDae(TestCase):
 
     def test_lsodi(self):
         """Check the lsodi solver"""
+        # skip on aarch64, see https://github.com/bmcage/odes/issues/101
+        if platform.machine() == "aarch64":
+            return
         for problem_cls in PROBLEMS_LSODI:
             problem = problem_cls()
             self._do_problem(problem, 'lsodi', **problem.lsodi_pars)
