@@ -20,10 +20,10 @@ ELIF SUNDIALS_INDEX_TYPE == "int64":
 ELSE:
     ctypedef np.int64_t INDEX_TYPE_t
 
-cdef inline int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1
-cdef inline int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1
+cdef int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1
+cdef int ndarray2nv_s(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1
 
-cdef inline int SUNMatrix2ndarray(SUNMatrix m, np.ndarray a) except? -1
-cdef inline int ndarray2SUNMatrix(SUNMatrix m, np.ndarray a) except? -1
+cdef int SUNMatrix2ndarray(SUNMatrix m, np.ndarray a) except? -1
+cdef int ndarray2SUNMatrix(SUNMatrix m, np.ndarray a) except? -1
 
 cdef ensure_numpy_float_array(object value)
