@@ -3,6 +3,7 @@ import io
 import os
 from os.path import join
 from distutils.log import info
+import sys
 
 from numpy.distutils.command.build_ext import build_ext as _build_ext
 
@@ -279,6 +280,9 @@ class build_ext(_build_ext):
     def run(self):
         """ Distutils calls this method to run the command """
         from Cython.Build import cythonize
-        self.extensions.extend(cythonize(self._get_cython_ext()))
+        self.extensions.extend(cythonize(
+                self._get_cython_ext(), 
+                compiler_directives=  {'language_level' : sys.version_info[0]})
+            )
         _build_ext.run(self) # actually do the build
 
