@@ -1,5 +1,5 @@
 from libc.stdio cimport FILE
-from c_sundials cimport *
+from .c_sundials cimport *
 
 cdef extern from "sunmatrix/sunmatrix_dense.h":
 

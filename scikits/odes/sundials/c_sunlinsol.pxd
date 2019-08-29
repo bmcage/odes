@@ -1,5 +1,5 @@
-from c_sundials cimport *
-from c_sunmatrix cimport *
+from .c_sundials cimport *
+from .c_sunmatrix cimport *
 
 include "sundials_config.pxi"
 
