@@ -2,7 +2,13 @@
 from numpy.testing import TestCase, run_module_suite
 
 from .. import dae
+from ..sundials import log_error_handler
 from ..sundials.ida import StatusEnumIDA
+
+COMMON_ARGS = {
+    "old_api": False,
+    "err_handler": log_error_handler
+}
 
 def normal_rhs(t, y, ydot, res):
     res[0] = ydot - t
@@ -78,7 +84,7 @@ def jac_error_immediate(t, y, ydot, residual, cj, J):
 
 class TestIdaReturn(TestCase):
     def test_normal_rhs(self):
-        solver = dae("ida", normal_rhs, old_api=False)
+        solver = dae("ida", normal_rhs, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.SUCCESS,
@@ -86,7 +92,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_rhs_with_return(self):
-        solver = dae("ida", rhs_with_return, old_api=False)
+        solver = dae("ida", rhs_with_return, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.SUCCESS,
@@ -94,7 +100,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_rhs_problem_late(self):
-        solver = dae("ida", rhs_problem_late, old_api=False)
+        solver = dae("ida", rhs_problem_late, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.TOO_MUCH_WORK,
@@ -102,7 +108,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_rhs_problem_immediate(self):
-        solver = dae("ida", rhs_problem_immediate, old_api=False)
+        solver = dae("ida", rhs_problem_immediate, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.REP_RES_ERR,
@@ -110,7 +116,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_rhs_error_late(self):
-        solver = dae("ida", rhs_error_late, old_api=False)
+        solver = dae("ida", rhs_error_late, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.RES_FAIL,
@@ -118,7 +124,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_rhs_error_immediate(self):
-        solver = dae("ida", rhs_error_immediate, old_api=False)
+        solver = dae("ida", rhs_error_immediate, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.RES_FAIL,
@@ -127,7 +133,7 @@ class TestIdaReturn(TestCase):
 
     def test_normal_root(self):
         solver = dae("ida", normal_rhs, rootfn=normal_root, nr_rootfns=1,
-                old_api=False)
+                **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.SUCCESS,
@@ -136,7 +142,7 @@ class TestIdaReturn(TestCase):
 
     def test_root_with_return(self):
         solver = dae("ida", normal_rhs, rootfn=root_with_return, nr_rootfns=1,
-                old_api=False)
+                **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.SUCCESS,
@@ -145,7 +151,7 @@ class TestIdaReturn(TestCase):
 
     def test_root_late(self):
         solver = dae("ida", normal_rhs, rootfn=root_late, nr_rootfns=1,
-                old_api=False)
+                **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.ROOT_RETURN,
@@ -154,7 +160,7 @@ class TestIdaReturn(TestCase):
 
     def test_root_immediate(self):
         solver = dae("ida", normal_rhs, rootfn=root_immediate, nr_rootfns=1,
-                old_api=False)
+                **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.SUCCESS,
@@ -163,7 +169,7 @@ class TestIdaReturn(TestCase):
 
     def test_root_error_late(self):
         solver = dae("ida", normal_rhs, rootfn=root_error_late, nr_rootfns=1,
-                old_api=False)
+                **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.RTFUNC_FAIL,
@@ -172,7 +178,7 @@ class TestIdaReturn(TestCase):
 
     def test_root_error_immediate(self):
         solver = dae("ida", normal_rhs, rootfn=root_error_immediate,
-                nr_rootfns=1, old_api=False)
+                nr_rootfns=1, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.RTFUNC_FAIL,
@@ -180,7 +186,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_normal_jac(self):
-        solver = dae("ida", normal_rhs, jacfn=normal_jac, old_api=False)
+        solver = dae("ida", normal_rhs, jacfn=normal_jac, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.SUCCESS,
@@ -188,7 +194,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_jac_with_return(self):
-        solver = dae("ida", normal_rhs, jacfn=jac_with_return, old_api=False)
+        solver = dae("ida", normal_rhs, jacfn=jac_with_return, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.SUCCESS,
@@ -196,7 +202,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_jac_problem_late(self):
-        solver = dae("ida", complex_rhs, jacfn=jac_problem_late, old_api=False)
+        solver = dae("ida", complex_rhs, jacfn=jac_problem_late, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.CONV_FAIL,
@@ -205,7 +211,7 @@ class TestIdaReturn(TestCase):
 
     def test_jac_problem_immediate(self):
         solver = dae("ida", normal_rhs, jacfn=jac_problem_immediate,
-                old_api=False)
+                **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.CONV_FAIL,
@@ -213,7 +219,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_jac_error_late(self):
-        solver = dae("ida", complex_rhs, jacfn=jac_error_late, old_api=False)
+        solver = dae("ida", complex_rhs, jacfn=jac_error_late, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.LSETUP_FAIL,
@@ -221,7 +227,7 @@ class TestIdaReturn(TestCase):
         )
 
     def test_jac_error_immediate(self):
-        solver = dae("ida", normal_rhs, jacfn=jac_error_immediate, old_api=False)
+        solver = dae("ida", normal_rhs, jacfn=jac_error_immediate, **COMMON_ARGS)
         soln = solver.solve([0, 1], [1], [0])
         self.assertEqual(
             StatusEnumIDA.LSETUP_FAIL,

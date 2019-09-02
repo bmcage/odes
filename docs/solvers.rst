@@ -37,3 +37,17 @@ A comparison of different methods is given in following image. In this BDF, RK23
 .. image:: ../ipython_examples/PerformanceTests.png
 
 You can generate above graph via the `Performance notebook <https://github.com/bmcage/odes/blob/master/ipython_examples/Performance%20tests.ipynb>`_.
+
+Solver Specific Options
+#######################
+
+The high level interfaces allow the option of passing solver specific options to
+the solvers. These options are covered in more detail in the `API docs <https://bmcage.github.io/odes>`_, but some features specific to ``odes`` are mentioned below.
+
+SUNDIALS
+========
+
+There are a number of SUNDIALS specific utilities in :py:mod:`scikits.odes.sundials`.
+Firstly there are :py:func:`scikits.odes.sundials.ontstop_stop`, :py:func:`scikits.odes.sundials.ontstop_continue`, :py:func:`scikits.odes.sundials.onroot_stop` and :py:func:`scikits.odes.sundials.onroot_continue`, which can be used with the `ontstop` or `onroot` options to either stop or continue evaluation when tstop or a root is encountered.
+Secondly, there are functions which can be passed to the `err_handler` option to either stop all messages from SUNDIALS being printed (:py:func:`scikits.odes.sundials.drop_all_error_handler`), or to pass them to Python's logging machinery (:py:func:`scikits.odes.sundials.log_error_handler`).
+Finally, the module contains the exceptions which can be caught in user code raised when using the `validate_flags` option.

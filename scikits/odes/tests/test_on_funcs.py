@@ -12,9 +12,15 @@ from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
 
 from numpy.testing import TestCase, run_module_suite
 
-from scikits.odes import ode
-from scikits.odes.sundials.cvode import StatusEnum
-from scikits.odes.sundials.common_defs import DTYPE
+from .. import ode
+from ..sundials.cvode import StatusEnum
+from ..sundials.common_defs import DTYPE
+from ..sundials import log_error_handler, ontstop_stop, onroot_stop
+
+COMMON_ARGS = {
+    "old_api": False,
+    "err_handler": log_error_handler
+}
 
 #data
 g  = 9.81    # gravitational constant
@@ -63,12 +69,6 @@ def onroot_va(t, y, solver):
 
     return 0
 
-def onroot_vb(t, y, solver):
-    """
-    onroot function to stop solver when root is found
-    """
-    return 1
-
 def onroot_vc(t, y, solver):
     """
     onroot function to reset the solver back at the start, but keep the current
@@ -103,12 +103,6 @@ def ontstop_va(t, y, solver):
 
     return 0
 
-def ontstop_vb(t, y, solver):
-    """
-    ontstop function to stop solver when tstop is reached
-    """
-    return 1
-
 def ontstop_vc(t, y, solver):
     """
     ontstop function to reset the solver back at the start, but keep the current
@@ -132,7 +126,7 @@ class TestOn(TestCase):
         #test calling sequence. End is reached before root is found
         tspan = np.arange(0, t_end1 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
-                     old_api=False)
+                     **COMMON_ARGS)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.SUCCESS, "ERROR: Error occurred"
         assert allclose([soln.values.t[-1], soln.values.y[-1,0], soln.values.y[-1,1]],
@@ -143,7 +137,7 @@ class TestOn(TestCase):
         #test root finding and stopping: End is reached at a root
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
-                     old_api=False)
+                     **COMMON_ARGS)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.ROOT_RETURN, "ERROR: Root not found!"
         assert allclose([soln.roots.t[0], soln.roots.y[0,0], soln.roots.y[0,1]],
@@ -155,7 +149,7 @@ class TestOn(TestCase):
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
                      onroot=onroot_va,
-                     old_api=False)
+                     **COMMON_ARGS)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.SUCCESS, "ERROR: Error occurred"
         assert allclose([soln.values.t[-1], soln.values.y[-1,0], soln.values.y[-1,1]],
@@ -170,8 +164,8 @@ class TestOn(TestCase):
         #test root finding and stopping: End is reached at a root with a function
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
-                     onroot=onroot_vb,
-                     old_api=False)
+                     onroot=onroot_stop,
+                     **COMMON_ARGS)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.ROOT_RETURN, "ERROR: Root not found!"
         assert allclose([soln.roots.t[-1], soln.roots.y[-1,0], soln.roots.y[-1,1]],
@@ -183,7 +177,7 @@ class TestOn(TestCase):
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
                      onroot=onroot_vc,
-                     old_api=False)
+                     **COMMON_ARGS)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.ROOT_RETURN, "ERROR: Not sufficient root found"
         assert allclose([soln.values.t[-1], soln.values.y[-1,0], soln.values.y[-1,1]],
@@ -199,7 +193,7 @@ class TestOn(TestCase):
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, nr_rootfns=2, rootfn=root_fn2,
                      onroot=onroot_vc,
-                     old_api=False)
+                     **COMMON_ARGS)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.ROOT_RETURN, "ERROR: Not sufficient root found"
         assert allclose([soln.values.t[-1], soln.values.y[-1,0], soln.values.y[-1,1]],
@@ -215,7 +209,7 @@ class TestOn(TestCase):
         tspan = np.arange(0, 30 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn3,
                      onroot=onroot_vc,
-                     old_api=False)
+                     **COMMON_ARGS)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.ROOT_RETURN, "ERROR: Not sufficient root found"
         assert allclose([soln.values.t[-1], soln.values.y[-1,0], soln.values.y[-1,1]],
@@ -232,7 +226,7 @@ class TestOn(TestCase):
         n = 0
         tspan = np.arange(0, t_end1 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, tstop=T1+1, ontstop=ontstop_va,
-                     old_api=False)
+                     **COMMON_ARGS)
 
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.SUCCESS, "ERROR: Error occurred"
@@ -246,7 +240,7 @@ class TestOn(TestCase):
         n = 0
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, tstop=T1,
-                     old_api=False)
+                     **COMMON_ARGS)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.TSTOP_RETURN, "ERROR: Tstop not found!"
         assert allclose([soln.tstop.t[0], soln.tstop.y[0,0], soln.tstop.y[0,1]],
@@ -262,7 +256,7 @@ class TestOn(TestCase):
         n = 0
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, tstop=T1, ontstop=ontstop_va,
-                     old_api=False)
+                     **COMMON_ARGS)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.SUCCESS, "ERROR: Error occurred"
         assert allclose([soln.values.t[-1], soln.values.y[-1,0], soln.values.y[-1,1]],
@@ -278,8 +272,8 @@ class TestOn(TestCase):
         global n
         n = 0
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, tstop=T1, ontstop=ontstop_vb,
-                     old_api=False)
+        solver = ode('cvode', rhs_fn, tstop=T1, ontstop=ontstop_stop,
+                     **COMMON_ARGS)
 
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.TSTOP_RETURN, "ERROR: Error occurred"
@@ -299,7 +293,7 @@ class TestOn(TestCase):
         n = 0
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
         solver = ode('cvode', rhs_fn, tstop=T1, ontstop=ontstop_vc,
-                     old_api=False)
+                     **COMMON_ARGS)
 
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.TSTOP_RETURN, "ERROR: Error occurred"

@@ -1,7 +1,13 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-from scikits.odes import ode
+from .. import ode
+from ..sundials import log_error_handler
+
+COMMON_ARGS = {
+    "old_api": False,
+    "err_handler": log_error_handler
+}
 
 
 xs = np.linspace(1, 10, 10)
@@ -20,7 +26,7 @@ def rhs(x, y, ydot):
 
 class GetInfoTest(unittest.TestCase):
     def setUp(self):
-        self.ode = ode('cvode', rhs, old_api=False)
+        self.ode = ode('cvode', rhs, **COMMON_ARGS)
         self.solution = self.ode.solve(xs, np.array([1]))
 
     def test_we_integrated_correctly(self):
@@ -47,7 +53,7 @@ class GetInfoTest(unittest.TestCase):
 
 class GetInfoTestSpils(unittest.TestCase):
     def setUp(self):
-        self.ode = ode('cvode', rhs, linsolver="spgmr", old_api=False)
+        self.ode = ode('cvode', rhs, linsolver="spgmr", **COMMON_ARGS)
         self.solution = self.ode.solve(xs, np.array([1]))
 
     def test_ode_exposes_num_njtimes_evals(self):

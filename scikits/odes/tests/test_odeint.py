@@ -19,8 +19,9 @@ from numpy.testing import (
     assert_, TestCase, run_module_suite, assert_array_almost_equal,
     assert_raises, assert_allclose, assert_array_equal, assert_equal)
 
-from scikits.odes.odeint import odeint
-from scikits.odes.sundials.common_defs import DTYPE
+from ..odeint import odeint
+from ..sundials import log_error_handler
+from ..sundials.common_defs import DTYPE
 
 TEST_LAPACK = DTYPE == np.double
 
