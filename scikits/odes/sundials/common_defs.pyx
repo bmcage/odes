@@ -33,10 +33,10 @@ ELSE:
     # fall back to double
     from numpy import double as DTYPE
 
-index_precision = SUNDIALS_INDEX_TYPE
-IF SUNDIALS_INDEX_TYPE == "int32":
+index_precision = SUNDIALS_INDEX_SIZE
+IF SUNDIALS_INDEX_SIZE == "32":
     from numpy import int32 as INDEX_TYPE
-ELIF SUNDIALS_INDEX_TYPE == "int64":
+ELIF SUNDIALS_INDEX_SIZE == "64":
     from numpy import int64 as INDEX_TYPE
 ELSE:
     from numpy import int64 as INDEX_TYPE

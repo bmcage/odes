@@ -20,7 +20,7 @@ extracted into directory sundials-3.1.1 is on a \*nix system::
 
     mkdir build-sundials-4.1.0
     cd build-sundials-4.1.0/
-    cmake -DLAPACK_ENABLE=ON -DSUNDIALS_INDEX_TYPE=int32_t -DCMAKE_INSTALL_PREFIX=<install_path> ../sundials-4.1.0/
+    cmake -DLAPACK_ENABLE=ON -DSUNDIALS_INDEX_SIZE=64 -DCMAKE_INSTALL_PREFIX=<install_path> ../sundials-4.1.0/
     make install
 
 .. warning::

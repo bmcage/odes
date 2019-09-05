@@ -15,6 +15,7 @@ from .c_sundials cimport realtype, N_Vector
 from .c_nvector_serial cimport *
 from .c_sunmatrix cimport *
 from .c_sunlinsol cimport *
+from .c_sunnonlinsol cimport *
 
 from .c_ida cimport *
 from .common_defs cimport (
