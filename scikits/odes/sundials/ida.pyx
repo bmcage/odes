@@ -1580,8 +1580,7 @@ cdef class IDA:
                 raise ValueError('IDADlsSetLinearSolver failed with code {}'
                                  .format(flag))
         elif linsolver == 'band':
-            A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
-                                 <int> opts['uband'] + <int> opts['lband']);
+            A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband']);
             LS = SUNBandLinearSolver(self.y0, A);
             if (A == NULL or LS == NULL):
                 raise ValueError('Could not allocate matrix or linear solver')
@@ -1688,8 +1687,7 @@ cdef class IDA:
                         raise ValueError('IDADlsSetLinearSolver failed with code {}'
                                          .format(flag))
                 elif linsolver == 'lapackband':
-                    A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'],
-                                         <int> opts['uband'] + <int> opts['lband']);
+                    A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband']);
                     LS = SUNLapackBand(self.y0, A)
                     if (A == NULL or LS == NULL):
                         raise ValueError('Could not allocate matrix or linear solver')
