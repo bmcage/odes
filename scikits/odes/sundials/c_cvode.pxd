@@ -133,22 +133,22 @@ cdef extern from "cvode/cvode_ls.h":
 
     ctypedef int (*CVLsJacFn)(realtype t, N_Vector y, N_Vector fy,
                               SUNMatrix Jac, void *user_data,
-                              N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+                              N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1
 
     ctypedef int (*CVLsPrecSetupFn)(realtype t, N_Vector y, N_Vector fy,
                                     booleantype jok, booleantype *jcurPtr,
-                                    realtype gamma, void *user_data)
+                                    realtype gamma, void *user_data) except? -1
 
     ctypedef int (*CVLsPrecSolveFn)(realtype t, N_Vector y, N_Vector fy,
                                     N_Vector r, N_Vector z, realtype gamma,
-                                    realtype delta, int lr, void *user_data)
+                                    realtype delta, int lr, void *user_data) except? -1
 
     ctypedef int (*CVLsJacTimesSetupFn)(realtype t, N_Vector y,
-                                       N_Vector fy, void *user_data)
+                                       N_Vector fy, void *user_data) except? -1
 
     ctypedef int (*CVLsJacTimesVecFn)(N_Vector v, N_Vector Jv, realtype t,
                                       N_Vector y, N_Vector fy,
-                                      void *user_data, N_Vector tmp)
+                                      void *user_data, N_Vector tmp) except? -1
             
     int CVodeSetLinearSolver(void *cvode_mem, SUNLinearSolver LS, SUNMatrix A)
 

@@ -292,7 +292,8 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 
 cdef int _jacdense(realtype tt,
             N_Vector yy, N_Vector ff, SUNMatrix Jac,
-            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
+            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, 
+            N_Vector tmp3) except? -1:
     """function with the signature of CVDlsJacFn that calls python Jac
        Note: signature of Jac is SUNMatrix
     """
@@ -380,7 +381,7 @@ class MutableBool(object):
 
 cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, 
                        booleantype *jcurPtr, realtype gamma, 
-                       void *auxiliary_data):
+                       void *auxiliary_data) except -1:
     """ function with the signature of CVLsPrecSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
 
@@ -462,7 +463,7 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
 
 cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, 
                        N_Vector z, realtype gamma, realtype delta, int lr, 
-                       void *auxiliary_data):
+                       void *auxiliary_data) except? -1:
     """ function with the signature of CVLsPrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
 
@@ -545,7 +546,7 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
         return user_flag
 
 cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
-                          N_Vector fy, void *user_data, N_Vector tmp):
+                          N_Vector fy, void *user_data, N_Vector tmp) except? -1:
     """ function with the signature of CVSpilsJacTimesVecFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, v_tmp, Jv_tmp
 
@@ -626,7 +627,7 @@ cdef class CV_WrapJacTimesSetupFunction(CV_JacTimesSetupFunction):
         return user_flag
 
 cdef int _jac_times_setupfn(realtype t, N_Vector y, N_Vector fy,
-                            void *user_data):
+                            void *user_data) except? -1:
     """ function with the signature of CVSpilsJacTimesSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, fy_tmp
 
