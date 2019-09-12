@@ -60,6 +60,9 @@ class StatusEnum(IntEnum):
     REPTD_RHSFUNC_ERR = CV_REPTD_RHSFUNC_ERR
     UNREC_RHSFUNC_ERR = CV_UNREC_RHSFUNC_ERR
     RTFUNC_FAIL = CV_RTFUNC_FAIL
+    NLS_INIT_FAIL = CV_NLS_INIT_FAIL
+    NLS_SETUP_FAIL = CV_NLS_SETUP_FAIL
+    CONSTR_FAIL = CV_CONSTR_FAIL
     MEM_FAIL = CV_MEM_FAIL
     MEM_NULL = CV_MEM_NULL
     ILL_INPUT = CV_ILL_INPUT
@@ -68,6 +71,7 @@ class StatusEnum(IntEnum):
     BAD_T = CV_BAD_T
     BAD_DKY = CV_BAD_DKY
     TOO_CLOSE = CV_TOO_CLOSE
+    VECTOROP_ERR  = CV_VECTOROP_ERR 
 
 STATUS_MESSAGE = {
     StatusEnum.SUCCESS: "Successful function return.",
@@ -86,6 +90,9 @@ STATUS_MESSAGE = {
     StatusEnum.REPTD_RHSFUNC_ERR: "The right-hand side function had repeated recoverable errors.",
     StatusEnum.UNREC_RHSFUNC_ERR: "The right-hand side function had a recoverable error, but no recovery is possible.",
     StatusEnum.RTFUNC_FAIL: "The rootfinding function failed in an unrecoverable manner.",
+    StatusEnum.NLS_INIT_FAIL: "The nonlinear solver's init routine failed.",
+    StatusEnum.NLS_SETUP_FAIL: "The nonlinear solver setup failed unrecoverably.",
+    StatusEnum.CONSTR_FAIL: "The inequality constraints could not be met",
     StatusEnum.MEM_FAIL: "A memory allocation failed.",
     StatusEnum.MEM_NULL: "The cvode_mem argument was NULL.",
     StatusEnum.ILL_INPUT: "One of the function inputs is illegal.",
@@ -94,6 +101,7 @@ STATUS_MESSAGE = {
     StatusEnum.BAD_T: "The time t is outside the last step taken.",
     StatusEnum.BAD_DKY: "The output derivative vector is NULL.",
     StatusEnum.TOO_CLOSE: "The output and initial times are too close to each other.",
+    StatusEnum.VECTOROP_ERR: "Vector operation error",
 }
 
 WARNING_STR = "Solver succeeded with flag {} and finished at {} with values {}"
