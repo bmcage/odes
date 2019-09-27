@@ -1589,6 +1589,9 @@ cdef class CVODE:
                     else:
                         raise ValueError('LinSolver: Unknown solver type: %s'
                                              % opts['linsolver'])
+                elif linsolver in ['lapackdense', 'lapackband']:
+                    raise ValueError('LinSolver: LAPACK not available, cannot execute solver type: %s'
+                                         % opts['linsolver'])
                 else:
                     raise ValueError('LinSolver: Unknown solver type: %s'
                                          % opts['linsolver'])
