@@ -59,10 +59,10 @@ matrix:
     # Reduced Index Size - this allows use of lapack linsolvers - default is -64
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_INDEX_SIZE='-32'
+      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_INDEX_SIZE='32'
     - python: 3.7
       env:
-      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_INDEX_SIZE='-32'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_INDEX_SIZE='32'
 
     # Additional precisions - default is 'double'
     - python: 2.7
