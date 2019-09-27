@@ -1675,7 +1675,7 @@ cdef class IDA:
                 raise ValueError('IDASpilsSetJacTimes failed with code {}'
                                  .format(flag))
         else:
-            IF SUNDIALS_BLAS_LAPACK:
+            if SUNDIALS_BLAS_LAPACK:
                 if linsolver == 'lapackdense':
                     A = SUNDenseMatrix(N, N)
                     LS = SUNLapackDense(self.y0, A)

@@ -1440,9 +1440,9 @@ cdef class CVODE:
         if opts['nonlin_conv_coef'] > 0:
             CVodeSetNonlinConvCoef(cv_mem, <int> opts['nonlin_conv_coef'])
 
+        # Linsolver
+        linsolver = opts['linsolver'].lower()
         if nonlinsolver == 'newton':
-            # Linsolver
-            linsolver = opts['linsolver'].lower()
             if linsolver == 'dense':
                 A = SUNDenseMatrix(N, N)
                 LS = SUNDenseLinearSolver(self.y0, A)
