@@ -1709,7 +1709,7 @@ cdef class IDA:
                 else:
                     raise ValueError('LinSolver: Unknown solver type: %s'
                                          % opts['linsolver'])
-            ELSE:
+            else:
                 raise ValueError('LinSolver: Unknown solver type: %s'
                                      % opts['linsolver'])
 
