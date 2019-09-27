@@ -12,7 +12,7 @@ addons:
       - liblapack-dev
 
 sudo: false
-dist: trusty
+dist: bionic
 
 cache:
   directories:
@@ -33,25 +33,27 @@ matrix:
       env:
       - TOXENV=py27 SUNDIALS_VERSION='4.1.0'
     - python: 3.5
+      dist: trusty
       env:
       - TOXENV=py35 SUNDIALS_VERSION='4.1.0'
     - python: 3.6
+      dist: trusty
       env:
       - TOXENV=py36 SUNDIALS_VERSION='4.1.0'
     - python: 3.7
-      dist: bionic
+      dist: trusty
       env:
       - TOXENV=py37 SUNDIALS_VERSION='4.1.0'
-    - python: 3.6
+    - python: 3.7
       env:
       - TOXENV=doctr SUNDIALS_VERSION='4.1.0'
-    - python: 3.6
+    - python: 3.7
       env:
       - TOXENV=docs SUNDIALS_VERSION='4.1.0'
-    - python: 3.6
+    - python: 3.7
       env:
       - TOXENV=check-manifest SUNDIALS_VERSION='4.1.0'
-    - python: 3.6
+    - python: 3.7
       env:
       - TOXENV=checkreadme SUNDIALS_VERSION='4.1.0'
 
@@ -59,50 +61,50 @@ matrix:
     - python: 2.7
       env:
       - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
-    - python: 3.6
+    - python: 3.7
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
     - python: 2.7
       env:
       - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
-    - python: 3.6
+    - python: 3.7
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
 
   allow_failures:
     - python: 2.7
       env:
       - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
-    - python: 3.6
+    - python: 3.7
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
 
     # Additional precisions
     - python: 2.7
       env:
       - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
-    - python: 3.6
+    - python: 3.7
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
     - python: 2.7
       env:
       - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
-    - python: 3.6
+    - python: 3.7
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
 
   allow_failures:
     - python: 2.7
       env:
       - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
-    - python: 3.6
+    - python: 3.7
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
 
 install:
   - source ci_support/ensure_sundials_installed.sh
   - pip install -U pip setuptools virtualenv wheel
-  - pip install -U tox
+  - pip install -U tox-travis
 
 script:
   - tox --workdir $HOME
