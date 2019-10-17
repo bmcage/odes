@@ -75,6 +75,7 @@ matrix:
       env:
       - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
     - python: 3.6
+      dist: trusty
       env:
       - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_TYPE='int64_t'
 
@@ -89,7 +90,7 @@ matrix:
       env:
       - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
 
-
+      
 install:
   - source ci_support/ensure_sundials_installed.sh
   - pip install -U pip setuptools virtualenv wheel
