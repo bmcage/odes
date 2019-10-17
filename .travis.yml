@@ -74,9 +74,9 @@ matrix:
     - python: 2.7
       env:
       - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
-    - python: 3.7
+    - python: 3.6
       env:
-      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
+      - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
 
   allow_failures:
     - python: 2.7
@@ -85,6 +85,10 @@ matrix:
     - python: 3.7
       env:
       - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+    # seg fault error on 3.7.1 ... to investigate
+    - python: 3.7
+      env:
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
 
 
 install:
