@@ -78,6 +78,12 @@ matrix:
       dist: trusty
       env:
       - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_TYPE='int64_t'
+      
+    # extended test fails with seg fault on more recent Ubuntu .. to investigate when access to this
+    - python: 3.7
+      env:
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
+    
 
   allow_failures:
     - python: 2.7
