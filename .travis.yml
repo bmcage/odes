@@ -85,7 +85,6 @@ matrix:
     - python: 3.7
       env:
       - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
-    # seg fault error on 3.7.1 ... to investigate
     - python: 3.7
       env:
       - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
