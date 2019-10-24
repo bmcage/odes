@@ -142,30 +142,29 @@ Using Nix
 
 By using the Nix package manager, you can install scikits-odes in one
 line. Of course you need to install `nix <https://nixos.org/nix/>`_
-first.
+first::
 
-    curl https://nixos.org/nix/install | sh
+  curl https://nixos.org/nix/install | sh
 
-And now you can start a python shell with scikits-odes (and numpy) ready for use.
+And now you can start a python shell with scikits-odes (and numpy) ready for use::
 
-    nix-shell \
-    -p python37Packages.scikits-odes \
-    -p python37Packages.numpy \
-    --run "python3"
+  nix-shell \  
+  -p python37Packages.scikits-odes \  
+  -p python37Packages.numpy \  
+  --run "python3"
 
 You can verify that lapack is available (although the nix install will have
-run many tests to check this already)), try the following python snippet in the interpreter:
+run many tests to check this already), try the following python snippet in the interpreter::
 
-.. ::code
     import numpy as np
     from scikits.odes.odeint import odeint
-
+    
     tout = np.linspace(0, 1)
     initial_values = np.array([1])
-
+    
     def right_hand_side(t, y, ydot):
-        ydot[0] = y[0]
-
+      ydot[0] = y[0]
+    
     output = odeint(right_hand_side, tout, initial_values,linsolver='lapackdense')
     print(output.values.y)
 
