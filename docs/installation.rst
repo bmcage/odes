@@ -3,6 +3,11 @@ Installation
 
 Requirements before install
 ---------------------------
+
+If you use nix (see below), all dependencies will be installed for you.
+
+If you do not wish to use nix then you will need to do the following.
+
 Before building ``odes``, you need to have installed:
 
     * numpy (automatically dealt with if using pip >=10)
@@ -131,3 +136,37 @@ Note that on your install, these directories and libs might be different than th
 Linking Errors
 ..............
 Verify you link to the correct sundials version. Easiest to ensure you only have one ``libsundials_xxx`` installed. If several are installed, pass the correct one via the ``$SUNDIALS_INST`` environment variable.
+
+Using Nix
+---------
+
+By using the Nix package manager, you can install scikits-odes in one
+line. Of course you need to install `nix <https://nixos.org/nix/>`_
+first.
+
+    curl https://nixos.org/nix/install | sh
+
+And now you can start a python shell with scikits-odes (and numpy) ready for use.
+
+    nix-shell -I nixpkgs=~/nixpkgs \
+    -p python37Packages.scikits-odes \
+    -p python37Packages.numpy \
+    --run "python3"
+
+To prove that lapack is available (although the nix install will have
+run many tests to check this already):
+
+    import numpy as np
+    from scikits.odes.odeint import odeint
+
+    tout = np.linspace(0, 1)
+    initial_values = np.array([1])
+
+    def right_hand_side(t, y, ydot):
+        ydot[0] = y[0]
+
+    output = odeint(right_hand_side, tout, initial_values,linsolver='lapackdense')
+    print(output.values.y)
+
+You'll probably want to write a ``shell.nix`` or similar for your
+project but you should refer to the nix documentation for this.
