@@ -109,7 +109,8 @@ In the cleaned repository, run::
 which creates a ``dist`` directory containing a ``tar.gz`` file, the sdist for
 the release. To upload the sdist to PyPI_, run::
 
-    twine upload dist/*
+    python3 -m pip install --user --upgrade twine
+    python3 -m twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
 
 See https://packaging.python.org/tutorials/distributing-packages/#uploading-your-project-to-pypi for more information about uploading to PyPI_.
 
