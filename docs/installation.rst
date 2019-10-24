@@ -148,14 +148,15 @@ first.
 
 And now you can start a python shell with scikits-odes (and numpy) ready for use.
 
-    nix-shell -I nixpkgs=~/nixpkgs \
+    nix-shell \
     -p python37Packages.scikits-odes \
     -p python37Packages.numpy \
     --run "python3"
 
-To prove that lapack is available (although the nix install will have
-run many tests to check this already):
+You can verify that lapack is available (although the nix install will have
+run many tests to check this already)), try the following python snippet in the interpreter:
 
+.. ::code
     import numpy as np
     from scikits.odes.odeint import odeint
 
