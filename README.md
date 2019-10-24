@@ -6,7 +6,7 @@
 [![Supported implementations](https://img.shields.io/pypi/implementation/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 [![PyPI](https://img.shields.io/pypi/status/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2537014.svg)](https://doi.org/10.5281/zenodo.2537014)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3517800.svg)](https://doi.org/10.5281/zenodo.3517800)
 
 [![Paper DOI](http://joss.theoj.org/papers/10.21105/joss.00165/status.svg)](https://doi.org/10.21105/joss.00165)
 
