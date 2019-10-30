@@ -23,22 +23,22 @@ from libc.stdio cimport stderr
 include "sundials_config.pxi"
 
 precision = SUNDIALS_FLOAT_TYPE
-IF SUNDIALS_FLOAT_TYPE == "single":
+if SUNDIALS_FLOAT_TYPE == "single":
     from numpy import single as DTYPE
-ELIF SUNDIALS_FLOAT_TYPE == "double":
+elif SUNDIALS_FLOAT_TYPE == "double":
     from numpy import double as DTYPE
-ELIF SUNDIALS_FLOAT_TYPE == "extended":
+elif SUNDIALS_FLOAT_TYPE == "extended":
     from numpy import longdouble as DTYPE
-ELSE:
+else:
     # fall back to double
     from numpy import double as DTYPE
 
-index_precision = SUNDIALS_INDEX_TYPE
-IF SUNDIALS_INDEX_TYPE == "int32":
+index_precision = SUNDIALS_INDEX_SIZE
+if SUNDIALS_INDEX_SIZE == "32":
     from numpy import int32 as INDEX_TYPE
-ELIF SUNDIALS_INDEX_TYPE == "int64":
+elif SUNDIALS_INDEX_SIZE == "64":
     from numpy import int64 as INDEX_TYPE
-ELSE:
+else:
     from numpy import int64 as INDEX_TYPE
 
 has_lapack = SUNDIALS_BLAS_LAPACK

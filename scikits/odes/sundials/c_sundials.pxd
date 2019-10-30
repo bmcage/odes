@@ -512,3 +512,79 @@ cdef extern from "sundials/sundials_sptfqmr.h":
 #        int s_ordering
 #
 #    ctypedef SLUMTDataRec *SLUMTData
+
+cdef extern from "sundials/sundials_nonlinearsolver.h":
+
+    struct _generic_SUNNonlinearSolver_Ops:
+        pass
+    struct _generic_SUNNonlinearSolver:
+        pass
+    ctypedef _generic_SUNNonlinearSolver_Ops *SUNNonlinearSolver_Ops
+    ctypedef _generic_SUNNonlinearSolver *SUNNonlinearSolver
+
+    ctypedef int (*SUNNonlinSolSysFn)(N_Vector y, N_Vector F, void* mem)
+    ctypedef int (*SUNNonlinSolLSetupFn)(N_Vector y, N_Vector F, 
+                                         booleantype jbad,
+                                         booleantype* jcur, void* mem)
+    ctypedef int (*SUNNonlinSolLSolveFn)(N_Vector y, N_Vector b, void* mem)
+    # rename reserved del into del_t for python!
+    ctypedef int (*SUNNonlinSolConvTestFn)(SUNNonlinearSolver NLS, N_Vector y,
+                                          N_Vector del_t, realtype tol, 
+                                          N_Vector ewt, void* mem)
+
+    cdef enum SUNNonlinearSolver_Type:
+        SUNNONLINEARSOLVER_ROOTFIND,
+        SUNNONLINEARSOLVER_FIXEDPOINT
+
+    struct _generic_SUNNonlinearSolver_Ops:
+        SUNNonlinearSolver_Type (*gettype)(SUNNonlinearSolver)
+        int (*initialize)(SUNNonlinearSolver)
+        int (*setup)(SUNNonlinearSolver, N_Vector, void*)
+        int (*solve)(SUNNonlinearSolver, N_Vector, N_Vector, N_Vector, realtype,
+                     booleantype, void*)
+        int (*free)(SUNNonlinearSolver)
+        int (*setsysfn)(SUNNonlinearSolver, SUNNonlinSolSysFn)
+        int (*setlsetupfn)(SUNNonlinearSolver, SUNNonlinSolLSetupFn)
+        int (*setlsolvefn)(SUNNonlinearSolver, SUNNonlinSolLSolveFn)
+        int (*setctestfn)(SUNNonlinearSolver, SUNNonlinSolConvTestFn)
+        int (*setmaxiters)(SUNNonlinearSolver, int)
+        int (*getnumiters)(SUNNonlinearSolver, long int*)
+        int (*getcuriter)(SUNNonlinearSolver, int*)
+        int (*getnumconvfails)(SUNNonlinearSolver, long int*)
+
+    #struct _generic_SUNNonlinearSolver :
+    #    void *content
+    #    struct _generic_SUNNonlinearSolver_Ops *ops
+
+    SUNNonlinearSolver_Type SUNNonlinSolGetType(SUNNonlinearSolver NLS)
+
+    int SUNNonlinSolInitialize(SUNNonlinearSolver NLS)
+    int SUNNonlinSolSetup(SUNNonlinearSolver NLS, N_Vector y, void* mem)
+    int SUNNonlinSolSolve(SUNNonlinearSolver NLS, N_Vector y0, N_Vector y,
+                          N_Vector w, realtype tol,
+                          booleantype callLSetup, void *mem)
+    int SUNNonlinSolFree(SUNNonlinearSolver NLS)
+
+    int SUNNonlinSolSetSysFn(SUNNonlinearSolver NLS,  SUNNonlinSolSysFn SysFn)
+    int SUNNonlinSolSetLSetupFn(SUNNonlinearSolver NLS,
+                                SUNNonlinSolLSetupFn SetupFn)
+    int SUNNonlinSolSetLSolveFn(SUNNonlinearSolver NLS,
+                                SUNNonlinSolLSolveFn SolveFn)
+    int SUNNonlinSolSetConvTestFn(SUNNonlinearSolver NLS,
+                                  SUNNonlinSolConvTestFn CTestFn)
+    int SUNNonlinSolSetMaxIters(SUNNonlinearSolver NLS, int maxiters)
+
+    int SUNNonlinSolGetNumIters(SUNNonlinearSolver NLS, long int *niters)
+    int SUNNonlinSolGetCurIter(SUNNonlinearSolver NLS, int *iter)
+    int SUNNonlinSolGetNumConvFails(SUNNonlinearSolver NLS,
+                                    long int *nconvfails)
+
+
+    enum: SUN_NLS_SUCCESS         #  0
+    enum: SUN_NLS_CONTINUE        # +1
+    enum: SUN_NLS_CONV_RECVR      # +2
+    
+    enum: SUN_NLS_MEM_NULL        # -1
+    enum: SUN_NLS_MEM_FAIL        # -2
+    enum: SUN_NLS_ILL_INPUT       # -3
+    enum: SUN_NLS_VECTOROP_ERR    # -4

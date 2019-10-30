@@ -1,5 +1,5 @@
 from libc.stdio cimport FILE
-from c_sundials cimport *
+from .c_sundials cimport *
 
 cdef extern from "sunmatrix/sunmatrix_dense.h":
 
@@ -47,7 +47,10 @@ cdef extern from "sunmatrix/sunmatrix_band.h":
     ctypedef _SUNMatrixContent_Band *SUNMatrixContent_Band
 
     SUNMatrix SUNBandMatrix(sunindextype N, sunindextype mu,
-                                            sunindextype ml, sunindextype smu)
+                                            sunindextype ml)
+
+    SUNMatrix SUNBandMatrixStorage(sunindextype N, sunindextype mu,
+                                   sunindextype ml, sunindextype smu)
 
     void SUNBandMatrix_Print(SUNMatrix A, FILE* outfile)
 

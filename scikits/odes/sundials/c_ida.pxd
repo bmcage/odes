@@ -36,6 +36,8 @@ cdef extern from "ida/ida.h":
     enum: IDA_FIRST_RES_FAIL  #-12
     enum: IDA_LINESEARCH_FAIL #-13
     enum: IDA_NO_RECOVERY     #-14
+    enum: IDA_NLS_INIT_FAIL   #-15
+    enum: IDA_NLS_SETUP_FAIL  #-16
 
     enum: IDA_MEM_NULL        #-20
     enum: IDA_MEM_FAIL        #-21
@@ -45,7 +47,9 @@ cdef extern from "ida/ida.h":
     enum: IDA_BAD_K           #-25
     enum: IDA_BAD_T           #-26
     enum: IDA_BAD_DKY         #-27
-    enum: IDA_UNRECOGNISED_ERROR #-99
+    enum: IDA_VECTOROP_ERR    #-28
+    
+    enum: IDA_UNRECOGNIZED_ERROR #-99
 
     ctypedef int (*IDAResFn)(realtype tt, N_Vector yy, N_Vector yp,
                     N_Vector rr, void *user_data)
@@ -61,6 +65,23 @@ cdef extern from "ida/ida.h":
 
     void *IDACreate()
 
+    int IDAInit(void *ida_mem, IDAResFn res,
+                realtype t0, N_Vector yy0, N_Vector yp0)
+    int IDAReInit(void *ida_mem,
+                  realtype t0, N_Vector yy0, N_Vector yp0)
+    int IDASStolerances(void *ida_mem, realtype reltol, realtype abstol)
+    int IDASVtolerances(void *ida_mem, realtype reltol, N_Vector abstol)
+    int IDAWFtolerances(void *ida_mem, IDAEwtFn efun)
+    int IDACalcIC(void *ida_mem, int icopt, realtype tout1)
+    
+    int IDASetNonlinConvCoefIC(void *ida_mem, realtype epiccon)
+    int IDASetMaxNumStepsIC(void *ida_mem, int maxnh)
+    int IDASetMaxNumJacsIC(void *ida_mem, int maxnj)
+    int IDASetMaxNumItersIC(void *ida_mem, int maxnit)
+    int IDASetLineSearchOffIC(void *ida_mem, booleantype lsoff)
+    int IDASetStepToleranceIC(void *ida_mem, realtype steptol)
+    int IDASetMaxBacksIC(void *ida_mem, int maxbacks)
+    
     int IDASetErrHandlerFn(void *ida_mem, IDAErrHandlerFn ehfun, void *eh_data)
     int IDASetErrFile(void *ida_mem, FILE *errfp)
     int IDASetUserData(void *ida_mem, void *user_data)
@@ -77,28 +98,12 @@ cdef extern from "ida/ida.h":
     int IDASetId(void *ida_mem, N_Vector id)
     int IDASetConstraints(void *ida_mem, N_Vector constraints)
 
+    int IDASetNonlinearSolver(void *ida_mem, SUNNonlinearSolver NLS)
 
-
+    int IDARootInit(void *ida_mem, int nrtfn, IDARootFn g)
     int IDASetRootDirection(void *ida_mem, int *rootdir)
     int IDASetNoInactiveRootWarn(void *ida_mem)
 
-    int IDAInit(void *ida_mem, IDAResFn res,
-                realtype t0, N_Vector yy0, N_Vector yp0)
-    int IDAReInit(void *ida_mem,
-                  realtype t0, N_Vector yy0, N_Vector yp0)
-    int IDASStolerances(void *ida_mem, realtype reltol, realtype abstol)
-    int IDASVtolerances(void *ida_mem, realtype reltol, N_Vector abstol)
-    int IDAWFtolerances(void *ida_mem, IDAEwtFn efun)
-
-    int IDASetNonlinConvCoefIC(void *ida_mem, realtype epiccon)
-    int IDASetMaxNumStepsIC(void *ida_mem, int maxnh)
-    int IDASetMaxNumJacsIC(void *ida_mem, int maxnj)
-    int IDASetMaxNumItersIC(void *ida_mem, int maxnit)
-    int IDASetLineSearchOffIC(void *ida_mem, booleantype lsoff)
-    int IDASetStepToleranceIC(void *ida_mem, realtype steptol)
-
-    int IDARootInit(void *ida_mem, int nrtfn, IDARootFn g)
-    int IDACalcIC(void *ida_mem, int icopt, realtype tout1)
     int IDASolve(void *ida_mem, realtype tout, realtype *tret,
                  N_Vector yret, N_Vector ypret, int itask)
     int IDAGetDky(void *ida_mem, realtype t, int k, N_Vector dky)
@@ -135,21 +140,68 @@ cdef extern from "ida/ida.h":
     char *IDAGetReturnFlagName(long int flag)
     void IDAFree(void **ida_mem)
 
-cdef extern from "ida/ida_direct.h":
-    enum: IDADLS_SUCCESS
-    enum: IDADLS_MEM_NULL
-    enum: IDADLS_LMEM_NULL
-    enum: IDADLS_ILL_INPUT
-    enum: IDADLS_MEM_FAIL
+cdef extern from "ida/ida_ls.h":
+    enum: IDALS_SUCCESS          # 0
+    enum: IDALS_MEM_NULL         #-1
+    enum: IDALS_LMEM_NULL        #-2
+    enum: IDALS_ILL_INPUT        #-3
+    enum: IDALS_MEM_FAIL         #-4
+    enum: IDALS_PMEM_NULL        #-5
+    enum: IDALS_JACFUNC_UNRECVR  #-6
+    enum: IDALS_JACFUNC_RECVR    #-7
+    enum: IDALS_SUNMAT_FAIL      #-8
+    enum: IDALS_SUNLS_FAIL       #-9
 
-    #/* Additional last_flag values */
-    enum: IDADLS_JACFUNC_UNRECVR
-    enum: IDADLS_JACFUNC_RECVR
+    ctypedef int (*IDALsJacFn)(realtype t, realtype c_j, N_Vector y,
+                               N_Vector yp, N_Vector r, SUNMatrix Jac,
+                               void *user_data, N_Vector tmp1,
+                               N_Vector tmp2, N_Vector tmp3)
+
+    ctypedef int (*IDALsPrecSetupFn)(realtype tt, N_Vector yy,
+                                    N_Vector yp, N_Vector rr,
+                                    realtype c_j, void *user_data)
+
+    ctypedef int (*IDALsPrecSolveFn)(realtype tt, N_Vector yy,
+                                    N_Vector yp, N_Vector rr,
+                                    N_Vector rvec, N_Vector zvec,
+                                    realtype c_j, realtype delta,
+                                    void *user_data)
+
+    ctypedef int (*IDALsJacTimesSetupFn)(realtype tt, N_Vector yy,
+                                        N_Vector yp, N_Vector rr,
+                                        realtype c_j, void *user_data) except? -1
+
+    ctypedef int (*IDALsJacTimesVecFn)(realtype tt, N_Vector yy,
+                                      N_Vector yp, N_Vector rr,
+                                      N_Vector v, N_Vector Jv,
+                                      realtype c_j, void *user_data,
+                                      N_Vector tmp1, N_Vector tmp2) except? -1
+
+    int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
     
-    ctypedef int (*IDADlsJacFn)(realtype t, realtype c_j, N_Vector y,
-                           N_Vector yp, N_Vector r, SUNMatrix Jac,
-                           void *user_data, N_Vector tmp1,
-                           N_Vector tmp2, N_Vector tmp3)
+    int IDASetJacFn(void *ida_mem, IDALsJacFn jac)
+    int IDASetPreconditioner(void *ida_mem, IDALsPrecSetupFn pset,
+                             IDALsPrecSolveFn psolve)
+    int IDASetJacTimes(void *ida_mem, IDALsJacTimesSetupFn jtsetup,
+                       IDALsJacTimesVecFn jtimes)
+    int IDASetEpsLin(void *ida_mem, realtype eplifac)
+    int IDASetIncrementFactor(void *ida_mem, realtype dqincfac)
+
+    int IDAGetLinWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
+    int IDAGetNumJacEvals(void *ida_mem, long int *njevals)
+    int IDAGetNumPrecEvals(void *ida_mem, long int *npevals)
+    int IDAGetNumPrecSolves(void *ida_mem, long int *npsolves)
+    int IDAGetNumLinIters(void *ida_mem, long int *nliters)
+    int IDAGetNumLinConvFails(void *ida_mem, long int *nlcfails)
+    int IDAGetNumJTSetupEvals(void *ida_mem, long int *njtsetups)
+    int IDAGetNumJtimesEvals(void *ida_mem, long int *njvevals)
+    int IDAGetNumLinResEvals(void *ida_mem, long int *nrevalsLS)
+    int IDAGetLastLinFlag(void *ida_mem, long int *flag)
+    char *IDAGetLinReturnFlagName(long int flag)
+
+cdef extern from "ida/ida_direct.h":
+    
+    ctypedef IDALsJacFn IDADlsJacFn
     int IDADlsSetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
     int IDADlsSetJacFn(void *ida_mem, IDADlsJacFn jac)
     
@@ -161,29 +213,10 @@ cdef extern from "ida/ida_direct.h":
 
 cdef extern from "ida/ida_spils.h":
 
-    enum: IDASPILS_SUCCESS   #  0
-    enum: IDASPILS_MEM_NULL  # -1
-    enum: IDASPILS_LMEM_NULL # -2
-    enum: IDASPILS_ILL_INPUT # -3
-    enum: IDASPILS_MEM_FAIL  # -4
-    enum: IDASPILS_PMEM_NULL # -5
-    enum: IDASPILS_SUNLS_FAIL # -6
-
-    ctypedef int (*IDASpilsPrecSetupFn)(realtype tt,
-                                        N_Vector yy, N_Vector yp, N_Vector rr,
-                                        realtype c_j, void *user_data)
-    ctypedef int (*IDASpilsPrecSolveFn)(realtype tt,
-                                        N_Vector yy, N_Vector yp, N_Vector rr,
-                                        N_Vector rvec, N_Vector zvec,
-                                        realtype c_j, realtype delta, void *user_data)                
-    ctypedef int (*IDASpilsJacTimesSetupFn)(realtype tt, N_Vector yy,
-                                       N_Vector yp, N_Vector rr,
-                                       realtype c_j, void *user_data) except? -1
-    ctypedef int (*IDASpilsJacTimesVecFn)(realtype tt,
-                                          N_Vector yy, N_Vector yp, N_Vector rr,
-                                          N_Vector v, N_Vector Jv,
-                                          realtype c_j, void *user_data,
-                                          N_Vector tmp1, N_Vector tmp2)  except? -1
+    ctypedef IDALsPrecSetupFn IDASpilsPrecSetupFn;
+    ctypedef IDALsPrecSolveFn IDASpilsPrecSolveFn;
+    ctypedef IDALsJacTimesSetupFn IDASpilsJacTimesSetupFn;
+    ctypedef IDALsJacTimesVecFn IDASpilsJacTimesVecFn;
 
     int IDASpilsSetLinearSolver(void *ida_mem, SUNLinearSolver LS)
     int IDASpilsSetPreconditioner(void *ida_mem,
@@ -198,6 +231,7 @@ cdef extern from "ida/ida_spils.h":
     int IDASpilsGetNumPrecSolves(void *ida_mem, long int *npsolves)
     int IDASpilsGetNumLinIters(void *ida_mem, long int *nliters)
     int IDASpilsGetNumConvFails(void *ida_mem, long int *nlcfails)
+    int IDASpilsGetNumJTSetupEvals(void *ida_mem, long int *njtsetups)
     int IDASpilsGetNumJtimesEvals(void *ida_mem, long int *njvevals)
     int IDASpilsGetNumResEvals(void *ida_mem, long int *nrevalsLS)
     int IDASpilsGetLastFlag(void *ida_mem, long int *flag)

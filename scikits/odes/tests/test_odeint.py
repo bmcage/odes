@@ -20,9 +20,10 @@ from numpy.testing import (
     assert_raises, assert_allclose, assert_array_equal, assert_equal)
 
 from scikits.odes.odeint import odeint
-from scikits.odes.sundials.common_defs import DTYPE
+from scikits.odes.sundials.common_defs import DTYPE, has_lapack
 
-TEST_LAPACK = DTYPE == np.double
+# Lapack only compatible with precision double and index type 32.
+TEST_LAPACK = (DTYPE == np.double and has_lapack)
 
 #------------------------------------------------------------------------------
 # Test ODE integrators

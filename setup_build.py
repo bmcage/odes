@@ -3,6 +3,7 @@ import io
 import os
 from os.path import join
 from distutils.log import info
+import sys
 
 from numpy.distutils.command.build_ext import build_ext as _build_ext
 
@@ -83,17 +84,17 @@ def get_sundials_config_pxi(include_dirs, dist):
         "SUNDIALS_INT32_T", headers=[SUNDIALS_CONFIG_H],
         include_dirs=include_dirs
     ):
-        SUNDIALS_INDEX_TYPE = '"int32"'
+        SUNDIALS_INDEX_SIZE = '"int32"'
         info("Found sundials built with int32.")
     elif config_cmd.check_macro_true(
         "SUNDIALS_INT64_T", headers=[SUNDIALS_CONFIG_H],
         include_dirs=include_dirs
     ):
-        SUNDIALS_INDEX_TYPE = '"int64"'
+        SUNDIALS_INDEX_SIZE = '"64"'
         info("Found sundials built with int64.")
     else:
         # fall back to int64
-        SUNDIALS_INDEX_TYPE = '"int64"'
+        SUNDIALS_INDEX_SIZE = '"64"'
         info("Failed to find sundials index type, falling back to int64...")
 
     # Check for blas/lapack
@@ -108,13 +109,13 @@ def get_sundials_config_pxi(include_dirs, dist):
 
     cfg = dict(
         float_type = SUNDIALS_FLOAT_TYPE,
-        index_type = SUNDIALS_INDEX_TYPE,
+        index_size = SUNDIALS_INDEX_SIZE,
         has_lapack = has_lapack,
     )
 
     return write_pxi(join(BASE_PATH, "sundials_config.pxi"), dict(
         SUNDIALS_FLOAT_TYPE=SUNDIALS_FLOAT_TYPE,
-        SUNDIALS_INDEX_TYPE=SUNDIALS_INDEX_TYPE,
+        SUNDIALS_INDEX_SIZE=SUNDIALS_INDEX_SIZE,
         SUNDIALS_BLAS_LAPACK=str(has_lapack),
     )), cfg
 
@@ -279,6 +280,9 @@ class build_ext(_build_ext):
     def run(self):
         """ Distutils calls this method to run the command """
         from Cython.Build import cythonize
-        self.extensions.extend(cythonize(self._get_cython_ext()))
+        self.extensions.extend(cythonize(
+                self._get_cython_ext(), 
+                compiler_directives=  {'language_level' : sys.version_info[0]})
+            )
         _build_ext.run(self) # actually do the build
 

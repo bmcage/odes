@@ -13,9 +13,9 @@ ELSE:
     # fall back to double
     ctypedef np.double_t DTYPE_t
 
-IF SUNDIALS_INDEX_TYPE == "int32":
+IF SUNDIALS_INDEX_SIZE == "32":
     ctypedef np.int32_t INDEX_TYPE_t
-ELIF SUNDIALS_INDEX_TYPE == "int64":
+ELIF SUNDIALS_INDEX_SIZE == "64":
     ctypedef np.int64_t INDEX_TYPE_t
 ELSE:
     ctypedef np.int64_t INDEX_TYPE_t

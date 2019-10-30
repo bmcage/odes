@@ -12,7 +12,7 @@ addons:
       - liblapack-dev
 
 sudo: false
-dist: trusty
+dist: bionic
 
 cache:
   directories:
@@ -31,81 +31,76 @@ matrix:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='3.1.1'
-    - python: 3.4
-      env:
-      - TOXENV=py34 SUNDIALS_VERSION='3.1.1'
+      - TOXENV=py27 SUNDIALS_VERSION='4.1.0'
     - python: 3.5
+      dist: trusty
       env:
-      - TOXENV=py35 SUNDIALS_VERSION='3.1.1'
+      - TOXENV=py35 SUNDIALS_VERSION='4.1.0'
     - python: 3.6
+      dist: trusty
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='3.1.1'
-    # commented as 3.7 not yet on travis
-    #- python: 3.7
-    #  env:
-    #  - TOXENV=py37 SUNDIALS_VERSION='3.1.1'
-    - python: 3.5
+      - TOXENV=py36 SUNDIALS_VERSION='4.1.0'
+    - python: 3.7
       env:
-      - TOXENV=doctr SUNDIALS_VERSION='3.1.1'
-    - python: 3.5
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0'
+    - python: 3.7
       env:
-      - TOXENV=docs SUNDIALS_VERSION='3.1.1'
-    - python: 3.5
+      - TOXENV=doctr SUNDIALS_VERSION='4.1.0'
+    - python: 3.7
       env:
-      - TOXENV=check-manifest SUNDIALS_VERSION='3.1.1'
-    - python: 3.5
+      - TOXENV=docs SUNDIALS_VERSION='4.1.0'
+    - python: 3.7
       env:
-      - TOXENV=checkreadme SUNDIALS_VERSION='3.1.1'
+      - TOXENV=check-manifest SUNDIALS_VERSION='4.1.0'
+    - python: 3.7
+      env:
+      - TOXENV=checkreadme SUNDIALS_VERSION='4.1.0'
 
-    # Additional precisions
+    # Reduced Index Size - this allows use of lapack linsolvers - default is -64
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='single'
-    - python: 3.6
+      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_INDEX_SIZE='32'
+    - python: 3.7
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='single'
-    - python: 2.7
-      env:
-      - TOXENV=py27 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='extended'
-    - python: 3.6
-      env:
-      - TOXENV=py36 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='extended'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_INDEX_SIZE='32'
 
-  allow_failures:
+    # Additional precisions - default is 'double'
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='single'
-    - python: 3.6
+      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+    - python: 3.7
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='single'
-
-    # Additional precisions
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='single'
+      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
     - python: 3.6
+      dist: trusty
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='single'
-    - python: 2.7
+      - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_TYPE='int64_t'
+      
+    # extended test fails with seg fault on more recent Ubuntu .. to investigate when access to this
+    - python: 3.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='extended'
-    - python: 3.6
-      env:
-      - TOXENV=py36 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='extended'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
+    
 
   allow_failures:
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='single'
-    - python: 3.6
+      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+    - python: 3.7
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='3.1.1' SUNDIALS_PRECISION='single'
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+    - python: 3.7
+      env:
+      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
 
+      
 install:
   - source ci_support/ensure_sundials_installed.sh
   - pip install -U pip setuptools virtualenv wheel
-  - pip install -U tox
+  - pip install -U tox-travis
 
 script:
   - tox --workdir $HOME

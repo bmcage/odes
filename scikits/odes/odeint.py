@@ -186,7 +186,7 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
         int_name = 'cvode'
     elif (method == 'admo'):
         options['lmm_type'] = 'ADAMS'
-        options['iter_type'] = 'FUNCTIONAL'
+        options['nonlinsolver'] = 'fixedpoint'
         int_name = 'cvode'
     elif (method == 'rk5'):
         int_name = 'dopri5'
@@ -207,7 +207,7 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
         del options['step']
         if (method == 'trapz'):
             options['lmm_type'] = 'ADAMS'
-            options['iter_type'] = 'FUNCTIONAL'
+            options['nonlinsolver'] = 'fixedpoint'
             options['order'] = 2
     else:
         int_name = method
