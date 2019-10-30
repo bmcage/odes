@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>scikits.odes.odeint &mdash; Odes 2.4.2.dev0 documentation</title>
+  <title>scikits.odes.odeint &mdash; Odes 2.5.0.dev0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                2.4.2.dev0
+                2.5.0.dev0
               </div>
             
           
@@ -340,7 +340,7 @@
         <span class="n">int_name</span> <span class="o">=</span> <span class="s1">&#39;cvode&#39;</span>
     <span class="k">elif</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;admo&#39;</span><span class="p">):</span>
         <span class="n">options</span><span class="p">[</span><span class="s1">&#39;lmm_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ADAMS&#39;</span>
-        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;iter_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;FUNCTIONAL&#39;</span>
+        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;nonlinsolver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fixedpoint&#39;</span>
         <span class="n">int_name</span> <span class="o">=</span> <span class="s1">&#39;cvode&#39;</span>
     <span class="k">elif</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;rk5&#39;</span><span class="p">):</span>
         <span class="n">int_name</span> <span class="o">=</span> <span class="s1">&#39;dopri5&#39;</span>
@@ -361,7 +361,7 @@
         <span class="k">del</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;trapz&#39;</span><span class="p">):</span>
             <span class="n">options</span><span class="p">[</span><span class="s1">&#39;lmm_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ADAMS&#39;</span>
-            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;iter_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;FUNCTIONAL&#39;</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;nonlinsolver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fixedpoint&#39;</span>
             <span class="n">options</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">int_name</span> <span class="o">=</span> <span class="n">method</span>
