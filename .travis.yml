@@ -77,8 +77,8 @@ matrix:
     - python: 3.6
       dist: trusty
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_TYPE='int64_t'
-      
+      - TOXENV=py36 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
+
     # extended test fails with seg fault on more recent Ubuntu .. to investigate when access to this
     - python: 3.7
       env:

@@ -28,6 +28,13 @@ extracted into directory sundials-5.0.0 is on a \*nix system::
     cmake -DLAPACK_ENABLE=ON -DSUNDIALS_INDEX_SIZE=64 -DCMAKE_INSTALL_PREFIX=<install_path> ../sundials-5.0.0/
     make install
 
+where you replace ``<install_path>`` with the install path you want, default normally is ``/usr/local/``.
+
+
+.. warning::
+
+    Using ``SUNDIALS_INDEX_SIZE=64`` will disable LAPLACK, even though ``-DLAPACK_ENABLE=ON`` is present! This means LAPACK solvers cannot be used. Use index size 32 if you require the LAPACK solvers.
+
 .. warning::
 
     Make sure you use the Fortran compiler as used for your BLAS/LAPACK install!
@@ -83,6 +90,10 @@ Inside the ``odes`` directory, run::
 
 which will install the checked out version of ``odes``. The same environment
 variables mentioned above can be used to control installation options.
+
+Alternatively, you can inside the ``odes`` directory the following command to reach the same result (as root, use ``sudo`` on linux distribution that support it)::
+
+    DISTUTILS_DEBUG=1  python3 setup.py install
 
 .. note::
     If you try to run the tests whilst in the ``odes`` directory, Python will pick up the source directory, and not the built version. Move to a different directory when running the tests.
