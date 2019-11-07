@@ -1,0 +1,576 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>scikits.odes.lsodiint &mdash; Odes 2.5.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Odes
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.5.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ode.html">ODE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dae.html">DAE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sundials.html">Sundials Solver Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Lower Level API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Odes</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>scikits.odes.lsodiint</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for scikits.odes.lsodiint</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Authors: B. Malengier </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">lsodi</span>
+<span class="sd">=====</span>
+<span class="sd">Solver developed during the 1980s, this is the version from 1987 - Fortran</span>
+
+<span class="sd">Integrator for linearly implicit systems of first-order odes.  lsodi</span>
+<span class="sd">provides the same methods as vode (adams and bdf).  This integrator</span>
+<span class="sd">accepts the following parameters in initializer or set_options method of the </span>
+<span class="sd">dae class:</span>
+
+<span class="sd">- rfn : residual function, see below for signature. This option need not be</span>
+<span class="sd">        set, as rfn will be set during initialization. If the residual function</span>
+<span class="sd">        of initialization needs to be reset, this option can be used</span>
+<span class="sd">- jacfn : jacobian function, see below for signature. Default is None.</span>
+<span class="sd">- adda_func = function, required, see below</span>
+<span class="sd">- atol=float|seq</span>
+<span class="sd">- rtol=float</span>
+<span class="sd">- lband=None|int</span>
+<span class="sd">- rband=None|int</span>
+<span class="sd">- method=&#39;adams&#39;|&#39;bdf&#39;</span>
+<span class="sd">- with_jacobian=0|1</span>
+<span class="sd">- max_steps = int</span>
+<span class="sd">- max_step_size = float</span>
+<span class="sd">- (first|min|max)_step = float</span>
+<span class="sd">- tstop = None|float</span>
+<span class="sd">- order = int        # &lt;=12 for adams, &lt;=5 for bdf</span>
+<span class="sd">- compute_initcond = None|&#39;yp0&#39;</span>
+
+<span class="sd">Details: </span>
+
+<span class="sd">Implicit integration requires two functions do be defined to integrate </span>
+<span class="sd">                    d y(t)[i]</span>
+<span class="sd">           a(t,y) * --------- = g(t,y)[i]</span>
+<span class="sd">                        dt</span>
+<span class="sd">where a(t,y) is a square matrix.</span>
+
+<span class="sd">- rfn computes the residual which the user provides.</span>
+<span class="sd">  rfn has the signature: rfn(x, y, yprime, return_residual)</span>
+<span class="sd">with </span>
+<span class="sd">    x       : independent variable, eg the time, float</span>
+<span class="sd">    y       : array of n unknowns in x</span>
+<span class="sd">    yprime  : dy/dx array of n unknowns in x, dimension = dim(y)</span>
+<span class="sd">    return_residual: array that must be updated with the value of the residuals,</span>
+<span class="sd">              so G(t,y,y&#39;).  The dimension is equal to dim(y)</span>
+<span class="sd">    return value: Not needed. However, for use with other solvers, consider </span>
+<span class="sd">              returning 0 on success.</span>
+<span class="sd">It calculates something like</span>
+<span class="sd">        def res(t, y, yprime, r):</span>
+<span class="sd">            r(t,y,s)=g(t,y)-a(t,y)*yprime</span>
+
+<span class="sd">- adda_func must modify the provided matrix p and is a required option.  If banded storage is used,</span>
+<span class="sd">ml and mu provide the upper and lower diagonals, see the lsodi.f</span>
+<span class="sd">source for full documentation.  adda_func is passed to the dae via set_options</span>
+<span class="sd">with the adda_func keyword argument. Schematically, it is</span>
+<span class="sd">        def adda(t, y, ml, mu, p, nrowp):</span>
+<span class="sd">            p += a(t,y)</span>
+<span class="sd">            return p</span>
+<span class="sd">Note: if your residual is a yprime - g, then adda must substract a, see def of</span>
+<span class="sd">rfn !</span>
+
+<span class="sd">- jacfn is not a supported option for lsodi.</span>
+
+<span class="sd">- compute_initcond: None or &#39;yp0&#39;</span>
+<span class="sd">  LSODI may be able to compute the initial conditions if you do not know them</span>
+<span class="sd">  precisely and the problem is not algebraic at t=0. </span>
+<span class="sd">  If yp0, then the differential variables (y of the ode system at time 0) </span>
+<span class="sd">    will be used to solve for the derivatives of the differential variables,</span>
+<span class="sd">    so yp0 will be calculated. </span>
+<span class="sd">Source: http://www.netlib.org/ode/lsodi.f</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;lsodi&#39;</span><span class="p">]</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;$Id$&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s2">&quot;restructuredtext en&quot;</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">int32</span><span class="p">,</span> <span class="n">isscalar</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">alen</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">.dae</span> <span class="k">import</span> <span class="n">DaeBase</span>
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">sys</span>
+
+<div class="viewcode-block" id="lsodi"><a class="viewcode-back" href="../../../api.html#scikits.odes.lsodiint.lsodi">[docs]</a><span class="k">class</span> <span class="nc">lsodi</span><span class="p">(</span><span class="n">DaeBase</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">.lsodi</span> <span class="k">import</span> <span class="n">lsodi</span> <span class="k">as</span> <span class="n">_runner</span>
+        <span class="kn">from</span> <span class="nn">.lsodi</span> <span class="k">import</span> <span class="n">intdy</span> <span class="k">as</span> <span class="n">_intdy</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">_runner</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">_intdy</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;lsodi&#39;</span>
+
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2</span> <span class="p">:</span> <span class="s1">&#39;lsodi was successful.&#39;</span><span class="p">,</span>
+               <span class="o">-</span><span class="mi">1</span> <span class="p">:</span> <span class="s1">&#39;excess work done on this call (check all inputs).&#39;</span><span class="p">,</span>
+               <span class="o">-</span><span class="mi">2</span> <span class="p">:</span> <span class="s1">&#39;excess accuracy requested (tolerances too small).&#39;</span><span class="p">,</span>
+               <span class="o">-</span><span class="mi">3</span> <span class="p">:</span> <span class="s1">&#39;illegal input detected (see printed message).&#39;</span><span class="p">,</span>
+               <span class="o">-</span><span class="mi">4</span> <span class="p">:</span> <span class="s1">&#39;repeated error test failures (check all inputs).&#39;</span><span class="p">,</span>
+               <span class="o">-</span><span class="mi">5</span> <span class="p">:</span> <span class="s1">&#39;repeated convergence failures (perhaps bad jacobian&#39;</span>
+                    <span class="s1">&#39; supplied or wrong choice of tolerances).&#39;</span><span class="p">,</span>
+               <span class="o">-</span><span class="mi">6</span> <span class="p">:</span> <span class="s1">&#39;error weight became zero during problem. (solution&#39;</span>
+                    <span class="s1">&#39; component i vanished, and atol or atol(i) = 0.).&#39;</span><span class="p">,</span>
+               <span class="o">-</span><span class="mi">7</span> <span class="p">:</span> <span class="s1">&#39;cannot occur in casual use.&#39;</span><span class="p">,</span>
+               <span class="o">-</span><span class="mi">8</span> <span class="p">:</span> <span class="s1">&#39;lsodi was unable to compute the initial dy/dt.  In&#39;</span>
+                    <span class="s1">&#39; casual use, this means a(t,y) is initially singular.&#39;</span>
+                    <span class="s1">&#39;  Supply ydoti and use istate = 1 on the first call.&#39;</span>
+               <span class="p">}</span>
+    <span class="n">supports_run_relax</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">supports_step</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resfn</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;rtol&#39;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span>
+                <span class="s1">&#39;atol&#39;</span><span class="p">:</span> <span class="mf">1e-12</span><span class="p">,</span>
+                <span class="s1">&#39;lband&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;uband&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;tstop&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> 
+                <span class="s1">&#39;order&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s1">&#39;max_steps&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+                <span class="s1">&#39;max_step_size&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="c1">#corresponds to infinite</span>
+                <span class="s1">&#39;min_step&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="s1">&#39;first_step&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="c1"># determined by solver</span>
+                <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s2">&quot;adams&quot;</span><span class="p">,</span> 
+                <span class="s1">&#39;compute_initcond&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;adda_func&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;rfn&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;jacfn&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_res</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_jac</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">default_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">rfn</span><span class="o">=</span><span class="n">resfn</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="lsodi.set_options"><a class="viewcode-back" href="../../../api.html#scikits.odes.lsodiint.lsodi.set_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; See dae.DaeBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="nf">_init_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;rtol&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;atol&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;uband&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;lband&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;jacfn&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Using provided Jacobian is not supported by lsodi&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;rfn&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;tstop&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsteps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;max_steps&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;max_step_size&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;min_step&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;first_step&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">],</span> <span class="sa">r</span><span class="s1">&#39;adams&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">meth</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">],</span> <span class="sa">r</span><span class="s1">&#39;bdf&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">meth</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown integration method </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;compute_initcond&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;compute_initcond&#39;</span><span class="p">],</span> <span class="sa">r</span><span class="s1">&#39;yp0&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown init cond calculation method </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;compute_initcond&#39;</span><span class="p">]))</span>
+                                            
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;adda_func&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;adda_func is required for lsodi algorithm!&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adda</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;adda_func&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="lsodi.init_step"><a class="viewcode-back" href="../../../api.html#scikits.odes.lsodiint.lsodi.init_step">[docs]</a>    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">yp_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; See dae.DaeBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="n">y0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yp0</span> <span class="o">=</span> <span class="n">yp0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_step</span> <span class="o">&lt;=</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">first_step</span> <span class="o">=</span> <span class="mf">1e-18</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">first_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_step</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">(</span><span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">first_step</span><span class="p">)</span>
+            <span class="n">t0_init</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">y0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yp</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">yp0</span><span class="p">)</span>
+            <span class="n">t0_init</span> <span class="o">=</span> <span class="n">t0</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">y_ic0_retn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">y_ic0_retn</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[:]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">yp_ic0_retn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">yp_ic0_retn</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">[:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">t0_init</span></div>
+
+    <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">has_jac</span><span class="p">):</span>
+        <span class="c1"># Calculate parameters for Fortran subroutine lsodi.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neq</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">if</span> <span class="n">has_jac</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">miter</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">miter</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">miter</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">miter</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">mf</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">meth</span> <span class="o">+</span> <span class="n">miter</span>
+        <span class="k">if</span> <span class="n">mf</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">]:</span>
+            <span class="n">lrw</span> <span class="o">=</span> <span class="mi">22</span> <span class="o">+</span> <span class="mi">16</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">mf</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">]:</span>
+            <span class="n">lrw</span> <span class="o">=</span> <span class="mi">22</span> <span class="o">+</span> <span class="mi">17</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ml</span> <span class="o">+</span><span class="n">mu</span><span class="p">)</span><span class="o">*</span><span class="n">neq</span>
+        <span class="k">elif</span> <span class="n">mf</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">]:</span>
+            <span class="n">lrw</span> <span class="o">=</span> <span class="mi">22</span> <span class="o">+</span> <span class="mi">9</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">mf</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">24</span><span class="p">,</span><span class="mi">25</span><span class="p">]:</span>
+            <span class="n">lrw</span> <span class="o">=</span> <span class="mi">22</span> <span class="o">+</span> <span class="mi">10</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ml</span> <span class="o">+</span><span class="n">mu</span><span class="p">)</span><span class="o">*</span><span class="n">neq</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unexpected mf=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">mf</span><span class="p">))</span>
+        <span class="n">liw</span> <span class="o">=</span> <span class="mi">20</span> <span class="o">+</span> <span class="n">n</span>
+        <span class="n">rwork</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">lrw</span><span class="p">,),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">rwork</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_step</span>
+        <span class="n">rwork</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_step</span>
+        <span class="n">rwork</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwork</span> <span class="o">=</span> <span class="n">rwork</span>
+        <span class="n">iwork</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">liw</span><span class="p">,),</span> <span class="n">int32</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iwork</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iwork</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span>
+        <span class="n">iwork</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span>
+        <span class="n">iwork</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsteps</span>
+        <span class="n">iwork</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>           <span class="c1"># mxhnil</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iwork</span> <span class="o">=</span> <span class="n">iwork</span>
+        <span class="k">if</span> <span class="n">isscalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">)</span> <span class="p">:</span>
+            <span class="n">itol</span><span class="o">=</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">itol</span><span class="o">=</span><span class="mi">2</span>
+        <span class="n">itask</span><span class="o">=</span><span class="mi">1</span>
+        <span class="c1"># don&#39;t internally compute ydot if it is provided</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_initcond</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">istate</span><span class="o">=</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">istate</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwork</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tstop</span>
+        <span class="n">iopt</span><span class="o">=</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">itol</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span><span class="n">itask</span><span class="p">,</span><span class="n">istate</span><span class="p">,</span><span class="n">iopt</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">rwork</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">iwork</span><span class="p">,</span><span class="n">mf</span><span class="p">]</span>
+        <span class="c1">#create storage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_res</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neq</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tmp_jac</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">neq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">neq</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tmp_jac</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">ml</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">neq</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_resFn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wrapper around the residual as defined by user, to create</span>
+<span class="sd">         the residual needed by lsodi</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_res</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_res</span>
+
+    <span class="k">def</span> <span class="nf">_jacFn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="n">cj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wrapper around the jacobian as defined by user, to create</span>
+<span class="sd">         the jacobian needed by lsodi</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">## Not supported for lsodi</span>
+        <span class="c1">#self.jac( t, y, yp, cj, self.tmp_jac)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_jac</span>
+
+<div class="viewcode-block" id="lsodi.solve"><a class="viewcode-back" href="../../../api.html#scikits.odes.lsodiint.lsodi.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">hook_fn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; See dae.DaeBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">t_retn</span> <span class="o">=</span> <span class="n">empty</span><span class="p">([</span><span class="n">alen</span><span class="p">(</span><span class="n">tspan</span><span class="p">),</span> <span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">y_retn</span> <span class="o">=</span> <span class="n">empty</span><span class="p">([</span><span class="n">alen</span><span class="p">(</span><span class="n">tspan</span><span class="p">),</span> <span class="n">alen</span><span class="p">(</span><span class="n">y0</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">yp_retn</span> <span class="o">=</span> <span class="n">empty</span><span class="p">([</span><span class="n">alen</span><span class="p">(</span><span class="n">tspan</span><span class="p">),</span> <span class="n">alen</span><span class="p">(</span><span class="n">y0</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>
+        
+        <span class="n">y_ic0_retn</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">alen</span><span class="p">(</span><span class="n">y0</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">yp_ic0_retn</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">alen</span><span class="p">(</span><span class="n">y0</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">tinit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_step</span><span class="p">(</span><span class="n">tspan</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span><span class="p">,</span> <span class="n">yp_ic0_retn</span><span class="p">)</span>
+        
+        <span class="n">t_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">tinit</span>
+        <span class="n">y_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">y0</span><span class="p">[:]</span>
+        <span class="n">yp_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">yp0</span><span class="p">[:]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">itask</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">itask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">indbreak</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">time</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tspan</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">(</span><span class="n">y_retn</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">yp_retn</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">t_retn</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">time</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+                <span class="n">indbreak</span> <span class="o">=</span> <span class="n">ind</span><span class="o">+</span><span class="mi">1</span>
+                <span class="k">break</span>
+            <span class="n">t_retn</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">y_retn</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][:]</span>
+            <span class="n">yp_retn</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t_retn</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">indbreak</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t_retn</span><span class="p">[</span><span class="n">indbreak</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="p">,</span> <span class="n">t_retn</span><span class="p">[:</span><span class="n">indbreak</span><span class="p">],</span> <span class="n">y_retn</span><span class="p">[:</span><span class="n">indbreak</span><span class="p">],</span>\
+                   <span class="n">yp_retn</span><span class="p">[:</span><span class="n">indbreak</span><span class="p">],</span> <span class="n">t_retn</span><span class="p">[</span><span class="n">indbreak</span><span class="p">],</span> <span class="n">y_retn</span><span class="p">[</span><span class="n">indbreak</span><span class="p">],</span>\
+                   <span class="n">yp_retn</span><span class="p">[</span><span class="n">indbreak</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="p">,</span> <span class="n">t_retn</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span></div>
+
+    <span class="k">def</span> <span class="nf">__run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">y1</span><span class="p">,</span> <span class="n">y1prime_tmp</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">istate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runner</span><span class="p">(</span><span class="o">*</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_resFn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">adda</span><span class="p">,</span>
+                                                 <span class="bp">self</span><span class="o">.</span><span class="n">_jacFn</span><span class="p">)</span> <span class="o">+</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">:]</span>
+                                                 <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">))</span> 
+                                             <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">istate</span>
+        <span class="n">y1prime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">istate</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;lsodi:&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">istate</span><span class="p">,</span><span class="s1">&#39;Unexpected istate=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">istate</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">istate</span> <span class="ow">in</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span> <span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;lsodi: present residual is&#39;</span><span class="p">,</span> <span class="n">y1prime_tmp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="mi">0</span>
+            
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+            <span class="n">yh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwork</span><span class="p">[</span><span class="mi">20</span><span class="p">:]</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">y1prime</span><span class="p">,</span> <span class="n">iflag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_intdy</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">yh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">neq</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">iflag</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">iflag</span><span class="o">==-</span><span class="mi">1</span><span class="p">:</span> 
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;order=</span><span class="si">%s</span><span class="s2"> invalid in call to intdy&quot;</span> \
+                                                        <span class="o">%</span><span class="n">order</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">iflag</span><span class="o">==-</span><span class="mi">2</span><span class="p">:</span> 
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;t=</span><span class="si">%s</span><span class="s2"> invalid in call to intdy&quot;</span><span class="o">%</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y1</span><span class="p">,</span> <span class="n">y1prime</span><span class="p">,</span> <span class="n">t</span>
+
+<div class="viewcode-block" id="lsodi.step"><a class="viewcode-back" href="../../../api.html#scikits.odes.lsodiint.lsodi.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; See dae.DaeBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Method &#39;&#39;init_step&#39;&#39; has to be called prior to the&#39;</span>
+                    <span class="s1">&#39;first call of &#39;&#39;step&#39;&#39; method, or after changing options&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">itask</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">itask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">itask</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">itask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="n">t</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">itask</span>
+        <span class="n">y_retn</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[:]</span>
+        <span class="k">if</span> <span class="n">yp_retn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">yp_retn</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yp</span><span class="p">[:]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_args</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span></div></div>
+
+<span class="k">if</span> <span class="n">lsodi</span><span class="o">.</span><span class="n">_runner</span><span class="p">:</span>
+    <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lsodi</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, B. Malengier
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
