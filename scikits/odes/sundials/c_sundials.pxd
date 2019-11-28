@@ -451,10 +451,9 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
     ctypedef _generic_SUNNonlinearSolver *SUNNonlinearSolver
 
     ctypedef int (*SUNNonlinSolSysFn)(N_Vector y, N_Vector F, void* mem)
-    ctypedef int (*SUNNonlinSolLSetupFn)(N_Vector y, N_Vector F, 
-                                         booleantype jbad,
+    ctypedef int (*SUNNonlinSolLSetupFn)(booleantype jbad,
                                          booleantype* jcur, void* mem)
-    ctypedef int (*SUNNonlinSolLSolveFn)(N_Vector y, N_Vector b, void* mem)
+    ctypedef int (*SUNNonlinSolLSolveFn)(N_Vector b, void* mem)
     # rename reserved del into del_t for python!
     ctypedef int (*SUNNonlinSolConvTestFn)(SUNNonlinearSolver NLS, N_Vector y,
                                           N_Vector del_t, realtype tol, 
