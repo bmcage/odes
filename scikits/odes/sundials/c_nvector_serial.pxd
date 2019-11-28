@@ -45,6 +45,49 @@ cdef extern from "nvector/nvector_serial.h":
     booleantype N_VInvTest_Serial(N_Vector x, N_Vector z)
     booleantype N_VConstrMask_Serial(N_Vector c, N_Vector x, N_Vector m)
     realtype N_VMinQuotient_Serial(N_Vector num, N_Vector denom)
+    
+    
+    int N_VLinearCombination_Serial(int nvec, realtype* c, N_Vector* V,
+                                    N_Vector z)
+    int N_VScaleAddMulti_Serial(int nvec, realtype* a, N_Vector x,
+                                N_Vector* Y, N_Vector* Z)
+    int N_VDotProdMulti_Serial(int nvec, N_Vector x, N_Vector* Y, 
+                               realtype* dotprods)
+
+    int N_VLinearSumVectorArray_Serial(int nvec, realtype a, N_Vector* X,
+                                       realtype b, N_Vector* Y, N_Vector* Z)
+    int N_VScaleVectorArray_Serial(int nvec, realtype* c,
+                                   N_Vector* X, N_Vector* Z)
+    int N_VConstVectorArray_Serial(int nvecs, realtype c, N_Vector* Z)
+    int N_VWrmsNormVectorArray_Serial(int nvecs, N_Vector* X,
+                                      N_Vector* W, realtype* nrm)
+    int N_VWrmsNormMaskVectorArray_Serial(int nvecs, N_Vector* X,
+                                          N_Vector* W, N_Vector id,
+                                          realtype* nrm)
+    int N_VScaleAddMultiVectorArray_Serial(int nvec, int nsum, realtype* a,
+                                           N_Vector* X, N_Vector** Y,
+                                           N_Vector** Z)
+    int N_VLinearCombinationVectorArray_Serial(int nvec, int nsum,
+                                               realtype* c,
+                                               N_Vector** X, N_Vector* Z)
+
+    realtype N_VWSqrSumLocal_Serial(N_Vector x, N_Vector w)
+    realtype N_VWSqrSumMaskLocal_Serial(N_Vector x, N_Vector w, N_Vector id)
+  
+    int N_VEnableFusedOps_Serial(N_Vector v, booleantype tf)
+
+    int N_VEnableLinearCombination_Serial(N_Vector v, booleantype tf)
+    int N_VEnableScaleAddMulti_Serial(N_Vector v, booleantype tf)
+    int N_VEnableDotProdMulti_Serial(N_Vector v, booleantype tf)
+
+    int N_VEnableLinearSumVectorArray_Serial(N_Vector v, booleantype tf)
+    int N_VEnableScaleVectorArray_Serial(N_Vector v, booleantype tf)
+    int N_VEnableConstVectorArray_Serial(N_Vector v, booleantype tf)
+    int N_VEnableWrmsNormVectorArray_Serial(N_Vector v, booleantype tf)
+    int N_VEnableWrmsNormMaskVectorArray_Serial(N_Vector v, booleantype tf)
+    int N_VEnableScaleAddMultiVectorArray_Serial(N_Vector v, booleantype tf)
+    int N_VEnableLinearCombinationVectorArray_Serial(N_Vector v, booleantype tf)
+
     # Macros
     sunindextype NV_LENGTH_S(N_Vector vc_s)
     realtype* NV_DATA_S(N_Vector vc_s)

@@ -68,9 +68,9 @@ cdef extern from "sundials/sundials_nvector.h":
         booleantype (*nvinvtest)(N_Vector, N_Vector)
         booleantype (*nvconstrmask)(N_Vector, N_Vector, N_Vector)
         realtype    (*nvminquotient)(N_Vector, N_Vector)
-        int (*nvlinearcombination)(int, realtype*, N_Vector*, N_Vector);
-        int (*nvscaleaddmulti)(int, realtype*, N_Vector, N_Vector*, N_Vector*);
-        int (*nvdotprodmulti)(int, N_Vector, N_Vector*, realtype*);
+        int (*nvlinearcombination)(int, realtype*, N_Vector*, N_Vector)
+        int (*nvscaleaddmulti)(int, realtype*, N_Vector, N_Vector*, N_Vector*)
+        int (*nvdotprodmulti)(int, N_Vector, N_Vector*, realtype*)
     
         int (*nvlinearsumvectorarray)(int, realtype, N_Vector*, realtype, 
                                       N_Vector*, N_Vector*)
@@ -81,7 +81,8 @@ cdef extern from "sundials/sundials_nvector.h":
                                          realtype*)
         int (*nvscaleaddmultivectorarray)(int, int, realtype*, N_Vector*, 
                                           N_Vector**, N_Vector**)
-        int (*nvlinearcombinationvectorarray)(int, int, realtype*, N_Vector**, N_Vector*)
+        int (*nvlinearcombinationvectorarray)(int, int, realtype*, N_Vector**,
+                                              N_Vector*)
     
         realtype (*nvdotprodlocal)(N_Vector, N_Vector)
         realtype (*nvmaxnormlocal)(N_Vector)
