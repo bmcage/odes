@@ -1152,7 +1152,7 @@ cdef class CVODE:
 
             if flag == CV_ILL_INPUT:
                 raise ValueError("CVode tolerances: negative 'atol' or 'rtol' value.")
-            elif flag != CV SUCCESS:
+            elif flag != CV_SUCCESS:
                 raise ValueError("CVode tolerances: tolerance could not be set")
             #TODO: implement CVFWtolerances(cv_mem, efun)
 

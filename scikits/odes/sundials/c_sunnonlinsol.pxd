@@ -112,49 +112,46 @@ cdef extern from "sunnonlinsol/sunnonlinsol_fixedpoint.h":
     int SUNNonlinSolGetSysFn_FixedPoint(SUNNonlinearSolver NLS,
                                         SUNNonlinSolSysFn *SysFn)
 
-cdef extern from "sunnonlinsol_petscsnes.h:
-    
-    struct _SUNNonlinearSolverContent_PetscSNES:
-        
-        int sysfn_last_err
-        PetscErrorCode petsc_last_err
-        long int nconvfails
-        long int nni
-        void *imem
-        SNES snes
-        Vec r
-        N_Vector y, f
-        SUNNonlinSolSysFn Sys
 
-
-    ctypedef _SUNNonlinearSolverContent_PetscSNES *SUNNonlinearSolverContent_PetscSNES
-
-
-    SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes)
-
-    SUNNonlinearSolver_Type SUNNonlinSolGetType_PetscSNES(SUNNonlinearSolver NLS)
-
-    int SUNNonlinSolInitialize_PetscSNES(SUNNonlinearSolver NLS)
-
-    int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
-                                    N_Vector y0, N_Vector y,
-                                    N_Vector w, realtype tol,
-                                    booleantype callLSetup, void* mem)
-
-    int SUNNonlinSolSetSysFn_PetscSNES(SUNNonlinearSolver NLS,
-                                       SUNNonlinSolSysFn SysFn)
-
-    int SUNNonlinSolGetNumIters_PetscSNES(SUNNonlinearSolver NLS, long int* nni);
-
-    int SUNNonlinSolGetNumConvFails_PetscSNES(SUNNonlinearSolver NLS,
-                                              long int* nconvfails)
-
-    int SUNNonlinSolFree_PetscSNES(SUNNonlinearSolver NLS)
-
-    int SUNNonlinSolGetSNES_PetscSNES(SUNNonlinearSolver NLS, SNES* snes)
-
-    int SUNNonlinSolGetPetscError_PetscSNES(SUNNonlinearSolver NLS,
-                                            PetscErrorCode* err)
-
-    int SUNNonlinSolGetSysFn_PetscSNES(SUNNonlinearSolver NLS,
-                                       SUNNonlinSolSysFn* SysFn)
+# We don't use PETSc SNES nonlinear solvers- "petscsnes.h" required then
+#  as dependency, see https://www.mcs.anl.gov/petsc/documentation/installation.html 
+# =============================================================================
+# cdef extern from "sunnonlinsol_petscsnes.h":
+#     
+#     struct _SUNNonlinearSolverContent_PetscSNES:
+#         
+#         int sysfn_last_err
+#         PetscErrorCode petsc_last_err
+#         long int nconvfails
+#         long int nni
+#         void *imem
+#         SNES snes
+#         Vec r
+#         N_Vector y, f
+#         SUNNonlinSolSysFn Sys
+# 
+#     ctypedef _SUNNonlinearSolverContent_PetscSNES *SUNNonlinearSolverContent_PetscSNES
+# 
+#     SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes)
+#     SUNNonlinearSolver_Type SUNNonlinSolGetType_PetscSNES(SUNNonlinearSolver NLS)
+# 
+#     int SUNNonlinSolInitialize_PetscSNES(SUNNonlinearSolver NLS)
+#     int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
+#                                     N_Vector y0, N_Vector y,
+#                                     N_Vector w, realtype tol,
+#                                     booleantype callLSetup, void* mem)
+# 
+#     int SUNNonlinSolSetSysFn_PetscSNES(SUNNonlinearSolver NLS,
+#                                        SUNNonlinSolSysFn SysFn)
+# 
+#     int SUNNonlinSolGetNumIters_PetscSNES(SUNNonlinearSolver NLS, long int* nni);
+#     int SUNNonlinSolGetNumConvFails_PetscSNES(SUNNonlinearSolver NLS,
+#                                               long int* nconvfails)
+#     int SUNNonlinSolFree_PetscSNES(SUNNonlinearSolver NLS)
+#     int SUNNonlinSolGetSNES_PetscSNES(SUNNonlinearSolver NLS, SNES* snes)
+#     int SUNNonlinSolGetPetscError_PetscSNES(SUNNonlinearSolver NLS,
+#                                             PetscErrorCode* err)
+#     int SUNNonlinSolGetSysFn_PetscSNES(SUNNonlinearSolver NLS,
+#                                        SUNNonlinSolSysFn* SysFn)
+# 
+# =============================================================================
