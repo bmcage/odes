@@ -33,6 +33,7 @@ cdef extern from "cvode/cvode.h":
     enum: CV_NLS_INIT_FAIL     #   -13
     enum: CV_NLS_SETUP_FAIL    #   -14
     enum: CV_CONSTR_FAIL       #   -15
+    enum: CV_NLS_FAIL          #   -16
 
     enum: CV_MEM_FAIL          #   -20
     enum: CV_MEM_NULL          #   -21
@@ -43,6 +44,8 @@ cdef extern from "cvode/cvode.h":
     enum: CV_BAD_DKY           #   -26
     enum: CV_TOO_CLOSE         #   -27
     enum: CV_VECTOROP_ERR      #   -28
+    
+    enum: CV_UNRECOGNIZED_ERR  #   -99
 
     ctypedef int (*CVRhsFn)(realtype t, N_Vector y, N_Vector ydot, void *user_data) except? -1
     ctypedef int (*CVRootFn)(realtype t, N_Vector y, realtype *gout, void *user_data) except? -1
@@ -94,10 +97,12 @@ cdef extern from "cvode/cvode.h":
     int CVodeGetNumErrTestFails(void *cvode_mem, long int *netfails)
     int CVodeGetLastOrder(void *cvode_mem, int *qlast)
     int CVodeGetCurrentOrder(void *cvode_mem, int *qcur)
+    int CVodeGetCurrentGamma(void *cvode_mem, realtype *gamma)
     int CVodeGetNumStabLimOrderReds(void *cvode_mem, long int *nslred)
     int CVodeGetActualInitStep(void *cvode_mem, realtype *hinused)
     int CVodeGetLastStep(void *cvode_mem, realtype *hlast)
     int CVodeGetCurrentStep(void *cvode_mem, realtype *hcur)
+    int CVodeGetCurrentState(void *cvode_mem, N_Vector *y)
     int CVodeGetCurrentTime(void *cvode_mem, realtype *tcur)
     int CVodeGetTolScaleFactor(void *cvode_mem, realtype *tolsfac)
     int CVodeGetErrWeights(void *cvode_mem, N_Vector eweight)
@@ -159,6 +164,7 @@ cdef extern from "cvode/cvode_ls.h":
                                CVLsPrecSolveFn psolve)
     int CVodeSetJacTimes(void *cvode_mem, CVLsJacTimesSetupFn jtsetup,
                          CVLsJacTimesVecFn jtimes)
+    int CVodeSetLinSysFn(void *cvode_mem, CVLsLinSysFn linsys)
 
     int CVodeGetLinWorkSpace(void *cvode_mem, long int *lenrwLS,
                              long int *leniwLS)
@@ -193,36 +199,35 @@ cdef extern from "cvode/cvode_bandpre.h":
     int CVBandPrecGetNumRhsEvals(void *cvode_mem, long int *nfevalsBP)
 
 cdef extern from "cvode/cvode_diag.h":
-    int CVDiag(void *cvode_mem)
-    int CVDiagGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
-    int CVDiagGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
-    int CVDiagGetLastFlag(void *cvode_mem, long int *flag)
-    char *CVDiagGetReturnFlagName(long int flag)
-
     # CVDIAG return values
     enum: CVDIAG_SUCCESS         #  0
     enum: CVDIAG_MEM_NULL        # -1
     enum: CVDIAG_LMEM_NULL       # -2
     enum: CVDIAG_ILL_INPUT       # -3
     enum: CVDIAG_MEM_FAIL        # -4
-    # Additional last_flag values */
+    # Additional last_flag values 
     enum: CVDIAG_INV_FAIL        # -5
     enum: CVDIAG_RHSFUNC_UNRECVR # -6
     enum: CVDIAG_RHSFUNC_RECVR   # -7
 
+    int CVDiag(void *cvode_mem)
+    int CVDiagGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
+    int CVDiagGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
+    int CVDiagGetLastFlag(void *cvode_mem, long int *flag)
+    char *CVDiagGetReturnFlagName(long int flag)
+
 cdef extern from "cvode/cvode_bbdpre.h":
     ctypedef int (*CVLocalFn)(sunindextype Nlocal, realtype t, N_Vector y,
-                         N_Vector g, void *user_data)
+                              N_Vector g, void *user_data)
     ctypedef int (*CVCommFn)(sunindextype Nlocal, realtype t, N_Vector y,
-                        void *user_data)
+                             void *user_data)
 
     int CVBBDPrecInit(void *cvode_mem, sunindextype Nlocal,
-                                  sunindextype mudq, sunindextype mldq,
-                                  sunindextype mukeep, sunindextype mlkeep,
-                                  realtype dqrely,
-                                  CVLocalFn gloc, CVCommFn cfn)
+                      sunindextype mudq, sunindextype mldq,
+                      sunindextype mukeep, sunindextype mlkeep,
+                      realtype dqrely, CVLocalFn gloc, CVCommFn cfn)
     int CVBBDPrecReInit(void *cvode_mem, sunindextype mudq, sunindextype mldq,
-                                    realtype dqrely)
+                        realtype dqrely)
     int CVBBDPrecGetWorkSpace(void *cvode_mem, long int *lenrwBBDP, 
                               long int *leniwBBDP)
     int CVBBDPrecGetNumGfnEvals(void *cvode_mem, long int *ngevalsBBDP)
@@ -238,9 +243,8 @@ cdef extern from "cvode/cvode_spils.h":
     int CVSpilsSetEpsLin(void *cvode_mem, realtype eplifac)
     int CVSpilsSetPreconditioner(void *cvode_mem, CVSpilsPrecSetupFn pset,
                                  CVSpilsPrecSolveFn psolve)
-    int CVSpilsSetJacTimes(void *cvode_mem,
-                                       CVSpilsJacTimesSetupFn jtsetup,
-                                       CVSpilsJacTimesVecFn jtimes)
+    int CVSpilsSetJacTimes(void *cvode_mem, CVSpilsJacTimesSetupFn jtsetup,
+                           CVSpilsJacTimesVecFn jtimes)
 
     int CVSpilsGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
     int CVSpilsGetNumPrecEvals(void *cvode_mem, long int *npevals)
