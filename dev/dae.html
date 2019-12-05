@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DAE Solvers &mdash; Odes 2.5.1.dev0 documentation</title>
+  <title>DAE Solvers &mdash; Odes 2.6.0.dev0 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                2.5.1.dev0
+                2.6.0.dev0
               </div>
             
           
@@ -206,8 +206,8 @@ discritisations of PDE (eg moving mesh combined with method of
 lines).
 As an easy example, consider the simple oscillator, which we write as
 G(y,y’,t) = 0 instead of the normal ode, and solve as a DAE.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">sqrt</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">sqrt</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="mf">4.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="mf">1.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">initx</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
@@ -216,7 +216,7 @@ G(y,y’,t) = 0 instead of the normal ode, and solve as a DAE.</p>
 <span class="go">    ... # we create residual equations for the problem</span>
 <span class="go">    ... result[0] = m*xdot[1] + k*x[0]</span>
 <span class="go">    ... result[1] = xdot[0] - x[1]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits.odes</span> <span class="k">import</span> <span class="n">dae</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits.odes</span> <span class="kn">import</span> <span class="n">dae</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">solver</span> <span class="o">=</span> <span class="n">dae</span><span class="p">(</span><span class="s1">&#39;ida&#39;</span><span class="p">,</span> <span class="n">reseqn</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">initx</span><span class="p">,</span> <span class="n">initxp</span><span class="p">)</span>
 </pre></div>

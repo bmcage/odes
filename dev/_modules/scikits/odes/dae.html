@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>scikits.odes.dae &mdash; Odes 2.5.1.dev0 documentation</title>
+  <title>scikits.odes.dae &mdash; Odes 2.6.0.dev0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                2.5.1.dev0
+                2.6.0.dev0
               </div>
             
           
@@ -176,14 +176,14 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dae&#39;</span><span class="p">]</span>
 <span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;$Id$&quot;</span>
 <span class="n">__docformat__</span> <span class="o">=</span> <span class="s2">&quot;restructuredtext en&quot;</span>
 
-<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">int32</span><span class="p">,</span> <span class="n">isscalar</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">alen</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">int32</span><span class="p">,</span> <span class="n">isscalar</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">alen</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">sys</span>
 
 <div class="viewcode-block" id="DaeBase"><a class="viewcode-back" href="../../../api.html#scikits.odes.dae.DaeBase">[docs]</a><span class="k">class</span> <span class="nc">DaeBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -200,7 +200,7 @@
 
     <span class="n">integrator_classes</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Rfn</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Rfn</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;all DAE solvers must implement this&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DaeBase.set_options"><a class="viewcode-back" href="../../../api.html#scikits.odes.dae.DaeBase.set_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
@@ -430,7 +430,7 @@
 
     <span class="n">LOADED</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">integrator_name</span><span class="p">,</span> <span class="n">eqsres</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">integrator_name</span><span class="p">,</span> <span class="n">eqsres</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
         <span class="n">integrator</span> <span class="o">=</span> <span class="n">find_dae_integrator</span><span class="p">(</span><span class="n">integrator_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">integrator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No integrator name match with </span><span class="si">%s</span><span class="s1"> or is not available.&#39;</span>\
@@ -592,7 +592,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Clean up what is needed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -607,7 +607,7 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">dae</span><span class="o">.</span><span class="n">LOADED</span><span class="p">:</span>
         <span class="c1">## ida</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">.sundials</span> <span class="k">import</span> <span class="n">ida</span>
+            <span class="kn">from</span> <span class="nn">.sundials</span> <span class="kn">import</span> <span class="n">ida</span>
             <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ida</span><span class="o">.</span><span class="n">IDA</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Could not load IDA solver&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
@@ -616,13 +616,13 @@
 
         <span class="c1">## ddaspk</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">.ddaspkint</span> <span class="k">import</span> <span class="n">ddaspk</span>
+            <span class="kn">from</span> <span class="nn">.ddaspkint</span> <span class="kn">import</span> <span class="n">ddaspk</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="c1">## lsodi</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">.lsodiint</span> <span class="k">import</span> <span class="n">lsodi</span>
+            <span class="kn">from</span> <span class="nn">.lsodiint</span> <span class="kn">import</span> <span class="n">lsodi</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
 
