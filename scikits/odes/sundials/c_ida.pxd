@@ -38,6 +38,7 @@ cdef extern from "ida/ida.h":
     enum: IDA_NO_RECOVERY     #-14
     enum: IDA_NLS_INIT_FAIL   #-15
     enum: IDA_NLS_SETUP_FAIL  #-16
+    enum: IDA_NLS_FAIL        #-17
 
     enum: IDA_MEM_NULL        #-20
     enum: IDA_MEM_FAIL        #-21
@@ -59,9 +60,9 @@ cdef extern from "ida/ida.h":
 
     ctypedef int (*IDAEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
 
-    ctypedef void (*IDAErrHandlerFn)(int error_code, \
-                    char *module, char *function, \
-                    char *msg, void *user_data)
+    ctypedef void (*IDAErrHandlerFn)(int error_code, const char *module, 
+                                    const char *function, char *msg, 
+                                    void *user_data)
 
     void *IDACreate()
 
@@ -106,6 +107,10 @@ cdef extern from "ida/ida.h":
 
     int IDASolve(void *ida_mem, realtype tout, realtype *tret,
                  N_Vector yret, N_Vector ypret, int itask)
+    
+    int IDAComputeY(void *ida_mem, N_Vector ycor, N_Vector y)
+    int IDAComputeYp(void *ida_mem, N_Vector ycor, N_Vector yp)
+    
     int IDAGetDky(void *ida_mem, realtype t, int k, N_Vector dky)
 
     int IDAGetWorkSpace(void *ida_mem, long int *lenrw, long int *leniw)
@@ -117,6 +122,9 @@ cdef extern from "ida/ida.h":
     int IDAGetConsistentIC(void *ida_mem, N_Vector yy0_mod, N_Vector yp0_mod)
     int IDAGetLastOrder(void *ida_mem, int *klast)
     int IDAGetCurrentOrder(void *ida_mem, int *kcur)
+    int IDAGetCurrentCj(void *ida_mem, realtype *cj)
+    int IDAGetCurrentY(void *ida_mem, N_Vector *ycur)
+    int IDAGetCurrentYp(void *ida_mem, N_Vector *ypcur)
     int IDAGetActualInitStep(void *ida_mem, realtype *hinused)
     int IDAGetLastStep(void *ida_mem, realtype *hlast)
     int IDAGetCurrentStep(void *ida_mem, realtype *hcur)
@@ -126,18 +134,17 @@ cdef extern from "ida/ida.h":
     int IDAGetEstLocalErrors(void *ida_mem, N_Vector ele)
     int IDAGetNumGEvals(void *ida_mem, long int *ngevals)
     int IDAGetRootInfo(void *ida_mem, int *rootsfound)
-
     int IDAGetIntegratorStats(void *ida_mem, long int *nsteps,
                               long int *nrevals, long int *nlinsetups,
                               long int *netfails, int *qlast, int *qcur,
                               realtype *hinused, realtype *hlast,
                               realtype *hcur, realtype *tcur)
-
     int IDAGetNumNonlinSolvIters(void *ida_mem, long int *nniters)
     int IDAGetNumNonlinSolvConvFails(void *ida_mem, long int *nncfails)
     int IDAGetNonlinSolvStats(void *ida_mem, long int *nniters,
                               long int *nncfails)
     char *IDAGetReturnFlagName(long int flag)
+
     void IDAFree(void **ida_mem)
 
 cdef extern from "ida/ida_ls.h":
@@ -202,6 +209,7 @@ cdef extern from "ida/ida_ls.h":
 cdef extern from "ida/ida_direct.h":
     
     ctypedef IDALsJacFn IDADlsJacFn
+
     int IDADlsSetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
     int IDADlsSetJacFn(void *ida_mem, IDADlsJacFn jac)
     
@@ -238,6 +246,7 @@ cdef extern from "ida/ida_spils.h":
     char *IDASpilsGetReturnFlagName(long int flag)
 
 cdef extern from "ida/ida_bbdpre.h":
+
     ctypedef int (*IDABBDLocalFn)(sunindextype Nlocal, realtype tt,
                                   N_Vector yy, N_Vector yp, N_Vector gval,
                                   void *user_data)
