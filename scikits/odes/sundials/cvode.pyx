@@ -44,34 +44,36 @@ SolverReturn = namedtuple(
 SolverVariables = namedtuple("SolverVariables", ["t", "y"])
 
 class StatusEnum(IntEnum):
-    SUCCESS = CV_SUCCESS
-    TSTOP_RETURN = CV_TSTOP_RETURN
-    ROOT_RETURN = CV_ROOT_RETURN
-    WARNING = CV_WARNING
-    TOO_MUCH_WORK = CV_TOO_MUCH_WORK
-    TOO_MUCH_ACC = CV_TOO_MUCH_ACC
-    ERR_FAILURE = CV_ERR_FAILURE
-    CONV_FAILURE = CV_CONV_FAILURE
-    LINIT_FAIL = CV_LINIT_FAIL
-    LSETUP_FAIL = CV_LSETUP_FAIL
-    LSOLVE_FAIL = CV_LSOLVE_FAIL
-    RHSFUNC_FAIL = CV_RHSFUNC_FAIL
-    FIRST_RHSFUNC_ERR = CV_FIRST_RHSFUNC_ERR
-    REPTD_RHSFUNC_ERR = CV_REPTD_RHSFUNC_ERR
-    UNREC_RHSFUNC_ERR = CV_UNREC_RHSFUNC_ERR
-    RTFUNC_FAIL = CV_RTFUNC_FAIL
-    NLS_INIT_FAIL = CV_NLS_INIT_FAIL
-    NLS_SETUP_FAIL = CV_NLS_SETUP_FAIL
-    CONSTR_FAIL = CV_CONSTR_FAIL
-    MEM_FAIL = CV_MEM_FAIL
-    MEM_NULL = CV_MEM_NULL
-    ILL_INPUT = CV_ILL_INPUT
-    NO_MALLOC = CV_NO_MALLOC
-    BAD_K = CV_BAD_K
-    BAD_T = CV_BAD_T
-    BAD_DKY = CV_BAD_DKY
-    TOO_CLOSE = CV_TOO_CLOSE
-    VECTOROP_ERR  = CV_VECTOROP_ERR 
+    SUCCESS           = CV_SUCCESS              # 0
+    TSTOP_RETURN      = CV_TSTOP_RETURN         # 1
+    ROOT_RETURN       = CV_ROOT_RETURN          # 2
+    WARNING           = CV_WARNING              # 99
+    TOO_MUCH_WORK     = CV_TOO_MUCH_WORK        # -1
+    TOO_MUCH_ACC      = CV_TOO_MUCH_ACC         # -2
+    ERR_FAILURE       = CV_ERR_FAILURE          # -3
+    CONV_FAILURE      = CV_CONV_FAILURE         # -4
+    LINIT_FAIL        = CV_LINIT_FAIL           # -5
+    LSETUP_FAIL       = CV_LSETUP_FAIL          # -6
+    LSOLVE_FAIL       = CV_LSOLVE_FAIL          # -7
+    RHSFUNC_FAIL      = CV_RHSFUNC_FAIL         # -8
+    FIRST_RHSFUNC_ERR = CV_FIRST_RHSFUNC_ERR    # -9
+    REPTD_RHSFUNC_ERR = CV_REPTD_RHSFUNC_ERR    # -10
+    UNREC_RHSFUNC_ERR = CV_UNREC_RHSFUNC_ERR    # -11
+    RTFUNC_FAIL       = CV_RTFUNC_FAIL          # -12
+    NLS_INIT_FAIL     = CV_NLS_INIT_FAIL        # -13
+    NLS_SETUP_FAIL    = CV_NLS_SETUP_FAIL       # -14
+    CONSTR_FAIL       = CV_CONSTR_FAIL          # -15
+    NLS_FAIL          = CV_NLS_FAIL             # -16
+    MEM_FAIL          = CV_MEM_FAIL             # -20
+    MEM_NULL          = CV_MEM_NULL             # -21
+    ILL_INPUT         = CV_ILL_INPUT            # -22
+    NO_MALLOC         = CV_NO_MALLOC            # -23
+    BAD_K             = CV_BAD_K                # -24
+    BAD_T             = CV_BAD_T                # -25
+    BAD_DKY           = CV_BAD_DKY              # -26
+    TOO_CLOSE         = CV_TOO_CLOSE            # -27
+    VECTOROP_ERR      = CV_VECTOROP_ERR         # -28
+    UNRECOGNIZED_ERR  = CV_UNRECOGNIZED_ERR     # -99
 
 STATUS_MESSAGE = {
     StatusEnum.SUCCESS: "Successful function return.",
@@ -93,6 +95,7 @@ STATUS_MESSAGE = {
     StatusEnum.NLS_INIT_FAIL: "The nonlinear solver's init routine failed.",
     StatusEnum.NLS_SETUP_FAIL: "The nonlinear solver setup failed unrecoverably.",
     StatusEnum.CONSTR_FAIL: "The inequality constraints could not be met",
+    StatusEnum.NLS_FAIL: "The nonlinear solver failed in an unrecoverable manner",
     StatusEnum.MEM_FAIL: "A memory allocation failed.",
     StatusEnum.MEM_NULL: "The cvode_mem argument was NULL.",
     StatusEnum.ILL_INPUT: "One of the function inputs is illegal.",
@@ -102,6 +105,7 @@ STATUS_MESSAGE = {
     StatusEnum.BAD_DKY: "The output derivative vector is NULL.",
     StatusEnum.TOO_CLOSE: "The output and initial times are too close to each other.",
     StatusEnum.VECTOROP_ERR: "Vector operation error",
+    StatusEnum.UNRECOGNIZED_ERR: "Unrecognized Error",
 }
 
 WARNING_STR = "Solver succeeded with flag {} and finished at {} with values {}"
