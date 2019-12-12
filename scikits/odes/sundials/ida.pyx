@@ -67,7 +67,7 @@ class StatusEnumIDA(IntEnum):
     NO_RECOVERY       = IDA_NO_RECOVERY       # -14
     NLS_INIT_FAIL     = IDA_NLS_INIT_FAIL     # -15
     NLS_SETUP_FAIL    = IDA_NLS_SETUP_FAIL    # -16
-    NLS_FAIL          = IDA_NLS_FAIL          #-17
+    NLS_FAIL          = IDA_NLS_FAIL          # -17
 
     MEM_NULL          = IDA_MEM_NULL          # -20
     MEM_FAIL          = IDA_MEM_FAIL          # -21
@@ -102,7 +102,7 @@ STATUS_MESSAGE = {
     StatusEnumIDA.NO_RECOVERY: "The residual routine or the linear setup or solve routine had a recoverable error, but IDACalcIC was unable to recover.",
     StatusEnumIDA.NLS_INIT_FAIL: "The nonlinear solver's init routine failed.",
     StatusEnumIDA.NLS_SETUP_FAIL: "The nonlinear solver setup failed unrecoverably.",
-    StatusEnumIDA.NLS_FAIL: : "The nonlinear solver failed in an unrecoverable manner",
+    StatusEnumIDA.NLS_FAIL: "The nonlinear solver failed in an unrecoverable manner",
     StatusEnumIDA.MEM_NULL: "Integrator memory is NULL.",
     StatusEnumIDA.MEM_FAIL: "A memory request failed.",
     StatusEnumIDA.ILL_INPUT: "Invalid input detected.",
@@ -836,7 +836,7 @@ cdef class IDA:
         self.verbosity = 1
         self.options = default_values
         self.N       = -1
-        self._old_api = True # use old api by default
+        self._old_api = False # use new api by default
         self._step_compute = False #avoid dict lookup
         self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)

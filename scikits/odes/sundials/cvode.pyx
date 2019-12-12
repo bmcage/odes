@@ -786,7 +786,7 @@ cdef class CVODE:
         self.verbosity = 1
         self.options = default_values
         self.N       = -1
-        self._old_api = True # use old api by default
+        self._old_api = False # use new api by default
         self._step_compute = False #avoid dict lookup
         self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)
