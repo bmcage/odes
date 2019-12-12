@@ -242,12 +242,12 @@ cdef extern from "cvodes/cvodes.h":
     int CVodeSensToggleOff(void *cvode_mem)
 
     int CVodeGetSens(void *cvode_mem, realtype *tret, N_Vector *ySout)
-    int CVodeGetSens1(void *cvode_mem, realtype *tret, int is,
-                      N_Vector ySout)
+    int CVodeGetSens1(void *cvode_mem, realtype *tret, int iss,
+                      N_Vector ySout) # rename is to iss, is protected in python
     int CVodeGetSensDky(void *cvode_mem, realtype t, int k,
                         N_Vector *dkyA)
-    int CVodeGetSensDky1(void *cvode_mem, realtype t, int k, int is,
-                         N_Vector dky)
+    int CVodeGetSensDky1(void *cvode_mem, realtype t, int k, int iss,
+                         N_Vector dky) # rename is to iss, is protected in python
 
     int CVodeGetSensNumRhsEvals(void *cvode_mem, long int *nfSevals)
     int CVodeGetNumRhsEvalsSens(void *cvode_mem, long int *nfevalsS)
@@ -282,13 +282,13 @@ cdef extern from "cvodes/cvodes.h":
     int CVodeSetQuadSensErrCon(void *cvode_mem, booleantype errconQS)
 
     int CVodeGetQuadSens(void *cvode_mem, realtype *tret, N_Vector *yQSout)
-    int CVodeGetQuadSens1(void *cvode_mem, realtype *tret, int is,
-                          N_Vector yQSout)
+    int CVodeGetQuadSens1(void *cvode_mem, realtype *tret, int iss,
+                          N_Vector yQSout) # rename is to iss, is protected in python
 
     int CVodeGetQuadSensDky(void *cvode_mem, realtype t, int k,
                             N_Vector *dkyQS_all)
     int CVodeGetQuadSensDky1(void *cvode_mem, realtype t, int k,
-                             int is, N_Vector dkyQS)
+                             int iss, N_Vector dkyQS) # rename is to iss, is protected in python
 
     int CVodeGetQuadSensNumRhsEvals(void *cvode_mem, long int *nfQSevals)
     int CVodeGetQuadSensNumErrTestFails(void *cvode_mem,
@@ -553,8 +553,8 @@ cdef extern from "cvodes/cvodes_direct.h":
     int CVDlsSetJacFnB(void *cvode_mem, int which, CVDlsJacFnB jacB)
     int CVDlsSetJacFnBS(void *cvode_mem, int which, CVDlsJacFnBS jacBS)
 
-cdef extern from "cvode/cvodes_bandpre.h":
-    int CVBandPrecInit(svoid *cvode_mem, sunindextype N, sunindextype mu,
+cdef extern from "cvodes/cvodes_bandpre.h":
+    int CVBandPrecInit(void *cvode_mem, sunindextype N, sunindextype mu,
                        sunindextype ml);
     int CVBandPrecGetWorkSpace(void *cvode_mem, long int *lenrwLS, 
                                long int *leniwLS)
