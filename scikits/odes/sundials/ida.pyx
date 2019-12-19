@@ -2003,8 +2003,7 @@ cdef class IDA:
                     'first required output %f.'
                              % (ic_t0, tspan[0], tspan[1]))
 
-        ret_ic = self.init_step(tspan[0], y0, yp0,
-                                           y_retn[0, :], yp_retn[0, :])
+        ret_ic = self.init_step(tspan[0], y0, yp0, y_retn[0, :], yp_retn[0, :])
 
         PyErr_CheckSignals()
         if self._old_api:

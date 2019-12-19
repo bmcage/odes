@@ -130,7 +130,7 @@ WARNING_STR = "Solver succeeded with flag {} and finished at {} with values {}"
 
 cdef class IDAS_data(IDA_data):
     def __cinit__(self, N, Ns=0):
-        IDA_data(self, N)
+        super(IDAS_data, self).__init__(N)
         
         self.yS_tmp = np.empty(Ns, DTYPE)
         self.ySdot_tmp = np.empty(Ns, DTYPE)
@@ -145,7 +145,7 @@ cdef class IDAS(IDA):
             Rfn     - residual function
             options - additional options for initialization
         """
-        self.IDA(Rfn, options)
+        super(IDAS, self).__init__(Rfn, **options)
         
         self.Ns       = -1
 
@@ -422,7 +422,7 @@ cdef class IDAS(IDA):
                     affects `solve`.
         """
 
-        IDA.set_options(self, options)
+        super(IDAS, self).set_options( **options)
 
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=False):
@@ -432,7 +432,7 @@ cdef class IDAS(IDA):
         """
         
         
-        IDA._set_runtime_changeable_options(self, options,
+        super(IDAS, self)._set_runtime_changeable_options(options,
                                               supress_supported_check)
 
     def init_step(self, DTYPE_t t0, object y0, object yp0,
@@ -466,7 +466,9 @@ cdef class IDAS(IDA):
                 tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
-        IDA.init_step(self, t0, y0, yp0, y_ic0_retn, yp_ic0_retn)
+        soln = super(IDAS, self).init_step(t0, y0, yp0, y_ic0_retn,
+                    yp_ic0_retn)
+        return soln
 
     def solve(self, object tspan, object y0,  object yp0):
         """
@@ -503,7 +505,7 @@ cdef class IDAS(IDA):
                 message= String with message in case of an error
         """
 
-        soln = IDA.solve(self, tspan, y0,  yp0)
+        soln = super(IDAS, self).solve(tspan, y0,  yp0)
         return soln
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn = None,
@@ -538,8 +540,6 @@ cdef class IDAS(IDA):
                 tstop  = Named tuple with entries t and y and ydot
                 message= String with message in case of an error
         """
-        soln = IDA.step(self, t, y_retn, yp_retn)
+        soln = super(IDAS, self).step(t, y_retn, yp_retn)
         return soln
 
-    def __dealloc__(self):
-        IDA.__dealloc__(self)

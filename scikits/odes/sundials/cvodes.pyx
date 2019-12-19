@@ -155,7 +155,7 @@ WARNING_STR = "Solver succeeded with flag {} and finished at {} with values {}"
 # Auxiliary data carrying runtime vales for the CVODE solver
 cdef class CVS_data(CV_data):
     def __cinit__(self, N, Ns=0):
-        CV_data(self, N)
+        super(CVS_data, self).__init__(N)
         
         self.yS_tmp = np.empty(Ns, DTYPE)
         self.ySdot_tmp = np.empty(Ns, DTYPE)
@@ -172,7 +172,7 @@ cdef class CVODES(CVODE):
                       of supported options and their values see set_options()
 
         """
-        self.CVODE(Rfn, options)
+        super(CVODES, self).__init__(Rfn, **options)
         
         self.Ns       = -1
 
@@ -415,7 +415,7 @@ cdef class CVODES(CVODE):
         """
 
         # Update values of all supplied options
-        CVODE.set_options(self, options)
+        super(CVODES, self).set_options(**options)
 
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=False):
@@ -424,7 +424,7 @@ cdef class CVODES(CVODE):
           mostly useful for values that need to be changed at run-time.
         """
         
-        CVODE._set_runtime_changeable_options(self, options,
+        super(CVODES, self)._set_runtime_changeable_options(options,
                                               supress_supported_check)
 
     def init_step(self, DTYPE_t t0, object y0):
@@ -452,7 +452,7 @@ cdef class CVODES(CVODE):
         Note: some options can be re-set also at runtime. See 'reinit_IC()'
         """
         
-        soln = CVODE.init_step(self, t0, y0)
+        soln = super(CVODES, self).init_step(t0, y0)
         return soln
 
     def solve(self, object tspan, object y0):
@@ -481,7 +481,7 @@ cdef class CVODES(CVODE):
                 tstop  = Named tuple with entries t and y
                 message= String with message in case of an error
         """
-        soln = CVODE.solve(self, tspan, y0)
+        soln = super(CVODES, self).solve(tspan, y0)
         return soln
 
     def step(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y_retn = None):
@@ -502,7 +502,7 @@ cdef class CVODES(CVODE):
             t_out - time, where the solver stopped
                     (when no error occured, t_out == t)
         """
-        soln = CVODE.step(self, t, y_retn)
+        soln = super(CVODES, self).step(t, y_retn)
         return soln
 
     def get_info(self):
@@ -511,10 +511,6 @@ cdef class CVODES(CVODE):
         of calls to the user's right-hand side function.
 
         """
-        info = CVODE.get_info(self)
+        info = super(CVODES, self).get_info()
 
         return info
-
-    def __dealloc__(self):
-        
-        CVODE.__dealloc__(self)

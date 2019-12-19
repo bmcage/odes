@@ -101,8 +101,13 @@ def jac_vec_error_immediate(v, Jv, t, y):
     return -1
 
 class TestCVodeReturn(TestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(TestCVodeReturn, self).__init__(*args, **kwargs)
+        self.solvername = "cvode"
+
     def test_normal_rhs(self):
-        solver = ode("cvode", normal_rhs, old_api=False)
+        solver = ode(self.solvername, normal_rhs, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.SUCCESS,
@@ -110,7 +115,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_rhs_with_return(self):
-        solver = ode("cvode", rhs_with_return, old_api=False)
+        solver = ode(self.solvername, rhs_with_return, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.SUCCESS,
@@ -118,7 +123,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_rhs_problem_late(self):
-        solver = ode("cvode", rhs_problem_late, old_api=False)
+        solver = ode(self.solvername, rhs_problem_late, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.TOO_MUCH_WORK,
@@ -126,7 +131,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_rhs_problem_immediate(self):
-        solver = ode("cvode", rhs_problem_immediate, old_api=False)
+        solver = ode(self.solvername, rhs_problem_immediate, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.FIRST_RHSFUNC_ERR,
@@ -134,7 +139,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_rhs_error_late(self):
-        solver = ode("cvode", rhs_error_late, old_api=False)
+        solver = ode(self.solvername, rhs_error_late, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.RHSFUNC_FAIL,
@@ -142,7 +147,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_rhs_error_immediate(self):
-        solver = ode("cvode", rhs_error_immediate, old_api=False)
+        solver = ode(self.solvername, rhs_error_immediate, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.RHSFUNC_FAIL,
@@ -150,7 +155,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_normal_root(self):
-        solver = ode("cvode", normal_rhs, rootfn=normal_root, nr_rootfns=1,
+        solver = ode(self.solvername, normal_rhs, rootfn=normal_root, nr_rootfns=1,
                 old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -159,7 +164,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_root_with_return(self):
-        solver = ode("cvode", normal_rhs, rootfn=root_with_return, nr_rootfns=1,
+        solver = ode(self.solvername, normal_rhs, rootfn=root_with_return, nr_rootfns=1,
                 old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -168,7 +173,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_root_late(self):
-        solver = ode("cvode", normal_rhs, rootfn=root_late, nr_rootfns=1,
+        solver = ode(self.solvername, normal_rhs, rootfn=root_late, nr_rootfns=1,
                 old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -177,7 +182,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_root_immediate(self):
-        solver = ode("cvode", normal_rhs, rootfn=root_immediate, nr_rootfns=1,
+        solver = ode(self.solvername, normal_rhs, rootfn=root_immediate, nr_rootfns=1,
                 old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -186,7 +191,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_root_error_late(self):
-        solver = ode("cvode", normal_rhs, rootfn=root_error_late, nr_rootfns=1,
+        solver = ode(self.solvername, normal_rhs, rootfn=root_error_late, nr_rootfns=1,
                 old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -195,7 +200,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_root_error_immediate(self):
-        solver = ode("cvode", normal_rhs, rootfn=root_error_immediate,
+        solver = ode(self.solvername, normal_rhs, rootfn=root_error_immediate,
                 nr_rootfns=1, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -204,7 +209,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_normal_jac(self):
-        solver = ode("cvode", normal_rhs, jacfn=normal_jac, old_api=False)
+        solver = ode(self.solvername, normal_rhs, jacfn=normal_jac, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.SUCCESS,
@@ -212,7 +217,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_with_return(self):
-        solver = ode("cvode", normal_rhs, jacfn=jac_with_return, old_api=False)
+        solver = ode(self.solvername, normal_rhs, jacfn=jac_with_return, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.SUCCESS,
@@ -220,7 +225,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_problem_late(self):
-        solver = ode("cvode", complex_rhs, jacfn=jac_problem_late, old_api=False)
+        solver = ode(self.solvername, complex_rhs, jacfn=jac_problem_late, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.CONV_FAILURE,
@@ -228,7 +233,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_problem_immediate(self):
-        solver = ode("cvode", normal_rhs, jacfn=jac_problem_immediate,
+        solver = ode(self.solvername, normal_rhs, jacfn=jac_problem_immediate,
                 old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -237,7 +242,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_error_late(self):
-        solver = ode("cvode", complex_rhs, jacfn=jac_error_late, old_api=False)
+        solver = ode(self.solvername, complex_rhs, jacfn=jac_error_late, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.LSETUP_FAIL,
@@ -245,7 +250,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_error_immediate(self):
-        solver = ode("cvode", normal_rhs, jacfn=jac_error_immediate,
+        solver = ode(self.solvername, normal_rhs, jacfn=jac_error_immediate,
                 old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -255,7 +260,7 @@ class TestCVodeReturn(TestCase):
 
 
     def test_normal_jac_vec(self):
-        solver = ode("cvode", normal_rhs, jac_times_vecfn=normal_jac_vec, old_api=False)
+        solver = ode(self.solvername, normal_rhs, jac_times_vecfn=normal_jac_vec, old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.SUCCESS,
@@ -263,7 +268,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_vec_with_return(self):
-        solver = ode("cvode", normal_rhs, jac_times_vecfn=jac_vec_with_return, linsolver="spgmr", old_api=False)
+        solver = ode(self.solvername, normal_rhs, jac_times_vecfn=jac_vec_with_return, linsolver="spgmr", old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.SUCCESS,
@@ -271,7 +276,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_vec_problem_late(self):
-        solver = ode("cvode", complex_rhs, jac_times_vecfn=jac_vec_problem_late, linsolver="spgmr", old_api=False)
+        solver = ode(self.solvername, complex_rhs, jac_times_vecfn=jac_vec_problem_late, linsolver="spgmr", old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
             StatusEnum.TOO_MUCH_WORK,
@@ -279,7 +284,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_vec_problem_immediate(self):
-        solver = ode("cvode", normal_rhs,
+        solver = ode(self.solvername, normal_rhs,
                 jac_times_vecfn=jac_vec_problem_immediate, linsolver="spgmr",
                 old_api=False)
         soln = solver.solve([0, 1], [1])
@@ -289,7 +294,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_vec_error_late(self):
-        solver = ode("cvode", complex_rhs, jac_times_vecfn=jac_vec_error_late,
+        solver = ode(self.solvername, complex_rhs, jac_times_vecfn=jac_vec_error_late,
                 linsolver="spgmr", old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -298,7 +303,7 @@ class TestCVodeReturn(TestCase):
         )
 
     def test_jac_vec_error_immediate(self):
-        solver = ode("cvode", normal_rhs, jac_times_vecfn=jac_vec_error_immediate, linsolver="spgmr",
+        solver = ode(self.solvername, normal_rhs, jac_times_vecfn=jac_vec_error_immediate, linsolver="spgmr",
                 old_api=False)
         soln = solver.solve([0, 1], [1])
         self.assertEqual(
@@ -306,9 +311,14 @@ class TestCVodeReturn(TestCase):
             soln.flag
         )
 
+class TestCVodesReturn(TestCVodeReturn):
+    def __init__(self, *args, **kwargs):
+        super(TestCVodesReturn, self).__init__(*args, **kwargs)
+        self.solvername = "cvodes"
 
 if __name__ == "__main__":
     try:
         run_module_suite()
     except NameError:
-        test = TestOn()
+        test = TestCVodeReturn()
+        TestCVodeReturn.test_normal_rhs()

@@ -460,6 +460,15 @@ def find_dae_integrator(name):
         except ImportError:
             print(sys.exc_info()[1])
 
+        ## idas
+        try:
+            from .sundials import idas
+            DaeBase.integrator_classes.append(idas.IDAS)
+        except ValueError as msg:
+            print('Could not load IDAS solver', msg)
+        except ImportError:
+            print(sys.exc_info()[1])
+
         ## ddaspk
         try:
             from .ddaspkint import ddaspk
