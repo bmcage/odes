@@ -1,7 +1,8 @@
 descr   = """
-Odes is a scikit toolkit for scipy to add some extra ode solvers.
-At present it provides dae solvers you can use, extending the capabilities
-offered in scipy.integrade.ode.
+Odes is a scikit toolkit for scipy to add extra ode solvers.
+Specifically it interfaces the Sundials solvers cvode, cvodes, ida and idas.
+It this way it provides extra modern ode and dae solvers you can use, 
+extending the capabilities offered in scipy.integrade.ode.
 
 LICENSE: the license of odes is the same as scipy, new BSD.
 """
@@ -22,8 +23,8 @@ BUILD_REQUIRES = ['numpy', 'cython'] # This is need for older pip
 
 MAJOR = 2
 MINOR = 6
-MICRO = 0
-DEV = False
+MICRO = 1
+DEV = True
 
 CLASSIFIERS = [
         'Development Status :: 5 - Production/Stable',
