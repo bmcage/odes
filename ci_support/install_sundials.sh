@@ -1,7 +1,7 @@
 #!/bin/sh
 set -ex
 
-SUNDIALS=sundials-"${SUNDIALS_VERSION:-5.0.0}"
+SUNDIALS=sundials-"${SUNDIALS_VERSION:-5.1.0}"
 SUNDIALS_FILE=$SUNDIALS.tar.gz
 SUNDIALS_URL=https://computing.llnl.gov/projects/sundials/download/$SUNDIALS_FILE
 PRECISION="${SUNDIALS_PRECISION:-double}"
