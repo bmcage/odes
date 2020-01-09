@@ -38,7 +38,7 @@ class TestDae(TestCase):
 
         # restrict to 'ida' method since jacobian function below
         # follows the ida interface
-        if jac is not None and integrator == 'ida':
+        if jac is not None and integrator in ['ida', 'idas']:
             def jac_times_vec(tt, yy, yp, rr, v, Jv, cj):
                 J = zeros((len(yy), len(yy)), DTYPE)
                 jac(tt, yy, yp, rr, cj, J)
@@ -59,7 +59,7 @@ class TestDae(TestCase):
         igs = [dae(integrator, res, jacfn=jac, old_api=old_api)]
 
         # if testing 'ida' then try the iterative linsolvers as well
-        if integrator == 'ida':
+        if integrator in ['ida', 'idas']:
             igs.append(
                 dae(integrator, res, linsolver='spgmr',
                     jac_times_vecfn=jac_times_vec,
@@ -87,7 +87,7 @@ class TestDae(TestCase):
                     flag = soln.flag
                     rt = soln.values.t
                 i += 1
-                if integrator == 'ida':
+                if integrator in ['ida', 'idas']:
                     assert flag==0, (problem.info(), flag)
                 else:
                     assert flag > 0, (problem.info(), flag)
@@ -122,6 +122,12 @@ class TestDae(TestCase):
         for problem_cls in PROBLEMS_IDA:
             problem = problem_cls()
             self._do_problem(problem, 'ida', old_api=False, **problem.ida_pars)
+
+    def test_idas(self):
+        """Check that idas solver behaves as ida"""
+        for problem_cls in PROBLEMS_IDA:
+            problem = problem_cls()
+            self._do_problem(problem, 'idas', **problem.ida_pars)
 
 #------------------------------------------------------------------------------
 # Test problems
@@ -312,6 +318,8 @@ class StiffVODECompare(DAE):
 PROBLEMS_DDASPK = [SimpleOscillator, StiffVODECompare,
             SimpleOscillatorJac ]
 PROBLEMS_IDA = [SimpleOscillator, StiffVODECompare,
+            SimpleOscillatorJacIDA ]
+PROBLEMS_IDAS = [SimpleOscillator, StiffVODECompare,
             SimpleOscillatorJacIDA ]
 PROBLEMS_LSODI = [SimpleOscillator, StiffVODECompare]
 #------------------------------------------------------------------------------

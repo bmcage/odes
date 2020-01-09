@@ -469,6 +469,14 @@ def find_ode_integrator(name):
             print('Could not load CVODE solver', msg)
         except ImportError:
             print(sys.exc_info()[1])
+        ## cvodes
+        try:
+            from .sundials import cvodes
+            OdeBase.integrator_classes.append(cvodes.CVODES)
+        except ValueError as msg:
+            print('Could not load CVODES solver', msg)
+        except ImportError:
+            print(sys.exc_info()[1])
 
         ## dopri5 and dop853
         try:

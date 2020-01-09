@@ -4,7 +4,7 @@ import numpy as np
 cimport numpy as np
 import inspect
 from .c_sundials cimport (
-    realtype, sunindextype, N_Vector, DlsMat, booleantype, SpfgmrMem,
+    realtype, sunindextype, N_Vector, DlsMat, booleantype,
     SUNMatrix, SUNMatGetID, SUNMATRIX_DENSE, SUNMATRIX_BAND, SUNMATRIX_SPARSE,
     SUNMATRIX_CUSTOM,
 )
@@ -112,10 +112,6 @@ cdef inline realtype get_band_element(DlsMat A, int i, int j):
 cdef inline void set_band_element(DlsMat A, int i, int j, realtype aij):
     (A.cols)[j][(i)-(j)+(A.s_mu)] = aij
 
-
-# Spfgmr accessor
-cdef inline N_Vector spfgmr_vtemp(SpfgmrMem mem):
-    return mem.vtemp
 
 # Public functions
 cdef int nv_s2ndarray(N_Vector v, np.ndarray[DTYPE_t, ndim=1] a) except? -1:

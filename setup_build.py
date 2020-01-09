@@ -9,6 +9,8 @@ from numpy.distutils.command.build_ext import build_ext as _build_ext
 
 PKGCONFIG_CVODE = 'sundials-cvode-serial'
 PKGCONFIG_IDA = 'sundials-ida-serial'
+PKGCONFIG_CVODES = 'sundials-cvodes-serial'
+PKGCONFIG_IDAS = 'sundials-idas-serial'
 
 
 def write_pxi(filename, definitions):
@@ -137,14 +139,20 @@ class build_ext(_build_ext):
         SUNDIALS_LIBRARIES = []
         CVODE_LIBRARIES = []
         IDA_LIBRARIES = []
+        CVODES_LIBRARIES = []
+        IDAS_LIBRARIES = []
 
         SUNDIALS_LIBRARY_DIRS = []
         CVODE_LIBRARY_DIRS = []
         IDA_LIBRARY_DIRS = []
+        CVODES_LIBRARY_DIRS = []
+        IDAS_LIBRARY_DIRS = []
 
         SUNDIALS_INCLUDE_DIRS = []
         CVODE_INCLUDE_DIRS = []
         IDA_INCLUDE_DIRS = []
+        CVODES_INCLUDE_DIRS = []
+        IDAS_INCLUDE_DIRS = []
 
         SUNDIALS_LIBDIR = os.environ.get("SUNDIALS_LIBDIR")
         SUNDIALS_INCLUDEDIR = os.environ.get("SUNDIALS_INCLUDEDIR")
@@ -185,6 +193,22 @@ class build_ext(_build_ext):
                         IDA_INCLUDE_DIRS.append(str(d))
                     for lib in ida_pkgconf.get('include_dirs', []):
                         IDA_LIBRARIES.append(str(lib))
+                    
+                    cvodes_pkgconf = pkgconfig.parse(PKGCONFIG_CVODES)
+                    for d in cvodes_pkgconf.get('library_dirs', []):
+                        CVODES_LIBRARY_DIRS.append(str(d))
+                    for d in cvodes_pkgconf.get('include_dirs', []):
+                        CVODES_INCLUDE_DIRS.append(str(d))
+                    for lib in cvodes_pkgconf.get('include_dirs', []):
+                        CVODES_LIBRARIES.append(str(lib))
+
+                    idas_pkgconf = pkgconfig.parse(PKGCONFIG_IDAS)
+                    for d in idas_pkgconf.get('library_dirs', []):
+                        IDAS_LIBRARY_DIRS.append(str(d))
+                    for d in idas_pkgconf.get('include_dirs', []):
+                        IDAS_INCLUDE_DIRS.append(str(d))
+                    for lib in idas_pkgconf.get('include_dirs', []):
+                        IDAS_LIBRARIES.append(str(lib))
                 except EnvironmentError:
                     pass
             except ImportError:
@@ -231,6 +255,11 @@ class build_ext(_build_ext):
         if not CVODE_LIBRARIES:
             CVODE_LIBRARIES.append('sundials_cvode')
 
+        if not IDAS_LIBRARIES:
+            IDAS_LIBRARIES.append('sundials_idas')
+
+        if not CVODES_LIBRARIES:
+            CVODES_LIBRARIES.append('sundials_cvodes')
 
         if has_lapack:
             lapack_opt = get_info('lapack_opt', notfound_action=2)
@@ -247,10 +276,16 @@ class build_ext(_build_ext):
 
         CVODE_LIBRARIES.extend(SUNDIALS_LIBRARIES)
         IDA_LIBRARIES.extend(SUNDIALS_LIBRARIES)
+        CVODES_LIBRARIES.extend(SUNDIALS_LIBRARIES)
+        IDAS_LIBRARIES.extend(SUNDIALS_LIBRARIES)
         CVODE_INCLUDE_DIRS.extend(SUNDIALS_INCLUDE_DIRS)
         IDA_INCLUDE_DIRS.extend(SUNDIALS_INCLUDE_DIRS)
+        CVODES_INCLUDE_DIRS.extend(SUNDIALS_INCLUDE_DIRS)
+        IDAS_INCLUDE_DIRS.extend(SUNDIALS_INCLUDE_DIRS)
         CVODE_LIBRARY_DIRS.extend(SUNDIALS_LIBRARY_DIRS)
         IDA_LIBRARY_DIRS.extend(SUNDIALS_LIBRARY_DIRS)
+        CVODES_LIBRARY_DIRS.extend(SUNDIALS_LIBRARY_DIRS)
+        IDAS_LIBRARY_DIRS.extend(SUNDIALS_LIBRARY_DIRS)
 
         return [
             Extension(
@@ -273,6 +308,20 @@ class build_ext(_build_ext):
                 include_dirs=IDA_INCLUDE_DIRS,
                 library_dirs=IDA_LIBRARY_DIRS,
                 libraries=IDA_LIBRARIES,
+            ),
+            Extension(
+                base_module + '.' + "cvodes",
+                sources = [join(base_path, 'cvodes.pyx')],
+                include_dirs=CVODES_INCLUDE_DIRS,
+                library_dirs=CVODES_LIBRARY_DIRS,
+                libraries=CVODES_LIBRARIES,
+            ),
+            Extension(
+                base_module + '.' + "idas",
+                sources = [join(base_path, 'idas.pyx')],
+                include_dirs=IDAS_INCLUDE_DIRS,
+                library_dirs=IDAS_LIBRARY_DIRS,
+                libraries=IDAS_LIBRARIES,
             ),
         ]
 

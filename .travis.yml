@@ -31,70 +31,70 @@ matrix:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='4.1.0'
+      - TOXENV=py27 SUNDIALS_VERSION='5.0.0'
     - python: 3.5
       dist: trusty
       env:
-      - TOXENV=py35 SUNDIALS_VERSION='4.1.0'
+      - TOXENV=py35 SUNDIALS_VERSION='5.0.0'
     - python: 3.6
       dist: trusty
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='4.1.0'
+      - TOXENV=py36 SUNDIALS_VERSION='5.0.0'
     - python: 3.7
       env:
-      - TOXENV=py37 SUNDIALS_VERSION='4.1.0'
+      - TOXENV=py37 SUNDIALS_VERSION='5.0.0'
     - python: 3.7
       env:
-      - TOXENV=doctr SUNDIALS_VERSION='4.1.0'
+      - TOXENV=doctr SUNDIALS_VERSION='5.0.0'
     - python: 3.7
       env:
-      - TOXENV=docs SUNDIALS_VERSION='4.1.0'
+      - TOXENV=docs SUNDIALS_VERSION='5.0.0'
     - python: 3.7
       env:
-      - TOXENV=check-manifest SUNDIALS_VERSION='4.1.0'
+      - TOXENV=check-manifest SUNDIALS_VERSION='5.0.0'
     - python: 3.7
       env:
-      - TOXENV=checkreadme SUNDIALS_VERSION='4.1.0'
+      - TOXENV=checkreadme SUNDIALS_VERSION='5.0.0'
 
     # Reduced Index Size - this allows use of lapack linsolvers - default is -64
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_INDEX_SIZE='32'
+      - TOXENV=py27 SUNDIALS_VERSION='5.0.0' SUNDIALS_INDEX_SIZE='32'
     - python: 3.7
       env:
-      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_INDEX_SIZE='32'
+      - TOXENV=py37 SUNDIALS_VERSION='5.0.0' SUNDIALS_INDEX_SIZE='32'
 
     # Additional precisions - default is 'double'
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+      - TOXENV=py27 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='single'
     - python: 3.7
       env:
-      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+      - TOXENV=py37 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='single'
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended'
+      - TOXENV=py27 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='extended'
     - python: 3.6
       dist: trusty
       env:
-      - TOXENV=py36 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_TYPE='int64_t'
-      
+      - TOXENV=py36 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
+
     # extended test fails with seg fault on more recent Ubuntu .. to investigate when access to this
     - python: 3.7
       env:
-      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
+      - TOXENV=py37 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
     
 
   allow_failures:
     - python: 2.7
       env:
-      - TOXENV=py27 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+      - TOXENV=py27 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='single'
     - python: 3.7
       env:
-      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='single'
+      - TOXENV=py37 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='single'
     - python: 3.7
       env:
-      - TOXENV=py37 SUNDIALS_VERSION='4.1.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
+      - TOXENV=py37 SUNDIALS_VERSION='5.0.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
 
       
 install:

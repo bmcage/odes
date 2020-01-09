@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SUNDIALS_DEFAULT_VERSION='4.1.0'
+SUNDIALS_DEFAULT_VERSION='5.0.0'
 SUNDIALS_DEFAULT_PRECISION='double'
 SUNDIALS_DEFAULT_INDEX_SIZE='64'
 
@@ -13,7 +13,7 @@ if [ ! -d "$SUNDIALS_LIBDIR" ]; then
     echo "Installing sundials ${SUNDIALS_VERSION:-$SUNDIALS_DEFAULT_VERSION}"
     ./ci_support/install_sundials.sh
 else
-    echo "Using cached sundials"
+    echo "Using cached sundials in $SUNDIALS_LIBDIR"
 fi
 
 export LD_LIBRARY_PATH=$SUNDIALS_LIBDIR:$LD_LIBRARY_PATH

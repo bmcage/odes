@@ -5,6 +5,15 @@ cdef extern from "sundials/sundials_types.h":
     ctypedef unsigned int booleantype
     ctypedef long sunindextype
 
+cdef extern from "sundials/sundials_version.h":
+    
+    #Fill a string with SUNDIALS version information */
+    int SUNDIALSGetVersion(char *version, int len)
+
+    # Fills integers with the major, minor, and patch release version numbers and a string with the release label.
+    int SUNDIALSGetVersionNumber(int *major, int *minor, int *patch,
+                                 char *label, int len);
+                                             
 cdef extern from "sundials/sundials_nvector.h":
     cdef enum N_Vector_ID:
         SUNDIALS_NVEC_SERIAL,
@@ -15,6 +24,11 @@ cdef extern from "sundials/sundials_nvector.h":
         SUNDIALS_NVEC_PETSC,
         SUNDIALS_NVEC_CUDA,
         SUNDIALS_NVEC_RAJA,
+        SUNDIALS_NVEC_OPENMPDEV,
+        SUNDIALS_NVEC_TRILINOS,
+        SUNDIALS_NVEC_MANYVECTOR,
+        SUNDIALS_NVEC_MPIMANYVECTOR,
+        SUNDIALS_NVEC_MPIPLUSX,
         SUNDIALS_NVEC_CUSTOM
 
     struct _generic_N_Vector_Ops:
@@ -23,6 +37,7 @@ cdef extern from "sundials/sundials_nvector.h":
         pass
     ctypedef _generic_N_Vector *N_Vector
     ctypedef _generic_N_Vector_Ops *N_Vector_Ops
+    ctypedef N_Vector *N_Vector_S
 
     struct _generic_N_Vector_Ops:
         N_Vector_ID (*nvgetvectorid)(N_Vector)
@@ -32,6 +47,8 @@ cdef extern from "sundials/sundials_nvector.h":
         void        (*nvspace)(N_Vector, sunindextype *, sunindextype *)
         realtype*   (*nvgetarraypointer)(N_Vector)
         void        (*nvsetarraypointer)(realtype *, N_Vector)
+        void*       (*nvgetcommunicator)(N_Vector)
+        sunindextype (*nvgetlength)(N_Vector)
         void        (*nvlinearsum)(realtype, N_Vector, realtype, N_Vector, N_Vector)
         void        (*nvconst)(realtype, N_Vector)
         void        (*nvprod)(N_Vector, N_Vector, N_Vector)
@@ -51,8 +68,42 @@ cdef extern from "sundials/sundials_nvector.h":
         booleantype (*nvinvtest)(N_Vector, N_Vector)
         booleantype (*nvconstrmask)(N_Vector, N_Vector, N_Vector)
         realtype    (*nvminquotient)(N_Vector, N_Vector)
+        int (*nvlinearcombination)(int, realtype*, N_Vector*, N_Vector)
+        int (*nvscaleaddmulti)(int, realtype*, N_Vector, N_Vector*, N_Vector*)
+        int (*nvdotprodmulti)(int, N_Vector, N_Vector*, realtype*)
+    
+        int (*nvlinearsumvectorarray)(int, realtype, N_Vector*, realtype, 
+                                      N_Vector*, N_Vector*)
+        int (*nvscalevectorarray)(int, realtype*, N_Vector*, N_Vector*)
+        int (*nvconstvectorarray)(int, realtype, N_Vector*)
+        int (*nvwrmsnormvectorarray)(int, N_Vector*, N_Vector*, realtype*)
+        int (*nvwrmsnormmaskvectorarray)(int, N_Vector*, N_Vector*, N_Vector,
+                                         realtype*)
+        int (*nvscaleaddmultivectorarray)(int, int, realtype*, N_Vector*, 
+                                          N_Vector**, N_Vector**)
+        int (*nvlinearcombinationvectorarray)(int, int, realtype*, N_Vector**,
+                                              N_Vector*)
+    
+        realtype (*nvdotprodlocal)(N_Vector, N_Vector)
+        realtype (*nvmaxnormlocal)(N_Vector)
+        realtype (*nvminlocal)(N_Vector)
+        realtype (*nvl1normlocal)(N_Vector)
+        booleantype (*nvinvtestlocal)(N_Vector, N_Vector)
+        booleantype (*nvconstrmasklocal)(N_Vector, N_Vector, N_Vector)
+        realtype (*nvminquotientlocal)(N_Vector, N_Vector)
+        realtype (*nvwsqrsumlocal)(N_Vector, N_Vector)
+        realtype (*nvwsqrsummasklocal)(N_Vector, N_Vector, N_Vector)
+
+    struct _generic_N_Vector:
+        void *content
+        N_Vector_Ops ops
+
 
     # * FUNCTIONS *
+    N_Vector N_VNewEmpty()
+    void N_VFreeEmpty(N_Vector v)
+    int N_VCopyOps(N_Vector w, N_Vector v)
+
     N_Vector_ID N_VGetVectorID(N_Vector w)
     N_Vector N_VClone(N_Vector w)
     N_Vector N_VCloneEmpty(N_Vector w)
@@ -60,6 +111,9 @@ cdef extern from "sundials/sundials_nvector.h":
     void N_VSpace(N_Vector v, sunindextype *lrw, sunindextype *liw)
     realtype *N_VGetArrayPointer(N_Vector v)
     void N_VSetArrayPointer(realtype *v_data, N_Vector v)
+    void *N_VGetCommunicator(N_Vector v)
+    sunindextype N_VGetLength(N_Vector v)
+
     void N_VLinearSum(realtype a, N_Vector x, realtype b, N_Vector y, N_Vector z)
     void N_VConst(realtype c, N_Vector z)
     void N_VProd(N_Vector x, N_Vector y, N_Vector z)
@@ -79,16 +133,63 @@ cdef extern from "sundials/sundials_nvector.h":
     booleantype N_VInvTest(N_Vector x, N_Vector z)
     booleantype N_VConstrMask(N_Vector c, N_Vector x, N_Vector m)
     realtype N_VMinQuotient(N_Vector num, N_Vector denom)
+    
+    # /* OPTIONAL fused vector operations */
+    int N_VLinearCombination(int nvec, realtype* c, N_Vector* X, N_Vector z)
 
+    int N_VScaleAddMulti(int nvec, realtype* a, N_Vector x,
+                         N_Vector* Y, N_Vector* Z)
+
+    int N_VDotProdMulti(int nvec, N_Vector x, N_Vector* Y, realtype* dotprods)
+
+    #/* OPTIONAL vector array operations */
+    int N_VLinearSumVectorArray(int nvec, realtype a, N_Vector* X,
+                                realtype b, N_Vector* Y, N_Vector* Z)
+
+    int N_VScaleVectorArray(int nvec, realtype* c, N_Vector* X, N_Vector* Z)
+
+    int N_VConstVectorArray(int nvec, realtype c, N_Vector* Z)
+
+    int N_VWrmsNormVectorArray(int nvec, N_Vector* X, N_Vector* W, 
+                               realtype* nrm)
+
+    int N_VWrmsNormMaskVectorArray(int nvec, N_Vector* X, N_Vector* W, 
+                                   N_Vector id, realtype* nrm)
+
+    int N_VScaleAddMultiVectorArray(int nvec, int nsum, realtype* a, 
+                                    N_Vector* X, N_Vector** Y, N_Vector** Z)
+
+    int N_VLinearCombinationVectorArray(int nvec, int nsum, realtype* c, 
+                                        N_Vector** X, N_Vector* Z)
+
+    #/* OPTIONAL local reduction kernels (no parallel communication) */
+    realtype N_VDotProdLocal(N_Vector x, N_Vector y)
+    realtype N_VMaxNormLocal(N_Vector x)
+    realtype N_VMinLocal(N_Vector x)
+    realtype N_VL1NormLocal(N_Vector x)
+    realtype N_VWSqrSumLocal(N_Vector x, N_Vector w)
+    realtype N_VWSqrSumMaskLocal(N_Vector x, N_Vector w, N_Vector id)
+    booleantype N_VInvTestLocal(N_Vector x, N_Vector z)
+    booleantype N_VConstrMaskLocal(N_Vector c, N_Vector x, N_Vector m)
+    realtype N_VMinQuotientLocal(N_Vector num, N_Vector denom)
+
+    # * Additional functions exported by NVECTOR module
+
+    N_Vector* N_VNewVectorArray(int count)
     N_Vector *N_VCloneEmptyVectorArray(int count, N_Vector w)
     N_Vector *N_VCloneVectorArray(int count, N_Vector w)
     void N_VDestroyVectorArray(N_Vector *vs, int count)
+
+    #/* These function are really only for users of the Fortran interface */
+    N_Vector N_VGetVecAtIndexVectorArray(N_Vector* vs, int index)
+    void N_VSetVecAtIndexVectorArray(N_Vector* vs, int index, N_Vector w)
 
 cdef extern from "sundials/sundials_matrix.h":
     cdef enum SUNMatrix_ID:
         SUNMATRIX_DENSE,
         SUNMATRIX_BAND,
         SUNMATRIX_SPARSE,
+        SUNMATRIX_SLUNRLOC,
         SUNMATRIX_CUSTOM
 
     struct _generic_SUNMatrix_Ops:
@@ -106,14 +207,18 @@ cdef extern from "sundials/sundials_matrix.h":
         int          (*copy)(SUNMatrix, SUNMatrix)
         int          (*scaleadd)(realtype, SUNMatrix, SUNMatrix)
         int          (*scaleaddi)(realtype, SUNMatrix)
+        int          (*matvecsetup)(SUNMatrix);
         int          (*matvec)(SUNMatrix, N_Vector, N_Vector)
         int          (*space)(SUNMatrix, long int*, long int*)
 
-    #struct _generic_SUNMatrix:
-    #    void *content
-    #    struct _generic_SUNMatrix_Ops *ops
+    struct _generic_SUNMatrix:
+        void *content
+        SUNMatrix_Ops ops
 
     # * FUNCTIONS *
+    SUNMatrix SUNMatNewEmpty()
+    void SUNMatFreeEmpty(SUNMatrix A)
+    int SUNMatCopyOps(SUNMatrix A, SUNMatrix B)
     SUNMatrix_ID SUNMatGetID(SUNMatrix A)
     SUNMatrix SUNMatClone(SUNMatrix A)
     void SUNMatDestroy(SUNMatrix A)
@@ -121,6 +226,7 @@ cdef extern from "sundials/sundials_matrix.h":
     int SUNMatCopy(SUNMatrix A, SUNMatrix B)
     int SUNMatScaleAdd(realtype c, SUNMatrix A, SUNMatrix B)
     int SUNMatScaleAddI(realtype c, SUNMatrix A)
+    int SUNMatMatvecSetup(SUNMatrix A)
     int SUNMatMatvec(SUNMatrix A, N_Vector x, N_Vector y)
     int SUNMatSpace(SUNMatrix A, long int *lenrw, long int *leniw)
 
@@ -145,22 +251,36 @@ cdef extern from "sundials/sundials_iterative.h":
     int QRfact(int n, realtype **h, realtype *q, int job)
     int QRsol(int n, realtype **h, realtype *q, realtype *b)
 
-# We don't support KLU for now
-#cdef extern from "sundials/sundials_klu_impl.h":
-#    cdef struct KLUDataRec:
-#        klu_symbolic *s_Symbolic
-#        klu_numeric  *s_Numeric
-#        klu_common    s_Common
-#        int           s_ordering
-#    ctypedef KLUDataRec *KLUData
+    enum: SUNMAT_SUCCESS                  #    0  /* function successfull          */
+    enum: SUNMAT_ILL_INPUT                # -701  /* illegal function input        */
+    enum: SUNMAT_MEM_FAIL                 # -702  /* failed memory access/alloc    */
+    enum: SUNMAT_OPERATION_FAIL           # -703  /* a SUNMatrix operation returned nonzero */
+    enum: SUNMAT_MATVEC_SETUP_REQUIRED    # -704  /* the SUNMatMatvecSetup routine needs to be called */
 
 cdef extern from "sundials/sundials_linearsolver.h":
 
     cdef enum SUNLinearSolver_Type:
         SUNLINEARSOLVER_DIRECT,
         SUNLINEARSOLVER_ITERATIVE,
-        SUNLINEARSOLVER_CUSTOM
+        SUNLINEARSOLVER_MATRIX_ITERATIVE
 
+
+    cdef enum SUNLinearSolver_ID:
+        SUNLINEARSOLVER_BAND,
+        SUNLINEARSOLVER_DENSE,
+        SUNLINEARSOLVER_KLU,
+        SUNLINEARSOLVER_LAPACKBAND,
+        SUNLINEARSOLVER_LAPACKDENSE,
+        SUNLINEARSOLVER_PCG,
+        SUNLINEARSOLVER_SPBCGS,
+        SUNLINEARSOLVER_SPFGMR,
+        SUNLINEARSOLVER_SPGMR,
+        SUNLINEARSOLVER_SPTFQMR,
+        SUNLINEARSOLVER_SUPERLUDIST,
+        SUNLINEARSOLVER_SUPERLUMT,
+        SUNLINEARSOLVER_CUSOLVERSP_BATCHQR,
+        SUNLINEARSOLVER_CUSTOM
+        
     struct _generic_SUNLinearSolver_Ops:
         pass
     struct _generic_SUNLinearSolver:
@@ -170,6 +290,7 @@ cdef extern from "sundials/sundials_linearsolver.h":
 
     struct _generic_SUNLinearSolver_Ops:
         SUNLinearSolver_Type (*gettype)(SUNLinearSolver)
+        SUNLinearSolver_ID   (*getid)(SUNLinearSolver);
         int                  (*setatimes)(SUNLinearSolver, void*, ATimesFn)
         int                  (*setpreconditioner)(SUNLinearSolver, void*,
                                                 PSetupFn, PSolveFn)
@@ -186,11 +307,17 @@ cdef extern from "sundials/sundials_linearsolver.h":
         N_Vector             (*resid)(SUNLinearSolver)
         int                  (*free)(SUNLinearSolver)
 
-    #struct _generic_SUNLinearSolver:
-    #    void *content
-    #    struct _generic_SUNLinearSolver_Ops *ops
+    struct _generic_SUNLinearSolver:
+        void *content
+        SUNLinearSolver_Ops ops
+
+    SUNLinearSolver SUNLinSolNewEmpty()
+
+    void SUNLinSolFreeEmpty(SUNLinearSolver S)
 
     SUNLinearSolver_Type SUNLinSolGetType(SUNLinearSolver S)
+
+    SUNLinearSolver_ID SUNLinSolGetID(SUNLinearSolver S)
     int SUNLinSolSetATimes(SUNLinearSolver S, void* A_data,
                            ATimesFn ATimes)
     int SUNLinSolSetPreconditioner(SUNLinearSolver S, void* P_data,
@@ -209,6 +336,27 @@ cdef extern from "sundials/sundials_linearsolver.h":
                                        long int *leniwLS)
     int SUNLinSolFree(SUNLinearSolver S)
 
+    enum: SUNLS_SUCCESS            #   0   /* successful/converged          */
+    
+    enum: SUNLS_MEM_NULL           # -801   /* mem argument is NULL          */
+    enum: SUNLS_ILL_INPUT          # -802   /* illegal function input        */
+    enum: SUNLS_MEM_FAIL           # -803   /* failed memory access          */
+    enum: SUNLS_ATIMES_FAIL_UNREC  # -804   /* atimes unrecoverable failure  */
+    enum: SUNLS_PSET_FAIL_UNREC    # -805   /* pset unrecoverable failure    */
+    enum: SUNLS_PSOLVE_FAIL_UNREC  # -806   /* psolve unrecoverable failure  */
+    enum: SUNLS_PACKAGE_FAIL_UNREC # -807   /* external package unrec. fail  */
+    enum: SUNLS_GS_FAIL            # -808   /* Gram-Schmidt failure          */
+    enum: SUNLS_QRSOL_FAIL         # -809   /* QRsol found singular R        */
+    enum: SUNLS_VECTOROP_ERR       # -810   /* vector operation error        */
+
+    enum: SUNLS_RES_REDUCED        # 801   /* nonconv. solve, resid reduced */
+    enum: SUNLS_CONV_FAIL          # 802   /* nonconvergent solve           */
+    enum: SUNLS_ATIMES_FAIL_REC    # 803   /* atimes failed recoverably     */
+    enum: SUNLS_PSET_FAIL_REC      # 804   /* pset failed recoverably       */
+    enum: SUNLS_PSOLVE_FAIL_REC    # 805   /* psolve failed recoverably     */
+    enum: SUNLS_PACKAGE_FAIL_REC   # 806   /* external package recov. fail  */
+    enum: SUNLS_QRFACT_FAIL        # 807   /* QRfact found singular matrix  */
+    enum: SUNLS_LUFACT_FAIL        # 808   /* LUfact found singular matrix  */
 
 cdef extern from "sundials/sundials_direct.h":
     enum: SUNDIALS_DENSE
@@ -294,225 +442,6 @@ cdef extern from "sundials/sundials_dense.h":
     void DenseMatvec(DlsMat A, realtype *x, realtype *y)
     void denseMatvec(realtype **a, realtype *x, realtype *y, sunindextype m, sunindextype n)
 
-cdef extern from "sundials/sundials_pcg.h":
-    ctypedef struct _PcgMemRec:
-        int l_max
-        N_Vector r
-        N_Vector p
-        N_Vector z
-        N_Vector Ap
-    ctypedef _PcgMemRec PcgMemRec
-    ctypedef _PcgMemRec *PcgMem
-
-    PcgMem PcgMalloc(int l_max, N_Vector vec_tmpl)
-    int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b, int pretype,
-                 realtype delta, void *P_data, N_Vector w, ATimesFn atimes,
-                 PSolveFn psolve, realtype *res_norm, int *nli, int *nps)
-    void PcgFree(PcgMem mem)
-
-    enum: PCG_SUCCESS           #  0  /* PCG algorithm converged          */
-    enum: PCG_RES_REDUCED       #  1  /* PCG did NOT converge, but the
-                                #        residual was reduced             */
-    enum: PCG_CONV_FAIL         #  2  /* PCG algorithm failed to converge */
-    enum: PCG_PSOLVE_FAIL_REC   #  3  /* psolve failed recoverably        */
-    enum: PCG_ATIMES_FAIL_REC   #  4  /* atimes failed recoverably        */
-    enum: PCG_PSET_FAIL_REC     #  5  /* pset faild recoverably           */
-
-    enum: PCG_MEM_NULL          # -1  /* mem argument is NULL             */
-    enum: PCG_ATIMES_FAIL_UNREC # -2  /* atimes returned failure flag     */
-    enum: PCG_PSOLVE_FAIL_UNREC # -3  /* psolve failed unrecoverably      */
-    enum: PCG_PSET_FAIL_UNREC   # -4  /* pset failed unrecoverably        */
-
-cdef extern from "sundials/sundials_sparse.h":
-
-    enum: CSC_MAT #0
-    enum: CSR_MAT #1
-
-    ctypedef struct _SlsMat:
-       int M
-       int N
-       int NNZ
-       int NP
-       realtype *data
-       int sparsetype
-       int *indexvals
-       int *indexptrs
-       int **rowvals
-       int **colptrs
-       int **colvals
-       int **rowptrs
-    ctypedef _SlsMat *SlsMat
-
-    SlsMat SparseNewMat(int M, int N, int NNZ, int sparsetype)
-    SlsMat SparseFromDenseMat(const DlsMat A, int sparsetype)
-    int SparseDestroyMat(SlsMat A)
-    int SparseSetMatToZero(SlsMat A)
-    int SparseCopyMat(const SlsMat A, SlsMat B)
-    int SparseScaleMat(realtype b, SlsMat A)
-    int SparseAddIdentityMat(SlsMat A)
-    int SparseAddMat(SlsMat A, const SlsMat B)
-    int SparseReallocMat(SlsMat A)
-    int SparseMatvec(const SlsMat A, const realtype *x, realtype *y)
-    void SparsePrintMat(const SlsMat A, FILE* outfile)
-
-cdef extern from "sundials/sundials_spgmr.h":
-    cdef struct _SpgmrMemRec:
-        int l_max
-
-        N_Vector *V
-        realtype **Hes
-        realtype *givens
-        N_Vector xcor
-        realtype *yg
-        N_Vector vtemp
-    ctypedef _SpgmrMemRec SpgmrMemRec
-    ctypedef _SpgmrMemRec *SpgmrMem
-
-    SpgmrMem SpgmrMalloc(int l_max, N_Vector vec_tmpl)
-    int SpgmrSolve(SpgmrMem mem, void *A_data, N_Vector x, N_Vector b,
-                   int pretype, int gstype, realtype delta,
-                   int max_restarts, void *P_data, N_Vector s1,
-                   N_Vector s2, ATimesFn atimes, PSolveFn psolve,
-                   realtype *res_norm, int *nli, int *nps)
-
-    enum: SPGMR_SUCCESS            #0  /* Converged                     */
-    enum: SPGMR_RES_REDUCED        #1  /* Did not converge, but reduced
-                                   #   /* norm of residual              */
-    enum: SPGMR_CONV_FAIL          #2  /* Failed to converge            */
-    enum: SPGMR_QRFACT_FAIL        #3  /* QRfact found singular matrix  */
-    enum: SPGMR_PSOLVE_FAIL_REC    #4  /* psolve failed recoverably     */
-    enum: SPGMR_ATIMES_FAIL_REC    #5  /* atimes failed recoverably     */
-    enum: SPGMR_PSET_FAIL_REC      #6  /* pset faild recoverably        */
-
-    enum: SPGMR_MEM_NULL          #-1  /* mem argument is NULL          */
-    enum: SPGMR_ATIMES_FAIL_UNREC #-2  /* atimes returned failure flag  */
-    enum: SPGMR_PSOLVE_FAIL_UNREC #-3  /* psolve failed unrecoverably   */
-    enum: SPGMR_GS_FAIL           #-4  /* Gram-Schmidt routine faiuled  */
-    enum: SPGMR_QRSOL_FAIL        #-5  /* QRsol found singular R        */
-    enum: SPGMR_PSET_FAIL_UNREC   #-6  /* pset failed unrecoverably     */
-
-    void SpgmrFree(SpgmrMem mem)
-
-cdef extern from "sundials/sundials_spbcgs.h":
-    ctypedef struct SpbcgMemRec:
-        int l_max
-        N_Vector r_star
-        N_Vector r
-        N_Vector p
-        N_Vector q
-        N_Vector u
-        N_Vector Ap
-        N_Vector vtemp
-    ctypedef SpbcgMemRec *SpbcgMem
-
-    SpbcgMem SpbcgMalloc(int l_max, N_Vector vec_tmpl)
-    int SpbcgSolve(SpbcgMem mem, void *A_data, N_Vector x, N_Vector b,
-                   int pretype, realtype delta, void *P_data, N_Vector sx,
-                   N_Vector sb, ATimesFn atimes, PSolveFn psolve,
-                   realtype *res_norm, int *nli, int *nps)
-
-    enum: SPBCG_SUCCESS            #0  /* SPBCG algorithm converged          */
-    enum: SPBCG_RES_REDUCED        #1  /* SPBCG did NOT converge, but the
-                                   #      residual was reduced               */
-    enum: SPBCG_CONV_FAIL          #2  /* SPBCG algorithm failed to converge */
-    enum: SPBCG_PSOLVE_FAIL_REC    #3  /* psolve failed recoverably          */
-    enum: SPBCG_ATIMES_FAIL_REC    #4  /* atimes failed recoverably          */
-    enum: SPBCG_PSET_FAIL_REC      #5  /* pset faild recoverably             */
-
-    enum: SPBCG_MEM_NULL          #-1  /* mem argument is NULL               */
-    enum: SPBCG_ATIMES_FAIL_UNREC #-2  /* atimes returned failure flag       */
-    enum: SPBCG_PSOLVE_FAIL_UNREC #-3  /* psolve failed unrecoverably        */
-    enum: SPBCG_PSET_FAIL_UNREC   #-4  /* pset failed unrecoverably          */
-
-    void SpbcgFree(SpbcgMem mem)
-
-cdef extern from "sundials/sundials_spfgmr.h":
-    ctypedef struct _SpfgmrMemRec:
-        int l_max
-        N_Vector *V
-        N_Vector *Z
-        realtype **Hes
-        realtype *givens
-        N_Vector xcor
-        realtype *yg
-        N_Vector vtemp
-    ctypedef _SpfgmrMemRec SpfgmrMemRec
-    ctypedef _SpfgmrMemRec *SpfgmrMem
-
-    SpfgmrMem SpfgmrMalloc(int l_max, N_Vector vec_tmpl)
-    int SpfgmrSolve(SpfgmrMem mem, void *A_data, N_Vector x, N_Vector b,
-                    int pretype, int gstype, realtype delta, int max_restarts,
-                    int maxit, void *P_data, N_Vector s1, N_Vector s2,
-                    ATimesFn atimes, PSolveFn psolve, realtype *res_norm,
-                    int *nli, int *nps)
-    void SpfgmrFree(SpfgmrMem mem)
-
-    enum: SPFGMR_SUCCESS           #  0  /* Converged                     */
-    enum: SPFGMR_RES_REDUCED       #  1  /* Did not converge, but reduced
-                                   #        norm of residual              */
-    enum: SPFGMR_CONV_FAIL         # 2  /* Failed to converge            */
-    enum: SPFGMR_QRFACT_FAIL       # 3  /* QRfact found singular matrix  */
-    enum: SPFGMR_PSOLVE_FAIL_REC   # 4  /* psolve failed recoverably     */
-    enum: SPFGMR_ATIMES_FAIL_REC   # 5  /* atimes failed recoverably     */
-    enum: SPFGMR_PSET_FAIL_REC     # 6  /* pset faild recoverably        */
-
-    enum: SPFGMR_MEM_NULL          # -1  /* mem argument is NULL          */
-    enum: SPFGMR_ATIMES_FAIL_UNREC # -2  /* atimes returned failure flag  */
-    enum: SPFGMR_PSOLVE_FAIL_UNREC # -3  /* psolve failed unrecoverably   */
-    enum: SPFGMR_GS_FAIL           # -4  /* Gram-Schmidt routine faiuled  */
-    enum: SPFGMR_QRSOL_FAIL        # -5  /* QRsol found singular R        */
-    enum: SPFGMR_PSET_FAIL_UNREC   # -6  /* pset failed unrecoverably     */
-
-cdef extern from "sundials/sundials_sptfqmr.h":
-    cdef struct SptfqmrMemRec:
-        int l_max
-
-        N_Vector r_star
-        N_Vector q
-        N_Vector d
-        N_Vector v
-        N_Vector p
-        N_Vector *r
-        N_Vector u
-        N_Vector vtemp1
-        N_Vector vtemp2
-        N_Vector vtemp3
-    ctypedef SptfqmrMemRec *SptfqmrMem
-
-    SptfqmrMem SptfqmrMalloc(int l_max, N_Vector vec_tmpl)
-    int SptfqmrSolve(SptfqmrMem mem, void *A_data, N_Vector x, N_Vector b,
-                     int pretype, realtype delta, void *P_data, N_Vector sx,
-                     N_Vector sb, ATimesFn atimes, PSolveFn psolve,
-                     realtype *res_norm, int *nli, int *nps)
-
-    enum: SPTFQMR_SUCCESS            #/* SPTFQMR algorithm converged          */
-    enum: SPTFQMR_RES_REDUCED        #/* SPTFQMR did NOT converge, but the    */
-    enum: SPTFQMR_CONV_FAIL          #/* SPTFQMR algorithm failed to converge */
-    enum: SPTFQMR_PSOLVE_FAIL_REC    #/* psolve failed recoverably            */
-    enum: SPTFQMR_ATIMES_FAIL_REC    #/* atimes failed recoverably            */
-    enum: SPTFQMR_PSET_FAIL_REC      #/* pset faild recoverably               */
-
-    enum: SPTFQMR_MEM_NULL           #/* mem argument is NULL                 */
-    enum: SPTFQMR_ATIMES_FAIL_UNREC  #/* atimes returned failure flag         */
-    enum: SPTFQMR_PSOLVE_FAIL_UNREC  #/* psolve failed unrecoverably          */
-    enum: SPTFQMR_PSET_FAIL_UNREC    #/* pset failed unrecoverably            */
-
-    void SptfqmrFree(SptfqmrMem mem)
-
-# We don't use SuperLUMT - "slu_mt_ddefs.h" required
-#cdef extern from "sundials/sundials_superlumt_impl.h":
-#    ctypedef struct SLUMTDataRec:
-#        SuperMatrix *s_A, *s_AC, *s_L, *s_U, *s_B
-#        Gstat_t *Gstat
-#        int *perm_r, *perm_c
-#        int num_threads
-#        double diag_pivot_thresh
-#        superlumt_options_t *superlumt_options
-#
-#        int s_ordering
-#
-#    ctypedef SLUMTDataRec *SLUMTData
-
 cdef extern from "sundials/sundials_nonlinearsolver.h":
 
     struct _generic_SUNNonlinearSolver_Ops:
@@ -523,10 +452,9 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
     ctypedef _generic_SUNNonlinearSolver *SUNNonlinearSolver
 
     ctypedef int (*SUNNonlinSolSysFn)(N_Vector y, N_Vector F, void* mem)
-    ctypedef int (*SUNNonlinSolLSetupFn)(N_Vector y, N_Vector F, 
-                                         booleantype jbad,
+    ctypedef int (*SUNNonlinSolLSetupFn)(booleantype jbad,
                                          booleantype* jcur, void* mem)
-    ctypedef int (*SUNNonlinSolLSolveFn)(N_Vector y, N_Vector b, void* mem)
+    ctypedef int (*SUNNonlinSolLSolveFn)(N_Vector b, void* mem)
     # rename reserved del into del_t for python!
     ctypedef int (*SUNNonlinSolConvTestFn)(SUNNonlinearSolver NLS, N_Vector y,
                                           N_Vector del_t, realtype tol, 
@@ -552,9 +480,12 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
         int (*getcuriter)(SUNNonlinearSolver, int*)
         int (*getnumconvfails)(SUNNonlinearSolver, long int*)
 
-    #struct _generic_SUNNonlinearSolver :
-    #    void *content
-    #    struct _generic_SUNNonlinearSolver_Ops *ops
+    struct _generic_SUNNonlinearSolver :
+        void *content
+        SUNNonlinearSolver_Ops ops
+
+    SUNNonlinearSolver SUNNonlinSolNewEmpty();
+    void SUNNonlinSolFreeEmpty(SUNNonlinearSolver NLS);
 
     SUNNonlinearSolver_Type SUNNonlinSolGetType(SUNNonlinearSolver NLS)
 
@@ -581,10 +512,11 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
 
 
     enum: SUN_NLS_SUCCESS         #  0
-    enum: SUN_NLS_CONTINUE        # +1
-    enum: SUN_NLS_CONV_RECVR      # +2
+    enum: SUN_NLS_CONTINUE        # +901
+    enum: SUN_NLS_CONV_RECVR      # +902
     
-    enum: SUN_NLS_MEM_NULL        # -1
-    enum: SUN_NLS_MEM_FAIL        # -2
-    enum: SUN_NLS_ILL_INPUT       # -3
-    enum: SUN_NLS_VECTOROP_ERR    # -4
+    enum: SUN_NLS_MEM_NULL        # -901
+    enum: SUN_NLS_MEM_FAIL        # -902
+    enum: SUN_NLS_ILL_INPUT       # -903
+    enum: SUN_NLS_VECTOROP_ERR    # -904
+    enum: SUN_NLS_EXT_FAIL        # -905 

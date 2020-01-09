@@ -43,42 +43,43 @@ SolverReturn = namedtuple(
 SolverVariables = namedtuple("SolverVariables", ["t", "y", "ydot"])
 
 class StatusEnumIDA(IntEnum):
-    SUCCESS = IDA_SUCCESS
-    TSTOP_RETURN = IDA_TSTOP_RETURN
-    ROOT_RETURN = IDA_ROOT_RETURN
+    SUCCESS           = IDA_SUCCESS           # 0
+    TSTOP_RETURN      = IDA_TSTOP_RETURN      # 1
+    ROOT_RETURN       = IDA_ROOT_RETURN       # 2
 
-    WARNING = IDA_WARNING
+    WARNING           = IDA_WARNING           # 99
 
-    TOO_MUCH_WORK = IDA_TOO_MUCH_WORK
-    TOO_MUCH_ACC = IDA_TOO_MUCH_ACC
-    ERR_FAIL = IDA_ERR_FAIL
-    CONV_FAIL = IDA_CONV_FAIL
+    TOO_MUCH_WORK     = IDA_TOO_MUCH_WORK     # -1
+    TOO_MUCH_ACC      = IDA_TOO_MUCH_ACC      # -2
+    ERR_FAIL          = IDA_ERR_FAIL          # -3
+    CONV_FAIL         = IDA_CONV_FAIL         # -4
 
-    LINIT_FAIL = IDA_LINIT_FAIL
-    LSETUP_FAIL = IDA_LSETUP_FAIL
-    LSOLVE_FAIL = IDA_LSOLVE_FAIL
-    RES_FAIL = IDA_RES_FAIL
-    REP_RES_ERR = IDA_REP_RES_ERR
-    RTFUNC_FAIL = IDA_RTFUNC_FAIL
-    CONSTR_FAIL= IDA_CONSTR_FAIL
+    LINIT_FAIL        = IDA_LINIT_FAIL        # -5
+    LSETUP_FAIL       = IDA_LSETUP_FAIL       # -6
+    LSOLVE_FAIL       = IDA_LSOLVE_FAIL       # -7
+    RES_FAIL          = IDA_RES_FAIL          # -8
+    REP_RES_ERR       = IDA_REP_RES_ERR       # -9
+    RTFUNC_FAIL       = IDA_RTFUNC_FAIL       # -10
+    CONSTR_FAIL       = IDA_CONSTR_FAIL       # -11
 
-    FIRST_RES_FAIL = IDA_FIRST_RES_FAIL
-    LINESEARCH_FAIL = IDA_LINESEARCH_FAIL
-    NO_RECOVERY = IDA_NO_RECOVERY
-    NLS_INIT_FAIL = IDA_NLS_INIT_FAIL
-    NLS_SETUP_FAIL = IDA_NLS_SETUP_FAIL
+    FIRST_RES_FAIL    = IDA_FIRST_RES_FAIL    # -12
+    LINESEARCH_FAIL   = IDA_LINESEARCH_FAIL   # -13
+    NO_RECOVERY       = IDA_NO_RECOVERY       # -14
+    NLS_INIT_FAIL     = IDA_NLS_INIT_FAIL     # -15
+    NLS_SETUP_FAIL    = IDA_NLS_SETUP_FAIL    # -16
+    NLS_FAIL          = IDA_NLS_FAIL          # -17
 
-    MEM_NULL= IDA_MEM_NULL
-    MEM_FAIL = IDA_MEM_FAIL
-    ILL_INPUT = IDA_ILL_INPUT
-    NO_MALLOC = IDA_NO_MALLOC
-    BAD_EWT = IDA_BAD_EWT
-    BAD_K = IDA_BAD_K
-    BAD_T = IDA_BAD_T
-    BAD_DKY = IDA_BAD_DKY
-    VECTOROP_ERR = IDA_VECTOROP_ERR
+    MEM_NULL          = IDA_MEM_NULL          # -20
+    MEM_FAIL          = IDA_MEM_FAIL          # -21
+    ILL_INPUT         = IDA_ILL_INPUT         # -22
+    NO_MALLOC         = IDA_NO_MALLOC         # -23
+    BAD_EWT           = IDA_BAD_EWT           # -24
+    BAD_K             = IDA_BAD_K             # -25
+    BAD_T             = IDA_BAD_T             # -26
+    BAD_DKY           = IDA_BAD_DKY           # -27
+    VECTOROP_ERR      = IDA_VECTOROP_ERR      # -28
 
-    UNRECOGNIZED_ERROR = IDA_UNRECOGNIZED_ERROR
+    UNRECOGNIZED_ERROR= IDA_UNRECOGNIZED_ERROR# -99
 
 STATUS_MESSAGE = {
     StatusEnumIDA.SUCCESS: "Successful function return.",
@@ -101,6 +102,7 @@ STATUS_MESSAGE = {
     StatusEnumIDA.NO_RECOVERY: "The residual routine or the linear setup or solve routine had a recoverable error, but IDACalcIC was unable to recover.",
     StatusEnumIDA.NLS_INIT_FAIL: "The nonlinear solver's init routine failed.",
     StatusEnumIDA.NLS_SETUP_FAIL: "The nonlinear solver setup failed unrecoverably.",
+    StatusEnumIDA.NLS_FAIL: "The nonlinear solver failed in an unrecoverable manner",
     StatusEnumIDA.MEM_NULL: "Integrator memory is NULL.",
     StatusEnumIDA.MEM_FAIL: "A memory request failed.",
     StatusEnumIDA.ILL_INPUT: "Invalid input detected.",
@@ -834,7 +836,7 @@ cdef class IDA:
         self.verbosity = 1
         self.options = default_values
         self.N       = -1
-        self._old_api = True # use old api by default
+        self._old_api = False # use new api by default
         self._step_compute = False #avoid dict lookup
         self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)
@@ -2001,8 +2003,7 @@ cdef class IDA:
                     'first required output %f.'
                              % (ic_t0, tspan[0], tspan[1]))
 
-        ret_ic = self.init_step(tspan[0], y0, yp0,
-                                           y_retn[0, :], yp_retn[0, :])
+        ret_ic = self.init_step(tspan[0], y0, yp0, y_retn[0, :], yp_retn[0, :])
 
         PyErr_CheckSignals()
         if self._old_api:
