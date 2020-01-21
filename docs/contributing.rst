@@ -119,10 +119,16 @@ Bumping the version to the next development version
 
 Modify ``MAJOR``, ``MINOR`` and ``MICRO`` in ``common.py`` to a later version (increasing ``MICRO`` by 1 is sufficient). Also in ``common.py``, change back to ``DEV=True``. Finally, copy the DOI badge of of the latest release from Zenodo_ to the ``README.md``, and commit only these two files. You can now run ``git stash pop`` to retrieve what you were working on.
 
+Build documentation on ReadTheDocs
+..................................
+
+Login on readthedocs_, as release manager you should have access to project ``scikits-odes``. Update the build documentation: latest, new release, master.
+On new bugfix point release, deactivate the previous point release docs.
+
 .. _Zenodo: https://zenodo.org
 .. _Github: https://github.com/bmcage/odes
 .. _PyPI: https://pypi.org
-.. _readthedocs: https://readthedocs.org
+.. _readthedocs: https://readthedocs.org/dashboard
 .. _doctr: https://drdoctr.github.io/doctr/
 .. _ORCID: https://orcid.org/
 .. _sphinx: http://www.sphinx-doc.org/
