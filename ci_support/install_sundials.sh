@@ -13,7 +13,12 @@ tar -xzvf "$SUNDIALS_FILE"
 
 mkdir sundials_build
 
-
-cd sundials_build &&
-    cmake -DCMAKE_INSTALL_PREFIX=$SUNDIALS_DIR -DLAPACK_ENABLE=ON -DSUNDIALS_INDEX_SIZE="$INDEX_SIZE" -DSUNDIALS_PRECISION="$PRECISION" -DEXAMPLES_INSTALL:BOOL=OFF ../$SUNDIALS &&
-    make && make install
+if [ "$PRECISION" == "extended" ]; then
+    cd sundials_build &&
+        cmake -DCMAKE_INSTALL_PREFIX=$SUNDIALS_DIR -DLAPACK_ENABLE=OFF -DSUNDIALS_INDEX_SIZE="$INDEX_SIZE" -DSUNDIALS_PRECISION="$PRECISION" -DEXAMPLES_INSTALL:BOOL=OFF ../$SUNDIALS &&
+        make && make install
+else 
+    cd sundials_build &&
+        cmake -DCMAKE_INSTALL_PREFIX=$SUNDIALS_DIR -DLAPACK_ENABLE=ON -DSUNDIALS_INDEX_SIZE="$INDEX_SIZE" -DSUNDIALS_PRECISION="$PRECISION" -DEXAMPLES_INSTALL:BOOL=OFF ../$SUNDIALS &&
+        make && make install
+fi
