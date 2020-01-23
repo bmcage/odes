@@ -7,8 +7,7 @@
 [![PyPI](https://img.shields.io/pypi/status/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 
 
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3602093.svg)](https://doi.org/10.5281/zenodo.3602093)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3625628.svg)](https://doi.org/10.5281/zenodo.3625628)
 
 [![Paper DOI](http://joss.theoj.org/papers/10.21105/joss.00165/status.svg)](https://doi.org/10.21105/joss.00165)
 
