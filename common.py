@@ -24,7 +24,7 @@ BUILD_REQUIRES = ['numpy', 'cython'] # This is need for older pip
 MAJOR = 2
 MINOR = 6
 MICRO = 1
-DEV = True
+DEV = False
 
 CLASSIFIERS = [
         'Development Status :: 5 - Production/Stable',
