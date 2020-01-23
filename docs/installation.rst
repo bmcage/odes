@@ -19,9 +19,9 @@ Before building ``odes``, you need to have installed:
 
 In addition, if building from a git checkout, you'll also need Cython.
 
-It is required that Sundials is built with the BLAS/LAPACK interface enabled, so check
-the Fortran Settings section. A typical install if sundials download package is
-extracted into directory sundials-5.1.0 is on a \*nix system::
+If using precision type double, it is required that Sundials is built with the BLAS/LAPACK interface enabled, so check the Fortran Settings section. 
+
+A typical install if sundials download package is extracted into directory sundials-5.1.0, with LAPACK included is on a \*nix system::
 
     mkdir build-sundials-5.1.0
     cd build-sundials-5.1.0/
@@ -30,10 +30,8 @@ extracted into directory sundials-5.1.0 is on a \*nix system::
 
 where you replace ``<install_path>`` with the install path you want, default normally is ``/usr/local/``.
 
+For extended precision, set ``-DLAPACK_ENABLE=OFF`` and add ``-DSUNDIALS_PRECISION=extended``.
 
-.. warning::
-
-    Using ``SUNDIALS_INDEX_SIZE=64`` will disable LAPLACK, even though ``-DLAPACK_ENABLE=ON`` is present! This means LAPACK solvers cannot be used. Use index size 32 if you require the LAPACK solvers.
 
 .. warning::
 
