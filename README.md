@@ -1,4 +1,4 @@
-[![Documentation Status](https://readthedocs.org/projects/scikits-odes/badge/?version=latest)](https://scikits-odes.readthedocs.org/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/scikits-odes/badge/?version=stable)](https://scikits-odes.readthedocs.org/en/stable/?badge=stable)
 [![Build Status](https://travis-ci.org/bmcage/odes.svg?branch=master)](https://travis-ci.org/bmcage/odes)
 [![Version](https://img.shields.io/pypi/v/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 [![License](https://img.shields.io/pypi/l/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
@@ -13,7 +13,7 @@
 
 
 ODES is a scikit for Python 2.7 and 3.3-3.5 offering extra ode/dae solvers, as an extension to what is available in scipy.
-The documentation is available at [Read The Docs](https://scikits-odes.readthedocs.io/en/latest/), and API docs can be found at https://bmcage.github.io/odes.
+The documentation is available at [Read The Docs](https://scikits-odes.readthedocs.io/), and API docs can be found at https://bmcage.github.io/odes.
 
 # Available solvers:
 ODES provides interfaces to the following solvers:
@@ -43,7 +43,7 @@ plt.plot(solution.values.t, solution.values.y[:,0], label='Van der Pol oscillato
 plt.show()
 ```
 
-For simplicity there is also a convenience function `odeint` wrapping the ode solver class. See the [User Guide](https://scikits-odes.readthedocs.io/en/latest/guide.html) for a simple example for `odeint`, as well as simple examples for object orientated interfaces and further examples using ODES solvers.
+For simplicity there is also a convenience function `odeint` wrapping the ode solver class. See the [User Guide](https://scikits-odes.readthedocs.io/) for a simple example for `odeint`, as well as simple examples for object orientated interfaces and further examples using ODES solvers.
 
 
 # Projects that use odes
