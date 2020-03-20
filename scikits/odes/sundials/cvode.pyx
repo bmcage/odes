@@ -238,7 +238,7 @@ cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data) e
     if parallel_implementation:
         raise NotImplemented
     else:
-        for i in np.arange(np.alen(g_tmp)):
+        for i in np.arange(len(g_tmp)):
             gout[i] = <realtype> g_tmp[i]
 
     return user_flag
@@ -1141,10 +1141,10 @@ cdef class CVODE:
                                                  <realtype> opts_atol)
             else:
                 np_atol = np.asarray(opts_atol, dtype=DTYPE)
-                if np.alen(np_atol) != self.N:
+                if len(np_atol) != self.N:
                     raise ValueError("Array length inconsistency: 'atol' "
                                      "lenght (%i) differs from problem size "
-                                     "(%i)." % (np.alen(np_atol), self.N))
+                                     "(%i)." % (len(np_atol), self.N))
 
                 if self.parallel_implementation:
                     raise NotImplemented
@@ -1245,7 +1245,7 @@ cdef class CVODE:
         if self._old_api:
             return (flag, time)
         else:
-            y_retn  = np.empty(np.alen(np_y0), DTYPE)
+            y_retn  = np.empty(len(np_y0), DTYPE)
             y_retn[:] = np_y0[:]
             soln = SolverReturn(
                 flag=flag,
@@ -1283,7 +1283,7 @@ cdef class CVODE:
         if self.parallel_implementation:
             raise ValueError('Error: Parallel implementation not implemented !')
         cdef INDEX_TYPE_t N
-        N = <INDEX_TYPE_t> np.alen(y0)
+        N = <INDEX_TYPE_t> len(y0)
 
         if opts['rfn'] is None:
             raise ValueError('The right-hand-side function rfn not assigned '
@@ -1378,7 +1378,7 @@ cdef class CVODE:
         #we test if rfn call doesn't give errors due to bad coding, as
         #cvode will ignore errors, it only checks return value (0 or 1 for error)
         if isinstance(rfn, CV_WrapRhsFunction):
-            _test = np.empty(np.alen(y0), DTYPE)
+            _test = np.empty(len(y0), DTYPE)
             if rfn.with_userdata:
                 rfn._rhsfn(t0, y0, _test, opts['user_data'])
             else:
@@ -1617,22 +1617,22 @@ cdef class CVODE:
             if linsolver == 'lapackband' or linsolver == 'band':
                 self.aux_data.jac_tmp = np.empty((
                         opts['uband'] + opts['lband'] + 1,
-                        np.alen(y0)
+                        len(y0)
                     ), DTYPE
                 )
             else:
-                self.aux_data.jac_tmp = np.empty((np.alen(y0), np.alen(y0)), DTYPE)
+                self.aux_data.jac_tmp = np.empty((len(y0), len(y0)), DTYPE)
             CVDlsSetJacFn(cv_mem, _jacdense)
 
         #we test if jac don't give errors due to bad coding, as
         #cvode will ignore errors, it only checks return value (0 or 1 for error)
         if jac is not None and isinstance(jac, CV_WrapJacRhsFunction):
             if linsolver == 'lapackband' or linsolver == 'band':
-                _test = np.empty((opts['uband']+opts['lband']+1, np.alen(y0)),
+                _test = np.empty((opts['uband']+opts['lband']+1, len(y0)),
                         DTYPE)
             else:
-                _test = np.empty((np.alen(y0), np.alen(y0)), DTYPE)
-            _fy_test = np.zeros(np.alen(y0), DTYPE)
+                _test = np.empty((len(y0), len(y0)), DTYPE)
+            _fy_test = np.zeros(len(y0), DTYPE)
             jac._jacfn(t0, y0, _fy_test, _test)
             _test = None
 
@@ -1679,7 +1679,7 @@ cdef class CVODE:
         if self._old_api:
             return (flag, time)
         else:
-            y_retn  = np.empty(np.alen(np_y0), DTYPE)
+            y_retn  = np.empty(len(np_y0), DTYPE)
             y_retn[:] = np_y0[:]
             soln = SolverReturn(
                 flag=flag,
@@ -1700,7 +1700,7 @@ cdef class CVODE:
             return
 
         cdef INDEX_TYPE_t N
-        N = <INDEX_TYPE_t> np.alen(y0)
+        N = <INDEX_TYPE_t> len(y0)
         if N == self.N:
             self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
         else:
@@ -1747,7 +1747,7 @@ cdef class CVODE:
         """
         cdef np.ndarray[DTYPE_t, ndim=1] np_tspan, np_y0
 
-        if not np.alen(tspan) > 1:
+        if not len(tspan) > 1:
             raise ValueError("Solve tspan must be array with minimum 2 elements,"
                              " start and end time.")
         np_tspan = np.asarray(tspan, dtype=DTYPE)
@@ -1790,7 +1790,7 @@ cdef class CVODE:
         cdef np.ndarray[DTYPE_t, ndim=1] t_retn
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn
         t_retn  = np.empty(np.shape(tspan), DTYPE)
-        y_retn  = np.empty([np.alen(tspan), np.alen(y0)], DTYPE)
+        y_retn  = np.empty([len(tspan), len(y0)], DTYPE)
 
         self._init_step(tspan[0], y0)
         PyErr_CheckSignals()
@@ -1799,7 +1799,7 @@ cdef class CVODE:
 
         cdef np.ndarray[DTYPE_t, ndim=1] y_last
         cdef unsigned int idx = 1 # idx == 0 is IC
-        cdef unsigned int last_idx = np.alen(tspan)
+        cdef unsigned int last_idx = len(tspan)
         cdef DTYPE_t t
         cdef int flag = 0
         cdef void *cv_mem = self._cv_mem

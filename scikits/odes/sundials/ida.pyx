@@ -254,7 +254,7 @@ cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
     if parallel_implementation:
         raise NotImplemented
     else:
-        for i in np.arange(np.alen(g_tmp)):
+        for i in np.arange(len(g_tmp)):
             gout[i] = <realtype> g_tmp[i]
 
     return user_flag
@@ -329,7 +329,7 @@ cdef int _jacdense(realtype tt, realtype cj,
         yp_tmp = aux_data.yp_tmp
         residual_tmp = aux_data.residual_tmp
         if aux_data.jac_tmp is None:
-            N = np.alen(yy_tmp)
+            N = len(yy_tmp)
             aux_data.jac_tmp = np.empty((N,N), DTYPE)
         jac_tmp = aux_data.jac_tmp
 
@@ -504,11 +504,11 @@ cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector yp, N_Vector r,
         residual_tmp = aux_data.residual_tmp
 
         if aux_data.r_vec is None:
-            N = np.alen(yy_tmp)
+            N = len(yy_tmp)
             aux_data.rvec_tmp = np.empty(N, DTYPE)
 
         if aux_data.z_tmp is None:
-            N = np.alen(yy_tmp)
+            N = len(yy_tmp)
             aux_data.z_tmp = np.empty(N, DTYPE)
 
         rvec_tmp = aux_data.rvec_tmp
@@ -1220,10 +1220,10 @@ cdef class IDA:
                                                 <realtype> opts_atol)
             else:
                 np_atol = np.asarray(opts_atol, dtype=DTYPE)
-                if np.alen(np_atol) != self.N:
+                if len(np_atol) != self.N:
                     raise ValueError("Array length inconsistency: 'atol' "
                                      "lenght (%i) differs from problem size "
-                                     "(%i)." % (np.alen(np_atol), self.N))
+                                     "(%i)." % (len(np_atol), self.N))
 
                 if self.parallel_implementation:
                     raise NotImplemented
@@ -1349,8 +1349,8 @@ cdef class IDA:
             if self._old_api:
                 return (True, time)
             else:
-                y_retn  = np.empty(np.alen(np_y0), DTYPE)
-                yp_retn = np.empty(np.alen(np_y0), DTYPE)
+                y_retn  = np.empty(len(np_y0), DTYPE)
+                yp_retn = np.empty(len(np_y0), DTYPE)
                 # if no init cond computed, the start values are values at t=0
                 y_retn[:] = np_y0[:]
                 yp_retn[:] = np_yp0[:]
@@ -1405,17 +1405,17 @@ cdef class IDA:
         if self.parallel_implementation:
             raise ValueError('Error: Parallel implementation not implemented !')
         cdef INDEX_TYPE_t N
-        N = <INDEX_TYPE_t> np.alen(y0)
+        N = <INDEX_TYPE_t> len(y0)
 
         if opts['rfn'] is None:
             raise ValueError('The residual function rfn not assigned '
                               'during ''set_options'' call !')
 
-        if not np.alen(y0) == np.alen(yp0):
+        if not len(y0) == len(yp0):
             raise ValueError('Arrays inconsistency: y0 and ydot0 have to be of '
                              'the same length !')
-        if (((np.alen(y0) == 0) and (not opts['compute_initcond'] == 'y0'))
-                or ((np.alen(yp0) == 0) and (not opts['compute_initcond'] == 'yp0'))):
+        if (((len(y0) == 0) and (not opts['compute_initcond'] == 'y0'))
+                or ((len(yp0) == 0) and (not opts['compute_initcond'] == 'yp0'))):
             raise ValueError('Value of y0 not set or the value of ydot0 not '
                              'flagged to be computed (see ''init_cond'' for '
                              'documentation.')
@@ -1717,7 +1717,7 @@ cdef class IDA:
 
 
         if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
-            self.aux_data.jac_tmp = np.empty((np.alen(y0), np.alen(y0)), DTYPE)
+            self.aux_data.jac_tmp = np.empty((len(y0), len(y0)), DTYPE)
             flag = IDADlsSetJacFn(ida_mem, _jacdense)
             if flag == IDALS_MEM_NULL:
                 raise MemoryError('IDA Memory NULL.')
@@ -1739,7 +1739,7 @@ cdef class IDA:
                 for idx in range(constraints_idx):
                     constraints_vars[constraints_idx[idx]] = constraints_type[idx]
             else:
-                assert np.alen(constraints_type) == N,\
+                assert len(constraints_type) == N,\
                   'Without ''constraints_idx'' specified the'\
                   '  ''constraints_type'' the constraints_idx has to be of the'\
                   ' same length as y (i.e. contains constraints for EVERY '\
@@ -1836,7 +1836,7 @@ cdef class IDA:
                 ypinit = self.yp
 
         if not ((y_ic0_retn is None) and (yp_ic0_retn is None)):
-            assert np.alen(y_ic0_retn) == np.alen(yp_ic0_retn) == N,\
+            assert len(y_ic0_retn) == len(yp_ic0_retn) == N,\
               'y_ic0 and/or yp_ic0 have to be of the same size as y0.'
 
             if not y_ic0_retn is None: nv_s2ndarray(yinit, y_ic0_retn)
@@ -1883,8 +1883,8 @@ cdef class IDA:
         if self._old_api:
             return (flag, time)
         else:
-            y_retn  = np.empty(np.alen(np_y0), DTYPE)
-            yp_retn = np.empty(np.alen(np_y0), DTYPE)
+            y_retn  = np.empty(len(np_y0), DTYPE)
+            yp_retn = np.empty(len(np_y0), DTYPE)
             # no init cond computed, the start values are values at t=t0
             y_retn[:] = np_y0[:]
             yp_retn[:] = np_yp0[:]
@@ -1908,8 +1908,8 @@ cdef class IDA:
             return
 
         cdef INDEX_TYPE_t N
-        N = <INDEX_TYPE_t> np.alen(y0)
-        Np = <INDEX_TYPE_t> np.alen(yp0)
+        N = <INDEX_TYPE_t> len(y0)
+        Np = <INDEX_TYPE_t> len(yp0)
         if N == self.N and Np == N:
             self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
             self.yp0  = N_VMake_Serial(N, <realtype *>yp0.data)
@@ -1985,17 +1985,17 @@ cdef class IDA:
 
         cdef np.ndarray[DTYPE_t, ndim=1] t_retn
         cdef np.ndarray[DTYPE_t, ndim=2] y_retn, yp_retn
-        t_retn  = np.empty([np.alen(tspan), ], DTYPE)
-        y_retn  = np.empty([np.alen(tspan), np.alen(y0)], DTYPE)
-        yp_retn = np.empty([np.alen(tspan), np.alen(y0)], DTYPE)
+        t_retn  = np.empty([len(tspan), ], DTYPE)
+        y_retn  = np.empty([len(tspan), len(y0)], DTYPE)
+        yp_retn = np.empty([len(tspan), len(y0)], DTYPE)
 
         cdef int flag
 
         #check to avoid typical error
         cdef dict opts = self.options
         cdef realtype ic_t0 = <realtype>opts['compute_initcond_t0']
-        if ((np.alen(tspan)>1 and ic_t0 > 0. and tspan[1] > tspan[0]) or
-            (np.alen(tspan)>1 and ic_t0 < 0. and tspan[1] < tspan[0])):
+        if ((len(tspan)>1 and ic_t0 > 0. and tspan[1] > tspan[0]) or
+            (len(tspan)>1 and ic_t0 < 0. and tspan[1] < tspan[0])):
             pass
         else:
             raise ValueError('InitCond: ''compute_initcond_t0'' value: %f '
@@ -2027,7 +2027,7 @@ cdef class IDA:
         #TODO: Parallel version
         cdef np.ndarray[DTYPE_t, ndim=1] y_last, yp_last
         cdef unsigned int idx = 1 # idx == 0 is IC
-        cdef unsigned int last_idx = np.alen(tspan)
+        cdef unsigned int last_idx = len(tspan)
         cdef DTYPE_t t
         cdef void *ida_mem = self._ida_mem
         cdef realtype t_out
