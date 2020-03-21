@@ -194,7 +194,7 @@ class dopri5(OdeBase):
                             verbosity = self.options['verbosity'])\
                         .set_initial_value(y0, t0)
         self.initialized = True
-        y_retn  = np.empty(np.alen(y0), float)
+        y_retn  = np.empty(len(y0), float)
         y_retn[:] = y0[:]
         soln = SolverReturn(
             flag=StatusEnumDOP.SUCCESS,
@@ -298,7 +298,7 @@ class dopri5(OdeBase):
         soln = self.init_step(tspan[0], y0)
         nrt = len(tspan)
         t_retn  = np.empty(np.shape(tspan), float)
-        y_retn  = np.empty([np.alen(tspan), np.alen(y0)], float)
+        y_retn  = np.empty([len(tspan), len(y0)], float)
 
         t_retn[0] = tspan[0]
         y_retn[0, :] = y0
