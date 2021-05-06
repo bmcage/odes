@@ -1,7 +1,10 @@
 # cython: embedsignature=True
 from cpython.exc cimport PyErr_CheckSignals
 from collections import namedtuple
-from enum import IntEnum
+try:
+    from enum import IntEnum
+except ImportError:
+    from enum34 import IntEnum
 import inspect
 from warnings import warn
 

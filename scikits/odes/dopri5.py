@@ -43,8 +43,12 @@ dop853
 
 from __future__ import print_function
 
+import sys
 from collections import namedtuple
-from enum import IntEnum
+try:
+    from enum import IntEnum
+except ImportError:
+    from enum34 import IntEnum
 from warnings import warn
 
 import numpy as np
