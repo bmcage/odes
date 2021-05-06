@@ -9,7 +9,7 @@ import platform
 import scipy.sparse as sparse
 
 from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
-                    empty, alen)
+                   empty)
 
 from numpy.testing import TestCase, run_module_suite
 from scipy.integrate import ode as Iode
@@ -75,8 +75,8 @@ class TestDae(TestCase):
 
         for ig in igs:
             ig.set_options(old_api=old_api, **integrator_params)
-            z = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
-            zprime = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
+            z = empty((1+len(problem.stop_t), len(problem.z0)), DTYPE)
+            zprime = empty((1+len(problem.stop_t), len(problem.z0)), DTYPE)
             ist = ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
             i=1
             for time in problem.stop_t:
