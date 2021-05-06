@@ -51,16 +51,12 @@ def _get_num_args(func):
     """
     Python 2/3 compatible method of getting number of args that `func` accepts
     """
-    if hasattr(inspect, "signature"):
-        sig = inspect.signature(func)
-        numargs = 0
-        for param in sig.parameters.values():
-            if param.kind in (
-                inspect.Parameter.POSITIONAL_ONLY,
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                inspect.Parameter.VAR_POSITIONAL,
-            ):
-                numargs += 1
-        return numargs
+    if hasattr(inspect, "getfullargspec"):
+        argspec = inspect.getfullargspec(func)
     else:
-        return len(inspect.getargspec(func).args)
+        argspec = inspect.getargspec(func)
+    arg_cnt = 0
+    for arg in argspec.args:
+        if arg not in ("self", "cls"):
+            arg_cnt += 1
+    return arg_cnt

@@ -32,7 +32,9 @@ cdef class IDA_JacRhsFunction:
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] residual,
                        DTYPE_t cj,
-                       np.ndarray[DTYPE_t, ndim=2] J) except? -1
+                       np.ndarray[DTYPE_t, ndim=2] J,
+                       object userdata = *) except? -1
+
 
 cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
     cdef object _jacfn

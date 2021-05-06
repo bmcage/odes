@@ -76,9 +76,12 @@ class TestDae(TestCase):
         # restrict to 'ida' method since jacobian function below
         # follows the ida interface
         if jac is not None and integrator in ['ida', 'idas']:
-            def jac_times_vec(tt, yy, yp, rr, v, Jv, cj):
+            def jac_times_vec(tt, yy, yp, rr, v, Jv, cj, userdata):
                 J = zeros((len(yy), len(yy)), DTYPE)
-                jac(tt, yy, yp, rr, cj, J)
+                if _get_num_args(jac) == 7:
+                    jac(tt, yy, yp, rr, cj, J, userdata)
+                else:
+                    jac(tt, yy, yp, rr, cj, J)
                 Js = sparse.csr_matrix(J)
                 Jv[:] = Js * v
                 return 0
@@ -89,18 +92,23 @@ class TestDae(TestCase):
 
             def jac_times_setupfn(tt, yy, yp, rr, cj, userdata):
                 J = zeros((len(yy), len(yy)), DTYPE)
-                jac(tt, yy, yp, rr, cj, J)
+                if _get_num_args(jac) == 7:
+                    jac(tt, yy, yp, rr, cj, J, userdata)
+                else:
+                    jac(tt, yy, yp, rr, cj, J)
                 userdata.J = sparse.csr_matrix(J)
                 return 0
 
-        igs = [dae(integrator, res, jacfn=jac, old_api=old_api)]
+        igs = [dae(integrator, res,
+                   jacfn=jac, old_api=old_api, user_data=my_userdata)]
 
         # if testing 'ida' then try the iterative linsolvers as well
         if integrator in ['ida', 'idas']:
             igs.append(
                 dae(integrator, res, linsolver='spgmr',
                     jac_times_vecfn=jac_times_vec,
-                    old_api=old_api)
+                    old_api=old_api,
+                    user_data=my_userdata)
             )
             igs.append(
                 dae(integrator, res, linsolver='spgmr',
@@ -256,6 +264,14 @@ class SimpleOscillatorJacIDA(SimpleOscillator):
         jac[0][0] = self.m*cj_in ;jac[0][1] = self.k
         jac[1][0] = -1       ;jac[1][1] = cj_in;
 
+class SimpleOscillatorIDAUserData(SimpleOscillatorJacIDA):
+    def res(self, t, z, zp, res, user_data):
+        SimpleOscillatorJacIDA.res(self, t, z, zp, res)
+
+    def jac(self, t, y, yp, residual, cj, jac, user_data):
+        SimpleOscillatorJacIDA.jac(self, t, y, yp, residual, cj, jac)
+
+
 class StiffVODECompare(DAE):
     r"""
     We create a stiff problem, obtain the vode solution, and compare with
@@ -352,13 +368,28 @@ class StiffVODECompare(DAE):
         return ( allclose(self.sol, y, atol=self.atol, rtol=self.rtol) and
                  allclose(self.sol2, y, atol=self.atol, rtol=self.rtol) )
 
-PROBLEMS_DDASPK = [SimpleOscillator, StiffVODECompare,
-            SimpleOscillatorJac ]
-PROBLEMS_IDA = [SimpleOscillator, StiffVODECompare,
-            SimpleOscillatorJacIDA ]
-PROBLEMS_IDAS = [SimpleOscillator, StiffVODECompare,
-            SimpleOscillatorJacIDA ]
-PROBLEMS_LSODI = [SimpleOscillator, StiffVODECompare]
+
+PROBLEMS_DDASPK = [
+    SimpleOscillator,
+    StiffVODECompare,
+    SimpleOscillatorJac,
+]
+PROBLEMS_IDA = [
+    SimpleOscillator,
+    StiffVODECompare,
+    SimpleOscillatorJacIDA,
+    SimpleOscillatorIDAUserData,
+]
+PROBLEMS_IDAS = [
+    SimpleOscillator,
+    StiffVODECompare,
+    SimpleOscillatorJacIDA,
+    SimpleOscillatorIDAUserData,
+]
+PROBLEMS_LSODI = [
+    SimpleOscillator,
+    StiffVODECompare,
+]
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
