@@ -14,7 +14,44 @@ from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
 from numpy.testing import TestCase, run_module_suite
 from scipy.integrate import ode as Iode
 from scikits.odes import ode,dae
+from scikits.odes.sundials import _get_num_args
 from scikits.odes.sundials.common_defs import DTYPE
+
+
+class TestGetNumArgs(TestCase):
+    """
+    Check the correct number for `_get_num_args`
+    """
+    def test_functions(self):
+        def _func(a, b, c):
+            pass
+        assert _get_num_args(_func) == 3
+
+        def _func(a, b, c=None):
+            pass
+        # kwd args should not make a difference
+        assert _get_num_args(_func) == 3
+
+    def test_methods(self):
+        class C:
+            @ classmethod
+            def class_method(cls, a, b):
+                pass
+
+            @ staticmethod
+            def static_method(a, b):
+                pass
+
+            def method(self, a, b):
+                pass
+
+        # self should not be counted
+        assert _get_num_args(C.method) == 2
+        # static methods should also work
+        assert _get_num_args(C.static_method) == 2
+        # class methods should also work
+        assert _get_num_args(C.class_method) == 2
+
 
 class TestDae(TestCase):
     """
@@ -333,3 +370,6 @@ if __name__ == "__main__":
         test.test_lsodi()
         test.test_ida_old_api()
         test.test_ida()
+        test = TestGetNumArgs()
+        test.test_functions()
+        test.test_methods()
