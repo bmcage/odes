@@ -266,9 +266,11 @@ class SimpleOscillatorJacIDA(SimpleOscillator):
 
 class SimpleOscillatorIDAUserData(SimpleOscillatorJacIDA):
     def res(self, t, z, zp, res, user_data):
+        assert user_data is not None
         SimpleOscillatorJacIDA.res(self, t, z, zp, res)
 
     def jac(self, t, y, yp, residual, cj, jac, user_data):
+        assert user_data is not None
         SimpleOscillatorJacIDA.jac(self, t, y, yp, residual, cj, jac)
 
 
