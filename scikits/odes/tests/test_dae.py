@@ -9,12 +9,49 @@ import platform
 import scipy.sparse as sparse
 
 from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
-                    empty, alen)
+                   empty)
 
 from numpy.testing import TestCase, run_module_suite
 from scipy.integrate import ode as Iode
 from scikits.odes import ode,dae
+from scikits.odes.sundials import _get_num_args
 from scikits.odes.sundials.common_defs import DTYPE
+
+
+class TestGetNumArgs(TestCase):
+    """
+    Check the correct number for `_get_num_args`
+    """
+    def test_functions(self):
+        def _func(a, b, c):
+            pass
+        assert _get_num_args(_func) == 3
+
+        def _func(a, b, c=None):
+            pass
+        # kwd args should not make a difference
+        assert _get_num_args(_func) == 3
+
+    def test_methods(self):
+        class C:
+            @ classmethod
+            def class_method(cls, a, b):
+                pass
+
+            @ staticmethod
+            def static_method(a, b):
+                pass
+
+            def method(self, a, b):
+                pass
+
+        # self should not be counted
+        assert _get_num_args(C.method) == 2
+        # static methods should also work
+        assert _get_num_args(C.static_method) == 2
+        # class methods should also work
+        assert _get_num_args(C.class_method) == 2
+
 
 class TestDae(TestCase):
     """
@@ -39,9 +76,12 @@ class TestDae(TestCase):
         # restrict to 'ida' method since jacobian function below
         # follows the ida interface
         if jac is not None and integrator in ['ida', 'idas']:
-            def jac_times_vec(tt, yy, yp, rr, v, Jv, cj):
+            def jac_times_vec(tt, yy, yp, rr, v, Jv, cj, userdata):
                 J = zeros((len(yy), len(yy)), DTYPE)
-                jac(tt, yy, yp, rr, cj, J)
+                if _get_num_args(jac) == 7:
+                    jac(tt, yy, yp, rr, cj, J, userdata)
+                else:
+                    jac(tt, yy, yp, rr, cj, J)
                 Js = sparse.csr_matrix(J)
                 Jv[:] = Js * v
                 return 0
@@ -52,18 +92,23 @@ class TestDae(TestCase):
 
             def jac_times_setupfn(tt, yy, yp, rr, cj, userdata):
                 J = zeros((len(yy), len(yy)), DTYPE)
-                jac(tt, yy, yp, rr, cj, J)
+                if _get_num_args(jac) == 7:
+                    jac(tt, yy, yp, rr, cj, J, userdata)
+                else:
+                    jac(tt, yy, yp, rr, cj, J)
                 userdata.J = sparse.csr_matrix(J)
                 return 0
 
-        igs = [dae(integrator, res, jacfn=jac, old_api=old_api)]
+        igs = [dae(integrator, res,
+                   jacfn=jac, old_api=old_api, user_data=my_userdata)]
 
         # if testing 'ida' then try the iterative linsolvers as well
         if integrator in ['ida', 'idas']:
             igs.append(
                 dae(integrator, res, linsolver='spgmr',
                     jac_times_vecfn=jac_times_vec,
-                    old_api=old_api)
+                    old_api=old_api,
+                    user_data=my_userdata)
             )
             igs.append(
                 dae(integrator, res, linsolver='spgmr',
@@ -75,8 +120,8 @@ class TestDae(TestCase):
 
         for ig in igs:
             ig.set_options(old_api=old_api, **integrator_params)
-            z = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
-            zprime = empty((1+len(problem.stop_t),alen(problem.z0)), DTYPE)
+            z = empty((1+len(problem.stop_t), len(problem.z0)), DTYPE)
+            zprime = empty((1+len(problem.stop_t), len(problem.z0)), DTYPE)
             ist = ig.init_step(0., problem.z0, problem.zprime0, z[0], zprime[0])
             i=1
             for time in problem.stop_t:
@@ -219,6 +264,16 @@ class SimpleOscillatorJacIDA(SimpleOscillator):
         jac[0][0] = self.m*cj_in ;jac[0][1] = self.k
         jac[1][0] = -1       ;jac[1][1] = cj_in;
 
+class SimpleOscillatorIDAUserData(SimpleOscillatorJacIDA):
+    def res(self, t, z, zp, res, user_data):
+        assert user_data is not None
+        SimpleOscillatorJacIDA.res(self, t, z, zp, res)
+
+    def jac(self, t, y, yp, residual, cj, jac, user_data):
+        assert user_data is not None
+        SimpleOscillatorJacIDA.jac(self, t, y, yp, residual, cj, jac)
+
+
 class StiffVODECompare(DAE):
     r"""
     We create a stiff problem, obtain the vode solution, and compare with
@@ -315,13 +370,28 @@ class StiffVODECompare(DAE):
         return ( allclose(self.sol, y, atol=self.atol, rtol=self.rtol) and
                  allclose(self.sol2, y, atol=self.atol, rtol=self.rtol) )
 
-PROBLEMS_DDASPK = [SimpleOscillator, StiffVODECompare,
-            SimpleOscillatorJac ]
-PROBLEMS_IDA = [SimpleOscillator, StiffVODECompare,
-            SimpleOscillatorJacIDA ]
-PROBLEMS_IDAS = [SimpleOscillator, StiffVODECompare,
-            SimpleOscillatorJacIDA ]
-PROBLEMS_LSODI = [SimpleOscillator, StiffVODECompare]
+
+PROBLEMS_DDASPK = [
+    SimpleOscillator,
+    StiffVODECompare,
+    SimpleOscillatorJac,
+]
+PROBLEMS_IDA = [
+    SimpleOscillator,
+    StiffVODECompare,
+    SimpleOscillatorJacIDA,
+    SimpleOscillatorIDAUserData,
+]
+PROBLEMS_IDAS = [
+    SimpleOscillator,
+    StiffVODECompare,
+    SimpleOscillatorJacIDA,
+    SimpleOscillatorIDAUserData,
+]
+PROBLEMS_LSODI = [
+    SimpleOscillator,
+    StiffVODECompare,
+]
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -333,3 +403,6 @@ if __name__ == "__main__":
         test.test_lsodi()
         test.test_ida_old_api()
         test.test_ida()
+        test = TestGetNumArgs()
+        test.test_functions()
+        test.test_methods()

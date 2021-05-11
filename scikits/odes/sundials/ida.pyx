@@ -1,7 +1,10 @@
 # cython: embedsignature=True
 from cpython.exc cimport PyErr_CheckSignals
 from collections import namedtuple
-from enum import IntEnum
+try:
+    from enum import IntEnum
+except ImportError:
+    from enum34 import IntEnum
 import inspect
 from warnings import warn
 
@@ -127,7 +130,8 @@ cdef class IDA_RhsFunction:
     recoverable failure, negative for unrecoverable failure (as per IDA
     documentation).
     """
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] result,
@@ -139,16 +143,14 @@ cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
         """
         set some residual equations as a ResFunction executable class
         """
-        self.with_userdata = 0
-        nrarg = _get_num_args(resfn)
-        if nrarg > 5:
-            # hopefully a class method
+        if _get_num_args(resfn) == 5:
             self.with_userdata = 1
-        elif nrarg == 5 and inspect.isfunction(resfn):
-            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._resfn = resfn
 
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] result,
@@ -197,7 +199,8 @@ cdef class IDA_RootFunction:
     Note that evaluate must return a integer, 0 for success, non-zero for error
     (as per IDA documentation).
     """
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] g,
@@ -209,16 +212,14 @@ cdef class IDA_WrapRootFunction(IDA_RootFunction):
         """
         set root-ing condition(equations) as a RootFunction executable class
         """
-        self.with_userdata = 0
-        nrarg = _get_num_args(rootfn)
-        if nrarg > 5:
-            #hopefully a class method, self gives 5 arg!
+        if _get_num_args(rootfn) == 5:
             self.with_userdata = 1
-        elif nrarg == 5 and inspect.isfunction(rootfn):
-            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._rootfn = rootfn
 
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] g,
@@ -268,12 +269,14 @@ cdef class IDA_JacRhsFunction:
     recoverable failure, negative for unrecoverable failure (as per IDA
     documentation).
     """
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] residual,
                        DTYPE_t cj,
-                       np.ndarray J) except? -1:
+                       np.ndarray J,
+                       object userdata = None) except? -1:
         """
         Returns the Jacobi matrix of the residual function, as
             d(res)/d y + cj d(res)/d ydot
@@ -291,24 +294,29 @@ cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
         """
         Set some jacobian equations as a JacResFunction executable class.
         """
+        if _get_num_args(jacfn) == 7:
+            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._jacfn = jacfn
 
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        np.ndarray[DTYPE_t, ndim=1] residual,
                        DTYPE_t cj,
-                       np.ndarray J) except? -1:
+                       np.ndarray J,
+                       object userdata = None) except? -1:
         """
         Returns the Jacobi matrix (for dense the full matrix, for band only
         bands. Result has to be stored in the variable J, which is preallocated
         to the corresponding size.
         """
-##        if self.with_userdata == 1:
-##            self._jacfn(t, y, ydot, cj, J, userdata)
-##        else:
-##            self._jacfn(t, y, ydot, cj, J)
-        user_flag = self._jacfn(t, y, ydot, residual, cj, J)
+        if self.with_userdata == 1:
+            user_flag = self._jacfn(t, y, ydot, residual, cj, J, userdata)
+        else:
+            user_flag = self._jacfn(t, y, ydot, residual, cj, J)
         if user_flag is None:
             user_flag = 0
         return user_flag
@@ -336,7 +344,7 @@ cdef int _jacdense(realtype tt, realtype cj,
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
         nv_s2ndarray(rr, residual_tmp)
-    user_flag = aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, cj, jac_tmp)
+    user_flag = aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, cj, jac_tmp, aux_data.user_data)
 
     if parallel_implementation:
         raise NotImplemented
@@ -355,7 +363,8 @@ cdef class IDA_PrecSetupFunction:
     recoverable failure, negative for unrecoverable failure (as per CVODE
     documentation).
     """
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] yp,
                        np.ndarray[DTYPE_t, ndim=1] rr,
@@ -377,16 +386,14 @@ cdef class IDA_WrapPrecSetupFunction(IDA_PrecSetupFunction):
         set a precondititioning setup method as a IDA_PrecSetupFunction
         executable class
         """
-        self.with_userdata = 0
-        nrarg = _get_num_args(prec_setupfn)
-        if nrarg > 5:
-            #hopefully a class method, self gives 6 arg!
+        if _get_num_args(prec_setupfn) == 6:
             self.with_userdata = 1
-        elif nrarg == 5 and inspect.isfunction(prec_setupfn):
-            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._prec_setupfn = prec_setupfn
 
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] yp,
                        np.ndarray[DTYPE_t, ndim=1] rr,
@@ -433,7 +440,8 @@ cdef class IDA_PrecSolveFunction:
     recoverable failure, negative for unrecoverable failure (as per CVODE
     documentation).
     """
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] yp,
                        np.ndarray[DTYPE_t, ndim=1] r,
@@ -460,16 +468,14 @@ cdef class IDA_WrapPrecSolveFunction(IDA_PrecSolveFunction):
         set a precondititioning solve method as a IDA_PrecSolveFunction
         executable class
         """
-        self.with_userdata = 0
-        nrarg = _get_num_args(prec_solvefn)
-        if nrarg > 9:
-            #hopefully a class method, self gives 10 arg!
+        if _get_num_args(prec_solvefn) == 9:
             self.with_userdata = 1
-        elif nrarg == 9 and inspect.isfunction(prec_solvefn):
-            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._prec_solvefn = prec_solvefn
 
-    cpdef int evaluate(self, DTYPE_t t,
+    cpdef int evaluate(self,
+                       DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] yp,
                        np.ndarray[DTYPE_t, ndim=1] r,
@@ -567,13 +573,10 @@ cdef class IDA_WrapJacTimesVecFunction(IDA_JacTimesVecFunction):
         set a jacobian-times-vector method as a IDA_JacTimesVecFunction
         executable class
         """
-        self.with_userdata = 0
-        nrarg = _get_num_args(jac_times_vecfn)
-        if nrarg > 8:
-            #hopefully a class method, self gives 9 arg!
+        if _get_num_args(jac_times_vecfn) == 8:
             self.with_userdata = 1
-        elif nrarg == 8 and inspect.isfunction(jac_times_vecfn):
-            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._jac_times_vecfn = jac_times_vecfn
 
     cpdef int evaluate(self,
@@ -655,13 +658,10 @@ cdef class IDA_WrapJacTimesSetupFunction(IDA_JacTimesSetupFunction):
         set a jacobian-times-vector method setup as a IDA_JacTimesSetupFunction
         executable class
         """
-        self.with_userdata = 0
-        nrarg = _get_num_args(jac_times_setupfn)
-        if nrarg > 6:
-            #hopefully a class method, self gives 7 arg!
+        if _get_num_args(jac_times_setupfn) == 6:
             self.with_userdata = 1
-        elif nrarg == 6 and inspect.isfunction(jac_times_setupfn):
-            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._jac_times_setupfn = jac_times_setupfn
 
     cpdef int evaluate(self,
@@ -734,10 +734,10 @@ cdef class IDA_WrapErrHandler(IDA_ErrHandler):
         """
         set some (c/p)ython function as the error handler
         """
-        nrarg = _get_num_args(err_handler)
-        self.with_userdata = (nrarg > 5) or (
-            nrarg == 5 and inspect.isfunction(err_handler)
-        )
+        if _get_num_args(err_handler) == 5:
+            self.with_userdata = 1
+        else:
+            self.with_userdata = 0
         self._err_handler = err_handler
 
     cpdef evaluate(self,
