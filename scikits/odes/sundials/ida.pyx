@@ -344,7 +344,7 @@ cdef int _jacdense(realtype tt, realtype cj,
         nv_s2ndarray(yy, yy_tmp)
         nv_s2ndarray(yp, yp_tmp)
         nv_s2ndarray(rr, residual_tmp)
-    user_flag = aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, cj, jac_tmp)
+    user_flag = aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, cj, jac_tmp, aux_data.user_data)
 
     if parallel_implementation:
         raise NotImplemented
