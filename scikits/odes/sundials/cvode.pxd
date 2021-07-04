@@ -11,7 +11,7 @@ cdef class CV_RhsFunction:
                        object userdata = *) except? -1
 
 cdef class CV_WrapRhsFunction(CV_RhsFunction):
-    cpdef public object _rhsfn
+    cdef public object _rhsfn
     cdef public int with_userdata
     cpdef set_rhsfn(self, object rhsfn)
 
@@ -22,7 +22,7 @@ cdef class CV_RootFunction:
                        object userdata = *) except? -1
 
 cdef class CV_WrapRootFunction(CV_RootFunction):
-    cpdef object _rootfn
+    cdef object _rootfn
     cdef int with_userdata
     cpdef set_rootfn(self, object rootfn)
 
@@ -33,7 +33,7 @@ cdef class CV_JacRhsFunction:
                        np.ndarray[DTYPE_t, ndim=2] J) except? -1
 
 cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
-    cpdef public object _jacfn
+    cdef public object _jacfn
     cdef int with_userdata
     cpdef set_jacfn(self, object jacfn)
 
@@ -46,7 +46,7 @@ cdef class CV_PrecSetupFunction:
                        object userdata = *) except? -1
 
 cdef class CV_WrapPrecSetupFunction(CV_PrecSetupFunction):
-    cpdef object _prec_setupfn
+    cdef object _prec_setupfn
     cdef int with_userdata
     cpdef set_prec_setupfn(self, object prec_setupfn)
 
@@ -61,7 +61,7 @@ cdef class CV_PrecSolveFunction:
                        object userdata = *) except? -1
 
 cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
-    cpdef object _prec_solvefn
+    cdef object _prec_solvefn
     cdef int with_userdata
     cpdef set_prec_solvefn(self, object prec_solvefn)
 
@@ -75,7 +75,7 @@ cdef class CV_JacTimesVecFunction:
                        object userdata = *) except? -1
 
 cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
-    cpdef object _jac_times_vecfn
+    cdef object _jac_times_vecfn
     cdef int with_userdata
     cpdef set_jac_times_vecfn(self, object jac_times_vecfn)
 
@@ -87,12 +87,12 @@ cdef class CV_JacTimesSetupFunction:
                        object userdata = *) except? -1
 
 cdef class CV_WrapJacTimesSetupFunction(CV_JacTimesSetupFunction):
-    cpdef object _jac_times_setupfn
+    cdef object _jac_times_setupfn
     cdef int with_userdata
     cpdef set_jac_times_setupfn(self, object jac_times_setupfn)
 
 cdef class CV_ContinuationFunction:
-    cpdef object _fn
+    cdef object _fn
     cpdef int evaluate(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y,
                        CVODE solver)
 
@@ -105,7 +105,7 @@ cdef class CV_ErrHandler:
                    object user_data = *)
 
 cdef class CV_WrapErrHandler(CV_ErrHandler):
-    cpdef object _err_handler
+    cdef object _err_handler
     cdef int with_userdata
     cpdef set_err_handler(self, object err_handler)
 
