@@ -169,6 +169,7 @@ class build_ext(_build_ext):
             # use pkgconfig to find sundials
             try:
                 import pkgconfig
+                from pkgconfig.pkgconfig import PackageNotFoundError
                 try:
                     cvode_pkgconf = pkgconfig.parse(PKGCONFIG_CVODE)
                     for d in cvode_pkgconf.get('library_dirs', []):
@@ -185,7 +186,7 @@ class build_ext(_build_ext):
                         IDA_INCLUDE_DIRS.append(str(d))
                     for lib in ida_pkgconf.get('include_dirs', []):
                         IDA_LIBRARIES.append(str(lib))
-                except EnvironmentError:
+                except (EnvironmentError, PackageNotFoundError) as e:
                     pass
             except ImportError:
                 info("pkgconfig module not found, using preset paths")
