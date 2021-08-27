@@ -9,51 +9,72 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sundials-index-size: [64]
-        sundials-precision: [double]
         include:
           - python-version: 2.7
             sundials-version: 5.7.0
             tox-env: py27
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.5
             sundials-version: 5.7.0
             tox-env: py35
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.6
             sundials-version: 5.7.0
             tox-env: py36
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.7
             sundials-version: 5.7.0
             tox-env: py37
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.8
             sundials-version: 5.7.0
             tox-env: py38
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.9
             sundials-version: 5.7.0
             tox-env: py39
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.7
             sundials-version: 5.7.0
             tox-env: doctr
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.7
             sundials-version: 5.7.0
             tox-env: docs
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.7
             sundials-version: 5.7.0
             tox-env: check-manifest
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.7
             sundials-version: 5.7.0
             tox-env: checkreadme
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: 3.7
             sundials-version: 5.7.0
             tox-env: py37
+            sundials-precision: double
             sundials-index-size: 32
           - python-version: 3.7
             sundials-version: 5.7.0
             tox-env: py37
             sundials-precision: single
+            sundials-index-size: 64
           - python-version: 3.7
             sundials-version: 5.7.0
             tox-env: py37
             sundials-precision: extended
+            sundials-index-size: 64
 
     steps:
     - uses: actions/checkout@v2
