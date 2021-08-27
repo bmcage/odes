@@ -1,0 +1,83 @@
+name: Python package
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sundials-index-size: [64]
+        sundials-precision: [double]
+        include:
+          - python-version: 2.7
+            sundials-version: 5.7.0
+            tox-env: py27
+          - python-version: 3.5
+            sundials-version: 5.7.0
+            tox-env: py35
+          - python-version: 3.6
+            sundials-version: 5.7.0
+            tox-env: py36
+          - python-version: 3.7
+            sundials-version: 5.7.0
+            tox-env: py37
+          - python-version: 3.8
+            sundials-version: 5.7.0
+            tox-env: py38
+          - python-version: 3.9
+            sundials-version: 5.7.0
+            tox-env: py39
+          - python-version: 3.7
+            sundials-version: 5.7.0
+            tox-env: doctr
+          - python-version: 3.7
+            sundials-version: 5.7.0
+            tox-env: docs
+          - python-version: 3.7
+            sundials-version: 5.7.0
+            tox-env: check-manifest
+          - python-version: 3.7
+            sundials-version: 5.7.0
+            tox-env: checkreadme
+          - python-version: 3.7
+            sundials-version: 5.7.0
+            tox-env: py37
+            sundials-index-size: 32
+          - python-version: 3.7
+            sundials-version: 5.7.0
+            tox-env: py37
+            sundials-precision: single
+          - python-version: 3.7
+            sundials-version: 5.7.0
+            tox-env: py37
+            sundials-precision: extended
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install build dependencies
+      run: sudo apt-get install gfortran liblapack-dev
+    - name: Install sundials
+      run: |
+        source ci_support/ensure_sundials_installed.sh &&
+        printf "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH\n export LIBRARY_PATH=$LIBRARY_PATH\n export CPATH=$CPATH" > sundials_env.sh
+      env:
+        SUNDIALS_VERSION: ${{ matrix.sundials-version }}
+        SUNDIALS_PRECISION: ${{ matrix.sundials-precision }}
+        SUNDIALS_INDEX_SIZE: ${{ matrix.sundials-index-size }}
+
+    - name: Install python dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools
+        python -m pip install --upgrade tox
+
+    - name: Run tests
+      run: |
+        source sundials_env.sh
+        tox
