@@ -63,6 +63,15 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install build dependencies
       run: sudo apt-get install gfortran liblapack-dev
+
+    - name: Sundials cache
+      uses: actions/cache@v2
+      with:
+        path: ~/sundials
+        key: ${{ runner.os }}-sundials-${{ matrix.sundials-version }}
+        restore-keys: |
+          ${{ runner.os }}-sundials-
+
     - name: Install sundials
       run: |
         source ci_support/ensure_sundials_installed.sh &&
@@ -71,6 +80,19 @@ jobs:
         SUNDIALS_VERSION: ${{ matrix.sundials-version }}
         SUNDIALS_PRECISION: ${{ matrix.sundials-precision }}
         SUNDIALS_INDEX_SIZE: ${{ matrix.sundials-index-size }}
+
+    - name: Get pip cache dir
+      id: pip-cache
+      run: |
+        echo "::set-output name=dir::$(pip cache dir)"
+
+    - name: pip cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key: ${{ runner.os }}-pip-1
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     - name: Install python dependencies
       run: |
