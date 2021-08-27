@@ -103,3 +103,5 @@ jobs:
       run: |
         source sundials_env.sh
         tox
+      env:
+        TOXENV: ${{ matrix.tox-env }}
