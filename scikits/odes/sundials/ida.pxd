@@ -22,7 +22,7 @@ cdef class IDA_RootFunction:
                        object userdata = *) except? -1
 
 cdef class IDA_WrapRootFunction(IDA_RootFunction):
-    cpdef object _rootfn
+    cdef object _rootfn
     cdef int with_userdata
     cpdef set_rootfn(self, object rootfn)
 
@@ -35,7 +35,7 @@ cdef class IDA_JacRhsFunction:
                        np.ndarray[DTYPE_t, ndim=2] J) except? -1
 
 cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
-    cpdef object _jacfn
+    cdef object _jacfn
     cdef int with_userdata
     cpdef set_jacfn(self, object jacfn) 
 
@@ -48,7 +48,7 @@ cdef class IDA_PrecSetupFunction:
                        object userdata = *) except? -1
 
 cdef class IDA_WrapPrecSetupFunction(IDA_PrecSetupFunction):
-    cpdef object _prec_setupfn
+    cdef object _prec_setupfn
     cdef int with_userdata
     cpdef set_prec_setupfn(self, object prec_setupfn)
 
@@ -64,7 +64,7 @@ cdef class IDA_PrecSolveFunction:
                        object userdata = *) except? -1
                            
 cdef class IDA_WrapPrecSolveFunction(IDA_PrecSolveFunction):
-    cpdef object _prec_solvefn
+    cdef object _prec_solvefn
     cdef int with_userdata
     cpdef set_prec_solvefn(self, object prec_solvefn)
 
@@ -80,7 +80,7 @@ cdef class IDA_JacTimesVecFunction:
                        object userdata = *) except? -1
 
 cdef class IDA_WrapJacTimesVecFunction(IDA_JacTimesVecFunction):
-    cpdef object _jac_times_vecfn
+    cdef object _jac_times_vecfn
     cdef int with_userdata
     cpdef set_jac_times_vecfn(self, object jac_times_vecfn)
 
@@ -94,7 +94,7 @@ cdef class IDA_JacTimesSetupFunction:
                        object userdata = *) except? -1
 
 cdef class IDA_WrapJacTimesSetupFunction(IDA_JacTimesSetupFunction):
-    cpdef object _jac_times_setupfn
+    cdef object _jac_times_setupfn
     cdef int with_userdata
     cpdef set_jac_times_setupfn(self, object jac_times_setupfn)
 
@@ -107,7 +107,7 @@ cdef class IDA_WrapJacTimesSetupFunction(IDA_JacTimesSetupFunction):
                        object userdata = *) except? -1
 
 cdef class IDA_ContinuationFunction:
-    cpdef object _fn
+    cdef object _fn
     cpdef int evaluate(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        IDA solver)
@@ -123,7 +123,7 @@ cdef class IDA_ErrHandler:
                    object user_data = *)
 
 cdef class IDA_WrapErrHandler(IDA_ErrHandler):
-    cpdef object _err_handler
+    cdef object _err_handler
     cdef int with_userdata
     cpdef set_err_handler(self, object err_handler)
 
