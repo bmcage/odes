@@ -9,7 +9,7 @@ LICENSE: the license of odes is the same as scipy, new BSD.
 
 DISTNAME            = 'scikits.odes'
 DESCRIPTION         = 'A python module for ordinary differential equation and'+\
-                      'differential algebraic equation solvers'
+                      ' differential algebraic equation solvers'
 LONG_DESCRIPTION    = descr
 MAINTAINER          = 'maintainer of odes is B. Malengier'
 MAINTAINER_EMAIL    = 'benny.malengier@gmail.org'
@@ -24,7 +24,7 @@ BUILD_REQUIRES = ['numpy', 'cython<3.0.0a8'] # This is need for older pip
 MAJOR = 2
 MINOR = 6
 MICRO = 2
-DEV = True
+DEV = False
 
 CLASSIFIERS = [
         'Development Status :: 5 - Production/Stable',
