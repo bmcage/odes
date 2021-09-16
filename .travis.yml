@@ -19,13 +19,6 @@ cache:
     - $HOME/.cache/pip
     - $HOME/sundials
 
-env:
-      global:
-        # Doctr deploy key for bmcage/odes
-        - secure: "aFKqG8ox8+mlfttD70nwHwkLcHz8PJM9K8dTxiXETAjOk+ZIc5g3tGTm1s9Gq+MpDVUgJmXJZBJituwmZnGB+1bwwLH71/ySMMYVkbvtK0kTDPj7qxuDkPKvj2SUIbC1MxiXXi1vK7zatdgHUDRQD4FZQsnbgNAtuQjMCe5hRJexXMUU21tZrMUFHJ6gKOjRExgLcnxE+j9dZbEYCSaumOY21LGOJXUv9RAqtcHC5VPvxrOG3jw7Q7yxFaPJrNBHoNc9bKQXfGLa/MV3YypOoGvIuj/+XhQzQ6jK3Vgp+LJ6t/nHkSs3Fwk3f8a0GyRGiAOZf36jb3BKK14zBmUak8bVbolJrYssMrFgK2bzRuEB37ZUejpuQ1vlH0fWJpFvAIgG1H3FUVasiu8fcq58Bvg6WHYkc1Av7M4HbKeCCaHTlM/SSp0iGJPXxokf3k/NFOwe0lFByYFzYv8aGYh4x3yT+HI1Ay0mTU3F+DJTn+KTVSmtmkrYEIq45aIhKiv7g0tYJYtFUt45J84TeMYtYJKMCwI5w1dzf1TwWtiAIxpJtbjF43cjHZN9kBhvhacjALrxAnK+nmE5yBmoB0xCMRj/TR31LIsDDyNy0yai/3FAdR+Uj1CihP+7Uokl+4nAnQpeCe6MMk+13CNkBBv2rFx0f2R9ZMKHzf1X1Y42WRc="
-        # Doctr deploy key for aragilar/odes
-        # - secure: "iw3NJw6/lfmWqIkqAVYJ8bG549y34T4atRvwy3P+Rg/xdVqh9RD1WOSf9U30chlAUTTM8ViVap6HEyq9i4CLVRNz/iIwAkbPY//9SdOJFxgBT3zwl9ms563oWAEXZo3a08X9H9T3IX6XhR7T3darKWqCTgpYJ+Y74FgMJR0EQ9M="
-
 matrix:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
@@ -49,9 +42,6 @@ matrix:
     - python: 3.9
       env:
       - TOXENV=py39 SUNDIALS_VERSION='5.7.0'
-    - python: 3.7
-      env:
-      - TOXENV=doctr SUNDIALS_VERSION='5.7.0'
     - python: 3.7
       env:
       - TOXENV=docs SUNDIALS_VERSION='5.7.0'
@@ -90,7 +80,6 @@ matrix:
     - python: 3.7
       env:
       - TOXENV=py37 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
-    
 
   allow_failures:
     - python: 2.7
@@ -100,7 +89,6 @@ matrix:
       env:
       - TOXENV=py37 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='single'
 
-      
 install:
   - source ci_support/ensure_sundials_installed.sh
   - pip install -U pip setuptools virtualenv wheel
