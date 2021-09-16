@@ -126,3 +126,16 @@ jobs:
         tox
       env:
         TOXENV: ${{ matrix.tox-env }}
+
+    - name: Build sdist
+      run: |
+        python setup.py sdist
+
+    - name: Publish package
+      # See https://github.com/marketplace/actions/pypi-publish for docs
+      if: startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        skip_existing: true
