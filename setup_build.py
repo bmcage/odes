@@ -6,6 +6,8 @@ from distutils.log import info
 import sys
 
 from numpy.distutils.command.build_ext import build_ext as _build_ext
+from numpy.distutils.system_info import get_info
+from numpy.distutils.extension import Extension
 
 PKGCONFIG_CVODE = 'sundials-cvode-serial'
 PKGCONFIG_IDA = 'sundials-ida-serial'
@@ -126,13 +128,8 @@ class build_ext(_build_ext):
     """
         Custom distutils command which encapsulates api_gen pre-building,
         Cython building, and C compilation.
-        Also handles making the Extension modules, since we can't rely on
-        NumPy being present in the main body of the setup script.
     """
     def _get_cython_ext(self):
-        from numpy.distutils.system_info import get_info
-        from setuptools import Extension
-
         base_path = join('scikits', 'odes', 'sundials')
         base_module = "scikits.odes.sundials"
 
