@@ -8,7 +8,7 @@ Here we test onroot and ontstop
 import numpy as np
 
 from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
-                    empty, alen)
+                    empty)
 
 from numpy.testing import TestCase, run_module_suite
 

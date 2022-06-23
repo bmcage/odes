@@ -115,7 +115,7 @@ __all__ = ['ddaspk']
 __version__ = "$Id$"
 __docformat__ = "restructuredtext en"
 
-from numpy import asarray, array, zeros, sin, int32, isscalar, empty, alen
+from numpy import asarray, array, zeros, sin, int32, isscalar, empty
 from copy import copy
 from .dae import DaeBase
 import re, sys
@@ -386,12 +386,12 @@ class ddaspk(DaeBase):
         """ See dae.DaeBase
         """
         
-        t_retn  = empty([alen(tspan), ], float)
-        y_retn  = empty([alen(tspan), alen(y0)], float)
-        yp_retn = empty([alen(tspan), alen(y0)], float)
+        t_retn  = empty([len(tspan), ], float)
+        y_retn  = empty([len(tspan), len(y0)], float)
+        yp_retn = empty([len(tspan), len(y0)], float)
         
-        y_ic0_retn  = empty(alen(y0), float)
-        yp_ic0_retn  = empty(alen(y0), float)
+        y_ic0_retn  = empty(len(y0), float)
+        yp_ic0_retn  = empty(len(y0), float)
         tinit = self.init_step(tspan[0], y0, yp0, y_ic0_retn, yp_ic0_retn)
         
         t_retn[0] = tinit

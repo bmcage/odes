@@ -28,7 +28,7 @@ __all__ = ['dae']
 __version__ = "$Id$"
 __docformat__ = "restructuredtext en"
 
-from numpy import asarray, array, zeros, sin, int32, isscalar, empty, alen
+from numpy import asarray, array, zeros, sin, int32, isscalar, empty
 from copy import copy
 import re, sys
 

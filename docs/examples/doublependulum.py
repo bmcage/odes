@@ -64,8 +64,7 @@ except:
 
 #imports
 import numpy as np
-from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi, empty,
-                    alen)
+from numpy import (arange, zeros, array, sin, cos, asarray, sqrt, pi, empty)
 from scikits.odes.sundials import ida
 from scikits.odes import dae
 import pylab
@@ -382,8 +381,8 @@ def main():
 
     #solve the same with ddaspk
     if alsoddaspk:
-        ddaspkz = empty((alen(problem.stop_t), problem.neq), float)
-        ddaspkzprime = empty((alen(problem.stop_t), problem.neq), float)
+        ddaspkz = empty((len(problem.stop_t), problem.neq), float)
+        ddaspkzprime = empty((len(problem.stop_t), problem.neq), float)
 
         problem.set_res(res)
         ig = dae('ddaspk', problem.ddaspk_res)

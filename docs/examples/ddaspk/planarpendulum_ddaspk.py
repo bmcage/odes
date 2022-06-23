@@ -40,7 +40,7 @@ then it solves the problme at hand. We take g=1, m=1
 #python 2.7 support
 from __future__ import print_function, division
 
-from numpy import (arange, zeros, array, sin, empty, alen)
+from numpy import (arange, zeros, array, sin, empty)
 from scikits.odes import dae
 import pylab
 
@@ -69,8 +69,8 @@ class PlanarPendulum():
                     - (x[0]**2 + x[1]**2)*x[4] - x[1] * PlanarPendulum.g
 
 problem = PlanarPendulum()
-z = empty((1+len(problem.stop_t), alen(problem.z0)), float)
-zprime = empty((1+len(problem.stop_t), alen(problem.z0)), float)
+z = empty((1+len(problem.stop_t), len(problem.z0)), float)
+zprime = empty((1+len(problem.stop_t), len(problem.z0)), float)
 algvar = -1
 
 ig = dae('ddaspk', problem.res)
