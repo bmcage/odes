@@ -91,7 +91,8 @@ matrix:
 
 install:
   - source ci_support/ensure_sundials_installed.sh
-  - pip install -U pip setuptools virtualenv wheel
+  - pip install -U pip virtualenv wheel
+  - pip install setuptools==59.2.0
   - pip install -U tox-travis
 
 script:

@@ -117,7 +117,8 @@ jobs:
 
     - name: Install python dependencies
       run: |
-        python -m pip install --upgrade pip setuptools
+        python -m pip install --upgrade pip
+        python -m pip install setuptools==59.2.0
         python -m pip install --upgrade tox
 
     - name: Run tests
