@@ -55,8 +55,6 @@ solution (this is slow!). For this you need to have the ffmpeg program
 installed. The animation is stored in the directory anidoublependulum.
 
 """
-#python 2.7 support
-from __future__ import print_function, division
 try:
     input = raw_input
 except:

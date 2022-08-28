@@ -32,8 +32,6 @@ theta is the angle with the vertical y axis.
 where the last constraint comes from deriving the equation of the curve on
 which the pendulum slides
 """
-#python 2.7 support
-from __future__ import print_function, division
 try:
     input = raw_input
 except:
