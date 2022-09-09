@@ -22,17 +22,6 @@ cache:
 matrix:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
-    - python: 2.7
-      env:
-      - TOXENV=py27 SUNDIALS_VERSION='5.7.0'
-    - python: 3.5
-      dist: trusty
-      env:
-      - TOXENV=py35 SUNDIALS_VERSION='5.7.0'
-    - python: 3.6
-      dist: trusty
-      env:
-      - TOXENV=py36 SUNDIALS_VERSION='5.7.0'
     - python: 3.7
       env:
       - TOXENV=py37 SUNDIALS_VERSION='5.7.0'
@@ -53,27 +42,14 @@ matrix:
       - TOXENV=checkreadme SUNDIALS_VERSION='5.7.0'
 
     # Reduced Index Size - this allows use of lapack linsolvers - default is -64
-    - python: 2.7
-      env:
-      - TOXENV=py27 SUNDIALS_VERSION='5.7.0' SUNDIALS_INDEX_SIZE='32'
     - python: 3.7
       env:
       - TOXENV=py37 SUNDIALS_VERSION='5.7.0' SUNDIALS_INDEX_SIZE='32'
 
     # Additional precisions - default is 'double'
-    - python: 2.7
-      env:
-      - TOXENV=py27 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='single'
     - python: 3.7
       env:
       - TOXENV=py37 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='single'
-    - python: 2.7
-      env:
-      - TOXENV=py27 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='extended'
-    - python: 3.6
-      dist: trusty
-      env:
-      - TOXENV=py36 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
     - python: 3.7
       env:
       - TOXENV=py37 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
@@ -82,16 +58,14 @@ matrix:
       - TOXENV=py37 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='extended' SUNDIALS_INDEX_SIZE='64'
 
   allow_failures:
-    - python: 2.7
-      env:
-      - TOXENV=py27 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='single'
     - python: 3.7
       env:
       - TOXENV=py37 SUNDIALS_VERSION='5.7.0' SUNDIALS_PRECISION='single'
 
 install:
   - source ci_support/ensure_sundials_installed.sh
-  - pip install -U pip setuptools virtualenv wheel
+  - pip install -U pip virtualenv wheel
+  - pip install "setuptools<=64.0.0"
   - pip install -U tox-travis
 
 script:
