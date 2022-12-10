@@ -18,7 +18,7 @@ LICENSE             = 'new BSD'
 
 DOWNLOAD_URL        = URL
 
-INSTALL_REQUIRES = ['scipy', 'enum34; python_version < "3.4"']
+INSTALL_REQUIRES = ['scipy']
 BUILD_REQUIRES = ['numpy', 'cython<3.0.0a8'] # This is need for older pip
 
 MAJOR = 2
@@ -38,6 +38,8 @@ CLASSIFIERS = [
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
 ]
 
 def build_verstring():
