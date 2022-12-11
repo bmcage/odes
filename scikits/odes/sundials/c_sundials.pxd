@@ -1,9 +1,21 @@
 from libc.stdio cimport FILE
 
 cdef extern from "sundials/sundials_types.h":
-    ctypedef float realtype
-    ctypedef unsigned int booleantype
+    ctypedef float sunrealtype
+    ctypedef unsigned int sunbooleantype
     ctypedef long sunindextype
+
+cdef extern from "sundials/sundials_context.h":
+    struct SUNContext:
+        pass
+
+    int SUNContext_Create(void* comm, SUNContext* ctx)
+    # Need to include profiler/logger headers
+    #int SUNContext_GetProfiler(SUNContext sunctx, SUNProfiler* profiler)
+    #int SUNContext_SetProfiler(SUNContext sunctx, SUNProfiler profiler)
+    #int SUNContext_GetLogger(SUNContext sunctx, SUNLogger* logger)
+    #int SUNContext_SetLogger(SUNContext sunctx, SUNLogger logger)
+    int SUNContext_Free(SUNContext* ctx)
 
 cdef extern from "sundials/sundials_version.h":
     
@@ -45,54 +57,54 @@ cdef extern from "sundials/sundials_nvector.h":
         N_Vector    (*nvcloneempty)(N_Vector)
         void        (*nvdestroy)(N_Vector)
         void        (*nvspace)(N_Vector, sunindextype *, sunindextype *)
-        realtype*   (*nvgetarraypointer)(N_Vector)
-        void        (*nvsetarraypointer)(realtype *, N_Vector)
+        sunrealtype*   (*nvgetarraypointer)(N_Vector)
+        void        (*nvsetarraypointer)(sunrealtype *, N_Vector)
         void*       (*nvgetcommunicator)(N_Vector)
         sunindextype (*nvgetlength)(N_Vector)
-        void        (*nvlinearsum)(realtype, N_Vector, realtype, N_Vector, N_Vector)
-        void        (*nvconst)(realtype, N_Vector)
+        void        (*nvlinearsum)(sunrealtype, N_Vector, sunrealtype, N_Vector, N_Vector)
+        void        (*nvconst)(sunrealtype, N_Vector)
         void        (*nvprod)(N_Vector, N_Vector, N_Vector)
         void        (*nvdiv)(N_Vector, N_Vector, N_Vector)
-        void        (*nvscale)(realtype, N_Vector, N_Vector)
+        void        (*nvscale)(sunrealtype, N_Vector, N_Vector)
         void        (*nvabs)(N_Vector, N_Vector)
         void        (*nvinv)(N_Vector, N_Vector)
-        void        (*nvaddconst)(N_Vector, realtype, N_Vector)
-        realtype    (*nvdotprod)(N_Vector, N_Vector)
-        realtype    (*nvmaxnorm)(N_Vector)
-        realtype    (*nvwrmsnorm)(N_Vector, N_Vector)
-        realtype    (*nvwrmsnormmask)(N_Vector, N_Vector, N_Vector)
-        realtype    (*nvmin)(N_Vector)
-        realtype    (*nvwl2norm)(N_Vector, N_Vector)
-        realtype    (*nvl1norm)(N_Vector)
-        void        (*nvcompare)(realtype, N_Vector, N_Vector)
-        booleantype (*nvinvtest)(N_Vector, N_Vector)
-        booleantype (*nvconstrmask)(N_Vector, N_Vector, N_Vector)
-        realtype    (*nvminquotient)(N_Vector, N_Vector)
-        int (*nvlinearcombination)(int, realtype*, N_Vector*, N_Vector)
-        int (*nvscaleaddmulti)(int, realtype*, N_Vector, N_Vector*, N_Vector*)
-        int (*nvdotprodmulti)(int, N_Vector, N_Vector*, realtype*)
+        void        (*nvaddconst)(N_Vector, sunrealtype, N_Vector)
+        sunrealtype    (*nvdotprod)(N_Vector, N_Vector)
+        sunrealtype    (*nvmaxnorm)(N_Vector)
+        sunrealtype    (*nvwrmsnorm)(N_Vector, N_Vector)
+        sunrealtype    (*nvwrmsnormmask)(N_Vector, N_Vector, N_Vector)
+        sunrealtype    (*nvmin)(N_Vector)
+        sunrealtype    (*nvwl2norm)(N_Vector, N_Vector)
+        sunrealtype    (*nvl1norm)(N_Vector)
+        void        (*nvcompare)(sunrealtype, N_Vector, N_Vector)
+        sunbooleantype (*nvinvtest)(N_Vector, N_Vector)
+        sunbooleantype (*nvconstrmask)(N_Vector, N_Vector, N_Vector)
+        sunrealtype    (*nvminquotient)(N_Vector, N_Vector)
+        int (*nvlinearcombination)(int, sunrealtype*, N_Vector*, N_Vector)
+        int (*nvscaleaddmulti)(int, sunrealtype*, N_Vector, N_Vector*, N_Vector*)
+        int (*nvdotprodmulti)(int, N_Vector, N_Vector*, sunrealtype*)
     
-        int (*nvlinearsumvectorarray)(int, realtype, N_Vector*, realtype, 
+        int (*nvlinearsumvectorarray)(int, sunrealtype, N_Vector*, sunrealtype, 
                                       N_Vector*, N_Vector*)
-        int (*nvscalevectorarray)(int, realtype*, N_Vector*, N_Vector*)
-        int (*nvconstvectorarray)(int, realtype, N_Vector*)
-        int (*nvwrmsnormvectorarray)(int, N_Vector*, N_Vector*, realtype*)
+        int (*nvscalevectorarray)(int, sunrealtype*, N_Vector*, N_Vector*)
+        int (*nvconstvectorarray)(int, sunrealtype, N_Vector*)
+        int (*nvwrmsnormvectorarray)(int, N_Vector*, N_Vector*, sunrealtype*)
         int (*nvwrmsnormmaskvectorarray)(int, N_Vector*, N_Vector*, N_Vector,
-                                         realtype*)
-        int (*nvscaleaddmultivectorarray)(int, int, realtype*, N_Vector*, 
+                                         sunrealtype*)
+        int (*nvscaleaddmultivectorarray)(int, int, sunrealtype*, N_Vector*, 
                                           N_Vector**, N_Vector**)
-        int (*nvlinearcombinationvectorarray)(int, int, realtype*, N_Vector**,
+        int (*nvlinearcombinationvectorarray)(int, int, sunrealtype*, N_Vector**,
                                               N_Vector*)
     
-        realtype (*nvdotprodlocal)(N_Vector, N_Vector)
-        realtype (*nvmaxnormlocal)(N_Vector)
-        realtype (*nvminlocal)(N_Vector)
-        realtype (*nvl1normlocal)(N_Vector)
-        booleantype (*nvinvtestlocal)(N_Vector, N_Vector)
-        booleantype (*nvconstrmasklocal)(N_Vector, N_Vector, N_Vector)
-        realtype (*nvminquotientlocal)(N_Vector, N_Vector)
-        realtype (*nvwsqrsumlocal)(N_Vector, N_Vector)
-        realtype (*nvwsqrsummasklocal)(N_Vector, N_Vector, N_Vector)
+        sunrealtype (*nvdotprodlocal)(N_Vector, N_Vector)
+        sunrealtype (*nvmaxnormlocal)(N_Vector)
+        sunrealtype (*nvminlocal)(N_Vector)
+        sunrealtype (*nvl1normlocal)(N_Vector)
+        sunbooleantype (*nvinvtestlocal)(N_Vector, N_Vector)
+        sunbooleantype (*nvconstrmasklocal)(N_Vector, N_Vector, N_Vector)
+        sunrealtype (*nvminquotientlocal)(N_Vector, N_Vector)
+        sunrealtype (*nvwsqrsumlocal)(N_Vector, N_Vector)
+        sunrealtype (*nvwsqrsummasklocal)(N_Vector, N_Vector, N_Vector)
 
     struct _generic_N_Vector:
         void *content
@@ -100,7 +112,7 @@ cdef extern from "sundials/sundials_nvector.h":
 
 
     # * FUNCTIONS *
-    N_Vector N_VNewEmpty()
+    N_Vector N_VNewEmpty(SUNContext* sunctx)
     void N_VFreeEmpty(N_Vector v)
     int N_VCopyOps(N_Vector w, N_Vector v)
 
@@ -109,69 +121,69 @@ cdef extern from "sundials/sundials_nvector.h":
     N_Vector N_VCloneEmpty(N_Vector w)
     void N_VDestroy(N_Vector v)
     void N_VSpace(N_Vector v, sunindextype *lrw, sunindextype *liw)
-    realtype *N_VGetArrayPointer(N_Vector v)
-    void N_VSetArrayPointer(realtype *v_data, N_Vector v)
+    sunrealtype *N_VGetArrayPointer(N_Vector v)
+    void N_VSetArrayPointer(sunrealtype *v_data, N_Vector v)
     void *N_VGetCommunicator(N_Vector v)
     sunindextype N_VGetLength(N_Vector v)
 
-    void N_VLinearSum(realtype a, N_Vector x, realtype b, N_Vector y, N_Vector z)
-    void N_VConst(realtype c, N_Vector z)
+    void N_VLinearSum(sunrealtype a, N_Vector x, sunrealtype b, N_Vector y, N_Vector z)
+    void N_VConst(sunrealtype c, N_Vector z)
     void N_VProd(N_Vector x, N_Vector y, N_Vector z)
     void N_VDiv(N_Vector x, N_Vector y, N_Vector z)
-    void N_VScale(realtype c, N_Vector x, N_Vector z)
+    void N_VScale(sunrealtype c, N_Vector x, N_Vector z)
     void N_VAbs(N_Vector x, N_Vector z)
     void N_VInv(N_Vector x, N_Vector z)
-    void N_VAddConst(N_Vector x, realtype b, N_Vector z)
-    realtype N_VDotProd(N_Vector x, N_Vector y)
-    realtype N_VMaxNorm(N_Vector x)
-    realtype N_VWrmsNorm(N_Vector x, N_Vector w)
-    realtype N_VWrmsNormMask(N_Vector x, N_Vector w, N_Vector id)
-    realtype N_VMin(N_Vector x)
-    realtype N_VWL2Norm(N_Vector x, N_Vector w)
-    realtype N_VL1Norm(N_Vector x)
-    void N_VCompare(realtype c, N_Vector x, N_Vector z)
-    booleantype N_VInvTest(N_Vector x, N_Vector z)
-    booleantype N_VConstrMask(N_Vector c, N_Vector x, N_Vector m)
-    realtype N_VMinQuotient(N_Vector num, N_Vector denom)
+    void N_VAddConst(N_Vector x, sunrealtype b, N_Vector z)
+    sunrealtype N_VDotProd(N_Vector x, N_Vector y)
+    sunrealtype N_VMaxNorm(N_Vector x)
+    sunrealtype N_VWrmsNorm(N_Vector x, N_Vector w)
+    sunrealtype N_VWrmsNormMask(N_Vector x, N_Vector w, N_Vector id)
+    sunrealtype N_VMin(N_Vector x)
+    sunrealtype N_VWL2Norm(N_Vector x, N_Vector w)
+    sunrealtype N_VL1Norm(N_Vector x)
+    void N_VCompare(sunrealtype c, N_Vector x, N_Vector z)
+    sunbooleantype N_VInvTest(N_Vector x, N_Vector z)
+    sunbooleantype N_VConstrMask(N_Vector c, N_Vector x, N_Vector m)
+    sunrealtype N_VMinQuotient(N_Vector num, N_Vector denom)
     
     # /* OPTIONAL fused vector operations */
-    int N_VLinearCombination(int nvec, realtype* c, N_Vector* X, N_Vector z)
+    int N_VLinearCombination(int nvec, sunrealtype* c, N_Vector* X, N_Vector z)
 
-    int N_VScaleAddMulti(int nvec, realtype* a, N_Vector x,
+    int N_VScaleAddMulti(int nvec, sunrealtype* a, N_Vector x,
                          N_Vector* Y, N_Vector* Z)
 
-    int N_VDotProdMulti(int nvec, N_Vector x, N_Vector* Y, realtype* dotprods)
+    int N_VDotProdMulti(int nvec, N_Vector x, N_Vector* Y, sunrealtype* dotprods)
 
     #/* OPTIONAL vector array operations */
-    int N_VLinearSumVectorArray(int nvec, realtype a, N_Vector* X,
-                                realtype b, N_Vector* Y, N_Vector* Z)
+    int N_VLinearSumVectorArray(int nvec, sunrealtype a, N_Vector* X,
+                                sunrealtype b, N_Vector* Y, N_Vector* Z)
 
-    int N_VScaleVectorArray(int nvec, realtype* c, N_Vector* X, N_Vector* Z)
+    int N_VScaleVectorArray(int nvec, sunrealtype* c, N_Vector* X, N_Vector* Z)
 
-    int N_VConstVectorArray(int nvec, realtype c, N_Vector* Z)
+    int N_VConstVectorArray(int nvec, sunrealtype c, N_Vector* Z)
 
     int N_VWrmsNormVectorArray(int nvec, N_Vector* X, N_Vector* W, 
-                               realtype* nrm)
+                               sunrealtype* nrm)
 
     int N_VWrmsNormMaskVectorArray(int nvec, N_Vector* X, N_Vector* W, 
-                                   N_Vector id, realtype* nrm)
+                                   N_Vector id, sunrealtype* nrm)
 
-    int N_VScaleAddMultiVectorArray(int nvec, int nsum, realtype* a, 
+    int N_VScaleAddMultiVectorArray(int nvec, int nsum, sunrealtype* a, 
                                     N_Vector* X, N_Vector** Y, N_Vector** Z)
 
-    int N_VLinearCombinationVectorArray(int nvec, int nsum, realtype* c, 
+    int N_VLinearCombinationVectorArray(int nvec, int nsum, sunrealtype* c, 
                                         N_Vector** X, N_Vector* Z)
 
     #/* OPTIONAL local reduction kernels (no parallel communication) */
-    realtype N_VDotProdLocal(N_Vector x, N_Vector y)
-    realtype N_VMaxNormLocal(N_Vector x)
-    realtype N_VMinLocal(N_Vector x)
-    realtype N_VL1NormLocal(N_Vector x)
-    realtype N_VWSqrSumLocal(N_Vector x, N_Vector w)
-    realtype N_VWSqrSumMaskLocal(N_Vector x, N_Vector w, N_Vector id)
-    booleantype N_VInvTestLocal(N_Vector x, N_Vector z)
-    booleantype N_VConstrMaskLocal(N_Vector c, N_Vector x, N_Vector m)
-    realtype N_VMinQuotientLocal(N_Vector num, N_Vector denom)
+    sunrealtype N_VDotProdLocal(N_Vector x, N_Vector y)
+    sunrealtype N_VMaxNormLocal(N_Vector x)
+    sunrealtype N_VMinLocal(N_Vector x)
+    sunrealtype N_VL1NormLocal(N_Vector x)
+    sunrealtype N_VWSqrSumLocal(N_Vector x, N_Vector w)
+    sunrealtype N_VWSqrSumMaskLocal(N_Vector x, N_Vector w, N_Vector id)
+    sunbooleantype N_VInvTestLocal(N_Vector x, N_Vector z)
+    sunbooleantype N_VConstrMaskLocal(N_Vector c, N_Vector x, N_Vector m)
+    sunrealtype N_VMinQuotientLocal(N_Vector num, N_Vector denom)
 
     # * Additional functions exported by NVECTOR module
 
@@ -205,8 +217,8 @@ cdef extern from "sundials/sundials_matrix.h":
         void         (*destroy)(SUNMatrix)
         int          (*zero)(SUNMatrix)
         int          (*copy)(SUNMatrix, SUNMatrix)
-        int          (*scaleadd)(realtype, SUNMatrix, SUNMatrix)
-        int          (*scaleaddi)(realtype, SUNMatrix)
+        int          (*scaleadd)(sunrealtype, SUNMatrix, SUNMatrix)
+        int          (*scaleaddi)(sunrealtype, SUNMatrix)
         int          (*matvecsetup)(SUNMatrix);
         int          (*matvec)(SUNMatrix, N_Vector, N_Vector)
         int          (*space)(SUNMatrix, long int*, long int*)
@@ -216,7 +228,7 @@ cdef extern from "sundials/sundials_matrix.h":
         SUNMatrix_Ops ops
 
     # * FUNCTIONS *
-    SUNMatrix SUNMatNewEmpty()
+    SUNMatrix SUNMatNewEmpty(SUNContext* sunctx)
     void SUNMatFreeEmpty(SUNMatrix A)
     int SUNMatCopyOps(SUNMatrix A, SUNMatrix B)
     SUNMatrix_ID SUNMatGetID(SUNMatrix A)
@@ -224,32 +236,32 @@ cdef extern from "sundials/sundials_matrix.h":
     void SUNMatDestroy(SUNMatrix A)
     int SUNMatZero(SUNMatrix A)
     int SUNMatCopy(SUNMatrix A, SUNMatrix B)
-    int SUNMatScaleAdd(realtype c, SUNMatrix A, SUNMatrix B)
-    int SUNMatScaleAddI(realtype c, SUNMatrix A)
+    int SUNMatScaleAdd(sunrealtype c, SUNMatrix A, SUNMatrix B)
+    int SUNMatScaleAddI(sunrealtype c, SUNMatrix A)
     int SUNMatMatvecSetup(SUNMatrix A)
     int SUNMatMatvec(SUNMatrix A, N_Vector x, N_Vector y)
     int SUNMatSpace(SUNMatrix A, long int *lenrw, long int *leniw)
 
 cdef extern from "sundials/sundials_iterative.h":
     enum:
-        PREC_NONE
-        PREC_LEFT
-        PREC_RIGHT
-        PREC_BOTH
+        SUN_PREC_NONE
+        SUN_PREC_LEFT
+        SUN_PREC_RIGHT
+        SUN_PREC_BOTH
     enum:
-        MODIFIED_GS = 1
-        CLASSICAL_GS = 2
-    ctypedef int (*ATimesFn)(void *A_data, N_Vector v, N_Vector z)
-    ctypedef int (*PSetupFn)(void *P_data)
-    ctypedef int (*PSolveFn)(void *P_data, N_Vector r, N_Vector z,
-                             realtype tol, int lr)
+        SUN_MODIFIED_GS = 1
+        SUN_CLASSICAL_GS = 2
+    ctypedef int (*SUNATimesFn)(void *A_data, N_Vector v, N_Vector z)
+    ctypedef int (*SUNPSetupFn)(void *P_data)
+    ctypedef int (*SUNPSolveFn)(void *P_data, N_Vector r, N_Vector z,
+                             sunrealtype tol, int lr)
 
-    int ModifiedGS(N_Vector *v, realtype **h, int k, int p,
-                   realtype *new_vk_norm)
-    int ClassicalGS(N_Vector *v, realtype **h, int k, int p,
-                    realtype *new_vk_norm, N_Vector temp, realtype *s)
-    int QRfact(int n, realtype **h, realtype *q, int job)
-    int QRsol(int n, realtype **h, realtype *q, realtype *b)
+    int ModifiedGS(N_Vector *v, sunrealtype **h, int k, int p,
+                   sunrealtype *new_vk_norm)
+    int ClassicalGS(N_Vector *v, sunrealtype **h, int k, int p,
+                    sunrealtype *new_vk_norm, N_Vector temp, sunrealtype *s)
+    int QRfact(int n, sunrealtype **h, sunrealtype *q, int job)
+    int QRsol(int n, sunrealtype **h, sunrealtype *q, sunrealtype *b)
 
     enum: SUNMAT_SUCCESS                  #    0  /* function successfull          */
     enum: SUNMAT_ILL_INPUT                # -701  /* illegal function input        */
@@ -291,17 +303,17 @@ cdef extern from "sundials/sundials_linearsolver.h":
     struct _generic_SUNLinearSolver_Ops:
         SUNLinearSolver_Type (*gettype)(SUNLinearSolver)
         SUNLinearSolver_ID   (*getid)(SUNLinearSolver);
-        int                  (*setatimes)(SUNLinearSolver, void*, ATimesFn)
+        int                  (*setatimes)(SUNLinearSolver, void*, SUNATimesFn)
         int                  (*setpreconditioner)(SUNLinearSolver, void*,
-                                                PSetupFn, PSolveFn)
+                                                SUNPSetupFn, SUNPSolveFn)
         int                  (*setscalingvectors)(SUNLinearSolver,
                                                 N_Vector, N_Vector)
         int                  (*initialize)(SUNLinearSolver)
         int                  (*setup)(SUNLinearSolver, SUNMatrix)
         int                  (*solve)(SUNLinearSolver, SUNMatrix, N_Vector,
-                                    N_Vector, realtype)
+                                    N_Vector, sunrealtype)
         int                  (*numiters)(SUNLinearSolver)
-        realtype             (*resnorm)(SUNLinearSolver)
+        sunrealtype             (*resnorm)(SUNLinearSolver)
         long int             (*lastflag)(SUNLinearSolver)
         int                  (*space)(SUNLinearSolver, long int*, long int*)
         N_Vector             (*resid)(SUNLinearSolver)
@@ -311,7 +323,7 @@ cdef extern from "sundials/sundials_linearsolver.h":
         void *content
         SUNLinearSolver_Ops ops
 
-    SUNLinearSolver SUNLinSolNewEmpty()
+    SUNLinearSolver SUNLinSolNewEmpty(SUNContext* sunctx)
 
     void SUNLinSolFreeEmpty(SUNLinearSolver S)
 
@@ -319,17 +331,17 @@ cdef extern from "sundials/sundials_linearsolver.h":
 
     SUNLinearSolver_ID SUNLinSolGetID(SUNLinearSolver S)
     int SUNLinSolSetATimes(SUNLinearSolver S, void* A_data,
-                           ATimesFn ATimes)
+                           SUNATimesFn ATimes)
     int SUNLinSolSetPreconditioner(SUNLinearSolver S, void* P_data,
-                                   PSetupFn Pset, PSolveFn Psol)
+                                   SUNPSetupFn Pset, SUNPSolveFn Psol)
     int SUNLinSolSetScalingVectors(SUNLinearSolver S, N_Vector s1,
                                    N_Vector s2)
     int SUNLinSolInitialize(SUNLinearSolver S)
     int SUNLinSolSetup(SUNLinearSolver S, SUNMatrix A)
     int SUNLinSolSolve(SUNLinearSolver S, SUNMatrix A, N_Vector x,
-                       N_Vector b, realtype tol)
+                       N_Vector b, sunrealtype tol)
     int SUNLinSolNumIters(SUNLinearSolver S)
-    realtype SUNLinSolResNorm(SUNLinearSolver S)
+    sunrealtype SUNLinSolResNorm(SUNLinearSolver S)
     N_Vector SUNLinSolResid(SUNLinearSolver S)
     long int SUNLinSolLastFlag(SUNLinearSolver S)
     int SUNLinSolSpace(SUNLinearSolver S, long int *lenrwLS,
@@ -370,77 +382,77 @@ cdef extern from "sundials/sundials_direct.h":
         sunindextype mu
         sunindextype ml
         sunindextype s_mu
-        realtype *data
+        sunrealtype *data
         sunindextype ldata
-        realtype **cols
+        sunrealtype **cols
 
-    ctypedef _DlsMat *DlsMat
+    ctypedef _DlsMat *SUNDlsMat
 
-    DlsMat NewDenseMat(sunindextype M, sunindextype N)
-    DlsMat NewBandMat(sunindextype N, sunindextype mu, sunindextype ml, sunindextype smu)
-    void DestroyMat(DlsMat A)
+    SUNDlsMat NewDenseMat(sunindextype M, sunindextype N)
+    SUNDlsMat NewBandMat(sunindextype N, sunindextype mu, sunindextype ml, sunindextype smu)
+    void DestroyMat(SUNDlsMat A)
     int *NewIntArray(int N)
     sunindextype *NewIndexArray(sunindextype N)
-    realtype *NewRealArray(long int N)
+    sunrealtype *NewRealArray(long int N)
     void DestroyArray(void *p)
-    void AddIdentity(DlsMat A)
-    void SetToZero(DlsMat A)
-    void PrintMat(DlsMat A, FILE *outfile)
+    void AddIdentity(SUNDlsMat A)
+    void SetToZero(SUNDlsMat A)
+    void PrintMat(SUNDlsMat A, FILE *outfile)
 
-    # * Exported function prototypes (functions working on realtype**)
-    realtype **newDenseMat(sunindextype m, sunindextype n)
-    realtype **newBandMat(sunindextype n, sunindextype smu, sunindextype ml)
-    void destroyMat(realtype **a)
+    # * Exported function prototypes (functions working on sunrealtype**)
+    sunrealtype **newDenseMat(sunindextype m, sunindextype n)
+    sunrealtype **newBandMat(sunindextype n, sunindextype smu, sunindextype ml)
+    void destroyMat(sunrealtype **a)
     int *newIntArray(int n)
     sunindextype *newIndexArray(sunindextype n)
-    realtype *newRealArray(sunindextype m)
+    sunrealtype *newRealArray(sunindextype m)
     void destroyArray(void *v)
 
 cdef extern from "sundials/sundials_band.h":
-    sunindextype BandGBTRF(DlsMat A, sunindextype *p)
-    sunindextype bandGBTRF(realtype **a, sunindextype n, sunindextype mu, sunindextype ml,
+    sunindextype SUNDlsMat_BandGBTRF(SUNDlsMat A, sunindextype *p)
+    sunindextype SUNDlsMat_bandGBTRF(sunrealtype **a, sunindextype n, sunindextype mu, sunindextype ml,
                        sunindextype smu, sunindextype *p)
-    void BandGBTRS(DlsMat A, sunindextype *p, realtype *b)
-    void bandGBTRS(realtype **a, sunindextype n, sunindextype smu, sunindextype ml,
-                   sunindextype *p, realtype *b)
-    void BandCopy(DlsMat A, DlsMat B, sunindextype copymu, sunindextype copyml)
-    void bandCopy(realtype **a, realtype **b, sunindextype n, sunindextype a_smu,
+    void SUNDlsMat_BandGBTRS(SUNDlsMat A, sunindextype *p, sunrealtype *b)
+    void SUNDlsMat_bandGBTRS(sunrealtype **a, sunindextype n, sunindextype smu, sunindextype ml,
+                   sunindextype *p, sunrealtype *b)
+    void SUNDlsMat_BandCopy(SUNDlsMat A, SUNDlsMat B, sunindextype copymu, sunindextype copyml)
+    void SUNDlsMat_bandCopy(sunrealtype **a, sunrealtype **b, sunindextype n, sunindextype a_smu,
                   sunindextype b_smu, sunindextype copymu, sunindextype copyml)
-    void BandScale(realtype c, DlsMat A)
-    void bandScale(realtype c, realtype **a, sunindextype n, sunindextype mu,
+    void SUNDlsMat_BandScale(sunrealtype c, SUNDlsMat A)
+    void SUNDlsMat_bandScale(sunrealtype c, sunrealtype **a, sunindextype n, sunindextype mu,
                    sunindextype ml, sunindextype smu)
-    void bandAddIdentity(realtype **a, sunindextype n, sunindextype smu)
-    void BandMatvec(DlsMat A, realtype *x, realtype *y)
-    void bandMatvec(realtype **a, realtype *x, realtype *y, sunindextype n,
+    void SUNDlsMat_bandAddIdentity(sunrealtype **a, sunindextype n, sunindextype smu)
+    void SUNDlsMat_BandMatvec(SUNDlsMat A, sunrealtype *x, sunrealtype *y)
+    void SUNDlsMat_bandMatvec(sunrealtype **a, sunrealtype *x, sunrealtype *y, sunindextype n,
                     sunindextype mu, sunindextype ml, sunindextype smu)
 
 cdef extern from "sundials/sundials_dense.h":
-    sunindextype DenseGETRF(DlsMat A, sunindextype *p)
-    void DenseGETRS(DlsMat A, sunindextype *p, realtype *b)
+    sunindextype SUNDlsMat_DenseGETRF(SUNDlsMat A, sunindextype *p)
+    void SUNDlsMat_DenseGETRS(SUNDlsMat A, sunindextype *p, sunrealtype *b)
 
-    sunindextype denseGETRF(realtype **a, sunindextype m, sunindextype n, sunindextype *p)
-    void denseGETRS(realtype **a, sunindextype n, sunindextype *p, realtype *b)
+    sunindextype SUNDlsMat_denseGETRF(sunrealtype **a, sunindextype m, sunindextype n, sunindextype *p)
+    void SUNDlsMat_denseGETRS(sunrealtype **a, sunindextype n, sunindextype *p, sunrealtype *b)
 
-    sunindextype DensePOTRF(DlsMat A)
-    void DensePOTRS(DlsMat A, realtype *b)
+    sunindextype SUNDlsMat_DensePOTRF(SUNDlsMat A)
+    void SUNDlsMat_DensePOTRS(SUNDlsMat A, sunrealtype *b)
 
-    sunindextype densePOTRF(realtype **a, sunindextype m)
-    void densePOTRS(realtype **a, sunindextype m, realtype *b)
+    sunindextype SUNDlsMat_densePOTRF(sunrealtype **a, sunindextype m)
+    void SUNDlsMat_densePOTRS(sunrealtype **a, sunindextype m, sunrealtype *b)
 
-    int DenseGEQRF(DlsMat A, realtype *beta, realtype *wrk)
-    int DenseORMQR(DlsMat A, realtype *beta, realtype *vn, realtype *vm,
-                   realtype *wrk)
+    int SUNDlsMat_DenseGEQRF(SUNDlsMat A, sunrealtype *beta, sunrealtype *wrk)
+    int SUNDlsMat_DenseORMQR(SUNDlsMat A, sunrealtype *beta, sunrealtype *vn, sunrealtype *vm,
+                   sunrealtype *wrk)
 
-    int denseGEQRF(realtype **a, sunindextype m, sunindextype n, realtype *beta, realtype *v)
-    int denseORMQR(realtype **a, sunindextype m, sunindextype n, realtype *beta,
-                   realtype *v, realtype *w, realtype *wrk)
-    void DenseCopy(DlsMat A, DlsMat B)
-    void denseCopy(realtype **a, realtype **b, sunindextype m, sunindextype n)
-    void DenseScale(realtype c, DlsMat A)
-    void denseScale(realtype c, realtype **a, sunindextype m, sunindextype n)
-    void denseAddIdentity(realtype **a, sunindextype n)
-    void DenseMatvec(DlsMat A, realtype *x, realtype *y)
-    void denseMatvec(realtype **a, realtype *x, realtype *y, sunindextype m, sunindextype n)
+    int SUNDlsMat_denseGEQRF(sunrealtype **a, sunindextype m, sunindextype n, sunrealtype *beta, sunrealtype *v)
+    int SUNDlsMat_denseORMQR(sunrealtype **a, sunindextype m, sunindextype n, sunrealtype *beta,
+                   sunrealtype *v, sunrealtype *w, sunrealtype *wrk)
+    void SUNDlsMat_DenseCopy(SUNDlsMat A, SUNDlsMat B)
+    void SUNDlsMat_denseCopy(sunrealtype **a, sunrealtype **b, sunindextype m, sunindextype n)
+    void SUNDlsMat_DenseScale(sunrealtype c, SUNDlsMat A)
+    void SUNDlsMat_denseScale(sunrealtype c, sunrealtype **a, sunindextype m, sunindextype n)
+    void SUNDlsMat_denseAddIdentity(sunrealtype **a, sunindextype n)
+    void SUNDlsMat_DenseMatvec(SUNDlsMat A, sunrealtype *x, sunrealtype *y)
+    void SUNDlsMat_denseMatvec(sunrealtype **a, sunrealtype *x, sunrealtype *y, sunindextype m, sunindextype n)
 
 cdef extern from "sundials/sundials_nonlinearsolver.h":
 
@@ -452,12 +464,12 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
     ctypedef _generic_SUNNonlinearSolver *SUNNonlinearSolver
 
     ctypedef int (*SUNNonlinSolSysFn)(N_Vector y, N_Vector F, void* mem)
-    ctypedef int (*SUNNonlinSolLSetupFn)(booleantype jbad,
-                                         booleantype* jcur, void* mem)
+    ctypedef int (*SUNNonlinSolLSetupFn)(sunbooleantype jbad,
+                                         sunbooleantype* jcur, void* mem)
     ctypedef int (*SUNNonlinSolLSolveFn)(N_Vector b, void* mem)
     # rename reserved del into del_t for python!
     ctypedef int (*SUNNonlinSolConvTestFn)(SUNNonlinearSolver NLS, N_Vector y,
-                                          N_Vector del_t, realtype tol, 
+                                          N_Vector del_t, sunrealtype tol, 
                                           N_Vector ewt, void* mem)
 
     cdef enum SUNNonlinearSolver_Type:
@@ -468,8 +480,8 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
         SUNNonlinearSolver_Type (*gettype)(SUNNonlinearSolver)
         int (*initialize)(SUNNonlinearSolver)
         int (*setup)(SUNNonlinearSolver, N_Vector, void*)
-        int (*solve)(SUNNonlinearSolver, N_Vector, N_Vector, N_Vector, realtype,
-                     booleantype, void*)
+        int (*solve)(SUNNonlinearSolver, N_Vector, N_Vector, N_Vector, sunrealtype,
+                     sunbooleantype, void*)
         int (*free)(SUNNonlinearSolver)
         int (*setsysfn)(SUNNonlinearSolver, SUNNonlinSolSysFn)
         int (*setlsetupfn)(SUNNonlinearSolver, SUNNonlinSolLSetupFn)
@@ -484,7 +496,7 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
         void *content
         SUNNonlinearSolver_Ops ops
 
-    SUNNonlinearSolver SUNNonlinSolNewEmpty();
+    SUNNonlinearSolver SUNNonlinSolNewEmpty(SUNContext* sunctx);
     void SUNNonlinSolFreeEmpty(SUNNonlinearSolver NLS);
 
     SUNNonlinearSolver_Type SUNNonlinSolGetType(SUNNonlinearSolver NLS)
@@ -492,8 +504,8 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
     int SUNNonlinSolInitialize(SUNNonlinearSolver NLS)
     int SUNNonlinSolSetup(SUNNonlinearSolver NLS, N_Vector y, void* mem)
     int SUNNonlinSolSolve(SUNNonlinearSolver NLS, N_Vector y0, N_Vector y,
-                          N_Vector w, realtype tol,
-                          booleantype callLSetup, void *mem)
+                          N_Vector w, sunrealtype tol,
+                          sunbooleantype callLSetup, void *mem)
     int SUNNonlinSolFree(SUNNonlinearSolver NLS)
 
     int SUNNonlinSolSetSysFn(SUNNonlinearSolver NLS,  SUNNonlinSolSysFn SysFn)

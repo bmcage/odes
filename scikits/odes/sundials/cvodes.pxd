@@ -1,7 +1,7 @@
 #defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 cimport numpy as np
-from .c_sundials cimport N_Vector, realtype
+from .c_sundials cimport N_Vector, sunrealtype
 from .common_defs cimport DTYPE_t, INDEX_TYPE_t
 
 from .cvode cimport (CV_RhsFunction, CV_WrapRhsFunction, CV_RootFunction,

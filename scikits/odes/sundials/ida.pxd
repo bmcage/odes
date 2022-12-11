@@ -1,5 +1,5 @@
 cimport numpy as np
-from .c_sundials cimport N_Vector, realtype
+from .c_sundials cimport N_Vector, sunrealtype, SUNContext
 from .common_defs cimport DTYPE_t
 
 cdef class IDA_RhsFunction:
@@ -114,7 +114,7 @@ cdef class IDA_ContinuationFunction:
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        IDA solver)
 
-cdef int _res(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj)
+cdef int _res(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj)
 
 cdef class IDA_ErrHandler:
     cpdef evaluate(self,
@@ -169,16 +169,17 @@ cdef class IDA:
     cdef bint initialized
 
     cdef void* _ida_mem
+    cdef SUNContext* sunctx
     cdef dict options
     cdef bint parallel_implementation
     cdef bint _old_api, _step_compute, _validate_flags
-    cdef realtype t, t0
+    cdef sunrealtype t, t0
 
     cdef IDA_data aux_data
 
     cdef int verbosity
 
-    #cdef realtype *y0, *yprime0
+    #cdef sunrealtype *y0, *yprime0
 
     # Functions
 
@@ -196,4 +197,4 @@ cdef class IDA:
                        np.ndarray[DTYPE_t, ndim=1] yp0)
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=*)
-    #def step(self, realtype t)
+    #def step(self, sunrealtype t)
