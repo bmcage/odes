@@ -22,9 +22,9 @@ INSTALL_REQUIRES = ['scipy']
 BUILD_REQUIRES = ['numpy', 'cython<3.0.0a8'] # This is need for older pip
 
 MAJOR = 2
-MINOR = 6
-MICRO = 6
-DEV = True
+MINOR = 7
+MICRO = 0
+DEV = False
 
 CLASSIFIERS = [
         'Development Status :: 5 - Production/Stable',
