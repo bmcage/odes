@@ -88,11 +88,11 @@ cdef extern from "idas/idas.h":
     enum: IDA_GETY_BADT       # -107
 
 
-    ctypedef int (*IDAResFn)(realtype tt, N_Vector yy, N_Vector yp,
+    ctypedef int (*IDAResFn)(sunrealtype tt, N_Vector yy, N_Vector yp,
                     N_Vector rr, void *user_data)
 
-    ctypedef int (*IDARootFn)(realtype t, N_Vector y, N_Vector yp,
-                    realtype *gout, void *user_data)
+    ctypedef int (*IDARootFn)(sunrealtype t, N_Vector y, N_Vector yp,
+                    sunrealtype *gout, void *user_data)
 
     ctypedef int (*IDAEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
 
@@ -101,16 +101,16 @@ cdef extern from "idas/idas.h":
                                     void *user_data)
 
     
-    ctypedef int (*IDAQuadRhsFn)(realtype tres, N_Vector yy, N_Vector yp,
+    ctypedef int (*IDAQuadRhsFn)(sunrealtype tres, N_Vector yy, N_Vector yp,
                                  N_Vector rrQ, void *user_data)
     
-    ctypedef int (*IDASensResFn)(int Ns, realtype t,
+    ctypedef int (*IDASensResFn)(int Ns, sunrealtype t,
                                  N_Vector yy, N_Vector yp, N_Vector resval,
                                  N_Vector *yyS, N_Vector *ypS,
                                  N_Vector *resvalS, void *user_data,
                                  N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
     
-    ctypedef int (*IDAQuadSensRhsFn)(int Ns, realtype t,
+    ctypedef int (*IDAQuadSensRhsFn)(int Ns, sunrealtype t,
                                      N_Vector yy, N_Vector yp,
                                      N_Vector *yyS, N_Vector *ypS,
                                      N_Vector rrQ, N_Vector *rhsvalQS,
@@ -118,45 +118,45 @@ cdef extern from "idas/idas.h":
                                      N_Vector yytmp, N_Vector yptmp, 
                                      N_Vector tmpQS)
     
-    ctypedef int (*IDAResFnB)(realtype tt,
+    ctypedef int (*IDAResFnB)(sunrealtype tt,
                               N_Vector yy, N_Vector yp,
                               N_Vector yyB, N_Vector ypB,
                               N_Vector rrB, void *user_dataB)
     
-    ctypedef int (*IDAResFnBS)(realtype t,
+    ctypedef int (*IDAResFnBS)(sunrealtype t,
                                N_Vector yy, N_Vector yp,
                                N_Vector *yyS, N_Vector *ypS,
                                N_Vector yyB, N_Vector ypB,
                                N_Vector rrBS, void *user_dataB)
     
-    ctypedef int (*IDAQuadRhsFnB)(realtype tt,
+    ctypedef int (*IDAQuadRhsFnB)(sunrealtype tt,
                                   N_Vector yy, N_Vector yp,
                                   N_Vector yyB, N_Vector ypB,
                                   N_Vector rhsvalBQ, void *user_dataB)
     
-    ctypedef int (*IDAQuadRhsFnBS)(realtype t,
+    ctypedef int (*IDAQuadRhsFnBS)(sunrealtype t,
                                    N_Vector yy, N_Vector yp,
                                    N_Vector *yyS, N_Vector *ypS,
                                    N_Vector yyB, N_Vector ypB,
                                    N_Vector rhsvalBQS, void *user_dataB)
 
-    void *IDACreate()
+    void *IDACreate(SUNContext sunctx)
 
     int IDAInit(void *ida_mem, IDAResFn res,
-                realtype t0, N_Vector yy0, N_Vector yp0)
+                sunrealtype t0, N_Vector yy0, N_Vector yp0)
     int IDAReInit(void *ida_mem,
-                  realtype t0, N_Vector yy0, N_Vector yp0)
-    int IDASStolerances(void *ida_mem, realtype reltol, realtype abstol)
-    int IDASVtolerances(void *ida_mem, realtype reltol, N_Vector abstol)
+                  sunrealtype t0, N_Vector yy0, N_Vector yp0)
+    int IDASStolerances(void *ida_mem, sunrealtype reltol, sunrealtype abstol)
+    int IDASVtolerances(void *ida_mem, sunrealtype reltol, N_Vector abstol)
     int IDAWFtolerances(void *ida_mem, IDAEwtFn efun)
-    int IDACalcIC(void *ida_mem, int icopt, realtype tout1)
+    int IDACalcIC(void *ida_mem, int icopt, sunrealtype tout1)
     
-    int IDASetNonlinConvCoefIC(void *ida_mem, realtype epiccon)
+    int IDASetNonlinConvCoefIC(void *ida_mem, sunrealtype epiccon)
     int IDASetMaxNumStepsIC(void *ida_mem, int maxnh)
     int IDASetMaxNumJacsIC(void *ida_mem, int maxnj)
     int IDASetMaxNumItersIC(void *ida_mem, int maxnit)
-    int IDASetLineSearchOffIC(void *ida_mem, booleantype lsoff)
-    int IDASetStepToleranceIC(void *ida_mem, realtype steptol)
+    int IDASetLineSearchOffIC(void *ida_mem, sunbooleantype lsoff)
+    int IDASetStepToleranceIC(void *ida_mem, sunrealtype steptol)
     int IDASetMaxBacksIC(void *ida_mem, int maxbacks)
     
     int IDASetErrHandlerFn(void *ida_mem, IDAErrHandlerFn ehfun, void *eh_data)
@@ -164,14 +164,14 @@ cdef extern from "idas/idas.h":
     int IDASetUserData(void *ida_mem, void *user_data)
     int IDASetMaxOrd(void *ida_mem, int maxord)
     int IDASetMaxNumSteps(void *ida_mem, long int mxsteps)
-    int IDASetInitStep(void *ida_mem, realtype hin)
-    int IDASetMaxStep(void *ida_mem, realtype hmax)
-    int IDASetStopTime(void *ida_mem, realtype tstop)
-    int IDASetNonlinConvCoef(void *ida_mem, realtype epcon)
+    int IDASetInitStep(void *ida_mem, sunrealtype hin)
+    int IDASetMaxStep(void *ida_mem, sunrealtype hmax)
+    int IDASetStopTime(void *ida_mem, sunrealtype tstop)
+    int IDASetNonlinConvCoef(void *ida_mem, sunrealtype epcon)
     int IDASetMaxErrTestFails(void *ida_mem, int maxnef)
     int IDASetMaxNonlinIters(void *ida_mem, int maxcor)
     int IDASetMaxConvFails(void *ida_mem, int maxncf)
-    int IDASetSuppressAlg(void *ida_mem, booleantype suppressalg)
+    int IDASetSuppressAlg(void *ida_mem, sunbooleantype suppressalg)
     int IDASetId(void *ida_mem, N_Vector id)
     int IDASetConstraints(void *ida_mem, N_Vector constraints)
 
@@ -181,13 +181,13 @@ cdef extern from "idas/idas.h":
     int IDASetRootDirection(void *ida_mem, int *rootdir)
     int IDASetNoInactiveRootWarn(void *ida_mem)
 
-    int IDASolve(void *ida_mem, realtype tout, realtype *tret,
+    int IDASolve(void *ida_mem, sunrealtype tout, sunrealtype *tret,
                  N_Vector yret, N_Vector ypret, int itask)
     
     int IDAComputeY(void *ida_mem, N_Vector ycor, N_Vector y)
     int IDAComputeYp(void *ida_mem, N_Vector ycor, N_Vector yp)
     
-    int IDAGetDky(void *ida_mem, realtype t, int k, N_Vector dky)
+    int IDAGetDky(void *ida_mem, sunrealtype t, int k, N_Vector dky)
 
     int IDAGetWorkSpace(void *ida_mem, long int *lenrw, long int *leniw)
     int IDAGetNumSteps(void *ida_mem, long int *nsteps)
@@ -198,14 +198,14 @@ cdef extern from "idas/idas.h":
     int IDAGetConsistentIC(void *ida_mem, N_Vector yy0_mod, N_Vector yp0_mod)
     int IDAGetLastOrder(void *ida_mem, int *klast)
     int IDAGetCurrentOrder(void *ida_mem, int *kcur)
-    int IDAGetCurrentCj(void *ida_mem, realtype *cj)
+    int IDAGetCurrentCj(void *ida_mem, sunrealtype *cj)
     int IDAGetCurrentY(void *ida_mem, N_Vector *ycur)
     int IDAGetCurrentYp(void *ida_mem, N_Vector *ypcur)
-    int IDAGetActualInitStep(void *ida_mem, realtype *hinused)
-    int IDAGetLastStep(void *ida_mem, realtype *hlast)
-    int IDAGetCurrentStep(void *ida_mem, realtype *hcur)
-    int IDAGetCurrentTime(void *ida_mem, realtype *tcur)
-    int IDAGetTolScaleFactor(void *ida_mem, realtype *tolsfact)
+    int IDAGetActualInitStep(void *ida_mem, sunrealtype *hinused)
+    int IDAGetLastStep(void *ida_mem, sunrealtype *hlast)
+    int IDAGetCurrentStep(void *ida_mem, sunrealtype *hcur)
+    int IDAGetCurrentTime(void *ida_mem, sunrealtype *tcur)
+    int IDAGetTolScaleFactor(void *ida_mem, sunrealtype *tolsfact)
     int IDAGetErrWeights(void *ida_mem, N_Vector eweight)
     int IDAGetEstLocalErrors(void *ida_mem, N_Vector ele)
     int IDAGetNumGEvals(void *ida_mem, long int *ngevals)
@@ -213,8 +213,8 @@ cdef extern from "idas/idas.h":
     int IDAGetIntegratorStats(void *ida_mem, long int *nsteps,
                               long int *nrevals, long int *nlinsetups,
                               long int *netfails, int *qlast, int *qcur,
-                              realtype *hinused, realtype *hlast,
-                              realtype *hcur, realtype *tcur)
+                              sunrealtype *hinused, sunrealtype *hlast,
+                              sunrealtype *hcur, sunrealtype *tcur)
     int IDAGetNumNonlinSolvIters(void *ida_mem, long int *nniters)
     int IDAGetNumNonlinSolvConvFails(void *ida_mem, long int *nncfails)
     int IDAGetNonlinSolvStats(void *ida_mem, long int *nniters,
@@ -228,13 +228,13 @@ cdef extern from "idas/idas.h":
     int IDAQuadInit(void *ida_mem, IDAQuadRhsFn rhsQ, N_Vector yQ0)
     int IDAQuadReInit(void *ida_mem, N_Vector yQ0)
 
-    int IDAQuadSStolerances(void *ida_mem, realtype reltolQ, realtype abstolQ)
-    int IDAQuadSVtolerances(void *ida_mem, realtype reltolQ, N_Vector abstolQ)
+    int IDAQuadSStolerances(void *ida_mem, sunrealtype reltolQ, sunrealtype abstolQ)
+    int IDAQuadSVtolerances(void *ida_mem, sunrealtype reltolQ, N_Vector abstolQ)
 
-    int IDASetQuadErrCon(void *ida_mem, booleantype errconQ)
+    int IDASetQuadErrCon(void *ida_mem, sunbooleantype errconQ)
 
-    int IDAGetQuad(void *ida_mem, realtype *t, N_Vector yQout)
-    int IDAGetQuadDky(void *ida_mem, realtype t, int k, N_Vector dky)
+    int IDAGetQuad(void *ida_mem, sunrealtype *t, N_Vector yQout)
+    int IDAGetQuadDky(void *ida_mem, sunrealtype t, int k, N_Vector dky)
 
     int IDAGetQuadNumRhsEvals(void *ida_mem, long int *nrhsQevals)
     int IDAGetQuadNumErrTestFails(void *ida_mem, long int *nQetfails)
@@ -248,27 +248,27 @@ cdef extern from "idas/idas.h":
                     IDASensResFn resS, N_Vector *yS0, N_Vector *ypS0)
     int IDASensReInit(void *ida_mem, int ism, N_Vector *yS0, N_Vector *ypS0)
 
-    int IDASensSStolerances(void *ida_mem, realtype reltolS, realtype *abstolS)
-    int IDASensSVtolerances(void *ida_mem, realtype reltolS, N_Vector *abstolS)
+    int IDASensSStolerances(void *ida_mem, sunrealtype reltolS, sunrealtype *abstolS)
+    int IDASensSVtolerances(void *ida_mem, sunrealtype reltolS, N_Vector *abstolS)
     int IDASensEEtolerances(void *ida_mem)
 
     int IDAGetSensConsistentIC(void *ida_mem, N_Vector *yyS0, N_Vector *ypS0)
 
-    int IDASetSensDQMethod(void *ida_mem, int DQtype, realtype DQrhomax)
-    int IDASetSensErrCon(void *ida_mem, booleantype errconS)
+    int IDASetSensDQMethod(void *ida_mem, int DQtype, sunrealtype DQrhomax)
+    int IDASetSensErrCon(void *ida_mem, sunbooleantype errconS)
     int IDASetSensMaxNonlinIters(void *ida_mem, int maxcorS)
-    int IDASetSensParams(void *ida_mem, realtype *p, realtype *pbar, int *plist)
+    int IDASetSensParams(void *ida_mem, sunrealtype *p, sunrealtype *pbar, int *plist)
 
     int IDASetNonlinearSolverSensSim(void *ida_mem, SUNNonlinearSolver NLS)
     int IDASetNonlinearSolverSensStg(void *ida_mem, SUNNonlinearSolver NLS)
 
     int IDASensToggleOff(void *ida_mem)
 
-    int IDAGetSens(void *ida_mem, realtype *tret, N_Vector *yySout)
-    int IDAGetSens1(void *ida_mem, realtype *tret, int iss, N_Vector yySret) # rename is to iss, is protected in python
+    int IDAGetSens(void *ida_mem, sunrealtype *tret, N_Vector *yySout)
+    int IDAGetSens1(void *ida_mem, sunrealtype *tret, int iss, N_Vector yySret) # rename is to iss, is protected in python
 
-    int IDAGetSensDky(void *ida_mem, realtype t, int k, N_Vector *dkyS)
-    int IDAGetSensDky1(void *ida_mem, realtype t, int k, int iss, N_Vector dkyS) # rename is to iss, is protected in python
+    int IDAGetSensDky(void *ida_mem, sunrealtype t, int k, N_Vector *dkyS)
+    int IDAGetSensDky1(void *ida_mem, sunrealtype t, int k, int iss, N_Vector dkyS) # rename is to iss, is protected in python
 
     int IDAGetSensNumResEvals(void *ida_mem, long int *nresSevals)
     int IDAGetNumResEvalsSens(void *ida_mem, long int *nresevalsS)
@@ -291,18 +291,18 @@ cdef extern from "idas/idas.h":
                         N_Vector *yQS0)
     int IDAQuadSensReInit(void *ida_mem, N_Vector *yQS0)
 
-    int IDAQuadSensSStolerances(void *ida_mem, realtype reltolQS,
-                                            realtype *abstolQS)
-    int IDAQuadSensSVtolerances(void *ida_mem, realtype reltolQS,
+    int IDAQuadSensSStolerances(void *ida_mem, sunrealtype reltolQS,
+                                            sunrealtype *abstolQS)
+    int IDAQuadSensSVtolerances(void *ida_mem, sunrealtype reltolQS,
                                 N_Vector *abstolQS)
     int IDAQuadSensEEtolerances(void *ida_mem)
 
-    int IDASetQuadSensErrCon(void *ida_mem, booleantype errconQS)
+    int IDASetQuadSensErrCon(void *ida_mem, sunbooleantype errconQS)
 
-    int IDAGetQuadSens(void *ida_mem, realtype *tret, N_Vector *yyQSout)
-    int IDAGetQuadSens1(void *ida_mem, realtype *tret, int iss, N_Vector yyQSret) # rename is to iss, is protected in python
-    int IDAGetQuadSensDky(void *ida_mem, realtype t, int k, N_Vector *dkyQS)
-    int IDAGetQuadSensDky1(void *ida_mem, realtype t, int k, int iss,
+    int IDAGetQuadSens(void *ida_mem, sunrealtype *tret, N_Vector *yyQSout)
+    int IDAGetQuadSens1(void *ida_mem, sunrealtype *tret, int iss, N_Vector yyQSret) # rename is to iss, is protected in python
+    int IDAGetQuadSensDky(void *ida_mem, sunrealtype t, int k, N_Vector *dkyQS)
+    int IDAGetQuadSensDky1(void *ida_mem, sunrealtype t, int k, int iss,
                            N_Vector dkyQS) # rename is to iss, is protected in python
 
     int IDAGetQuadSensNumRhsEvals(void *ida_mem, long int *nrhsQSevals)
@@ -320,79 +320,79 @@ cdef extern from "idas/idas.h":
 
     int IDACreateB(void *ida_mem, int *which)
     int IDAInitB(void *ida_mem, int which, IDAResFnB resB,
-                 realtype tB0, N_Vector yyB0, N_Vector ypB0)
+                 sunrealtype tB0, N_Vector yyB0, N_Vector ypB0)
     int IDAInitBS(void *ida_mem, int which, IDAResFnBS resS,
-                  realtype tB0, N_Vector yyB0, N_Vector ypB0)
+                  sunrealtype tB0, N_Vector yyB0, N_Vector ypB0)
     int IDAReInitB(void *ida_mem, int which,
-                            realtype tB0, N_Vector yyB0, N_Vector ypB0)
+                            sunrealtype tB0, N_Vector yyB0, N_Vector ypB0)
     int IDASStolerancesB(void *ida_mem, int which,
-                         realtype relTolB, realtype absTolB)
+                         sunrealtype relTolB, sunrealtype absTolB)
     int IDASVtolerancesB(void *ida_mem, int which,
-                         realtype relTolB, N_Vector absTolB)
+                         sunrealtype relTolB, N_Vector absTolB)
     int IDAQuadInitB(void *ida_mem, int which,
                      IDAQuadRhsFnB rhsQB, N_Vector yQB0)
     int IDAQuadInitBS(void *ida_mem, int which,
                       IDAQuadRhsFnBS rhsQS, N_Vector yQB0)
     int IDAQuadReInitB(void *ida_mem, int which, N_Vector yQB0)
     int IDAQuadSStolerancesB(void *ida_mem, int which,
-                             realtype reltolQB, realtype abstolQB)
+                             sunrealtype reltolQB, sunrealtype abstolQB)
     int IDAQuadSVtolerancesB(void *ida_mem, int which,
-                             realtype reltolQB, N_Vector abstolQB)
+                             sunrealtype reltolQB, N_Vector abstolQB)
 
-    int IDACalcICB (void *ida_mem, int which, realtype tout1,
+    int IDACalcICB (void *ida_mem, int which, sunrealtype tout1,
                     N_Vector yy0, N_Vector yp0)
-    int IDACalcICBS(void *ida_mem, int which, realtype tout1,
+    int IDACalcICBS(void *ida_mem, int which, sunrealtype tout1,
                     N_Vector yy0, N_Vector yp0,
                     N_Vector *yyS0, N_Vector *ypS0)
 
-    int IDASolveF(void *ida_mem, realtype tout, realtype *tret,
+    int IDASolveF(void *ida_mem, sunrealtype tout, sunrealtype *tret,
                   N_Vector yret, N_Vector ypret, int itask, int *ncheckPtr)
 
-    int IDASolveB(void *ida_mem, realtype tBout, int itaskB)
+    int IDASolveB(void *ida_mem, sunrealtype tBout, int itaskB)
 
     int IDAAdjSetNoSensi(void *ida_mem)
 
     int IDASetUserDataB(void *ida_mem, int which, void *user_dataB)
     int IDASetMaxOrdB(void *ida_mem, int which, int maxordB)
     int IDASetMaxNumStepsB(void *ida_mem, int which, long int mxstepsB)
-    int IDASetInitStepB(void *ida_mem, int which, realtype hinB)
-    int IDASetMaxStepB(void *ida_mem, int which, realtype hmaxB)
-    int IDASetSuppressAlgB(void *ida_mem, int which, booleantype suppressalgB)
+    int IDASetInitStepB(void *ida_mem, int which, sunrealtype hinB)
+    int IDASetMaxStepB(void *ida_mem, int which, sunrealtype hmaxB)
+    int IDASetSuppressAlgB(void *ida_mem, int which, sunbooleantype suppressalgB)
     int IDASetIdB(void *ida_mem, int which, N_Vector idB)
     int IDASetConstraintsB(void *ida_mem, int which, N_Vector constraintsB)
     int IDASetQuadErrConB(void *ida_mem, int which, int errconQB)
 
     int IDASetNonlinearSolverB(void *ida_mem, int which, SUNNonlinearSolver NLS)
 
-    int IDAGetB(void* ida_mem, int which, realtype *tret,
+    int IDAGetB(void* ida_mem, int which, sunrealtype *tret,
                 N_Vector yy, N_Vector yp)
-    int IDAGetQuadB(void *ida_mem, int which, realtype *tret, N_Vector qB)
+    int IDAGetQuadB(void *ida_mem, int which, sunrealtype *tret, N_Vector qB)
 
     void *IDAGetAdjIDABmem(void *ida_mem, int which)
 
     int IDAGetConsistentICB(void *ida_mem, int which, 
                             N_Vector yyB0, N_Vector ypB0)
 
-    int IDAGetAdjY(void *ida_mem, realtype t, N_Vector yy, N_Vector yp)
+    int IDAGetAdjY(void *ida_mem, sunrealtype t, N_Vector yy, N_Vector yp)
 
     struct _IDAadjCheckPointRec:
         void *my_addr
         void *next_addr
-        realtype t0
-        realtype t1
+        sunrealtype t0
+        sunrealtype t1
         long int nstep
         int order
-        realtype step
+        sunrealtype step
 
     ctypedef _IDAadjCheckPointRec IDAadjCheckPointRec
     
     int IDAGetAdjCheckPointsInfo(void *ida_mem, IDAadjCheckPointRec *ckpnt)
 
     int IDAGetAdjDataPointHermite(void *ida_mem, int which,
-                                  realtype *t, N_Vector yy, N_Vector yd)
+                                  sunrealtype *t, N_Vector yy, N_Vector yd)
 
     int IDAGetAdjDataPointPolynomial(void *ida_mem, int which,
-                                     realtype *t, int *order, N_Vector y)
+                                     sunrealtype *t, int *order, N_Vector y)
 
     int IDAGetAdjCurrentCheckPoint(void *ida_mem, void **addr)
 
@@ -412,29 +412,29 @@ cdef extern from "idas/idas_ls.h":
     enum: IDALS_NO_ADJ          # -101
     enum: IDALS_LMEMB_NULL      # -102
 
-    ctypedef int (*IDALsJacFn)(realtype t, realtype c_j, N_Vector y,
+    ctypedef int (*IDALsJacFn)(sunrealtype t, sunrealtype c_j, N_Vector y,
                                N_Vector yp, N_Vector r, SUNMatrix Jac,
                                void *user_data, N_Vector tmp1,
                                N_Vector tmp2, N_Vector tmp3)
 
-    ctypedef int (*IDALsPrecSetupFn)(realtype tt, N_Vector yy,
+    ctypedef int (*IDALsPrecSetupFn)(sunrealtype tt, N_Vector yy,
                                     N_Vector yp, N_Vector rr,
-                                    realtype c_j, void *user_data)
+                                    sunrealtype c_j, void *user_data)
 
-    ctypedef int (*IDALsPrecSolveFn)(realtype tt, N_Vector yy,
+    ctypedef int (*IDALsPrecSolveFn)(sunrealtype tt, N_Vector yy,
                                     N_Vector yp, N_Vector rr,
                                     N_Vector rvec, N_Vector zvec,
-                                    realtype c_j, realtype delta,
+                                    sunrealtype c_j, sunrealtype delta,
                                     void *user_data)
 
-    ctypedef int (*IDALsJacTimesSetupFn)(realtype tt, N_Vector yy,
+    ctypedef int (*IDALsJacTimesSetupFn)(sunrealtype tt, N_Vector yy,
                                         N_Vector yp, N_Vector rr,
-                                        realtype c_j, void *user_data) except? -1
+                                        sunrealtype c_j, void *user_data) except? -1
 
-    ctypedef int (*IDALsJacTimesVecFn)(realtype tt, N_Vector yy,
+    ctypedef int (*IDALsJacTimesVecFn)(sunrealtype tt, N_Vector yy,
                                       N_Vector yp, N_Vector rr,
                                       N_Vector v, N_Vector Jv,
-                                      realtype c_j, void *user_data,
+                                      sunrealtype c_j, void *user_data,
                                       N_Vector tmp1, N_Vector tmp2) except? -1
 
     int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
@@ -444,8 +444,8 @@ cdef extern from "idas/idas_ls.h":
                              IDALsPrecSolveFn psolve)
     int IDASetJacTimes(void *ida_mem, IDALsJacTimesSetupFn jtsetup,
                        IDALsJacTimesVecFn jtimes)
-    int IDASetEpsLin(void *ida_mem, realtype eplifac)
-    int IDASetIncrementFactor(void *ida_mem, realtype dqincfac)
+    int IDASetEpsLin(void *ida_mem, sunrealtype eplifac)
+    int IDASetIncrementFactor(void *ida_mem, sunrealtype dqincfac)
 
     int IDAGetLinWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
     int IDAGetNumJacEvals(void *ida_mem, long int *njevals)
@@ -459,69 +459,69 @@ cdef extern from "idas/idas_ls.h":
     int IDAGetLastLinFlag(void *ida_mem, long int *flag)
     char *IDAGetLinReturnFlagName(long int flag)
 
-    ctypedef int (*IDALsJacFnB)(realtype tt, realtype c_jB, N_Vector yy,
+    ctypedef int (*IDALsJacFnB)(sunrealtype tt, sunrealtype c_jB, N_Vector yy,
                                 N_Vector yp, N_Vector yyB, N_Vector ypB,
                                 N_Vector rrB, SUNMatrix JacB,
                                 void *user_dataB, N_Vector tmp1B,
                                 N_Vector tmp2B, N_Vector tmp3B)
     
-    ctypedef int (*IDALsJacFnBS)(realtype tt, realtype c_jB, N_Vector yy,
+    ctypedef int (*IDALsJacFnBS)(sunrealtype tt, sunrealtype c_jB, N_Vector yy,
                                  N_Vector yp, N_Vector *yS, N_Vector *ypS,
                                  N_Vector yyB, N_Vector ypB, N_Vector rrB,
                                  SUNMatrix JacB, void *user_dataB,
                                  N_Vector tmp1B, N_Vector tmp2B,
                                  N_Vector tmp3B)
     
-    ctypedef int (*IDALsPrecSetupFnB)(realtype tt, N_Vector yy,
+    ctypedef int (*IDALsPrecSetupFnB)(sunrealtype tt, N_Vector yy,
                                       N_Vector yp, N_Vector yyB,
                                       N_Vector ypB, N_Vector rrB,
-                                      realtype c_jB, void *user_dataB)
+                                      sunrealtype c_jB, void *user_dataB)
     
-    ctypedef int (*IDALsPrecSetupFnBS)(realtype tt, N_Vector yy,
+    ctypedef int (*IDALsPrecSetupFnBS)(sunrealtype tt, N_Vector yy,
                                        N_Vector yp, N_Vector *yyS,
                                        N_Vector *ypS, N_Vector yyB,
                                        N_Vector ypB, N_Vector rrB,
-                                       realtype c_jB, void *user_dataB)
+                                       sunrealtype c_jB, void *user_dataB)
     
-    ctypedef int (*IDALsPrecSolveFnB)(realtype tt, N_Vector yy,
+    ctypedef int (*IDALsPrecSolveFnB)(sunrealtype tt, N_Vector yy,
                                       N_Vector yp, N_Vector yyB,
                                       N_Vector ypB, N_Vector rrB,
                                       N_Vector rvecB, N_Vector zvecB,
-                                      realtype c_jB, realtype deltaB,
+                                      sunrealtype c_jB, sunrealtype deltaB,
                                       void *user_dataB)
     
-    ctypedef int (*IDALsPrecSolveFnBS)(realtype tt, N_Vector yy,
+    ctypedef int (*IDALsPrecSolveFnBS)(sunrealtype tt, N_Vector yy,
                                        N_Vector yp, N_Vector *yyS,
                                        N_Vector *ypS, N_Vector yyB,
                                        N_Vector ypB, N_Vector rrB,
                                        N_Vector rvecB, N_Vector zvecB,
-                                       realtype c_jB, realtype deltaB,
+                                       sunrealtype c_jB, sunrealtype deltaB,
                                        void *user_dataB)
     
-    ctypedef int (*IDALsJacTimesSetupFnB)(realtype t, N_Vector yy,
+    ctypedef int (*IDALsJacTimesSetupFnB)(sunrealtype t, N_Vector yy,
                                           N_Vector yp, N_Vector yyB,
                                           N_Vector ypB, N_Vector rrB,
-                                          realtype c_jB, void *user_dataB)
+                                          sunrealtype c_jB, void *user_dataB)
     
-    ctypedef int (*IDALsJacTimesSetupFnBS)(realtype t, N_Vector yy,
+    ctypedef int (*IDALsJacTimesSetupFnBS)(sunrealtype t, N_Vector yy,
                                            N_Vector yp, N_Vector *yyS,
                                            N_Vector *ypS, N_Vector yyB,
                                            N_Vector ypB, N_Vector rrB,
-                                           realtype c_jB, void *user_dataB)
+                                           sunrealtype c_jB, void *user_dataB)
     
-    ctypedef int (*IDALsJacTimesVecFnB)(realtype t, N_Vector yy,
+    ctypedef int (*IDALsJacTimesVecFnB)(sunrealtype t, N_Vector yy,
                                         N_Vector yp, N_Vector yyB,
                                         N_Vector ypB, N_Vector rrB,
                                         N_Vector vB, N_Vector JvB,
-                                        realtype c_jB, void *user_dataB,
+                                        sunrealtype c_jB, void *user_dataB,
                                         N_Vector tmp1B, N_Vector tmp2B)
     
-    ctypedef int (*IDALsJacTimesVecFnBS)(realtype t, N_Vector yy,
+    ctypedef int (*IDALsJacTimesVecFnBS)(sunrealtype t, N_Vector yy,
                                          N_Vector yp, N_Vector *yyS,
                                          N_Vector *ypS, N_Vector yyB,
                                          N_Vector ypB, N_Vector rrB,
                                          N_Vector vB, N_Vector JvB,
-                                         realtype c_jB, void *user_dataB,
+                                         sunrealtype c_jB, void *user_dataB,
                                          N_Vector tmp1B, N_Vector tmp2B)
 
     int IDASetLinearSolverB(void *ida_mem, int which, SUNLinearSolver LS,
@@ -530,8 +530,8 @@ cdef extern from "idas/idas_ls.h":
     int IDASetJacFnB(void *ida_mem, int which, IDALsJacFnB jacB)
     int IDASetJacFnBS(void *ida_mem, int which, IDALsJacFnBS jacBS)
 
-    int IDASetEpsLinB(void *ida_mem, int which, realtype eplifacB)
-    int IDASetIncrementFactorB(void *ida_mem, int which, realtype dqincfacB)
+    int IDASetEpsLinB(void *ida_mem, int which, sunrealtype eplifacB)
+    int IDASetIncrementFactorB(void *ida_mem, int which, sunrealtype dqincfacB)
     int IDASetPreconditionerB(void *ida_mem, int which,
                               IDALsPrecSetupFnB psetB,
                               IDALsPrecSolveFnB psolveB)
@@ -548,122 +548,114 @@ cdef extern from "idas/idas_ls.h":
 
 cdef extern from "idas/idas_direct.h":
     
-    ctypedef IDALsJacFn IDADlsJacFn
-    ctypedef IDALsJacFnB IDADlsJacFnB
-    ctypedef IDALsJacFnBS IDADlsJacFnBS
+    ctypedef IDALsJacFn IDAJacFn
+    ctypedef IDALsJacFnB IDAJacFnB
+    ctypedef IDALsJacFnBS IDAJacFnBS
 
-    int IDADlsSetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
-    int IDADlsSetJacFn(void *ida_mem, IDADlsJacFn jac)
+    int IDASetJacFn(void *ida_mem, IDAJacFn jac)
     
-    int IDADlsGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
-    int IDADlsGetNumJacEvals(void *ida_mem, long int *njevals)
-    int IDADlsGetNumResEvals(void *ida_mem, long int *nfevalsLS)
-    int IDADlsGetLastFlag(void *ida_mem, long int *flag)
-    char *IDADlsGetReturnFlagName(long int flag)
+    int IDAGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
+    int IDAGetNumJacEvals(void *ida_mem, long int *njevals)
+    int IDAGetNumResEvals(void *ida_mem, long int *nfevalsLS)
+    int IDAGetLastFlag(void *ida_mem, long int *flag)
+    char *IDAGetReturnFlagName(long int flag)
 
-    int IDADlsSetLinearSolverB(void *ida_mem, int which,
-                               SUNLinearSolver LS, SUNMatrix A)
+    int IDASetJacFnB(void *ida_mem, int which, IDAJacFnB jacB)
     
-    int IDADlsSetJacFnB(void *ida_mem, int which, IDADlsJacFnB jacB)
-    
-    int IDADlsSetJacFnBS(void *ida_mem, int which, IDADlsJacFnBS jacBS)
+    int IDASetJacFnBS(void *ida_mem, int which, IDAJacFnBS jacBS)
 
 
 cdef extern from "idas/idas_spils.h":
 
-    ctypedef IDALsPrecSetupFn IDASpilsPrecSetupFn;
-    ctypedef IDALsPrecSolveFn IDASpilsPrecSolveFn;
-    ctypedef IDALsJacTimesSetupFn IDASpilsJacTimesSetupFn;
-    ctypedef IDALsJacTimesVecFn IDASpilsJacTimesVecFn;
+    ctypedef IDALsPrecSetupFn IDAPrecSetupFn;
+    ctypedef IDALsPrecSolveFn IDAPrecSolveFn;
+    ctypedef IDALsJacTimesSetupFn IDAJacTimesSetupFn;
+    ctypedef IDALsJacTimesVecFn IDAJacTimesVecFn;
 
-    ctypedef IDALsPrecSetupFnB IDASpilsPrecSetupFnB
-    ctypedef IDALsPrecSetupFnBS IDASpilsPrecSetupFnBS
-    ctypedef IDALsPrecSolveFnB IDASpilsPrecSolveFnB
-    ctypedef IDALsPrecSolveFnBS IDASpilsPrecSolveFnBS
-    ctypedef IDALsJacTimesSetupFnB IDASpilsJacTimesSetupFnB
-    ctypedef IDALsJacTimesSetupFnBS IDASpilsJacTimesSetupFnBS
-    ctypedef IDALsJacTimesVecFnB IDASpilsJacTimesVecFnB
-    ctypedef IDALsJacTimesVecFnBS IDASpilsJacTimesVecFnBS
+    ctypedef IDALsPrecSetupFnB IDAPrecSetupFnB
+    ctypedef IDALsPrecSetupFnBS IDAPrecSetupFnBS
+    ctypedef IDALsPrecSolveFnB IDAPrecSolveFnB
+    ctypedef IDALsPrecSolveFnBS IDAPrecSolveFnBS
+    ctypedef IDALsJacTimesSetupFnB IDAJacTimesSetupFnB
+    ctypedef IDALsJacTimesSetupFnBS IDAJacTimesSetupFnBS
+    ctypedef IDALsJacTimesVecFnB IDAJacTimesVecFnB
+    ctypedef IDALsJacTimesVecFnBS IDAJacTimesVecFnBS
 
-    int IDASpilsSetLinearSolver(void *ida_mem, SUNLinearSolver LS)
-    int IDASpilsSetPreconditioner(void *ida_mem,
-                                  IDASpilsPrecSetupFn pset,
-                                  IDASpilsPrecSolveFn psolve)
-    int IDASpilsSetJacTimes(void *ida_mem, IDASpilsJacTimesSetupFn jtsetup,
-                            IDASpilsJacTimesVecFn jtimes)
-    int IDASpilsSetEpsLin(void *ida_mem, realtype eplifac)
-    int IDASpilsSetIncrementFactor(void *ida_mem, realtype dqincfac)
-    int IDASpilsGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
-    int IDASpilsGetNumPrecEvals(void *ida_mem, long int *npevals)
-    int IDASpilsGetNumPrecSolves(void *ida_mem, long int *npsolves)
-    int IDASpilsGetNumLinIters(void *ida_mem, long int *nliters)
-    int IDASpilsGetNumConvFails(void *ida_mem, long int *nlcfails)
-    int IDASpilsGetNumJTSetupEvals(void *ida_mem, long int *njtsetups)
-    int IDASpilsGetNumJtimesEvals(void *ida_mem, long int *njvevals)
-    int IDASpilsGetNumResEvals(void *ida_mem, long int *nrevalsLS)
-    int IDASpilsGetLastFlag(void *ida_mem, long int *flag)
-    char *IDASpilsGetReturnFlagName(long int flag)
+    int IDASetPreconditioner(void *ida_mem,
+                                  IDAPrecSetupFn pset,
+                                  IDAPrecSolveFn psolve)
+    int IDASetJacTimes(void *ida_mem, IDAJacTimesSetupFn jtsetup,
+                            IDAJacTimesVecFn jtimes)
+    int IDASetEpsLin(void *ida_mem, sunrealtype eplifac)
+    int IDASetIncrementFactor(void *ida_mem, sunrealtype dqincfac)
+    int IDAGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
+    int IDAGetNumPrecEvals(void *ida_mem, long int *npevals)
+    int IDAGetNumPrecSolves(void *ida_mem, long int *npsolves)
+    int IDAGetNumLinIters(void *ida_mem, long int *nliters)
+    int IDAGetNumConvFails(void *ida_mem, long int *nlcfails)
+    int IDAGetNumJTSetupEvals(void *ida_mem, long int *njtsetups)
+    int IDAGetNumJtimesEvals(void *ida_mem, long int *njvevals)
+    int IDAGetNumResEvals(void *ida_mem, long int *nrevalsLS)
+    int IDAGetLastFlag(void *ida_mem, long int *flag)
+    char *IDAGetReturnFlagName(long int flag)
 
-    int IDASpilsSetLinearSolverB(void *ida_mem, int which,
-                                 SUNLinearSolver LS)
+    int IDASetEpsLinB(void *ida_mem, int which, sunrealtype eplifacB)
     
-    int IDASpilsSetEpsLinB(void *ida_mem, int which, realtype eplifacB)
+    int IDASetIncrementFactorB(void *ida_mem, int which,
+                                    sunrealtype dqincfacB)
     
-    int IDASpilsSetIncrementFactorB(void *ida_mem, int which,
-                                    realtype dqincfacB)
+    int IDASetPreconditionerB(void *ida_mem, int which,
+                                   IDAPrecSetupFnB psetB,
+                                   IDAPrecSolveFnB psolveB)
     
-    int IDASpilsSetPreconditionerB(void *ida_mem, int which,
-                                   IDASpilsPrecSetupFnB psetB,
-                                   IDASpilsPrecSolveFnB psolveB)
+    int IDASetPreconditionerBS(void *ida_mem, int which,
+                                    IDAPrecSetupFnBS psetBS,
+                                    IDAPrecSolveFnBS psolveBS)
     
-    int IDASpilsSetPreconditionerBS(void *ida_mem, int which,
-                                    IDASpilsPrecSetupFnBS psetBS,
-                                    IDASpilsPrecSolveFnBS psolveBS)
+    int IDASetJacTimesB(void *ida_mem, int which,
+                             IDAJacTimesSetupFnB jtsetupB,
+                             IDAJacTimesVecFnB jtimesB)
     
-    int IDASpilsSetJacTimesB(void *ida_mem, int which,
-                             IDASpilsJacTimesSetupFnB jtsetupB,
-                             IDASpilsJacTimesVecFnB jtimesB)
-    
-    int IDASpilsSetJacTimesBS(void *ida_mem, int which,
-                              IDASpilsJacTimesSetupFnBS jtsetupBS,
-                              IDASpilsJacTimesVecFnBS jtimesBS)
+    int IDASetJacTimesBS(void *ida_mem, int which,
+                              IDAJacTimesSetupFnBS jtsetupBS,
+                              IDAJacTimesVecFnBS jtimesBS)
 
 cdef extern from "idas/idas_bbdpre.h":
 
-    ctypedef int (*IDABBDLocalFn)(sunindextype Nlocal, realtype tt,
+    ctypedef int (*IDABBDLocalFn)(sunindextype Nlocal, sunrealtype tt,
                                   N_Vector yy, N_Vector yp, N_Vector gval,
                                   void *user_data)
-    ctypedef int (*IDABBDCommFn)(sunindextype Nlocal, realtype tt,
+    ctypedef int (*IDABBDCommFn)(sunindextype Nlocal, sunrealtype tt,
                                  N_Vector yy, N_Vector yp,
                                  void *user_data)
 
     int IDABBDPrecInit(void *ida_mem, sunindextype Nlocal,
                        sunindextype mudq, sunindextype mldq,
                        sunindextype mukeep, sunindextype mlkeep,
-                       realtype dq_rel_yy,
+                       sunrealtype dq_rel_yy,
                        IDABBDLocalFn Gres, IDABBDCommFn Gcomm)
     int IDABBDPrecReInit(void *ida_mem,
                          sunindextype mudq, sunindextype mldq,
-                         realtype dq_rel_yy)
+                         sunrealtype dq_rel_yy)
     int IDABBDPrecGetWorkSpace(void *ida_mem,
                                long int *lenrwBBDP, long int *leniwBBDP)
     int IDABBDPrecGetNumGfnEvals(void *ida_mem, long int *ngevalsBBDP)
 
-    ctypedef int (*IDABBDLocalFnB)(sunindextype NlocalB, realtype tt,
+    ctypedef int (*IDABBDLocalFnB)(sunindextype NlocalB, sunrealtype tt,
                                    N_Vector yy, N_Vector yp,
                                    N_Vector yyB, N_Vector ypB,
                                    N_Vector gvalB, void *user_dataB)
     
-    ctypedef int (*IDABBDCommFnB)(sunindextype NlocalB, realtype tt,
+    ctypedef int (*IDABBDCommFnB)(sunindextype NlocalB, sunrealtype tt,
                                   N_Vector yy, N_Vector yp,
                                   N_Vector yyB, N_Vector ypB, void *user_dataB)
 
     int IDABBDPrecInitB(void *ida_mem, int which, sunindextype NlocalB,
                         sunindextype mudqB, sunindextype mldqB,
                         sunindextype mukeepB, sunindextype mlkeepB,
-                        realtype dq_rel_yyB,
+                        sunrealtype dq_rel_yyB,
                         IDABBDLocalFnB GresB, IDABBDCommFnB GcommB)
 
     int IDABBDPrecReInitB(void *ida_mem, int which,
                           sunindextype mudqB, sunindextype mldqB,
-                          realtype dq_rel_yyB)
+                          sunrealtype dq_rel_yyB)

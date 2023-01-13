@@ -1,10 +1,7 @@
 # cython: embedsignature=True
 from cpython.exc cimport PyErr_CheckSignals
 from collections import namedtuple
-try:
-    from enum import IntEnum
-except ImportError:
-    from enum34 import IntEnum
+from enum import IntEnum
 import inspect
 from warnings import warn
 
@@ -18,7 +15,9 @@ from . import (
     _get_num_args,
 )
 
-from .c_sundials cimport realtype, N_Vector
+from .c_sundials cimport (
+    sunrealtype, N_Vector, SUNContext_Create, SUNContext_Free,
+)
 from .c_nvector_serial cimport *
 from .c_sunmatrix cimport *
 from .c_sunlinsol cimport *
@@ -155,7 +154,7 @@ cdef class CV_WrapRhsFunction(CV_RhsFunction):
             user_flag = 0
         return user_flag
 
-cdef int _rhsfn(realtype tt, N_Vector yy, N_Vector yp,
+cdef int _rhsfn(sunrealtype tt, N_Vector yy, N_Vector yp,
               void *auxiliary_data) except? -1:
     """ function with the signature of CVRhsFn, that calls python Rhs """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
@@ -221,7 +220,7 @@ cdef class CV_WrapRootFunction(CV_RootFunction):
             user_flag = 0
         return user_flag
 
-cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data) except? -1:
+cdef int _rootfn(sunrealtype t, N_Vector y, sunrealtype *gout, void *auxiliary_data) except? -1:
     """ function with the signature of CVRootFn """
 
     aux_data = <CV_data> auxiliary_data
@@ -242,7 +241,7 @@ cdef int _rootfn(realtype t, N_Vector y, realtype *gout, void *auxiliary_data) e
         raise NotImplemented
     else:
         for i in np.arange(len(g_tmp)):
-            gout[i] = <realtype> g_tmp[i]
+            gout[i] = <sunrealtype> g_tmp[i]
 
     return user_flag
 
@@ -297,11 +296,11 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
             user_flag = 0
         return user_flag
 
-cdef int _jacdense(realtype tt,
+cdef int _jacdense(sunrealtype tt,
             N_Vector yy, N_Vector ff, SUNMatrix Jac,
             void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, 
             N_Vector tmp3) except? -1:
-    """function with the signature of CVDlsJacFn that calls python Jac
+    """function with the signature of CVodeJacFn that calls python Jac
        Note: signature of Jac is SUNMatrix
     """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, ff_tmp
@@ -386,8 +385,8 @@ class MutableBool(object):
     def __init__(self, value):
         self.value = value
 
-cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector ff, booleantype jok, 
-                       booleantype *jcurPtr, realtype gamma, 
+cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector ff, sunbooleantype jok, 
+                       sunbooleantype *jcurPtr, sunrealtype gamma, 
                        void *auxiliary_data) except -1:
     """ function with the signature of CVLsPrecSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
@@ -468,8 +467,8 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
             user_flag = 0
         return user_flag
 
-cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector ff, N_Vector r, 
-                       N_Vector z, realtype gamma, realtype delta, int lr, 
+cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector ff, N_Vector r, 
+                       N_Vector z, sunrealtype gamma, sunrealtype delta, int lr, 
                        void *auxiliary_data) except? -1:
     """ function with the signature of CVLsPrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
@@ -552,9 +551,9 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
             user_flag = 0
         return user_flag
 
-cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
+cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, sunrealtype t, N_Vector y,
                           N_Vector fy, void *user_data, N_Vector tmp) except? -1:
-    """ function with the signature of CVSpilsJacTimesVecFn, that calls python function """
+    """ function with the signature of CVodeJacTimesVecFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, v_tmp, Jv_tmp
 
     aux_data = <CV_data> user_data
@@ -633,9 +632,9 @@ cdef class CV_WrapJacTimesSetupFunction(CV_JacTimesSetupFunction):
             user_flag = 0
         return user_flag
 
-cdef int _jac_times_setupfn(realtype t, N_Vector y, N_Vector fy,
+cdef int _jac_times_setupfn(sunrealtype t, N_Vector y, N_Vector fy,
                             void *user_data) except? -1:
-    """ function with the signature of CVSpilsJacTimesSetupFn, that calls python function """
+    """ function with the signature of CVodeJacTimesSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, fy_tmp
 
     aux_data = <CV_data> user_data
@@ -794,7 +793,13 @@ cdef class CVODE:
         self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
+        self.sunctx = NULL
         self.initialized = False
+
+    cpdef _create_suncontext(self):
+        cdef int res = SUNContext_Create(NULL, &self.sunctx)
+        if res < 0:
+            raise RuntimeError("Failed to create Sundials context")
 
     def set_options(self, **options):
         """
@@ -1140,8 +1145,8 @@ cdef class CVODE:
                     self.atol = NULL
 
             if np.isscalar(opts_atol):
-                flag = CVodeSStolerances(cv_mem, <realtype> opts_rtol,
-                                                 <realtype> opts_atol)
+                flag = CVodeSStolerances(cv_mem, <sunrealtype> opts_rtol,
+                                                 <sunrealtype> opts_atol)
             else:
                 np_atol = np.asarray(opts_atol, dtype=DTYPE)
                 if len(np_atol) != self.N:
@@ -1152,8 +1157,8 @@ cdef class CVODE:
                 if self.parallel_implementation:
                     raise NotImplemented
                 else:
-                    atol = N_VMake_Serial(self.N, <realtype *> np_atol.data)
-                    flag = CVodeSVtolerances(cv_mem, <realtype> opts_rtol, atol)
+                    atol = N_VMake_Serial(self.N, <sunrealtype *> np_atol.data, self.sunctx)
+                    flag = CVodeSVtolerances(cv_mem, <sunrealtype> opts_rtol, atol)
 
                     self.atol = atol
 
@@ -1168,7 +1173,7 @@ cdef class CVODE:
             opts_tstop = options['tstop']
             self.options['tstop'] = opts_tstop
             if (not opts_tstop is None) and (opts_tstop > 0.):
-                flag = CVodeSetStopTime(cv_mem, <realtype> opts_tstop)
+                flag = CVodeSetStopTime(cv_mem, <sunrealtype> opts_tstop)
                 if flag == CV_ILL_INPUT:
                     raise ValueError('CVodeSetStopTime::Stop value is beyond '
                                      'current value.')
@@ -1299,13 +1304,16 @@ cdef class CVODE:
             N_VDestroy(self.y)
             N_VDestroy(self.yp)
 
+        if self.sunctx is NULL:
+            self._create_suncontext()
+
         # Initialize y0, y, yp
         if self.parallel_implementation:
             raise NotImplemented
         else:
-            self.y0 = N_VMake_Serial(N, <realtype *>y0.data)
+            self.y0 = N_VMake_Serial(N, <sunrealtype *>y0.data, self.sunctx)
             self.y  = N_VClone(self.y0)
-            self.yp = N_VNew_Serial(N)
+            self.yp = N_VNew_Serial(N, self.sunctx)
 
         cdef int flag
         cdef void* cv_mem = self._cv_mem
@@ -1313,15 +1321,15 @@ cdef class CVODE:
         if (cv_mem is NULL) or (self.N != N):
             if (not cv_mem is NULL):
                 CVodeFree(&cv_mem)
-            cv_mem = CVodeCreate(lmm)
+            cv_mem = CVodeCreate(lmm, self.sunctx)
             if cv_mem is NULL:
                 raise MemoryError('CVodeCreate:MemoryError: Could not create '
                                   'cv_mem object')
 
             self._cv_mem = cv_mem
-            flag = CVodeInit(cv_mem, _rhsfn,  <realtype> t0, self.y0)
+            flag = CVodeInit(cv_mem, _rhsfn,  <sunrealtype> t0, self.y0)
         elif self.N == N:
-            flag = CVodeReInit(cv_mem, <realtype> t0, self.y0)
+            flag = CVodeReInit(cv_mem, <sunrealtype> t0, self.y0)
         else:
             raise ValueError('CVodeInit:Error: You should not be here...')
         if flag == CV_ILL_INPUT:
@@ -1434,11 +1442,11 @@ cdef class CVODE:
         if lmm_type == 'bdf':
             CVodeSetStabLimDet(cv_mem, <bint> opts['bdf_stability_detection'])
         if opts['first_step_size'] > 0.:
-            CVodeSetInitStep(cv_mem, <realtype> opts['first_step_size'])
+            CVodeSetInitStep(cv_mem, <sunrealtype> opts['first_step_size'])
         if (opts['min_step_size'] > 0.):
-           CVodeSetMinStep(cv_mem, <realtype> opts['min_step_size'])
+           CVodeSetMinStep(cv_mem, <sunrealtype> opts['min_step_size'])
         if opts['max_step_size'] > 0.:
-            flag = CVodeSetMaxStep(cv_mem, <realtype> opts['max_step_size'])
+            flag = CVodeSetMaxStep(cv_mem, <sunrealtype> opts['max_step_size'])
             if flag == CV_ILL_INPUT:
                 raise ValueError('CVodeSetMaxStep: max_step_size is negative '
                                  'or smaller than min_step_size.')
@@ -1453,8 +1461,8 @@ cdef class CVODE:
         linsolver = opts['linsolver'].lower()
         if nonlinsolver == 'newton':
             if linsolver == 'dense':
-                A = SUNDenseMatrix(N, N)
-                LS = SUNDenseLinearSolver(self.y0, A)
+                A = SUNDenseMatrix(N, N, self.sunctx)
+                LS = SUNLinSol_Dense(self.y0, A, self.sunctx)
                 # check if memory was allocated
                 if (A == NULL or LS == NULL):
                     raise ValueError('Could not allocate matrix or linear solver')
@@ -1469,8 +1477,8 @@ cdef class CVODE:
                     raise ValueError('CVodeSetLinearSolver failed with code {}'
                                      .format(flag))
             elif linsolver == 'band':
-                A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband']);
-                LS = SUNBandLinearSolver(self.y0, A);
+                A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'], self.sunctx);
+                LS = SUNLinSol_Band(self.y0, A, self.sunctx);
                 if (A == NULL or LS == NULL):
                     raise ValueError('Could not allocate matrix or linear solver')
                 flag = CVodeSetLinearSolver(cv_mem, LS, A)
@@ -1497,27 +1505,27 @@ cdef class CVODE:
                   or (linsolver == 'sptfqmr')):
                 precond_type = opts['precond_type'].lower()
                 if precond_type == 'none':
-                    pretype = PREC_NONE
+                    pretype = SUN_PREC_NONE
                 elif precond_type == 'left':
-                    pretype = PREC_LEFT
+                    pretype = SUN_PREC_LEFT
                 elif precond_type == 'right':
-                    pretype = PREC_RIGHT
+                    pretype = SUN_PREC_RIGHT
                 elif precond_type == 'both':
-                    pretype = PREC_BOTH
+                    pretype = SUN_PREC_BOTH
                 else:
                     raise ValueError('LinSolver::Precondition: Unknown type: %s'
                                      % opts['precond_type'])
     
                 if linsolver == 'spgmr':
-                    LS = SUNSPGMR(self.y0, pretype, <int> opts['maxl']);
+                    LS = SUNLinSol_SPGMR(self.y0, pretype, <int> opts['maxl'], self.sunctx);
                     if LS == NULL:
                         raise ValueError('Could not allocate linear solver')
                 elif linsolver == 'spbcgs':
-                    LS = SUNSPBCGS(self.y0, pretype, <int> opts['maxl']);
+                    LS = SUNLinSol_SPBCGS(self.y0, pretype, <int> opts['maxl'], self.sunctx);
                     if LS == NULL:
                         raise ValueError('Could not allocate linear solver')
                 elif linsolver == 'sptfqmr':
-                    LS = SUNSPTFQMR(self.y0, pretype, <int> opts['maxl']);
+                    LS = SUNLinSol_SPTFQMR(self.y0, pretype, <int> opts['maxl'], self.sunctx);
                     if LS == NULL:
                         raise ValueError('Could not allocate linear solver')
                 else:
@@ -1525,7 +1533,7 @@ cdef class CVODE:
                     
                 flag = CVodeSetLinearSolver(cv_mem, LS, NULL);
                 if flag == CVLS_MEM_FAIL:
-                        raise MemoryError('LinSolver:CVSpils memory allocation '
+                        raise MemoryError('LinSolver:CVode memory allocation '
                                           'error.')
                 elif flag != CVLS_SUCCESS:
                     raise ValueError('CVodeSetLinearSolver failed with code {}'
@@ -1534,7 +1542,7 @@ cdef class CVODE:
                 #flag = SUNSPGMRSetGSType(LS, gstype);
                                           
                 # TODO make option
-                #flag = CVSpilsSetEpsLin(cvode_mem, DELT);
+                #flag = CVodeSetEpsLin(cvode_mem, DELT);
                 if self.aux_data.prec_solvefn:
                     if self.aux_data.prec_setupfn:
                         flag = CVodeSetPreconditioner(cv_mem, _prec_setupfn, _prec_solvefn)
@@ -1561,12 +1569,12 @@ cdef class CVODE:
                     raise ValueError('LinSolver: The cvspils linear solver has '
                                      'not been initialized.')
                 elif flag != CVLS_SUCCESS:
-                    raise ValueError('CVSpilsSetJacTimes failed with code {}'
+                    raise ValueError('CVodeSetJacTimes failed with code {}'
                                      .format(flag))
             else:
                 if SUNDIALS_BLAS_LAPACK:
                     if linsolver == 'lapackdense':
-                        A = SUNDenseMatrix(N, N)
+                        A = SUNDenseMatrix(N, N, self.sunctx)
                         LS = SUNLapackDense(self.y0, A)
                         # check if memory was allocated
                         if (A == NULL or LS == NULL):
@@ -1582,7 +1590,7 @@ cdef class CVODE:
                             raise ValueError('CVodeSetLinearSolver failed with code {}'
                                              .format(flag))
                     elif linsolver == 'lapackband':
-                        A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'])
+                        A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'], self.sunctx)
                         LS = SUNLapackBand(self.y0, A)
                         if (A == NULL or LS == NULL):
                             raise ValueError('Could not allocate matrix or linear solver')
@@ -1606,7 +1614,7 @@ cdef class CVODE:
                                          % opts['linsolver'])
         elif nonlinsolver == 'fixedpoint':
             # create fixed point nonlinear solver object 
-            NLS = SUNNonlinSol_FixedPoint(self.y0, 0);
+            NLS = SUNNonlinSol_FixedPoint(self.y0, 0, self.sunctx);
             # attach nonlinear solver object to CVode
             flag = CVodeSetNonlinearSolver(cv_mem, NLS)
             if flag != CV_SUCCESS:
@@ -1625,7 +1633,7 @@ cdef class CVODE:
                 )
             else:
                 self.aux_data.jac_tmp = np.empty((len(y0), len(y0)), DTYPE)
-            CVDlsSetJacFn(cv_mem, _jacdense)
+            CVodeSetJacFn(cv_mem, _jacdense)
 
         #we test if jac don't give errors due to bad coding, as
         #cvode will ignore errors, it only checks return value (0 or 1 for error)
@@ -1705,11 +1713,11 @@ cdef class CVODE:
         cdef INDEX_TYPE_t N
         N = <INDEX_TYPE_t> len(y0)
         if N == self.N:
-            self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
+            self.y0  = N_VMake_Serial(N, <sunrealtype *>y0.data, self.sunctx)
         else:
             raise ValueError("Cannot re-init IC with array of unequal lenght.")
 
-        flag = CVodeReInit(self._cv_mem, <realtype> t0, self.y0)
+        flag = CVodeReInit(self._cv_mem, <sunrealtype> t0, self.y0)
 
         if flag == CV_ILL_INPUT:
             raise ValueError('CVodeReInit: Ill input')
@@ -1806,7 +1814,7 @@ cdef class CVODE:
         cdef DTYPE_t t
         cdef int flag = 0
         cdef void *cv_mem = self._cv_mem
-        cdef realtype t_out
+        cdef sunrealtype t_out
         cdef N_Vector y  = self.y
         cdef CV_ContinuationFunction onroot = self.options['onroot']
         cdef CV_ContinuationFunction ontstop = self.options['ontstop']
@@ -1817,7 +1825,7 @@ cdef class CVODE:
         t = tspan[idx]
 
         while True:
-            flag = CVode(cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
+            flag = CVode(cv_mem, <sunrealtype> t,  y, &t_out, CV_NORMAL)
 
             nv_s2ndarray(y,  y_last)
 
@@ -1912,19 +1920,19 @@ cdef class CVODE:
                              'the first call of ''step'' method.')
 
         cdef N_Vector y  = self.y
-        cdef realtype t_out
+        cdef sunrealtype t_out
         cdef int flagCV
 
         if self._old_api:
             if t>0.0:
-                flagCV = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
+                flagCV = CVode(self._cv_mem, <sunrealtype> t,  y, &t_out, CV_NORMAL)
             else:
-                flagCV = CVode(self._cv_mem, <realtype> -t,  y, &t_out, CV_ONE_STEP)
+                flagCV = CVode(self._cv_mem, <sunrealtype> -t,  y, &t_out, CV_ONE_STEP)
         else:
             if self._step_compute:
-                flagCV = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_ONE_STEP)
+                flagCV = CVode(self._cv_mem, <sunrealtype> t,  y, &t_out, CV_ONE_STEP)
             else:
-                flagCV = CVode(self._cv_mem, <realtype> t,  y, &t_out, CV_NORMAL)
+                flagCV = CVode(self._cv_mem, <sunrealtype> t,  y, &t_out, CV_NORMAL)
 
         if self._old_api:
             warn("Old api is deprecated, move to new api", DeprecationWarning)
@@ -2009,7 +2017,7 @@ cdef class CVODE:
         cdef int flagCV
         cdef long int nsteps, nfevals, nlinsetups, netfails
         cdef int qlast, qcur
-        cdef realtype hinused, hlast, hcur, tcur
+        cdef sunrealtype hinused, hlast, hcur, tcur
 
         # for extra output from SPILS modules (SPGMR, SPBCGS, SPTFQMR)
         cdef long int npevals, npsolves, njvevals, nliters, nfevalsLS
@@ -2028,11 +2036,11 @@ cdef class CVODE:
 
         linsolver = self.options['linsolver'].lower()
         if linsolver == 'spgmr' or linsolver == 'spbcgs' or linsolver == 'sptfqmr':
-            flagCV = CVSpilsGetNumPrecEvals(self._cv_mem, &npevals)
-            flagCV = CVSpilsGetNumPrecSolves(self._cv_mem, &npsolves)
-            flagCV = CVSpilsGetNumJtimesEvals(self._cv_mem, &njvevals)
-            flagCV = CVSpilsGetNumLinIters(self._cv_mem, &nliters)
-            flagCV = CVSpilsGetNumRhsEvals(self._cv_mem, &nfevalsLS)
+            flagCV = CVodeGetNumPrecEvals(self._cv_mem, &npevals)
+            flagCV = CVodeGetNumPrecSolves(self._cv_mem, &npsolves)
+            flagCV = CVodeGetNumJtimesEvals(self._cv_mem, &njvevals)
+            flagCV = CVodeGetNumLinIters(self._cv_mem, &nliters)
+            flagCV = CVodeGetNumRhsEvals(self._cv_mem, &nfevalsLS)
             info.update({'NumPrecEvals': npevals, 'NumPrecSolves': npsolves,
                          'NumJtimesEvals': njvevals, 'NumLinIters': nliters,
                          'NumRhsEvalsJtimesFD': nfevalsLS})
@@ -2040,9 +2048,10 @@ cdef class CVODE:
         return info
 
     def __dealloc__(self):
-        if not self._cv_mem is NULL: CVodeFree(&self._cv_mem)
+        if self._cv_mem is not NULL: CVodeFree(&self._cv_mem)
         #TODO: when implementing parallel, does N_VDestroy be called separately
         #      for parallel version or it's a generic one?
-        if not self.y0   is NULL: N_VDestroy(self.y0)
-        if not self.y    is NULL: N_VDestroy(self.y)
-        if not self.atol is NULL: N_VDestroy(self.atol)
+        if self.y0   is not NULL: N_VDestroy(self.y0)
+        if self.y    is not NULL: N_VDestroy(self.y)
+        if self.atol is not NULL: N_VDestroy(self.atol)
+        if self.sunctx is not NULL: SUNContext_Free(&self.sunctx)

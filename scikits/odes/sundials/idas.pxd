@@ -1,5 +1,5 @@
 cimport numpy as np
-from .c_sundials cimport N_Vector, realtype
+from .c_sundials cimport N_Vector, sunrealtype
 from .common_defs cimport DTYPE_t
 
 from .ida cimport (IDA_RhsFunction, IDA_WrapRhsFunction, IDA_RootFunction,

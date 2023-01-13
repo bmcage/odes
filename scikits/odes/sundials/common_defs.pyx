@@ -4,7 +4,7 @@ import numpy as np
 cimport numpy as np
 import inspect
 from .c_sundials cimport (
-    realtype, sunindextype, N_Vector, DlsMat, booleantype,
+    sunrealtype, sunindextype, N_Vector, SUNDlsMat, sunbooleantype,
     SUNMatrix, SUNMatGetID, SUNMATRIX_DENSE, SUNMATRIX_BAND, SUNMATRIX_SPARSE,
     SUNMATRIX_CUSTOM,
 )
@@ -43,73 +43,73 @@ else:
 
 has_lapack = SUNDIALS_BLAS_LAPACK
 
-ctypedef realtype *DlsMat_col
-ctypedef realtype *nv_content_data_s
+ctypedef sunrealtype *DlsMat_col
+ctypedef sunrealtype *nv_content_data_s
 
 # N_Vector content access functions
 # These lack an equivalent we can use from cython
-cdef inline realtype get_nv_ith_s(nv_content_data_s vcd_s, int i):
+cdef inline sunrealtype get_nv_ith_s(nv_content_data_s vcd_s, int i):
     return vcd_s[i]
 
 cdef inline void set_nv_ith_s(nv_content_data_s vcd_s, int i,
-                          realtype new_value):
+                          sunrealtype new_value):
     vcd_s[i] = new_value
 
 
 # Dense matrix: access functions
 
-cdef inline int get_dense_N(DlsMat A):
+cdef inline int get_dense_N(SUNDlsMat A):
     return A.N
 
 
-cdef inline int get_dense_M(DlsMat A):
+cdef inline int get_dense_M(SUNDlsMat A):
     return A.M
 
 
-cdef inline int get_band_mu(DlsMat A):
+cdef inline int get_band_mu(SUNDlsMat A):
     return A.mu
 
 
-cdef inline int get_band_ml(DlsMat A):
+cdef inline int get_band_ml(SUNDlsMat A):
     return A.ml
 
-cdef inline realtype* get_dense_col(DlsMat A, int j):
+cdef inline sunrealtype* get_dense_col(SUNDlsMat A, int j):
     return (A.cols)[j]
 
 
-cdef inline void set_dense_col(DlsMat A, int j, realtype *data):
+cdef inline void set_dense_col(SUNDlsMat A, int j, sunrealtype *data):
     (A.cols)[j] = data
 
 
-cdef inline realtype get_dense_element(DlsMat A, int i, int j):
+cdef inline sunrealtype get_dense_element(SUNDlsMat A, int i, int j):
     return (A.cols)[j][i]
 
 
-cdef inline void set_dense_element(DlsMat A, int i, int j, realtype aij):
+cdef inline void set_dense_element(SUNDlsMat A, int i, int j, sunrealtype aij):
     (A.cols)[j][i] = aij
 
 
 # Band matrix access functions
-cdef inline DlsMat_col get_band_col(DlsMat A, int j):
+cdef inline DlsMat_col get_band_col(SUNDlsMat A, int j):
     return ((A.cols)[j] + (A.s_mu))
 
 
-cdef inline void set_band_col(DlsMat A, int j, realtype *data):
+cdef inline void set_band_col(SUNDlsMat A, int j, sunrealtype *data):
     ((A.cols)[j]) = data
 
 
-cdef inline realtype get_band_col_elem(DlsMat_col col_j, int i, int j):
+cdef inline sunrealtype get_band_col_elem(DlsMat_col col_j, int i, int j):
     return col_j[(i)-(j)]
 
 
-cdef inline void set_band_col_elem(DlsMat_col col_j, int i, int j, realtype aij):
+cdef inline void set_band_col_elem(DlsMat_col col_j, int i, int j, sunrealtype aij):
     col_j[(i)-(j)] = aij
 
-cdef inline realtype get_band_element(DlsMat A, int i, int j):
+cdef inline sunrealtype get_band_element(SUNDlsMat A, int i, int j):
     return ((A.cols)[j][(i)-(j)+(A.s_mu)])
 
 
-cdef inline void set_band_element(DlsMat A, int i, int j, realtype aij):
+cdef inline void set_band_element(SUNDlsMat A, int i, int j, sunrealtype aij):
     (A.cols)[j][(i)-(j)+(A.s_mu)] = aij
 
 

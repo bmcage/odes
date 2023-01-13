@@ -14,7 +14,7 @@ cdef extern from "sunnonlinsol/sunnonlinsol_newton.h":
       SUNNonlinSolConvTestFn CTest
     
       N_Vector    delta
-      booleantype jcur
+      sunbooleantype jcur
       int         curiter
       int         maxiters
       long int    niters
@@ -23,15 +23,15 @@ cdef extern from "sunnonlinsol/sunnonlinsol_newton.h":
     
     ctypedef _SUNNonlinearSolverContent_Newton *SUNNonlinearSolverContent_Newton;
 
-    SUNNonlinearSolver SUNNonlinSol_Newton(N_Vector y)
-    SUNNonlinearSolver SUNNonlinSol_NewtonSens(int count, N_Vector y)
+    SUNNonlinearSolver SUNNonlinSol_Newton(N_Vector y, SUNContext sunctx)
+    SUNNonlinearSolver SUNNonlinSol_NewtonSens(int count, N_Vector y, SUNContext sunctx)
 
     SUNNonlinearSolver_Type SUNNonlinSolGetType_Newton(SUNNonlinearSolver NLS)
 
     int SUNNonlinSolInitialize_Newton(SUNNonlinearSolver NLS)
     int SUNNonlinSolSolve_Newton(SUNNonlinearSolver NLS,  N_Vector y0, 
-                                 N_Vector y, N_Vector w, realtype tol,
-                                 booleantype callLSetup, void *mem)
+                                 N_Vector y, N_Vector w, sunrealtype tol,
+                                 sunbooleantype callLSetup, void *mem)
     int SUNNonlinSolFree_Newton(SUNNonlinearSolver NLS)
 
     int SUNNonlinSolSetSysFn_Newton(SUNNonlinearSolver NLS,
@@ -64,9 +64,9 @@ cdef extern from "sunnonlinsol/sunnonlinsol_fixedpoint.h":
 
         int       m
         int      *imap
-        realtype *R
-        realtype *gamma
-        realtype *cvals
+        sunrealtype *R
+        sunrealtype *gamma
+        sunrealtype *cvals
         N_Vector *df
         N_Vector *dg
         N_Vector *q
@@ -84,16 +84,16 @@ cdef extern from "sunnonlinsol/sunnonlinsol_fixedpoint.h":
 
     ctypedef _SUNNonlinearSolverContent_FixedPoint *SUNNonlinearSolverContent_FixedPoint
 
-    SUNNonlinearSolver SUNNonlinSol_FixedPoint(N_Vector y, int m)
-    SUNNonlinearSolver SUNNonlinSol_FixedPointSens(int count, N_Vector y, int m)
+    SUNNonlinearSolver SUNNonlinSol_FixedPoint(N_Vector y, int m, SUNContext sunctx)
+    SUNNonlinearSolver SUNNonlinSol_FixedPointSens(int count, N_Vector y, int m, SUNContext sunctx)
 
     SUNNonlinearSolver_Type SUNNonlinSolGetType_FixedPoint(SUNNonlinearSolver NLS)
 
     int SUNNonlinSolInitialize_FixedPoint(SUNNonlinearSolver NLS)
     int SUNNonlinSolSolve_FixedPoint(SUNNonlinearSolver NLS,
                                      N_Vector y0, N_Vector y,
-                                     N_Vector w, realtype tol,
-                                     booleantype callSetup, void *mem)
+                                     N_Vector w, sunrealtype tol,
+                                     sunbooleantype callSetup, void *mem)
     int SUNNonlinSolFree_FixedPoint(SUNNonlinearSolver NLS)
 
     int SUNNonlinSolSetSysFn_FixedPoint(SUNNonlinearSolver NLS,
@@ -132,14 +132,14 @@ cdef extern from "sunnonlinsol/sunnonlinsol_fixedpoint.h":
 # 
 #     ctypedef _SUNNonlinearSolverContent_PetscSNES *SUNNonlinearSolverContent_PetscSNES
 # 
-#     SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes)
+#     SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes, SUNContext sunctx)
 #     SUNNonlinearSolver_Type SUNNonlinSolGetType_PetscSNES(SUNNonlinearSolver NLS)
 # 
 #     int SUNNonlinSolInitialize_PetscSNES(SUNNonlinearSolver NLS)
 #     int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
 #                                     N_Vector y0, N_Vector y,
-#                                     N_Vector w, realtype tol,
-#                                     booleantype callLSetup, void* mem)
+#                                     N_Vector w, sunrealtype tol,
+#                                     sunbooleantype callLSetup, void* mem)
 # 
 #     int SUNNonlinSolSetSysFn_PetscSNES(SUNNonlinearSolver NLS,
 #                                        SUNNonlinSolSysFn SysFn)

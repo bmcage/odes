@@ -12,7 +12,7 @@ cdef extern from "sunlinsol/sunlinsol_dense.h":
 
     ctypedef _SUNLinearSolverContent_Dense *SUNLinearSolverContent_Dense
     
-    SUNLinearSolver SUNLinSol_Dense(N_Vector y, SUNMatrix A)
+    SUNLinearSolver SUNLinSol_Dense(N_Vector y, SUNMatrix A, SUNContext sunctx)
     SUNLinearSolver SUNDenseLinearSolver(N_Vector y, SUNMatrix A) #deprecated
 
     SUNLinearSolver_Type SUNLinSolGetType_Dense(SUNLinearSolver S)
@@ -20,7 +20,7 @@ cdef extern from "sunlinsol/sunlinsol_dense.h":
     int SUNLinSolInitialize_Dense(SUNLinearSolver S)
     int SUNLinSolSetup_Dense(SUNLinearSolver S, SUNMatrix A)
     int SUNLinSolSolve_Dense(SUNLinearSolver S, SUNMatrix A,
-                             N_Vector x, N_Vector b, realtype tol)
+                             N_Vector x, N_Vector b, sunrealtype tol)
     sunindextype SUNLinSolLastFlag_Dense(SUNLinearSolver S)
     int SUNLinSolSpace_Dense(SUNLinearSolver S, long int *lenrwLS,
                              long int *leniwLS)
@@ -35,7 +35,7 @@ cdef extern from "sunlinsol/sunlinsol_band.h":
 
     ctypedef _SUNLinearSolverContent_Band *SUNLinearSolverContent_Band
 
-    SUNLinearSolver SUNLinSol_Band(N_Vector y, SUNMatrix A)
+    SUNLinearSolver SUNLinSol_Band(N_Vector y, SUNMatrix A, SUNContext sunctx)
     SUNLinearSolver SUNBandLinearSolver(N_Vector y, SUNMatrix A) # deprecated
 
     SUNLinearSolver_Type SUNLinSolGetType_Band(SUNLinearSolver S)
@@ -43,7 +43,7 @@ cdef extern from "sunlinsol/sunlinsol_band.h":
     int SUNLinSolInitialize_Band(SUNLinearSolver S)
     int SUNLinSolSetup_Band(SUNLinearSolver S, SUNMatrix A)
     int SUNLinSolSolve_Band(SUNLinearSolver S, SUNMatrix A,
-                            N_Vector x, N_Vector b, realtype tol)
+                            N_Vector x, N_Vector b, sunrealtype tol)
     sunindextype SUNLinSolLastFlag_Band(SUNLinearSolver S)
     int SUNLinSolSpace_Band(SUNLinearSolver S, long int *lenrwLS,
                             long int *leniwLS)
@@ -62,7 +62,7 @@ IF SUNDIALS_BLAS_LAPACK:
 
         ctypedef _SUNLinearSolverContent_LapackDense *SUNLinearSolverContent_LapackDense
 
-        SUNLinearSolver SUNLinSol_LapackDense(N_Vector y, SUNMatrix A)
+        SUNLinearSolver SUNLinSol_LapackDense(N_Vector y, SUNMatrix A, SUNContext sunctx)
         SUNLinearSolver SUNLapackDense(N_Vector y, SUNMatrix A) #deprecated
 
         SUNLinearSolver_Type SUNLinSolGetType_LapackDense(SUNLinearSolver S)
@@ -70,7 +70,7 @@ IF SUNDIALS_BLAS_LAPACK:
         int SUNLinSolInitialize_LapackDense(SUNLinearSolver S)
         int SUNLinSolSetup_LapackDense(SUNLinearSolver S, SUNMatrix A)
         int SUNLinSolSolve_LapackDense(SUNLinearSolver S, SUNMatrix A,
-                                       N_Vector x, N_Vector b, realtype tol)
+                                       N_Vector x, N_Vector b, sunrealtype tol)
         sunindextype SUNLinSolLastFlag_LapackDense(SUNLinearSolver S)
         int SUNLinSolSpace_LapackDense(SUNLinearSolver S, long int *lenrwLS,
                                        long int *leniwLS)
@@ -86,7 +86,7 @@ IF SUNDIALS_BLAS_LAPACK:
 
         ctypedef _SUNLinearSolverContent_LapackBand *SUNLinearSolverContent_LapackBand
 
-        SUNLinearSolver SUNLinSol_LapackBand(N_Vector y, SUNMatrix A)
+        SUNLinearSolver SUNLinSol_LapackBand(N_Vector y, SUNMatrix A, SUNContext sunctx)
         SUNLinearSolver SUNLapackBand(N_Vector y, SUNMatrix A) # deprecated
 
         SUNLinearSolver_Type SUNLinSolGetType_LapackBand(SUNLinearSolver S)
@@ -94,7 +94,7 @@ IF SUNDIALS_BLAS_LAPACK:
         int SUNLinSolInitialize_LapackBand(SUNLinearSolver S)
         int SUNLinSolSetup_LapackBand(SUNLinearSolver S, SUNMatrix A)
         int SUNLinSolSolve_LapackBand(SUNLinearSolver S, SUNMatrix A,
-                                      N_Vector x, N_Vector b, realtype tol)
+                                      N_Vector x, N_Vector b, sunrealtype tol)
         sunindextype SUNLinSolLastFlag_LapackBand(SUNLinearSolver S)
         int SUNLinSolSpace_LapackBand(SUNLinearSolver S, long int *lenrwLS,
                                       long int *leniwLS)
@@ -107,13 +107,13 @@ cdef extern from "sunlinsol/sunlinsol_pcg.h":
         int maxl
         int pretype
         int numiters
-        realtype resnorm
+        sunrealtype resnorm
         long int last_flag
 
-        ATimesFn ATimes
+        SUNATimesFn ATimes
         void* ATData
-        PSetupFn Psetup
-        PSolveFn Psolve
+        SUNPSetupFn Psetup
+        SUNPSolveFn Psolve
         void* PData
 
         N_Vector s
@@ -124,7 +124,7 @@ cdef extern from "sunlinsol/sunlinsol_pcg.h":
 
     ctypedef _SUNLinearSolverContent_PCG *SUNLinearSolverContent_PCG
 
-    SUNLinearSolver SUNLinSol_PCG(N_Vector y, int pretype, int maxl)
+    SUNLinearSolver SUNLinSol_PCG(N_Vector y, int pretype, int maxl, SUNContext sunctx)
     int SUNLinSol_PCGSetPrecType(SUNLinearSolver S, int pretype)
     int SUNLinSol_PCGSetMaxl(SUNLinearSolver S, int maxl)
     SUNLinearSolver SUNPCG(N_Vector y, int pretype, int maxl) #deprecated
@@ -134,16 +134,16 @@ cdef extern from "sunlinsol/sunlinsol_pcg.h":
     SUNLinearSolver_Type SUNLinSolGetType_PCG(SUNLinearSolver S)
     SUNLinearSolver_ID SUNLinSolGetID_PCG(SUNLinearSolver S)
     int SUNLinSolInitialize_PCG(SUNLinearSolver S)
-    int SUNLinSolSetATimes_PCG(SUNLinearSolver S, void* A_data, ATimesFn ATimes)
+    int SUNLinSolSetATimes_PCG(SUNLinearSolver S, void* A_data, SUNATimesFn ATimes)
     int SUNLinSolSetPreconditioner_PCG(SUNLinearSolver S, void* P_data,
-                                       PSetupFn Pset, PSolveFn Psol)
+                                       SUNPSetupFn Pset, SUNPSolveFn Psol)
     int SUNLinSolSetScalingVectors_PCG(SUNLinearSolver S, N_Vector s,
                                        N_Vector nul)
     int SUNLinSolSetup_PCG(SUNLinearSolver S, SUNMatrix nul)
     int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNMatrix nul,
-                           N_Vector x, N_Vector b, realtype tol)
+                           N_Vector x, N_Vector b, sunrealtype tol)
     int SUNLinSolNumIters_PCG(SUNLinearSolver S)
-    realtype SUNLinSolResNorm_PCG(SUNLinearSolver S)
+    sunrealtype SUNLinSolResNorm_PCG(SUNLinearSolver S)
     N_Vector SUNLinSolResid_PCG(SUNLinearSolver S)
     sunindextype SUNLinSolLastFlag_PCG(SUNLinearSolver S)
     int SUNLinSolSpace_PCG(SUNLinearSolver S, long int *lenrwLS,
@@ -157,13 +157,13 @@ cdef extern from "sunlinsol/sunlinsol_spbcgs.h":
         int maxl
         int pretype
         int numiters
-        realtype resnorm
+        sunrealtype resnorm
         long int last_flag
 
-        ATimesFn ATimes
+        SUNATimesFn ATimes
         void* ATData
-        PSetupFn Psetup
-        PSolveFn Psolve
+        SUNPSetupFn Psetup
+        SUNPSolveFn Psolve
         void* PData
 
         N_Vector s1
@@ -178,7 +178,7 @@ cdef extern from "sunlinsol/sunlinsol_spbcgs.h":
 
     ctypedef _SUNLinearSolverContent_SPBCGS *SUNLinearSolverContent_SPBCGS
 
-    SUNLinearSolver SUNLinSol_SPBCGS(N_Vector y, int pretype, int maxl)
+    SUNLinearSolver SUNLinSol_SPBCGS(N_Vector y, int pretype, int maxl, SUNContext sunctx)
     int SUNLinSol_SPBCGSSetPrecType(SUNLinearSolver S, int pretype)
     int SUNLinSol_SPBCGSSetMaxl(SUNLinearSolver S, int maxl)
     SUNLinearSolver SUNSPBCGS(N_Vector y, int pretype, int maxl) # deprecated
@@ -189,19 +189,19 @@ cdef extern from "sunlinsol/sunlinsol_spbcgs.h":
     SUNLinearSolver_ID SUNLinSolGetID_SPBCGS(SUNLinearSolver S)
     int SUNLinSolInitialize_SPBCGS(SUNLinearSolver S)
     int SUNLinSolSetATimes_SPBCGS(SUNLinearSolver S, void* A_data,
-                                                  ATimesFn ATimes)
+                                                  SUNATimesFn ATimes)
     int SUNLinSolSetPreconditioner_SPBCGS(SUNLinearSolver S,
                                                           void* P_data,
-                                                          PSetupFn Pset,
-                                                          PSolveFn Psol)
+                                                          SUNPSetupFn Pset,
+                                                          SUNPSolveFn Psol)
     int SUNLinSolSetScalingVectors_SPBCGS(SUNLinearSolver S,
                                                           N_Vector s1,
                                                           N_Vector s2)
     int SUNLinSolSetup_SPBCGS(SUNLinearSolver S, SUNMatrix A)
     int SUNLinSolSolve_SPBCGS(SUNLinearSolver S, SUNMatrix A,
-                                              N_Vector x, N_Vector b, realtype tol)
+                                              N_Vector x, N_Vector b, sunrealtype tol)
     int SUNLinSolNumIters_SPBCGS(SUNLinearSolver S)
-    realtype SUNLinSolResNorm_SPBCGS(SUNLinearSolver S)
+    sunrealtype SUNLinSolResNorm_SPBCGS(SUNLinearSolver S)
     N_Vector SUNLinSolResid_SPBCGS(SUNLinearSolver S)
     sunindextype SUNLinSolLastFlag_SPBCGS(SUNLinearSolver S)
     int SUNLinSolSpace_SPBCGS(SUNLinearSolver S,
@@ -218,31 +218,31 @@ cdef extern from "sunlinsol/sunlinsol_spfgmr.h":
         int gstype
         int max_restarts
         int numiters
-        realtype resnorm
+        sunrealtype resnorm
         long int last_flag
 
-        ATimesFn ATimes
+        SUNATimesFn ATimes
         void* ATData
-        PSetupFn Psetup
-        PSolveFn Psolve
+        SUNPSetupFn Psetup
+        SUNPSolveFn Psolve
         void* PData
 
         N_Vector s1
         N_Vector s2
         N_Vector *V
         N_Vector *Z
-        realtype **Hes
-        realtype *givens
+        sunrealtype **Hes
+        sunrealtype *givens
         N_Vector xcor
-        realtype *yg
+        sunrealtype *yg
         N_Vector vtemp
 
-        realtype *cv
+        sunrealtype *cv
         N_Vector *Xv
 
     ctypedef _SUNLinearSolverContent_SPFGMR *SUNLinearSolverContent_SPFGMR
 
-    SUNLinearSolver SUNLinSol_SPFGMR(N_Vector y, int pretype, int maxl)
+    SUNLinearSolver SUNLinSol_SPFGMR(N_Vector y, int pretype, int maxl, SUNContext sunctx)
     int SUNLinSol_SPFGMRSetPrecType(SUNLinearSolver S, int pretype)
     int SUNLinSol_SPFGMRSetGSType(SUNLinearSolver S, int gstype)
     int SUNLinSol_SPFGMRSetMaxRestarts(SUNLinearSolver S, int maxrs)
@@ -255,19 +255,19 @@ cdef extern from "sunlinsol/sunlinsol_spfgmr.h":
     SUNLinearSolver_ID SUNLinSolGetID_SPFGMR(SUNLinearSolver S)
     int SUNLinSolInitialize_SPFGMR(SUNLinearSolver S)
     int SUNLinSolSetATimes_SPFGMR(SUNLinearSolver S, void* A_data,
-                                                  ATimesFn ATimes)
+                                                  SUNATimesFn ATimes)
     int SUNLinSolSetPreconditioner_SPFGMR(SUNLinearSolver S,
                                                           void* P_data,
-                                                          PSetupFn Pset,
-                                                          PSolveFn Psol)
+                                                          SUNPSetupFn Pset,
+                                                          SUNPSolveFn Psol)
     int SUNLinSolSetScalingVectors_SPFGMR(SUNLinearSolver S,
                                                           N_Vector s1,
                                                           N_Vector s2)
     int SUNLinSolSetup_SPFGMR(SUNLinearSolver S, SUNMatrix A)
     int SUNLinSolSolve_SPFGMR(SUNLinearSolver S, SUNMatrix A,
-                                              N_Vector x, N_Vector b, realtype tol)
+                                              N_Vector x, N_Vector b, sunrealtype tol)
     int SUNLinSolNumIters_SPFGMR(SUNLinearSolver S)
-    realtype SUNLinSolResNorm_SPFGMR(SUNLinearSolver S)
+    sunrealtype SUNLinSolResNorm_SPFGMR(SUNLinearSolver S)
     N_Vector SUNLinSolResid_SPFGMR(SUNLinearSolver S)
     sunindextype SUNLinSolLastFlag_SPFGMR(SUNLinearSolver S)
     int SUNLinSolSpace_SPFGMR(SUNLinearSolver S, long int *lenrwLS,
@@ -283,30 +283,30 @@ cdef extern from "sunlinsol/sunlinsol_spgmr.h":
         int gstype
         int max_restarts
         int numiters
-        realtype resnorm
+        sunrealtype resnorm
         long int last_flag
 
-        ATimesFn ATimes
+        SUNATimesFn ATimes
         void* ATData
-        PSetupFn Psetup
-        PSolveFn Psolve
+        SUNPSetupFn Psetup
+        SUNPSolveFn Psolve
         void* PData
 
         N_Vector s1
         N_Vector s2
         N_Vector *V
-        realtype **Hes
-        realtype *givens
+        sunrealtype **Hes
+        sunrealtype *givens
         N_Vector xcor
-        realtype *yg
+        sunrealtype *yg
         N_Vector vtemp
 
-        realtype *cv
+        sunrealtype *cv
         N_Vector *Xv
 
     ctypedef _SUNLinearSolverContent_SPGMR *SUNLinearSolverContent_SPGMR
 
-    SUNLinearSolver SUNLinSol_SPGMR(N_Vector y, int pretype, int maxl)
+    SUNLinearSolver SUNLinSol_SPGMR(N_Vector y, int pretype, int maxl, SUNContext sunctx)
     int SUNLinSol_SPGMRSetPrecType(SUNLinearSolver S, int pretype)
     int SUNLinSol_SPGMRSetGSType(SUNLinearSolver S, int gstype)
     int SUNLinSol_SPGMRSetMaxRestarts(SUNLinearSolver S, int maxrs)
@@ -320,16 +320,16 @@ cdef extern from "sunlinsol/sunlinsol_spgmr.h":
     SUNLinearSolver_ID SUNLinSolGetID_SPGMR(SUNLinearSolver S)
     int SUNLinSolInitialize_SPGMR(SUNLinearSolver S)
     int SUNLinSolSetATimes_SPGMR(SUNLinearSolver S, void* A_data,
-                                 ATimesFn ATimes)
+                                 SUNATimesFn ATimes)
     int SUNLinSolSetPreconditioner_SPGMR(SUNLinearSolver S, void* P_data,
-                                         PSetupFn Pset, PSolveFn Psol)
+                                         SUNPSetupFn Pset, SUNPSolveFn Psol)
     int SUNLinSolSetScalingVectors_SPGMR(SUNLinearSolver S, N_Vector s1,
                                          N_Vector s2)
     int SUNLinSolSetup_SPGMR(SUNLinearSolver S, SUNMatrix A)
     int SUNLinSolSolve_SPGMR(SUNLinearSolver S, SUNMatrix A,
-                             N_Vector x, N_Vector b, realtype tol)
+                             N_Vector x, N_Vector b, sunrealtype tol)
     int SUNLinSolNumIters_SPGMR(SUNLinearSolver S)
-    realtype SUNLinSolResNorm_SPGMR(SUNLinearSolver S)
+    sunrealtype SUNLinSolResNorm_SPGMR(SUNLinearSolver S)
     N_Vector SUNLinSolResid_SPGMR(SUNLinearSolver S)
     sunindextype SUNLinSolLastFlag_SPGMR(SUNLinearSolver S)
     int SUNLinSolSpace_SPGMR(SUNLinearSolver S, long int *lenrwLS,
@@ -343,13 +343,13 @@ cdef extern from "sunlinsol/sunlinsol_sptfqmr.h":
         int maxl
         int pretype
         int numiters
-        realtype resnorm
+        sunrealtype resnorm
         long int last_flag
 
-        ATimesFn ATimes
+        SUNATimesFn ATimes
         void* ATData
-        PSetupFn Psetup
-        PSolveFn Psolve
+        SUNPSetupFn Psetup
+        SUNPSolveFn Psolve
         void* PData
 
         N_Vector s1
@@ -367,7 +367,7 @@ cdef extern from "sunlinsol/sunlinsol_sptfqmr.h":
 
     ctypedef _SUNLinearSolverContent_SPTFQMR *SUNLinearSolverContent_SPTFQMR
 
-    SUNLinearSolver SUNLinSol_SPTFQMR(N_Vector y, int pretype, int maxl)
+    SUNLinearSolver SUNLinSol_SPTFQMR(N_Vector y, int pretype, int maxl, SUNContext sunctx)
     int SUNLinSol_SPTFQMRSetPrecType(SUNLinearSolver S, int pretype)
     int SUNLinSol_SPTFQMRSetMaxl(SUNLinearSolver S, int maxl)
     SUNLinearSolver SUNSPTFQMR(N_Vector y, int pretype, int maxl) # deprecated
@@ -378,16 +378,16 @@ cdef extern from "sunlinsol/sunlinsol_sptfqmr.h":
     SUNLinearSolver_ID SUNLinSolGetID_SPTFQMR(SUNLinearSolver S)
     int SUNLinSolInitialize_SPTFQMR(SUNLinearSolver S)
     int SUNLinSolSetATimes_SPTFQMR(SUNLinearSolver S, void* A_data,
-                                   ATimesFn ATimes)
+                                   SUNATimesFn ATimes)
     int SUNLinSolSetPreconditioner_SPTFQMR(SUNLinearSolver S, void* P_data,
-                                           PSetupFn Pset, PSolveFn Psol)
+                                           SUNPSetupFn Pset, SUNPSolveFn Psol)
     int SUNLinSolSetScalingVectors_SPTFQMR(SUNLinearSolver S, N_Vector s1,
                                            N_Vector s2)
     int SUNLinSolSetup_SPTFQMR(SUNLinearSolver S, SUNMatrix A)
     int SUNLinSolSolve_SPTFQMR(SUNLinearSolver S, SUNMatrix A,
-                               N_Vector x, N_Vector b, realtype tol)
+                               N_Vector x, N_Vector b, sunrealtype tol)
     int SUNLinSolNumIters_SPTFQMR(SUNLinearSolver S)
-    realtype SUNLinSolResNorm_SPTFQMR(SUNLinearSolver S)
+    sunrealtype SUNLinSolResNorm_SPTFQMR(SUNLinearSolver S)
     N_Vector SUNLinSolResid_SPTFQMR(SUNLinearSolver S)
     long int SUNLinSolLastFlag_SPTFQMR(SUNLinearSolver S)
     int SUNLinSolSpace_SPTFQMR(SUNLinearSolver S, long int *lenrwLS,
@@ -406,7 +406,7 @@ cdef extern from "sunlinsol/sunlinsol_sptfqmr.h":
 #        sunindextype *perm_r, *perm_c
 #        sunindextype N
 #        int          num_threads
-#        realtype     diag_pivot_thresh
+#        sunrealtype     diag_pivot_thresh
 #        int          ordering
 #        superlumt_options_t *options
 #
@@ -419,7 +419,7 @@ cdef extern from "sunlinsol/sunlinsol_sptfqmr.h":
 #    int SUNLinSolInitialize_SuperLUMT(SUNLinearSolver S)
 #    int SUNLinSolSetup_SuperLUMT(SUNLinearSolver S, SUNMatrix A)
 #    int SUNLinSolSolve_SuperLUMT(SUNLinearSolver S, SUNMatrix A,
-#                                 N_Vector x, N_Vector b, realtype tol)
+#                                 N_Vector x, N_Vector b, sunrealtype tol)
 #    long int SUNLinSolLastFlag_SuperLUMT(SUNLinearSolver S)
 #    int SUNLinSolSpace_SuperLUMT(SUNLinearSolver S, long int *lenrwLS,
 #                                 long int *leniwLS)

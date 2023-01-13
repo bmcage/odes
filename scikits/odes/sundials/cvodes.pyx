@@ -1,10 +1,7 @@
 # cython: embedsignature=True
 from cpython.exc cimport PyErr_CheckSignals
 from collections import namedtuple
-try:
-    from enum import IntEnum
-except ImportError:
-    from enum34 import IntEnum
+from enum import IntEnum
 import inspect
 from warnings import warn
 
@@ -18,7 +15,7 @@ from . import (
     _get_num_args,
 )
 
-from .c_sundials cimport realtype, N_Vector
+from .c_sundials cimport sunrealtype, N_Vector
 from .c_nvector_serial cimport *
 from .c_sunmatrix cimport *
 from .c_sunlinsol cimport *

@@ -14,7 +14,9 @@ import numpy as np
 cimport numpy as np
 
 
-from .c_sundials cimport realtype, N_Vector
+from .c_sundials cimport (
+    sunrealtype, N_Vector, SUNContext_Create, SUNContext_Free,
+)
 from .c_nvector_serial cimport *
 from .c_sunmatrix cimport *
 from .c_sunlinsol cimport *
@@ -164,7 +166,7 @@ cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
         return user_flag
 
 
-cdef int _res(realtype tt, N_Vector yy, N_Vector yp,
+cdef int _res(sunrealtype tt, N_Vector yy, N_Vector yp,
               N_Vector rr, void *auxiliary_data):
     """ function with the signature of IDAResFn """
     cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
@@ -232,8 +234,8 @@ cdef class IDA_WrapRootFunction(IDA_RootFunction):
             user_flag = 0
         return user_flag
 
-cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
-                 realtype *gout, void *auxiliary_data):
+cdef int _rootfn(sunrealtype t, N_Vector yy, N_Vector yp,
+                 sunrealtype *gout, void *auxiliary_data):
     """ function with the signature of IDARootFn """
 
     aux_data = <IDA_data> auxiliary_data
@@ -256,7 +258,7 @@ cdef int _rootfn(realtype t, N_Vector yy, N_Vector yp,
         raise NotImplemented
     else:
         for i in np.arange(len(g_tmp)):
-            gout[i] = <realtype> g_tmp[i]
+            gout[i] = <sunrealtype> g_tmp[i]
 
     return user_flag
 
@@ -321,10 +323,10 @@ cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
             user_flag = 0
         return user_flag
 
-cdef int _jacdense(realtype tt, realtype cj,
+cdef int _jacdense(sunrealtype tt, sunrealtype cj,
             N_Vector yy, N_Vector yp, N_Vector rr, SUNMatrix Jac,
             void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
-    """function with the signature of IDADlsJacFn """
+    """function with the signature of IDAJacFn """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp, residual_tmp
     cdef np.ndarray jac_tmp
 
@@ -407,10 +409,10 @@ cdef class IDA_WrapPrecSetupFunction(IDA_PrecSetupFunction):
             user_flag = 0
         return user_flag
 
-cdef int _prec_setupfn(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
-                       realtype cj,
+cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
+                       sunrealtype cj,
                        void *auxiliary_data):
-    """ function with the signature of IDASpilsPrecSetupFn, that calls
+    """ function with the signature of IDAPrecSetupFn, that calls
         the python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, rp_tmp, residual_tmp
 
@@ -493,10 +495,10 @@ cdef class IDA_WrapPrecSolveFunction(IDA_PrecSolveFunction):
             user_flag = 0
         return user_flag
 
-cdef int _prec_solvefn(realtype tt, N_Vector yy, N_Vector yp, N_Vector r,
-                       N_Vector rvec, N_Vector z, realtype cj,
-                       realtype delta, void *auxiliary_data):
-    """ function with the signature of CVSpilsPrecSolveFn, that calls python function """
+cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector r,
+                       N_Vector rvec, N_Vector z, sunrealtype cj,
+                       sunrealtype delta, void *auxiliary_data):
+    """ function with the signature of CVodePrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
 
     aux_data = <IDA_data> auxiliary_data
@@ -596,8 +598,8 @@ cdef class IDA_WrapJacTimesVecFunction(IDA_JacTimesVecFunction):
             user_flag = 0
         return user_flag
 
-cdef int _jac_times_vecfn(realtype t, N_Vector yy, N_Vector yp, N_Vector rr, N_Vector v,
-        N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) except? -1:
+cdef int _jac_times_vecfn(sunrealtype t, N_Vector yy, N_Vector yp, N_Vector rr, N_Vector v,
+        N_Vector Jv, sunrealtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) except? -1:
     """ function with the signature of IDA_JacTimesVecFunction, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp, rr_tmp, v_tmp, Jv_tmp
 
@@ -679,8 +681,8 @@ cdef class IDA_WrapJacTimesSetupFunction(IDA_JacTimesSetupFunction):
             user_flag = 0
         return user_flag
 
-cdef int _jac_times_setupfn(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, 
-                            realtype cj, void *user_data) except? -1:
+cdef int _jac_times_setupfn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, 
+                            sunrealtype cj, void *user_data) except? -1:
     """ function with the signature of IDA_JacTimesSetupFunction, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp, rr_tmp
 
@@ -841,7 +843,13 @@ cdef class IDA:
         self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)
         self._ida_mem = NULL
+        self.sunctx = NULL
         self.initialized = False
+
+    cpdef _create_suncontext(self):
+        cdef int res = SUNContext_Create(NULL, &self.sunctx)
+        if res < 0:
+            raise RuntimeError("Failed to create Sundials context")
 
     def set_options(self, **options):
         """
@@ -1216,8 +1224,8 @@ cdef class IDA:
                     self.atol = NULL
 
             if np.isscalar(opts_atol):
-                flag = IDASStolerances(ida_mem, <realtype> opts_rtol,
-                                                <realtype> opts_atol)
+                flag = IDASStolerances(ida_mem, <sunrealtype> opts_rtol,
+                                                <sunrealtype> opts_atol)
             else:
                 np_atol = np.asarray(opts_atol, dtype=DTYPE)
                 if len(np_atol) != self.N:
@@ -1228,8 +1236,8 @@ cdef class IDA:
                 if self.parallel_implementation:
                     raise NotImplemented
                 else:
-                    atol = N_VMake_Serial(self.N, <realtype *> np_atol.data)
-                    flag = IDASVtolerances(ida_mem, <realtype> opts_rtol, atol)
+                    atol = N_VMake_Serial(self.N, <sunrealtype *> np_atol.data, self.sunctx)
+                    flag = IDASVtolerances(ida_mem, <sunrealtype> opts_rtol, atol)
 
                     self.atol = atol
 
@@ -1242,7 +1250,7 @@ cdef class IDA:
             opts_tstop = options['tstop']
             self.options['tstop'] = opts_tstop
             if (not opts_tstop is None) and (opts_tstop > 0.):
-               flag = IDASetStopTime(ida_mem, <realtype> opts_tstop)
+               flag = IDASetStopTime(ida_mem, <sunrealtype> opts_tstop)
                if flag == IDA_ILL_INPUT:
                    raise ValueError('IDASetStopTime::Stop value is beyond '
                                     'current value.')
@@ -1429,12 +1437,15 @@ cdef class IDA:
             N_VDestroy(self.y)
             N_VDestroy(self.yp)
 
+        if self.sunctx is NULL:
+            self._create_suncontext()
+
         if self.parallel_implementation:
             raise NotImplemented
         else:
-            self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
-            self.yp0 = N_VMake_Serial(N, <realtype *>yp0.data)
-            self.residual = N_VNew_Serial(N)
+            self.y0  = N_VMake_Serial(N, <sunrealtype *>y0.data, self.sunctx)
+            self.yp0 = N_VMake_Serial(N, <sunrealtype *>yp0.data, self.sunctx)
+            self.residual = N_VNew_Serial(N, self.sunctx)
             self.y   = N_VClone(self.y0)  #clone does not copy data!
             self.yp  = N_VClone(self.yp0) #clone does not copy data!
 
@@ -1445,15 +1456,15 @@ cdef class IDA:
         if (ida_mem is NULL) or (self.N != N):
             if (not ida_mem is NULL):
                 IDAFree(&ida_mem)
-            ida_mem = IDACreate()
+            ida_mem = IDACreate(self.sunctx)
             if ida_mem is NULL:
                 raise MemoryError('IDACreate:MemoryError: Could not allocate '
                                   'ida_mem object')
 
             self._ida_mem = ida_mem
-            flag = IDAInit(ida_mem, _res, <realtype> t0, self.y0, self.yp0)
+            flag = IDAInit(ida_mem, _res, <sunrealtype> t0, self.y0, self.yp0)
         elif self.N == N:
-            flag = IDAReInit(ida_mem, <realtype> t0, self.y0, self.yp0)
+            flag = IDAReInit(ida_mem, <sunrealtype> t0, self.y0, self.yp0)
         else:
             raise ValueError('IDAInit:Error: You should not be here...')
         if flag == IDA_ILL_INPUT:
@@ -1555,9 +1566,9 @@ cdef class IDA:
             IDASetMaxOrd(ida_mem, <int> opts['order'])
         IDASetMaxNumSteps(ida_mem, <int> opts['max_steps'])
         if opts['first_step_size'] > 0.:
-            IDASetInitStep(ida_mem, <realtype> opts['first_step_size'])
+            IDASetInitStep(ida_mem, <sunrealtype> opts['first_step_size'])
         if opts['max_step_size'] > 0.:
-            flag = IDASetMaxStep(ida_mem, <realtype> opts['max_step_size'])
+            flag = IDASetMaxStep(ida_mem, <sunrealtype> opts['max_step_size'])
             if flag == IDA_ILL_INPUT:
                 raise ValueError('IDASetMaxStep: max_step_size is negative or '
                                  'smaller than allowed.')
@@ -1572,34 +1583,34 @@ cdef class IDA:
         linsolver = opts['linsolver'].lower()
 
         if linsolver == 'dense':
-            A = SUNDenseMatrix(N, N)
-            LS = SUNDenseLinearSolver(self.y0, A)
+            A = SUNDenseMatrix(N, N, self.sunctx)
+            LS = SUNLinSol_Dense(self.y0, A, self.sunctx)
             # check if memory was allocated
             if (A == NULL or LS == NULL):
                 raise ValueError('Could not allocate matrix or linear solver')
             # attach matrix and linear solver to cvode
-            flag = IDADlsSetLinearSolver(ida_mem, LS, A)
+            flag = IDASetLinearSolver(ida_mem, LS, A)
             if flag == IDALS_ILL_INPUT:
                 raise ValueError('IDADense linear solver setting failed, '
                                 'arguments incompatible')
             elif flag == IDALS_MEM_NULL:
                 raise MemoryError('IDADense linear solver memory allocation error.')
             elif flag != IDALS_SUCCESS:
-                raise ValueError('IDADlsSetLinearSolver failed with code {}'
+                raise ValueError('IDASetLinearSolver failed with code {}'
                                  .format(flag))
         elif linsolver == 'band':
-            A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband']);
-            LS = SUNBandLinearSolver(self.y0, A);
+            A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'], self.sunctx);
+            LS = SUNLinSol_Band(self.y0, A, self.sunctx);
             if (A == NULL or LS == NULL):
                 raise ValueError('Could not allocate matrix or linear solver')
-            flag = IDADlsSetLinearSolver(ida_mem, LS, A)
+            flag = IDASetLinearSolver(ida_mem, LS, A)
             if flag == IDALS_ILL_INPUT:
                 raise ValueError('IDABand linear solver setting failed, '
                                 'arguments incompatible')
             elif flag == IDALS_MEM_NULL:
                 raise MemoryError('IDABand linear solver memory allocation error.')
             elif flag != IDALS_SUCCESS:
-                raise ValueError('IDADlsSetLinearSolver failed with code {}'
+                raise ValueError('IDASetLinearSolver failed with code {}'
                                  .format(flag))
         elif ((linsolver == 'spgmr') or (linsolver == 'spbcg')
                   or (linsolver == 'sptfqmr')):
@@ -1607,106 +1618,106 @@ cdef class IDA:
 
             precond_type = opts['precond_type'].lower()
             if precond_type == 'none':
-                pretype = PREC_NONE
+                pretype = SUN_PREC_NONE
             elif precond_type == 'left':
-                pretype = PREC_LEFT
+                pretype = SUN_PREC_LEFT
             elif precond_type == 'right':
-                pretype = PREC_RIGHT
+                pretype = SUN_PREC_RIGHT
             elif precond_type == 'both':
-                pretype = PREC_BOTH
+                pretype = SUN_PREC_BOTH
             else:
                 raise ValueError('LinSolver::Precondition: Unknown type: %s'
                                  % opts['precond_type'])
 
 
             if linsolver == 'spgmr':
-                LS = SUNSPGMR(self.y0, pretype, maxl);
+                LS = SUNLinSol_SPGMR(self.y0, pretype, maxl, self.sunctx);
                 if LS == NULL:
                     raise ValueError('Could not allocate linear solver')
             elif linsolver == 'spbcgs':
-                LS = SUNSPBCGS(self.y0, pretype, maxl);
+                LS = SUNLinSol_SPBCGS(self.y0, pretype, maxl, self.sunctx);
                 if LS == NULL:
                     raise ValueError('Could not allocate linear solver')
             elif linsolver == 'sptfqmr':
-                LS = SUNSPTFQMR(self.y0, pretype, maxl);
+                LS = SUNLinSol_SPTFQMR(self.y0, pretype, maxl, self.sunctx);
                 if LS == NULL:
                     raise ValueError('Could not allocate linear solver')
             else:
                 raise ValueError('Given linsolver {} not implemented in odes'.format(linsolver))
 
-            flag = IDASpilsSetLinearSolver(ida_mem, LS);
+            flag = IDASetLinearSolver(ida_mem, LS, NULL);
             if flag == IDALS_MEM_NULL:
                     raise MemoryError('IDA memory was NULL')
             elif flag == IDALS_ILL_INPUT:
                     raise MemoryError('linear solver memory was NULL')
             elif flag != IDALS_SUCCESS:
-                raise ValueError('IDASpilsSetLinearSolver failed with code {}'
+                raise ValueError('IDASetLinearSolver failed with code {}'
                                  .format(flag))
             # TODO: make option for the Gram-Schmidt orthogonalization
             #flag = SUNSPGMRSetGSType(LS, gstype);
 
             # TODO make option
-            #flag = IDASpilsSetEpsLin(cvode_mem, DELT);
+            #flag = IDASetEpsLin(cvode_mem, DELT);
 
             if self.aux_data.prec_solvefn:
                 if self.aux_data.prec_setupfn:
-                    flag = IDASpilsSetPreconditioner(ida_mem, _prec_setupfn,
+                    flag = IDASetPreconditioner(ida_mem, _prec_setupfn,
                                                      _prec_solvefn)
                 else:
-                    flag = IDASpilsSetPreconditioner(ida_mem, NULL, _prec_solvefn)
+                    flag = IDASetPreconditioner(ida_mem, NULL, _prec_solvefn)
             if flag == IDALS_MEM_NULL:
                 raise ValueError('LinSolver: The cvode mem pointer is NULL.')
             elif flag == IDALS_LMEM_NULL:
                 raise ValueError('LinSolver: The cvspils linear solver has '
                                  'not been initialized.')
             elif flag != IDALS_SUCCESS:
-                raise ValueError('IDASpilsSetPreconditioner failed with code {}'
+                raise ValueError('IDASetPreconditioner failed with code {}'
                                  .format(flag))
 
             if self.aux_data.jac_times_vecfn:
                 if self.aux_data.jac_times_setupfn:
-                   flag = IDASpilsSetJacTimes(ida_mem, _jac_times_setupfn, _jac_times_vecfn)
+                   flag = IDASetJacTimes(ida_mem, _jac_times_setupfn, _jac_times_vecfn)
                 else:
-                   flag = IDASpilsSetJacTimes(ida_mem, NULL, _jac_times_vecfn)
+                   flag = IDASetJacTimes(ida_mem, NULL, _jac_times_vecfn)
             if flag == IDALS_MEM_NULL:
                 raise ValueError('LinSolver: The ida mem pointer is NULL.')
             elif flag == IDALS_LMEM_NULL:
                 raise ValueError('LinSolver: The idaspils linear solver has '
                                  'not been initialized.')
             elif flag != IDALS_SUCCESS:
-                raise ValueError('IDASpilsSetJacTimes failed with code {}'
+                raise ValueError('IDASetJacTimes failed with code {}'
                                  .format(flag))
         else:
             if SUNDIALS_BLAS_LAPACK:
                 if linsolver == 'lapackdense':
-                    A = SUNDenseMatrix(N, N)
+                    A = SUNDenseMatrix(N, N, self.sunctx)
                     LS = SUNLapackDense(self.y0, A)
                     # check if memory was allocated
                     if (A == NULL or LS == NULL):
                         raise ValueError('Could not allocate matrix or linear solver')
                     # attach matrix and linear solver to cvode
-                    flag = IDADlsSetLinearSolver(ida_mem, LS, A)
+                    flag = IDASetLinearSolver(ida_mem, LS, A)
                     if flag == IDALS_ILL_INPUT:
                         raise ValueError('IDADense linear solver setting failed, '
                                         'arguments incompatible')
                     elif flag == IDALS_MEM_NULL:
                         raise MemoryError('IDADense linear solver memory allocation error.')
                     elif flag != IDALS_SUCCESS:
-                        raise ValueError('IDADlsSetLinearSolver failed with code {}'
+                        raise ValueError('IDASetLinearSolver failed with code {}'
                                          .format(flag))
                 elif linsolver == 'lapackband':
-                    A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband']);
+                    A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'], self.sunctx);
                     LS = SUNLapackBand(self.y0, A)
                     if (A == NULL or LS == NULL):
                         raise ValueError('Could not allocate matrix or linear solver')
-                    flag = IDADlsSetLinearSolver(ida_mem, LS, A)
+                    flag = IDASetLinearSolver(ida_mem, LS, A)
                     if flag == IDALS_ILL_INPUT:
                         raise ValueError('IDABand linear solver setting failed, '
                                         'arguments incompatible')
                     elif flag == IDALS_MEM_NULL:
                         raise MemoryError('IDABand linear solver memory allocation error.')
                     elif flag != IDALS_SUCCESS:
-                        raise ValueError('IDADlsSetLinearSolver failed with code {}'
+                        raise ValueError('IDASetLinearSolver failed with code {}'
                                          .format(flag))
                 else:
                     raise ValueError('LinSolver: Unknown solver type: %s'
@@ -1718,13 +1729,13 @@ cdef class IDA:
 
         if (linsolver in ['dense', 'lapackdense']) and self.aux_data.jac:
             self.aux_data.jac_tmp = np.empty((len(y0), len(y0)), DTYPE)
-            flag = IDADlsSetJacFn(ida_mem, _jacdense)
+            flag = IDASetJacFn(ida_mem, _jacdense)
             if flag == IDALS_MEM_NULL:
                 raise MemoryError('IDA Memory NULL.')
             if flag == IDALS_LMEM_NULL:
                 raise ValueError('IDA linear solver memory NULL')
             elif flag != IDALS_SUCCESS:
-                raise ValueError('IDADlsSetJacFn failed with code {}'
+                raise ValueError('IDASetJacFn failed with code {}'
                                  .format(flag))
 
         # Constraints
@@ -1754,7 +1765,7 @@ cdef class IDA:
                 raise NotImplemented
             else:
                 self.constraints =\
-                   N_VMake_Serial(N, <realtype*> constraints_vars.data)
+                   N_VMake_Serial(N, <sunrealtype*> constraints_vars.data, self.sunctx)
             flag = IDASetConstraints(ida_mem, self.constraints)
             if flag == IDA_ILL_INPUT:
                 raise ValueError('IDAConstraints: ''constraints_type'' contains'
@@ -1787,7 +1798,7 @@ cdef class IDA:
             if self.parallel_implementation:
                 raise NotImplemented
             else:
-                self.dae_vars_id = N_VMake_Serial(N, <realtype*> dae_vars.data)
+                self.dae_vars_id = N_VMake_Serial(N, <sunrealtype*> dae_vars.data, self.sunctx)
 
             IDASetId(ida_mem, self.dae_vars_id)
 
@@ -1796,7 +1807,7 @@ cdef class IDA:
 
         # Initial condition
         cdef bint compute_initcond_p
-        cdef realtype ic_t0 = <realtype>opts['compute_initcond_t0']
+        cdef sunrealtype ic_t0 = <sunrealtype>opts['compute_initcond_t0']
 
         if compute_initcond in [None, 'y0', 'yp0', '']:
             compute_initcond_p = (compute_initcond == 'y0' or
@@ -1911,12 +1922,12 @@ cdef class IDA:
         N = <INDEX_TYPE_t> len(y0)
         Np = <INDEX_TYPE_t> len(yp0)
         if N == self.N and Np == N:
-            self.y0  = N_VMake_Serial(N, <realtype *>y0.data)
-            self.yp0  = N_VMake_Serial(N, <realtype *>yp0.data)
+            self.y0  = N_VMake_Serial(N, <sunrealtype *>y0.data, self.sunctx)
+            self.yp0  = N_VMake_Serial(N, <sunrealtype *>yp0.data, self.sunctx)
         else:
             raise ValueError("Cannot re-init IC with array of unequal lenght.")
 
-        flag = IDAReInit(self._ida_mem, <realtype> t0, self.y0, self.yp0)
+        flag = IDAReInit(self._ida_mem, <sunrealtype> t0, self.y0, self.yp0)
 
         if flag == IDA_ILL_INPUT:
                 raise ValueError('IDA[Re]Init: Ill input')
@@ -1993,7 +2004,7 @@ cdef class IDA:
 
         #check to avoid typical error
         cdef dict opts = self.options
-        cdef realtype ic_t0 = <realtype>opts['compute_initcond_t0']
+        cdef sunrealtype ic_t0 = <sunrealtype>opts['compute_initcond_t0']
         if ((len(tspan)>1 and ic_t0 > 0. and tspan[1] > tspan[0]) or
             (len(tspan)>1 and ic_t0 < 0. and tspan[1] < tspan[0])):
             pass
@@ -2030,7 +2041,7 @@ cdef class IDA:
         cdef unsigned int last_idx = len(tspan)
         cdef DTYPE_t t
         cdef void *ida_mem = self._ida_mem
-        cdef realtype t_out
+        cdef sunrealtype t_out
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp
         cdef IDA_ContinuationFunction onroot = self.options['onroot']
@@ -2043,7 +2054,7 @@ cdef class IDA:
         t = tspan[idx]
 
         while True:
-            flag = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+            flag = IDASolve(self._ida_mem, <sunrealtype> t, &t_out, y, yp,
                             IDA_NORMAL)
 
             nv_s2ndarray(y,  y_last)
@@ -2178,21 +2189,21 @@ cdef class IDA:
                              'the first call of ''step'' method.')
         cdef N_Vector y  = self.y
         cdef N_Vector yp = self.yp
-        cdef realtype t_out
+        cdef sunrealtype t_out
         cdef int flagIDA
         if self._old_api:
             if t>0.0:
-                flagIDA = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+                flagIDA = IDASolve(self._ida_mem, <sunrealtype> t, &t_out, y, yp,
                                    IDA_NORMAL)
             else:
-                flagIDA = IDASolve(self._ida_mem, <realtype> -t, &t_out, y, yp,
+                flagIDA = IDASolve(self._ida_mem, <sunrealtype> -t, &t_out, y, yp,
                                    IDA_ONE_STEP)
         else:
             if self._step_compute:
-                flagIDA = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+                flagIDA = IDASolve(self._ida_mem, <sunrealtype> t, &t_out, y, yp,
                                    IDA_ONE_STEP)
             else:
-                flagIDA = IDASolve(self._ida_mem, <realtype> t, &t_out, y, yp,
+                flagIDA = IDASolve(self._ida_mem, <sunrealtype> t, &t_out, y, yp,
                                    IDA_NORMAL)
 
         cdef np.ndarray[DTYPE_t, ndim=1] y_out
@@ -2293,3 +2304,4 @@ cdef class IDA:
         if not self.residual is NULL: N_VDestroy(self.residual)
         if not self.dae_vars_id is NULL: N_VDestroy(self.dae_vars_id)
         if not self.constraints is NULL: N_VDestroy(self.constraints)
+        if self.sunctx is not NULL: SUNContext_Free(&self.sunctx)

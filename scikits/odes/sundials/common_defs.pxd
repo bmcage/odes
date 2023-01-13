@@ -1,5 +1,5 @@
 cimport numpy as np
-from .c_sundials cimport N_Vector, DlsMat, SUNMatrix
+from .c_sundials cimport N_Vector, SUNDlsMat, SUNMatrix
 
 include "sundials_config.pxi"
 
