@@ -797,7 +797,7 @@ cdef class CVODE:
         self.initialized = False
 
     cpdef _create_suncontext(self):
-        int res = SUNContext_Create(NULL, self.sunctx)
+        cdef int res = SUNContext_Create(NULL, &self.sunctx)
         if res < 0:
             raise RuntimeError("Failed to create Sundials context")
 
@@ -1462,7 +1462,7 @@ cdef class CVODE:
         if nonlinsolver == 'newton':
             if linsolver == 'dense':
                 A = SUNDenseMatrix(N, N, self.sunctx)
-                LS = SUNDenseLinearSolver(self.y0, A)
+                LS = SUNLinSol_Dense(self.y0, A, self.sunctx)
                 # check if memory was allocated
                 if (A == NULL or LS == NULL):
                     raise ValueError('Could not allocate matrix or linear solver')
@@ -1478,7 +1478,7 @@ cdef class CVODE:
                                      .format(flag))
             elif linsolver == 'band':
                 A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'], self.sunctx);
-                LS = SUNBandLinearSolver(self.y0, A);
+                LS = SUNLinSol_Band(self.y0, A, self.sunctx);
                 if (A == NULL or LS == NULL):
                     raise ValueError('Could not allocate matrix or linear solver')
                 flag = CVodeSetLinearSolver(cv_mem, LS, A)
@@ -1517,15 +1517,15 @@ cdef class CVODE:
                                      % opts['precond_type'])
     
                 if linsolver == 'spgmr':
-                    LS = SUNSPGMR(self.y0, pretype, <int> opts['maxl']);
+                    LS = SUNLinSol_SPGMR(self.y0, pretype, <int> opts['maxl'], self.sunctx);
                     if LS == NULL:
                         raise ValueError('Could not allocate linear solver')
                 elif linsolver == 'spbcgs':
-                    LS = SUNSPBCGS(self.y0, pretype, <int> opts['maxl']);
+                    LS = SUNLinSol_SPBCGS(self.y0, pretype, <int> opts['maxl'], self.sunctx);
                     if LS == NULL:
                         raise ValueError('Could not allocate linear solver')
                 elif linsolver == 'sptfqmr':
-                    LS = SUNSPTFQMR(self.y0, pretype, <int> opts['maxl']);
+                    LS = SUNLinSol_SPTFQMR(self.y0, pretype, <int> opts['maxl'], self.sunctx);
                     if LS == NULL:
                         raise ValueError('Could not allocate linear solver')
                 else:
@@ -2054,4 +2054,4 @@ cdef class CVODE:
         if self.y0   is not NULL: N_VDestroy(self.y0)
         if self.y    is not NULL: N_VDestroy(self.y)
         if self.atol is not NULL: N_VDestroy(self.atol)
-        if self.sunctx is not NULL: SUNContext_Free(self.sunctx)
+        if self.sunctx is not NULL: SUNContext_Free(&self.sunctx)

@@ -140,7 +140,7 @@ cdef extern from "idas/idas.h":
                                    N_Vector yyB, N_Vector ypB,
                                    N_Vector rhsvalBQS, void *user_dataB)
 
-    void *IDACreate(SUNContext* sunctx)
+    void *IDACreate(SUNContext sunctx)
 
     int IDAInit(void *ida_mem, IDAResFn res,
                 sunrealtype t0, N_Vector yy0, N_Vector yp0)
@@ -552,7 +552,6 @@ cdef extern from "idas/idas_direct.h":
     ctypedef IDALsJacFnB IDAJacFnB
     ctypedef IDALsJacFnBS IDAJacFnBS
 
-    int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
     int IDASetJacFn(void *ida_mem, IDAJacFn jac)
     
     int IDAGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
@@ -561,9 +560,6 @@ cdef extern from "idas/idas_direct.h":
     int IDAGetLastFlag(void *ida_mem, long int *flag)
     char *IDAGetReturnFlagName(long int flag)
 
-    int IDASetLinearSolverB(void *ida_mem, int which,
-                               SUNLinearSolver LS, SUNMatrix A)
-    
     int IDASetJacFnB(void *ida_mem, int which, IDAJacFnB jacB)
     
     int IDASetJacFnBS(void *ida_mem, int which, IDAJacFnBS jacBS)
@@ -585,7 +581,6 @@ cdef extern from "idas/idas_spils.h":
     ctypedef IDALsJacTimesVecFnB IDAJacTimesVecFnB
     ctypedef IDALsJacTimesVecFnBS IDAJacTimesVecFnBS
 
-    int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS)
     int IDASetPreconditioner(void *ida_mem,
                                   IDAPrecSetupFn pset,
                                   IDAPrecSolveFn psolve)
@@ -604,9 +599,6 @@ cdef extern from "idas/idas_spils.h":
     int IDAGetLastFlag(void *ida_mem, long int *flag)
     char *IDAGetReturnFlagName(long int flag)
 
-    int IDASetLinearSolverB(void *ida_mem, int which,
-                                 SUNLinearSolver LS)
-    
     int IDASetEpsLinB(void *ida_mem, int which, sunrealtype eplifacB)
     
     int IDASetIncrementFactorB(void *ida_mem, int which,

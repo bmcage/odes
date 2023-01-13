@@ -54,7 +54,7 @@ cdef extern from "cvode/cvode.h":
                                char *module, char *function,
                                char *msg, void *user_data)
 
-    void *CVodeCreate(int lmm, SUNContext* sunctx)
+    void *CVodeCreate(int lmm, SUNContext sunctx)
 
     int CVodeInit(void *cvode_mem, CVRhsFn f, sunrealtype t0, N_Vector y0)
     int CVodeReInit(void *cvode_mem, sunrealtype t0, N_Vector y0)
@@ -189,8 +189,6 @@ cdef extern from "cvode/cvode_ls.h":
 cdef extern from "cvode/cvode_direct.h":
     ctypedef CVLsJacFn CVodeJacFn
 
-    int CVodeSetLinearSolver(void *cvode_mem, SUNLinearSolver LS,
-                             SUNMatrix A)
     int CVodeSetJacFn(void *cvode_mem, CVodeJacFn jac)
     int CVodeGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
     int CVodeGetNumJacEvals(void *cvode_mem, long int *njevals)
@@ -246,7 +244,6 @@ cdef extern from "cvode/cvode_spils.h":
     ctypedef CVLsJacTimesSetupFn CVodeJacTimesSetupFn
     ctypedef CVLsJacTimesVecFn CVodeJacTimesVecFn
 
-    int CVodeSetLinearSolver(void *cvode_mem, SUNLinearSolver LS)
     int CVodeSetEpsLin(void *cvode_mem, sunrealtype eplifac)
     int CVodeSetPreconditioner(void *cvode_mem, CVodePrecSetupFn pset,
                                  CVodePrecSolveFn psolve)

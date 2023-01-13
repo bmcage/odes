@@ -9,9 +9,9 @@ cdef extern from "nvector/nvector_serial.h":
 
     ctypedef _N_VectorContent_Serial *N_VectorContent_Serial
 
-    N_Vector N_VNew_Serial(sunindextype vec_length, SUNContext* sunctx)
-    N_Vector N_VNewEmpty_Serial(sunindextype vec_length, SUNContext* sunctx)
-    N_Vector N_VMake_Serial(sunindextype vec_length, sunrealtype *v_data, SUNContext* sunctx)
+    N_Vector N_VNew_Serial(sunindextype vec_length, SUNContext sunctx)
+    N_Vector N_VNewEmpty_Serial(sunindextype vec_length, SUNContext sunctx)
+    N_Vector N_VMake_Serial(sunindextype vec_length, sunrealtype *v_data, SUNContext sunctx)
     N_Vector *N_VCloneVectorArray_Serial(int count, N_Vector w)
     N_Vector *N_VCloneVectorArrayEmpty_Serial(int count, N_Vector w)
     void N_VDestroyVectorArray_Serial(N_Vector *vs, int count)

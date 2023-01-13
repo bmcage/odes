@@ -51,7 +51,7 @@ setup(
     long_description = LONG_DESCRIPTION,
     url = URL,
     license = LICENSE,
-    setup_requires = BUILD_REQUIRES,
+#    setup_requires = BUILD_REQUIRES,
     install_requires = INSTALL_REQUIRES,
     packages = find_packages(),
     namespace_packages = ['scikits'],

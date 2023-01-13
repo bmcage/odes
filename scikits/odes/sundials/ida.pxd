@@ -169,7 +169,7 @@ cdef class IDA:
     cdef bint initialized
 
     cdef void* _ida_mem
-    cdef SUNContext* sunctx
+    cdef SUNContext sunctx
     cdef dict options
     cdef bint parallel_implementation
     cdef bint _old_api, _step_compute, _validate_flags
@@ -182,8 +182,7 @@ cdef class IDA:
     #cdef sunrealtype *y0, *yprime0
 
     # Functions
-
-    #def set_options(self, dict options)
+    cpdef _create_suncontext(self)
     cpdef _init_step(self, DTYPE_t t0,
                     np.ndarray[DTYPE_t, ndim=1] y0,
                     np.ndarray[DTYPE_t, ndim=1] yp0,
@@ -197,4 +196,3 @@ cdef class IDA:
                        np.ndarray[DTYPE_t, ndim=1] yp0)
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=*)
-    #def step(self, sunrealtype t)

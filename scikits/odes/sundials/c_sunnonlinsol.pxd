@@ -23,8 +23,8 @@ cdef extern from "sunnonlinsol/sunnonlinsol_newton.h":
     
     ctypedef _SUNNonlinearSolverContent_Newton *SUNNonlinearSolverContent_Newton;
 
-    SUNNonlinearSolver SUNNonlinSol_Newton(N_Vector y, SUNContext* sunctx)
-    SUNNonlinearSolver SUNNonlinSol_NewtonSens(int count, N_Vector y, SUNContext* sunctx)
+    SUNNonlinearSolver SUNNonlinSol_Newton(N_Vector y, SUNContext sunctx)
+    SUNNonlinearSolver SUNNonlinSol_NewtonSens(int count, N_Vector y, SUNContext sunctx)
 
     SUNNonlinearSolver_Type SUNNonlinSolGetType_Newton(SUNNonlinearSolver NLS)
 
@@ -84,8 +84,8 @@ cdef extern from "sunnonlinsol/sunnonlinsol_fixedpoint.h":
 
     ctypedef _SUNNonlinearSolverContent_FixedPoint *SUNNonlinearSolverContent_FixedPoint
 
-    SUNNonlinearSolver SUNNonlinSol_FixedPoint(N_Vector y, int m, SUNContext* sunctx)
-    SUNNonlinearSolver SUNNonlinSol_FixedPointSens(int count, N_Vector y, int m, SUNContext* sunctx)
+    SUNNonlinearSolver SUNNonlinSol_FixedPoint(N_Vector y, int m, SUNContext sunctx)
+    SUNNonlinearSolver SUNNonlinSol_FixedPointSens(int count, N_Vector y, int m, SUNContext sunctx)
 
     SUNNonlinearSolver_Type SUNNonlinSolGetType_FixedPoint(SUNNonlinearSolver NLS)
 
@@ -132,7 +132,7 @@ cdef extern from "sunnonlinsol/sunnonlinsol_fixedpoint.h":
 # 
 #     ctypedef _SUNNonlinearSolverContent_PetscSNES *SUNNonlinearSolverContent_PetscSNES
 # 
-#     SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes, SUNContext* sunctx)
+#     SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes, SUNContext sunctx)
 #     SUNNonlinearSolver_Type SUNNonlinSolGetType_PetscSNES(SUNNonlinearSolver NLS)
 # 
 #     int SUNNonlinSolInitialize_PetscSNES(SUNNonlinearSolver NLS)

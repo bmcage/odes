@@ -64,7 +64,7 @@ cdef extern from "ida/ida.h":
                                     const char *function, char *msg, 
                                     void *user_data)
 
-    void *IDACreate(SUNContext* sunctx)
+    void *IDACreate(SUNContext sunctx)
 
     int IDAInit(void *ida_mem, IDAResFn res,
                 sunrealtype t0, N_Vector yy0, N_Vector yp0)
@@ -210,7 +210,6 @@ cdef extern from "ida/ida_direct.h":
     
     ctypedef IDALsJacFn IDAJacFn
 
-    int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
     int IDASetJacFn(void *ida_mem, IDAJacFn jac)
     
     int IDAGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
@@ -226,7 +225,6 @@ cdef extern from "ida/ida_spils.h":
     ctypedef IDALsJacTimesSetupFn IDAJacTimesSetupFn;
     ctypedef IDALsJacTimesVecFn IDAJacTimesVecFn;
 
-    int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS)
     int IDASetPreconditioner(void *ida_mem,
                                   IDAPrecSetupFn pset,
                                   IDAPrecSolveFn psolve)

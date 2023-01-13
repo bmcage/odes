@@ -127,7 +127,7 @@ cdef class CV_data:
 cdef class CVODE:
     cdef N_Vector atol
     cdef void* _cv_mem
-    cdef SUNContext* sunctx
+    cdef SUNContext sunctx
     cdef dict options
     cdef bint parallel_implementation, initialized, _old_api, _step_compute, _validate_flags
     cdef CV_data aux_data
@@ -142,6 +142,7 @@ cdef class CVODE:
     cdef int verbosity
 
     # Functions
+    cpdef _create_suncontext(self)
     cpdef _init_step(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
     cpdef _reinit_IC(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
 

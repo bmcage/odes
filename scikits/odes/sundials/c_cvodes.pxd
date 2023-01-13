@@ -122,7 +122,7 @@ cdef extern from "cvodes/cvodes.h":
                                  N_Vector yB, N_Vector qBdot, void *user_dataB)
 
     # Exported Functions -- Forward Problems
-    void *CVodeCreate(int lmm, SUNContext* sunctx)
+    void *CVodeCreate(int lmm, SUNContext sunctx)
 
     int CVodeInit(void *cvode_mem, CVRhsFn f, sunrealtype t0, N_Vector y0)
     int CVodeReInit(void *cvode_mem, sunrealtype t0, N_Vector y0)
@@ -539,8 +539,6 @@ cdef extern from "cvodes/cvodes_direct.h":
     ctypedef CVLsJacFnB CVodeJacFnB
     ctypedef CVLsJacFnBS CVodeJacFnBS
 
-    int CVodeSetLinearSolver(void *cvode_mem, SUNLinearSolver LS,
-                             SUNMatrix A)
     int CVodeSetJacFn(void *cvode_mem, CVodeJacFn jac)
     int CVodeGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
     int CVodeGetNumJacEvals(void *cvode_mem, long int *njevals)
@@ -548,8 +546,6 @@ cdef extern from "cvodes/cvodes_direct.h":
     int CVodeGetLastFlag(void *cvode_mem, long int *flag)
     char *CVodeGetReturnFlagName(long int flag)
 
-    int CVodeSetLinearSolverB(void *cvode_mem, int which,
-                              SUNLinearSolver LS, SUNMatrix A)
     int CVodeSetJacFnB(void *cvode_mem, int which, CVodeJacFnB jacB)
     int CVodeSetJacFnBS(void *cvode_mem, int which, CVodeJacFnBS jacBS)
 
@@ -633,7 +629,6 @@ cdef extern from "cvodes/cvodes_spils.h":
     ctypedef CVLsJacTimesVecFnB CVodeJacTimesVecFnB;
     ctypedef CVLsJacTimesVecFnBS CVodeJacTimesVecFnBS;
 
-    int CVodeSetLinearSolver(void *cvode_mem, SUNLinearSolver LS)
     int CVodeSetEpsLin(void *cvode_mem, sunrealtype eplifac)
     int CVodeSetPreconditioner(void *cvode_mem, CVodePrecSetupFn pset,
                                  CVodePrecSolveFn psolve)
@@ -651,7 +646,6 @@ cdef extern from "cvodes/cvodes_spils.h":
     int CVodeGetLastFlag(void *cvode_mem, long int *flag)
     char *CVodeGetReturnFlagName(long int flag)
 
-    int CVodeSetLinearSolverB(void *cvode_mem, int which, SUNLinearSolver LS)
     int CVodeSetEpsLinB(void *cvode_mem, int which, sunrealtype eplifacB)
     int CVodeSetPreconditionerB(void *cvode_mem, int which,
                                   CVodePrecSetupFnB psetB,

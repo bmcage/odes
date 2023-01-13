@@ -12,7 +12,7 @@ cdef extern from "sunmatrix/sunmatrix_dense.h":
 
     ctypedef _SUNMatrixContent_Dense *SUNMatrixContent_Dense
 
-    SUNMatrix SUNDenseMatrix(sunindextype M, sunindextype N, SUNContext* sunctx)
+    SUNMatrix SUNDenseMatrix(sunindextype M, sunindextype N, SUNContext sunctx)
     void SUNDenseMatrix_Print(SUNMatrix A, FILE* outfile)
     sunindextype SUNDenseMatrix_Rows(SUNMatrix A)
     sunindextype SUNDenseMatrix_Columns(SUNMatrix A)
@@ -47,10 +47,10 @@ cdef extern from "sunmatrix/sunmatrix_band.h":
     ctypedef _SUNMatrixContent_Band *SUNMatrixContent_Band
 
     SUNMatrix SUNBandMatrix(sunindextype N, sunindextype mu,
-                                            sunindextype ml)
+                                            sunindextype ml, SUNContext sunctx)
 
     SUNMatrix SUNBandMatrixStorage(sunindextype N, sunindextype mu,
-                                   sunindextype ml, sunindextype smu)
+                                   sunindextype ml, sunindextype smu, SUNContext sunctx)
 
     void SUNBandMatrix_Print(SUNMatrix A, FILE* outfile)
 

@@ -846,8 +846,8 @@ cdef class IDA:
         self.sunctx = NULL
         self.initialized = False
 
-    cdef _create_suncontext(self):
-        int res = SUNContext_Create(NULL, self.sunctx)
+    cpdef _create_suncontext(self):
+        cdef int res = SUNContext_Create(NULL, &self.sunctx)
         if res < 0:
             raise RuntimeError("Failed to create Sundials context")
 
@@ -1584,7 +1584,7 @@ cdef class IDA:
 
         if linsolver == 'dense':
             A = SUNDenseMatrix(N, N, self.sunctx)
-            LS = SUNDenseLinearSolver(self.y0, A)
+            LS = SUNLinSol_Dense(self.y0, A, self.sunctx)
             # check if memory was allocated
             if (A == NULL or LS == NULL):
                 raise ValueError('Could not allocate matrix or linear solver')
@@ -1600,7 +1600,7 @@ cdef class IDA:
                                  .format(flag))
         elif linsolver == 'band':
             A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'], self.sunctx);
-            LS = SUNBandLinearSolver(self.y0, A);
+            LS = SUNLinSol_Band(self.y0, A, self.sunctx);
             if (A == NULL or LS == NULL):
                 raise ValueError('Could not allocate matrix or linear solver')
             flag = IDASetLinearSolver(ida_mem, LS, A)
@@ -1631,21 +1631,21 @@ cdef class IDA:
 
 
             if linsolver == 'spgmr':
-                LS = SUNSPGMR(self.y0, pretype, maxl);
+                LS = SUNLinSol_SPGMR(self.y0, pretype, maxl, self.sunctx);
                 if LS == NULL:
                     raise ValueError('Could not allocate linear solver')
             elif linsolver == 'spbcgs':
-                LS = SUNSPBCGS(self.y0, pretype, maxl);
+                LS = SUNLinSol_SPBCGS(self.y0, pretype, maxl, self.sunctx);
                 if LS == NULL:
                     raise ValueError('Could not allocate linear solver')
             elif linsolver == 'sptfqmr':
-                LS = SUNSPTFQMR(self.y0, pretype, maxl);
+                LS = SUNLinSol_SPTFQMR(self.y0, pretype, maxl, self.sunctx);
                 if LS == NULL:
                     raise ValueError('Could not allocate linear solver')
             else:
                 raise ValueError('Given linsolver {} not implemented in odes'.format(linsolver))
 
-            flag = IDASetLinearSolver(ida_mem, LS);
+            flag = IDASetLinearSolver(ida_mem, LS, NULL);
             if flag == IDALS_MEM_NULL:
                     raise MemoryError('IDA memory was NULL')
             elif flag == IDALS_ILL_INPUT:
@@ -2304,4 +2304,4 @@ cdef class IDA:
         if not self.residual is NULL: N_VDestroy(self.residual)
         if not self.dae_vars_id is NULL: N_VDestroy(self.dae_vars_id)
         if not self.constraints is NULL: N_VDestroy(self.constraints)
-        if self.sunctx is not NULL: SUNContext_Free(self.sunctx)
+        if self.sunctx is not NULL: SUNContext_Free(&self.sunctx)

@@ -6,8 +6,9 @@ cdef extern from "sundials/sundials_types.h":
     ctypedef long sunindextype
 
 cdef extern from "sundials/sundials_context.h":
-    struct SUNContext:
+    struct _SUNContext:
         pass
+    ctypedef _SUNContext* SUNContext
 
     int SUNContext_Create(void* comm, SUNContext* ctx)
     # Need to include profiler/logger headers
@@ -47,9 +48,9 @@ cdef extern from "sundials/sundials_nvector.h":
         pass
     struct _generic_N_Vector:
         pass
-    ctypedef _generic_N_Vector *N_Vector
-    ctypedef _generic_N_Vector_Ops *N_Vector_Ops
-    ctypedef N_Vector *N_Vector_S
+    ctypedef _generic_N_Vector* N_Vector
+    ctypedef _generic_N_Vector_Ops* N_Vector_Ops
+    ctypedef N_Vector* N_Vector_S
 
     struct _generic_N_Vector_Ops:
         N_Vector_ID (*nvgetvectorid)(N_Vector)
@@ -112,7 +113,7 @@ cdef extern from "sundials/sundials_nvector.h":
 
 
     # * FUNCTIONS *
-    N_Vector N_VNewEmpty(SUNContext* sunctx)
+    N_Vector N_VNewEmpty(SUNContext sunctx)
     void N_VFreeEmpty(N_Vector v)
     int N_VCopyOps(N_Vector w, N_Vector v)
 
@@ -228,7 +229,7 @@ cdef extern from "sundials/sundials_matrix.h":
         SUNMatrix_Ops ops
 
     # * FUNCTIONS *
-    SUNMatrix SUNMatNewEmpty(SUNContext* sunctx)
+    SUNMatrix SUNMatNewEmpty(SUNContext sunctx)
     void SUNMatFreeEmpty(SUNMatrix A)
     int SUNMatCopyOps(SUNMatrix A, SUNMatrix B)
     SUNMatrix_ID SUNMatGetID(SUNMatrix A)
@@ -323,7 +324,7 @@ cdef extern from "sundials/sundials_linearsolver.h":
         void *content
         SUNLinearSolver_Ops ops
 
-    SUNLinearSolver SUNLinSolNewEmpty(SUNContext* sunctx)
+    SUNLinearSolver SUNLinSolNewEmpty(SUNContext sunctx)
 
     void SUNLinSolFreeEmpty(SUNLinearSolver S)
 
@@ -496,7 +497,7 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
         void *content
         SUNNonlinearSolver_Ops ops
 
-    SUNNonlinearSolver SUNNonlinSolNewEmpty(SUNContext* sunctx);
+    SUNNonlinearSolver SUNNonlinSolNewEmpty(SUNContext sunctx);
     void SUNNonlinSolFreeEmpty(SUNNonlinearSolver NLS);
 
     SUNNonlinearSolver_Type SUNNonlinSolGetType(SUNNonlinearSolver NLS)
