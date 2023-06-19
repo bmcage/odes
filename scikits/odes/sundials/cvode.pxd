@@ -23,18 +23,19 @@ cdef class CV_RootFunction:
 
 cdef class CV_WrapRootFunction(CV_RootFunction):
     cdef object _rootfn
-    cdef int with_userdata
+    cdef public int with_userdata
     cpdef set_rootfn(self, object rootfn)
 
 cdef class CV_JacRhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
                        np.ndarray[DTYPE_t, ndim=1] y,
                        np.ndarray[DTYPE_t, ndim=1] fy,
-                       np.ndarray[DTYPE_t, ndim=2] J) except? -1
+                       np.ndarray[DTYPE_t, ndim=2] J,
+                       object userdata = *) except? -1
 
 cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
     cdef public object _jacfn
-    cdef int with_userdata
+    cdef public int with_userdata
     cpdef set_jacfn(self, object jacfn)
 
 cdef class CV_PrecSetupFunction:
@@ -128,7 +129,7 @@ cdef class CVODE:
     cdef N_Vector atol
     cdef void* _cv_mem
     cdef SUNContext sunctx
-    cdef dict options
+    cdef public dict options
     cdef bint parallel_implementation, initialized, _old_api, _step_compute, _validate_flags
     cdef CV_data aux_data
 
