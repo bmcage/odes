@@ -11,7 +11,7 @@ import scipy.sparse as sparse
 from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
                    empty)
 
-from numpy.testing import TestCase, run_module_suite
+from numpy.testing import TestCase
 from scipy.integrate import ode as Iode
 from scikits.odes import ode,dae
 from scikits.odes.sundials import _get_num_args
@@ -392,17 +392,3 @@ PROBLEMS_LSODI = [
     SimpleOscillator,
     StiffVODECompare,
 ]
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    try:
-        run_module_suite()
-    except NameError:
-        test = TestDae()
-        test.test_ddaspk()
-        test.test_lsodi()
-        test.test_ida_old_api()
-        test.test_ida()
-        test = TestGetNumArgs()
-        test.test_functions()
-        test.test_methods()
