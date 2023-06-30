@@ -13,3 +13,4 @@ prune ipython_examples
 
 exclude *.enc
 exclude upload_api_docs.sh
+exclude .readthedocs.yaml

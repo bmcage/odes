@@ -16,7 +16,7 @@ from numpy import (arange, zeros, array, dot, sqrt, cos, sin, eye, pi, exp,
                    allclose)
 
 from numpy.testing import (
-    assert_, TestCase, run_module_suite, assert_array_almost_equal,
+    assert_, TestCase, assert_array_almost_equal,
     assert_raises, assert_allclose, assert_array_equal, assert_equal)
 
 from scikits.odes.odeint import odeint
@@ -447,7 +447,3 @@ def test_odeint_bad_shapes():
 
     # shape of array returned by badjac(x, t) is not correct.
     assert_raises(ValueError, odeint, sys1, [0, 1], [10, 10], jacfn=badjac)
-
-
-if __name__ == "__main__":
-    run_module_suite()

@@ -1,5 +1,5 @@
 
-from numpy.testing import TestCase, run_module_suite
+from numpy.testing import TestCase
 
 from .. import dae
 from ..sundials.ida import StatusEnumIDA
@@ -238,10 +238,3 @@ class TestIdasReturn(TestIdaReturn):
     def __init__(self, *args, **kwargs):
         super(TestIdasReturn, self).__init__(*args, **kwargs)
         self.solvername = "idas"
-
-if __name__ == "__main__":
-    try:
-        run_module_suite()
-    except NameError:
-        test = TestIdaReturn()
-        test.test_normal_rhs()

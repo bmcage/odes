@@ -10,7 +10,7 @@ import numpy as np
 from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
                     empty)
 
-from numpy.testing import TestCase, run_module_suite
+from numpy.testing import TestCase
 
 from scikits.odes import ode
 from scikits.odes.sundials.cvode import StatusEnum
@@ -311,18 +311,3 @@ class TestOn(TestCase):
         assert allclose([soln.tstop.t[-1], soln.tstop.y[-1,0], soln.tstop.y[-1,1]],
                         [30.0, -1452.5024, -294.30],
                         atol=atol, rtol=rtol)
-if __name__ == "__main__":
-    try:
-        run_module_suite()
-    except NameError:
-        test = TestOn()
-        test.test_cvode_rootfn_noroot()
-        test.test_cvode_rootfn()
-        test.test_cvode_rootfnacc()
-        test.test_cvode_rootfn_stop()
-        test.test_cvode_rootfn_test()
-        test.test_cvode_tstopfn()
-        test.test_cvode_tstopfn_notstop()
-        test.test_cvode_tstopfn_stop()
-        test.test_cvode_tstopfn_test()
-        test.test_cvode_tstopfnacc()

@@ -10,7 +10,7 @@ from __future__ import division, print_function, absolute_import
 import numpy as np
 
 from numpy.testing import (
-    assert_, TestCase, run_module_suite, assert_array_almost_equal,
+    assert_, TestCase, assert_array_almost_equal,
     assert_raises, assert_allclose, assert_array_equal, assert_equal)
 from scikits.odes import ode
 from scikits.odes.dopri5 import StatusEnumDOP

@@ -1,5 +1,5 @@
 
-from numpy.testing import TestCase, run_module_suite
+from numpy.testing import TestCase
 
 from .. import ode
 from ..sundials.cvode import StatusEnum
@@ -315,10 +315,3 @@ class TestCVodesReturn(TestCVodeReturn):
     def __init__(self, *args, **kwargs):
         super(TestCVodesReturn, self).__init__(*args, **kwargs)
         self.solvername = "cvodes"
-
-if __name__ == "__main__":
-    try:
-        run_module_suite()
-    except NameError:
-        test = TestCVodeReturn()
-        TestCVodeReturn.test_normal_rhs()
