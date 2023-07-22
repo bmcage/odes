@@ -1077,7 +1077,7 @@ cdef class CVODE:
         if not supress_supported_check:
             for opt in options.keys():
                 if not opt in ['atol', 'rtol', 'tstop', 'rootfn', 'nr_rootfns',
-                               'verbosity', 'one_step_compute']:
+                               'verbosity', 'one_step_compute', 'max_step_size']:
                     raise ValueError("Option '%s' can''t be set runtime." % opt)
 
         # Verbosity level
@@ -1181,7 +1181,7 @@ cdef class CVODE:
         if ('tstop' in options) and (options['tstop'] is not None):
             opts_tstop = options['tstop']
             self.options['tstop'] = opts_tstop
-            if (not opts_tstop is None) and (opts_tstop > 0.):
+            if (not opts_tstop is None):
                 flag = CVodeSetStopTime(cv_mem, <sunrealtype> opts_tstop)
                 if flag == CV_ILL_INPUT:
                     raise ValueError('CVodeSetStopTime::Stop value is beyond '
