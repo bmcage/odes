@@ -1,37 +1,36 @@
 Installation
 ============
 
+Installation of ``odes`` can either be done by installing from source, or via
+one of the distributions listed at the end of the page.
+
 Requirements before install
 ---------------------------
 
-If you use nix (see below), all dependencies will be installed for you.
-
-If you do not wish to use nix then you will need to do the following.
-
 Before building ``odes``, you need to have installed:
 
-    * numpy (automatically dealt with if using pip >=10)
     * Python header files (``python-dev``/``python3-dev`` on Debian/Ubuntu-based
       distributions, ``python-devel`` on Fedora)
     * C compiler
     * Fortran compiler (e.g. gfortran)
-    * `Sundials 5.1.0 <https://computation.llnl.gov/casc/sundials/download/download.html>`_ 
+    * `SUNDIALS <https://sundials.readthedocs.io/>`_ 
 
-In addition, if building from a git checkout, you'll also need Cython.
+Python-based build dependencies should be installed auto-installed as part of
+the build, see the pyproject.toml file for more details.
 
-If using precision type double, it is required that Sundials is built with the BLAS/LAPACK interface enabled, so check the Fortran Settings section. 
+SUNDIALS Install
+................
+Detail of how to install SUNDIALS are part of their
+`documentation <https://sundials.readthedocs.io/en/latest/Install_link.html>`_,
+however there are some key things to consider when installing SUNDIALS for use
+with ``odes``:
 
-A typical install if sundials download package is extracted into directory sundials-5.1.0, with LAPACK included is on a \*nix system::
-
-    mkdir build-sundials-5.1.0
-    cd build-sundials-5.1.0/
-    cmake -DLAPACK_ENABLE=ON -DSUNDIALS_INDEX_SIZE=64 -DCMAKE_INSTALL_PREFIX=<install_path> ../sundials-5.1.0/
-    make install
-
-where you replace ``<install_path>`` with the install path you want, default normally is ``/usr/local/``.
-
-For extended precision, set ``-DLAPACK_ENABLE=OFF`` and add ``-DSUNDIALS_PRECISION=extended``.
-
+    #. As SUNDIALS does change its API quite regularly, you will need to choose
+        a version of ``odes`` which supports the version of SUNDIALS you have
+        installed. See below for an approximate compatibility table.
+    #. If you wish to use 64-bit floats, then you will need to link to
+        BLAS/LAPACK when building SUNDIALS. Other floating point precisions
+        should not link with BLAS/LAPACK.
 
 .. warning::
 
@@ -42,6 +41,27 @@ For extended precision, set ``-DLAPACK_ENABLE=OFF`` and add ``-DSUNDIALS_PRECISI
     We recommend using `OpenBLAS <http://www.openblas.net/>`_, which provides a
     optimised BLAS implementation which widely distributed, and which doesn't
     need to be recompiled for different CPUs.
+
+.. list-table:: Approximate supported versions
+    :header-rows: 1
+
+    * - SUNDIALS version
+      - ``odes`` version
+    * - 6.x
+      - 2.7.x
+    * - 5.x
+      - 2.6.x
+    * - 4.x
+      - 2.5.x
+    * - 3.x
+      - 2.4.x
+    * - 2.x and earlier
+      - 2.3.x and earlier
+
+.. warning::
+    Note that the SUNDIALS 2.x series tended to have more API changes compared
+    to that of later series (which generally had the changes occur only on major
+    releases), so matching SUNDIALS and ``odes`` may be much harder.
 
 Installation
 ------------
@@ -88,10 +108,6 @@ Inside the ``odes`` directory, run::
 
 which will install the checked out version of ``odes``. The same environment
 variables mentioned above can be used to control installation options.
-
-Alternatively, you can inside the ``odes`` directory the following command to reach the same result (as root, use ``sudo`` on linux distribution that support it)::
-
-    DISTUTILS_DEBUG=1  python3 setup.py install
 
 .. note::
     If you try to run the tests whilst in the ``odes`` directory, Python will pick up the source directory, and not the built version. Move to a different directory when running the tests.
@@ -146,8 +162,15 @@ Linking Errors
 ..............
 Verify you link to the correct sundials version. Easiest to ensure you only have one ``libsundials_xxx`` installed. If several are installed, pass the correct one via the ``$SUNDIALS_INST`` environment variable.
 
-Using Nix
----------
+Installing via a Distribution
+-----------------------------
+
+Some distributions have packaged ``odes``. The maintainers of those packages
+have added the following sections. If they do not work, please contact those
+maintainers, and send us a Pull Request with any fixes.
+
+Nix
+...
 
 By using the Nix package manager, you can install scikits-odes in one
 line. Of course you need to install `nix <https://nixos.org/nix/>`_
