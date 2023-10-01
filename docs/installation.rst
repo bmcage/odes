@@ -52,7 +52,7 @@ To install ``odes``, use::
 which will download the latest version from PyPI. This will handle the installation of the additional runtime dependencies of ``odes``. You should then run the tests to make sure everything is set up correctly.
 
 If you have installed SUNDIALS in a non-standard path (e.g. ``/usr/`` or ``/usr/local/``), you can set ``$SUNDIALS_INST`` in your environment to the installation prefix of SUNDIALS (i.e. value of ``<install_path>`` mentioned above).
-
+If you plan to install ``odes`` in a ``conda`` environment, make sure ``$SUNDIALS_INST`` is installed at ``/path/to/conda/envs/<env_name>/lib``.
 
 Testing your version of ``odes``
 ................................
