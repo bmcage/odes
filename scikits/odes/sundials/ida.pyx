@@ -1691,7 +1691,7 @@ cdef class IDA:
             if SUNDIALS_BLAS_LAPACK:
                 if linsolver == 'lapackdense':
                     A = SUNDenseMatrix(N, N, self.sunctx)
-                    LS = SUNLapackDense(self.y0, A)
+                    LS = SUNLinSol_LapackDense(self.y0, A, self.sunctx)
                     # check if memory was allocated
                     if (A == NULL or LS == NULL):
                         raise ValueError('Could not allocate matrix or linear solver')
@@ -1707,7 +1707,7 @@ cdef class IDA:
                                          .format(flag))
                 elif linsolver == 'lapackband':
                     A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'], self.sunctx);
-                    LS = SUNLapackBand(self.y0, A)
+                    LS = SUNLinSol_LapackBand(self.y0, A, self.sunctx)
                     if (A == NULL or LS == NULL):
                         raise ValueError('Could not allocate matrix or linear solver')
                     flag = IDASetLinearSolver(ida_mem, LS, A)

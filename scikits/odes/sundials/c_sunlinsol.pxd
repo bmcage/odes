@@ -63,7 +63,6 @@ IF SUNDIALS_BLAS_LAPACK:
         ctypedef _SUNLinearSolverContent_LapackDense *SUNLinearSolverContent_LapackDense
 
         SUNLinearSolver SUNLinSol_LapackDense(N_Vector y, SUNMatrix A, SUNContext sunctx)
-        SUNLinearSolver SUNLapackDense(N_Vector y, SUNMatrix A) #deprecated
 
         SUNLinearSolver_Type SUNLinSolGetType_LapackDense(SUNLinearSolver S)
         SUNLinearSolver_ID SUNLinSolGetID_LapackDense(SUNLinearSolver S)
@@ -87,7 +86,6 @@ IF SUNDIALS_BLAS_LAPACK:
         ctypedef _SUNLinearSolverContent_LapackBand *SUNLinearSolverContent_LapackBand
 
         SUNLinearSolver SUNLinSol_LapackBand(N_Vector y, SUNMatrix A, SUNContext sunctx)
-        SUNLinearSolver SUNLapackBand(N_Vector y, SUNMatrix A) # deprecated
 
         SUNLinearSolver_Type SUNLinSolGetType_LapackBand(SUNLinearSolver S)
         SUNLinearSolver_ID SUNLinSolGetID_LapackBand(SUNLinearSolver S)
