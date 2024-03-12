@@ -306,6 +306,12 @@ class ode(object):
         else:
             return {}
 
+    def print_stats(self):
+        if hasattr(self._integrator, "print_stats"):
+            self._integrator.print_stats()
+        else:
+            print(f"Method `print_stats` is not implemented for integrator {self._integrator}")
+
 #------------------------------------------------------------------------------
 # ODE integrators
 #------------------------------------------------------------------------------

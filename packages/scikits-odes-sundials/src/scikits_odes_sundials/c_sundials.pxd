@@ -4,6 +4,10 @@ cdef extern from "sundials/sundials_types.h":
     ctypedef float sunrealtype
     ctypedef unsigned int sunbooleantype
     ctypedef long sunindextype
+    
+    cdef enum SUNOutputFormat:
+        SUN_OUTPUTFORMAT_TABLE,
+        SUN_OUTPUTFORMAT_CSV
 
 cdef extern from "sundials/sundials_context.h":
     struct _SUNContext:

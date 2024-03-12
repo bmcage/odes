@@ -10,13 +10,15 @@ include "sundials_config.pxi"
 import numpy as np
 cimport numpy as np
 
+from libc cimport stdio
+
 from . import (
     CVODESolveFailed, CVODESolveFoundRoot, CVODESolveReachedTSTOP,
     _get_num_args,
 )
 
 from .c_sundials cimport (
-    sunrealtype, N_Vector, SUNContext_Create, SUNContext_Free,
+    sunrealtype, N_Vector, SUNContext_Create, SUNContext_Free, SUN_OUTPUTFORMAT_TABLE
 )
 from .c_nvector_serial cimport *
 from .c_sunmatrix cimport *
@@ -2048,6 +2050,9 @@ cdef class CVODE:
                          'NumRhsEvalsJtimesFD': nfevalsLS})
 
         return info
+    
+    def print_stats(self):
+        CVodePrintAllStats(self._cv_mem, stdio.stdout, SUN_OUTPUTFORMAT_TABLE)
 
     def __dealloc__(self):
         if self._cv_mem is not NULL: CVodeFree(&self._cv_mem)
