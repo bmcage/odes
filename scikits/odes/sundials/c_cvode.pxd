@@ -120,6 +120,7 @@ cdef extern from "cvode/cvode.h":
     int CVodeGetNumNonlinSolvConvFails(void *cvode_mem, long int *nncfails)
     int CVodeGetNonlinSolvStats(void *cvode_mem, long int *nniters,
                                             long int *nncfails)
+    int CVodePrintAllStats(void* cvode_mem, FILE* outfile, SUNOutputFormat fmt)
     char *CVodeGetReturnFlagName(long int flag)
     void CVodeFree(void **cvode_mem)
 
