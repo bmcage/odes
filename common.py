@@ -19,7 +19,7 @@ LICENSE             = 'new BSD'
 DOWNLOAD_URL        = URL
 
 INSTALL_REQUIRES = ['scipy']
-BUILD_REQUIRES = ['numpy', 'cython<3.0.0a8'] # This is need for older pip
+BUILD_REQUIRES = ['numpy', 'cython<3'] # This is need for older pip
 
 MAJOR = 2
 MINOR = 7
