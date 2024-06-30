@@ -1,0 +1,8 @@
+recursive-include src *.pyx *.pxd
+include tox.ini
+include setup_build.py
+include local-requirements.txt
+prune **/__pycache__
+prune **/*.pyc
+prune **/*.swp
+prune **/*.swo

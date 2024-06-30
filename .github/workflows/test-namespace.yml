@@ -1,0 +1,121 @@
+name: Test scikits-odes
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          #- python-version: "3.7"
+          #  sundials-version: "6.5.0"
+          #  tox-env: py37
+          #  sundials-precision: double
+          #  sundials-index-size: 64
+          - python-version: "3.8"
+            sundials-version: "6.5.0"
+            tox-env: py38
+            sundials-precision: double
+            sundials-index-size: 64
+          - python-version: "3.9"
+            sundials-version: "6.5.0"
+            tox-env: py39
+            sundials-precision: double
+            sundials-index-size: 64
+          - python-version: "3.10"
+            sundials-version: "6.5.0"
+            tox-env: py310
+            sundials-precision: double
+            sundials-index-size: 64
+          - python-version: "3.11"
+            sundials-version: "6.5.0"
+            tox-env: py311
+            sundials-precision: double
+            sundials-index-size: 64
+          - python-version: "3.12"
+            sundials-version: "6.5.0"
+            tox-env: py312
+            sundials-precision: double
+            sundials-index-size: 64
+          - python-version: "3.11"
+            sundials-version: "6.5.0"
+            tox-env: check-manifest
+            sundials-precision: double
+            sundials-index-size: 64
+          #- python-version: "3.11"
+          #  sundials-version: "6.5.0"
+          #  tox-env: checkreadme
+          #  sundials-precision: double
+          #  sundials-index-size: 64
+          - python-version: "3.11"
+            sundials-version: "6.5.0"
+            tox-env: py311
+            sundials-precision: double
+            sundials-index-size: 32
+          #- python-version: "3.11"
+          #  sundials-version: "6.5.0"
+          #  tox-env: py311
+          #  sundials-precision: single
+          #  sundials-index-size: 64
+          - python-version: "3.11"
+            sundials-version: "6.5.0"
+            tox-env: py311
+            sundials-precision: extended
+            sundials-index-size: 64
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install build dependencies
+      run: sudo apt-get install gfortran liblapack-dev
+
+    - name: Sundials cache
+      uses: actions/cache@v2
+      with:
+        path: ~/sundials
+        key: ${{ runner.os }}-sundials-${{ matrix.sundials-version }}
+        restore-keys: |
+          ${{ runner.os }}-sundials-
+
+    - name: Install sundials
+      run: |
+        source ci_support/ensure_sundials_installed.sh &&
+        printf "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH\n export LIBRARY_PATH=$LIBRARY_PATH\n export CPATH=$CPATH" > sundials_env.sh
+      env:
+        SUNDIALS_VERSION: ${{ matrix.sundials-version }}
+        SUNDIALS_PRECISION: ${{ matrix.sundials-precision }}
+        SUNDIALS_INDEX_SIZE: ${{ matrix.sundials-index-size }}
+
+    - name: Get pip cache dir
+      id: pip-cache
+      run: |
+        echo "::set-output name=dir::$(pip cache dir)"
+
+    - name: pip cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key: ${{ runner.os }}-pip-1
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade tox
+
+    - name: Run tests
+      run: |
+        cat sundials_env.sh
+        source sundials_env.sh &&
+        env &&
+        cd packages/scikits-odes &&
+        tox
+      env:
+        TOXENV: ${{ matrix.tox-env }}

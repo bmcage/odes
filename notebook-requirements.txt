@@ -1,0 +1,5 @@
+cython
+matplotlib
+pandas
+ggplot
+ipython[notebook]
