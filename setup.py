@@ -15,8 +15,6 @@ from setuptools import find_packages
 if '' not in sys.path:
     sys.path.insert(0, '')
 
-from common import *
-
 additional_kwargs = {}
 
 if "bdist_wheel" in sys.argv or "install" in sys.argv:
@@ -43,16 +41,6 @@ else:
     from setuptools import setup
 
 setup(
-    name = DISTNAME,
-    version = VERSION,
-    maintainer = MAINTAINER,
-    maintainer_email = MAINTAINER_EMAIL,
-    description = DESCRIPTION,
-    long_description = LONG_DESCRIPTION,
-    url = URL,
-    license = LICENSE,
-#    setup_requires = BUILD_REQUIRES,
-    install_requires = INSTALL_REQUIRES,
     packages = find_packages(),
     namespace_packages = ['scikits'],
     zip_safe = False,
@@ -60,6 +48,5 @@ setup(
         # If any package contains *.pxd files, include them:
         '': ['*.pxd'],
     },
-    classifiers = CLASSIFIERS,
     **additional_kwargs
 )
