@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools", "numpy", "cython<3", "pkgconfig"]
+
+[project]
+name = 'scikits-odes-sundials'
+dynamic = ["version"]
+description = 'Sundials wrapper module for scikits.odes'
+readme = "README.md"
+authors = [
+    {name = 'B. Malengier', email = 'benny.malengier@gmail.org'},
+]
+maintainers = [
+    {name = 'B. Malengier', email = 'benny.malengier@gmail.org'},
+]
+license = {file = 'LICENSE.txt'}
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Environment :: Console',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: BSD License',
+    'Topic :: Scientific/Engineering',
+    'Programming Language :: Python :: 3',
+    "Programming Language :: Python :: 3 :: Only",
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+]
+dependencies = ["numpy", "scikits-odes-core"]
+
+[project.urls]
+Homepage = "http://cage.ugent.be/~bm/progs.html"
+Documentation = "https://scikits-odes.readthedocs.io/en/stable/"
+Repository = "https://github.com/bmcage/odes"
+Issues = "https://github.com/bmcage/odes/issues"
+Paper = "https://doi.org/10.21105/joss.00165"
+DOI = "https://doi.org/10.5281/zenodo.5511691"

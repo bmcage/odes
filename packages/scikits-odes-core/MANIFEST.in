@@ -1,0 +1,5 @@
+include tox.ini
+prune **/__pycache__
+prune **/*.pyc
+prune **/*.swp
+prune **/*.swo

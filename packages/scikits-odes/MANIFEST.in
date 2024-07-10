@@ -1,0 +1,6 @@
+prune **/__pycache__
+prune **/*.pyc
+prune **/*.swp
+prune **/*.swo
+include tox.ini
+include local-requirements.txt

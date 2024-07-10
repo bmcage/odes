@@ -1,0 +1,4 @@
+# this is to link to the other packages in the repository
+../scikits-odes-core/
+../scikits-odes-daepack/
+../scikits-odes-sundials/

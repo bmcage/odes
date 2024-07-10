@@ -10,7 +10,7 @@
 *swp
 *.egg
 *.ipynb_checkpoints*
-scikits.odes.egg-info/*
+*.egg-info
 build*
 .emacs.desktop*
 dist
@@ -22,3 +22,4 @@ _configtest.o.d
 .cache
 .eggs
 .pytest_cache
+.mesonpy*
