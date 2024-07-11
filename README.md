@@ -1,5 +1,4 @@
 [![Documentation Status](https://readthedocs.org/projects/scikits-odes/badge/?version=stable)](https://scikits-odes.readthedocs.org/en/stable/?badge=stable)
-[![Build Status](https://travis-ci.org/bmcage/odes.svg?branch=master)](https://travis-ci.org/bmcage/odes)
 [![Version](https://img.shields.io/pypi/v/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 [![License](https://img.shields.io/pypi/l/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
 [![Supported versions](https://img.shields.io/pypi/pyversions/scikits.odes.svg)](https://pypi.python.org/pypi/scikits.odes/)
@@ -13,7 +12,7 @@
 [![Paper DOI](http://joss.theoj.org/papers/10.21105/joss.00165/status.svg)](https://doi.org/10.21105/joss.00165)
 
 
-ODES is a scikit for Python 3.6-3.9 offering extra ode/dae solvers, as an extension to what is available in scipy.
+ODES is a scikit for Python 3.7+ offering extra ode/dae solvers, as an extension to what is available in scipy.
 The documentation is available at [Read The Docs](https://scikits-odes.readthedocs.io/), and API docs can be found at https://bmcage.github.io/odes.
 
 # Available solvers:
