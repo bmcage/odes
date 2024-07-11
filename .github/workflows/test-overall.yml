@@ -120,7 +120,7 @@ jobs:
       run: |
         cat sundials_env.sh
         source sundials_env.sh &&
-        env &&
+        env | sort &&
         tox
       env:
         TOXENV: ${{ matrix.tox-env }}
