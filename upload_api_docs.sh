@@ -2,7 +2,7 @@
 
 set -e
 
-if [ "$GITHUB_REPOSITORY" = "bmcage/odes" ] && [ "$DOCTR_DEPLOY" ]; then
+if [ "$GITHUB_REPOSITORY" = "bmcage/odes" ] || [ "$DOCTR_DEPLOY" ]; then
     deploy="true"
 else
     deploy="false"
