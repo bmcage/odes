@@ -17,7 +17,7 @@ if [ "true" = "$UPLOAD_SCIKITS_ODES_API_DOCS" ]; then
     git add -A --verbose
     git status
     git commit --verbose -m "Auto-update from Github Actions Workflow" -m "Deployed from commit ${GITHUB_SHA} (${GITHUB_REF})"
-    git push --verbose --force "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/bmcage" gh-pages
+    git push --verbose --force "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/bmcage/odes" gh-pages
 else
     echo "Skipping upload of API docs"
 fi
