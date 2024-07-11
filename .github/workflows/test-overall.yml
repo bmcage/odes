@@ -42,7 +42,7 @@ jobs:
             sundials-index-size: 64
           - python-version: "3.11"
             sundials-version: "6.5.0"
-            tox-env: apidocs-deploy
+            tox-env: apidocs
             sundials-precision: double
             sundials-index-size: 64
           - python-version: "3.11"
