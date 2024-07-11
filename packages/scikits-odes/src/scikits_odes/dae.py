@@ -58,10 +58,8 @@ class dae(object):
         x       : independent variable, eg the time, float
         y       : array of n unknowns in x
         yprime  : dy/dx array of n unknowns in x, dimension = dim(y)
-        return_residual: array that must be updated with the value of the
-            residuals, so G(t,y,y').  The dimension is equal to dim(y)
-        return value: integer, 0 for success. It is not guaranteed that a solver
-            takes this status into account
+        return_residual: array that must be updated with the value of the residuals, so G(t,y,y').  The dimension is equal to dim(y)
+        return value: integer, 0 for success. It is not guaranteed that a solver takes this status into account
 
         Some solvers will allow userdata to be passed to eqsres, or optional
         formats that are more performant.

@@ -35,11 +35,13 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    'docs_versions_menu',
+    'sphinxcontrib.jquery',
 ]
 
 intersphinx_mapping = {
     'scipy': (
-        'https://docs.scipy.org/doc/scipy/reference/', None
+        'https://docs.scipy.org/doc/scipy/', None
     )
 }
 

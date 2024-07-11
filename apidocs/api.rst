@@ -8,12 +8,12 @@ scikits.odes
 scikits.odes.ode
 ----------------
 .. automodule:: scikits.odes.ode
-    :members: OdeBase
+    :members:
 
 scikits.odes.dae
 ----------------
 .. automodule:: scikits.odes.dae
-    :members: DaeBase
+    :members:
 
 scikits.odes.dopri5
 --------------------
