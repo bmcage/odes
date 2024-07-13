@@ -72,16 +72,18 @@ jobs:
           #  sundials-index-size: 64
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        fetch-tags: true
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install build dependencies
       run: sudo apt-get install gfortran liblapack-dev
 
     - name: Sundials cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ~/sundials
         key: ${{ runner.os }}-sundials-${{ matrix.sundials-version }}
@@ -103,7 +105,7 @@ jobs:
         echo "::set-output name=dir::$(pip cache dir)"
 
     - name: pip cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: ${{ runner.os }}-pip-1

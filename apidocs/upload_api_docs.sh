@@ -8,7 +8,7 @@ if [ "true" = "$UPLOAD_SCIKITS_ODES_API_DOCS" ]; then
     git clone --branch gh-pages https://github.com/bmcage/odes gh-pages
     # Run rsync
     branch_name="$GITHUB_REF_NAME"
-    rsync -av --delete "$API_DOCS_OUT_DIR" "./gh-pages/$branch_name/"
+    rsync -av --delete "$API_DOCS_OUT_DIR"/* "./gh-pages/$branch_name/"
     # Run docs-versions-menu
     cd gh-pages
     docs-versions-menu
