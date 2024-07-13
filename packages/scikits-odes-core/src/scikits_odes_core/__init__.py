@@ -8,7 +8,7 @@ class DaeBase:
 
     Parameters
     ----------
-    Rfn :
+    Rfn : function
         residual function
     options : mapping
         Additional options for initialization, solver dependent
@@ -186,8 +186,8 @@ class OdeBase:
     ----------
     Rfn : function
         A function which computes the required derivatives. The signature
-        should be ``func(t, y, y_dot, *args, **kwargs)``. Note that *args and
-        **kwargs handling are solver dependent.
+        should be ``func(t, y, y_dot, *args, **kwargs)``. Note that ``*args``
+        and ``**kwargs`` handling are solver dependent.
 
     options : mapping
         Additional options for initialization, solver dependent

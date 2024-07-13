@@ -5,47 +5,47 @@ ddaspk
 ======
 Solver developed 1989 to 1996, with some corrections from 2000 - Fortran
 
-This code solves a system of differential/algebraic equations of the form 
-G(t,y,y') = 0 , using a combination of Backward Differentiation Formula 
-(BDF) methods and a choice of two linear system solution methods: direct 
-(dense or band) or Krylov (iterative). 
-Krylov is not supported from within scikits.odes. 
-In order to support it, a new interface should be created ddaspk_krylov, 
+This code solves a system of differential/algebraic equations of the form
+G(t,y,y') = 0 , using a combination of Backward Differentiation Formula
+(BDF) methods and a choice of two linear system solution methods: direct
+(dense or band) or Krylov (iterative).
+Krylov is not supported from within scikits.odes.
+In order to support it, a new interface should be created ddaspk_krylov,
 with a different signature, reflecting the changes needed.
 
 Source: http://www.netlib.org/ode/ddaspk.f
 
-On construction the function calculating the residual (res) must be given and 
-optionally also the function calculating the jacobian (jac). 
+On construction the function calculating the residual (res) must be given and
+optionally also the function calculating the jacobian (jac).
 res has the signature: res(x, y, yprime, return_residual)
-with 
+with
     x       : independent variable, eg the time, float
     y       : array of n unknowns in x
     yprime  : dy/dx array of n unknowns in x, dimension = dim(y)
     return_residual: array that must be updated with the value of the residuals,
               so G(t,y,y').  The dimension is equal to dim(y)
-    return value: Not needed. However, for use with other solvers, consider 
+    return value: Not needed. However, for use with other solvers, consider
               returning 0 on success.
 
 jac has the signature jac(x, y, yprime, cj, return_jac)
-with 
+with
     x       : independent variable, eg the time, float
     y       : array of n unknowns in x
     yprime  : dy/dx array of n unknowns in x, dimension = dim(y)
-    cj      : internal variable of ddaspk algorithm you can use, don't change it! 
-              cj can be ignored, or used to rescale constraint equations in the 
+    cj      : internal variable of ddaspk algorithm you can use, don't change it!
+              cj can be ignored, or used to rescale constraint equations in the
               system
-    return_jac : two dimensional array of the Jacobian, as per the Jacobian 
-              definition of the ddaspk solver. This means it should be or a 
+    return_jac : two dimensional array of the Jacobian, as per the Jacobian
+              definition of the ddaspk solver. This means it should be or a
                 full nxn shaped array in general (n=dim(y)), or a banded shaped
-                array as per the definition of lband/uband. 
-                Jac is optional and should be set with the jacfn option keyword. 
-                Note that jac is defined as 
+                array as per the definition of lband/uband.
+                Jac is optional and should be set with the jacfn option keyword.
+                Note that jac is defined as
                             dres(i)/dy(j) + cj*dres(i)/dyprime(j)
-    return value: Not needed. However, for use with other solvers, consider 
+    return value: Not needed. However, for use with other solvers, consider
               returning 0 on success.
 
-This integrator accepts the following parameters in the initializer or 
+This integrator accepts the following parameters in the initializer or
 set_options method of the dae class:
 
 - rfn : residual function, see above for signature. This option need not be
@@ -80,20 +80,20 @@ set_options method of the dae class:
   Note: best is to run code first with no condition
 - compute_initcond: None or 'yp0' or 'y0'
   DDASPK may be able to compute the initial conditions if you do not know them
-  precisely. 
+  precisely.
   If y0, then y0 will be calculated
-  If yp0, then the differential variables will be used to solve for the 
-    algebraic variables and the derivative of the differential variables. 
+  If yp0, then the differential variables will be used to solve for the
+    algebraic variables and the derivative of the differential variables.
     Which are the algebraic variables must be indicated with algebraic_var method
 - exclude_algvar_from_error: bool
-  To determine solution, do not take the algebraic variables error control into 
+  To determine solution, do not take the algebraic variables error control into
   account. Default=False
 - constraint_init: bool
   Enforce the constraint checks of Y during initial condition computation
   Note: try first with no constraints
 - constraint_type: if constraint_init, give an integer array with for every
-  unknown the specific condition to check: 
-       1: y0[i] >= 0 
+  unknown the specific condition to check:
+       1: y0[i] >= 0
        2: y0[i] >  0
       -1: y0[i] <= 0
       -2: y0[i] <  0
@@ -102,10 +102,10 @@ set_options method of the dae class:
 - algebraic_vars_idx: an array or None (= default)
                 Description:
                     If given problem is of type DAE, some items of the residual
-                    vector returned by the 'resfn' have to be treated as 
-                    algebraic variables. These are denoted by the position 
+                    vector returned by the 'resfn' have to be treated as
+                    algebraic variables. These are denoted by the position
                     (index) in the residual vector.
-                    All these indexes have to be specified in the 
+                    All these indexes have to be specified in the
                     'algebraic_vars_idx' array.
 """
 
@@ -127,16 +127,16 @@ class ddaspk(DaeBase):
     _runner = _runner
     messages = { 1: 'A step was successfully taken in the '
                     'intermediate-output mode.  The code has not '
-                    'yet reached TOUT.', 
+                    'yet reached TOUT.',
                  2: 'The integration to TSTOP was successfully '
-                    'completed (T = TSTOP) by stepping exactly to TSTOP.', 
+                    'completed (T = TSTOP) by stepping exactly to TSTOP.',
                  3: 'The integration to TOUT was successfully '
                     'completed (T = TOUT) by stepping past TOUT. '
-                    'Y(*) and YPRIME(*) are obtained by interpolation.', 
+                    'Y(*) and YPRIME(*) are obtained by interpolation.',
                  4: 'The initial condition calculation, with '
                     'INFO(11) > 0, was successful, and INFO(14) = 1. '
                     'No integration steps were taken, and the solution '
-                    'is not considered to have been started.', 
+                    'is not considered to have been started.',
                 -1: 'A large amount of work has been expended (about 500 steps)',
                 -2: 'Excess accuracy requested. (Tolerances too small.)',
                 -3: 'The local error test cannot be satisfied because you '
@@ -145,29 +145,29 @@ class ddaspk(DaeBase):
                     ' relative error test is impossible for this component.',
                 -5: 'Repeated failures in the evaluation or processing of the'
                     ' preconditioner (in JAC)',
-                -6: 'repeated error test failures on the last attempted step)', 
+                -6: 'repeated error test failures on the last attempted step)',
                 -7: 'The nonlinear system solver in the time integration could'
                     ' not converge.',
                 -8: 'The matrix of partial derivatives appears to be singular'
-                    ' (direct method).', 
+                    ' (direct method).',
                 -9: 'The nonlinear system solver in the time integration'
                     'failed to achieve convergence, and there were repeated '
-                    'error test failures in this step.', 
+                    'error test failures in this step.',
                 -10:'The nonlinear system solver in the time integration failed'
-                    ' to achieve convergence because IRES was equal to -1.', 
+                    ' to achieve convergence because IRES was equal to -1.',
                 -11:'IRES = -2 was encountered and control is'
-                    'being returned to the calling program.', 
-                -12:'Failed to compute the initial Y, YPRIME.', 
+                    'being returned to the calling program.',
+                -12:'Failed to compute the initial Y, YPRIME.',
                 -13:"Unrecoverable error encountered inside user's"
                     "PSOL routine, and control is being returned to"
-                    "the calling program.", 
+                    "the calling program.",
                 -14:'The Krylov linear system solver could not '
-                    'achieve convergence.', 
+                    'achieve convergence.',
                 -33:'The code has encountered trouble from which'
                    ' it cannot recover.  A message is printed'
                    ' explaining the trouble and control is returned'
                    ' to the calling program.  For example, this occurs'
-                   ' when invalid input is detected.', 
+                   ' when invalid input is detected.',
                 }
     supports_run_relax = 0
     supports_step = 1
@@ -178,18 +178,18 @@ class ddaspk(DaeBase):
             'atol': 1e-12,
             'lband': None,
             'uband': None,
-            'tstop': None, 
+            'tstop': None,
             'order' : 5,
             'max_steps' : 500,
             'max_step_size' : 0.0, # corresponds to infinite
             'first_step' : 0.0, # determined by solver
-            'enforce_nonnegativity': False, 
-            'nonneg_type': None, 
+            'enforce_nonnegativity': False,
+            'nonneg_type': None,
             'compute_initcond': None,
-            'constraint_init': False, 
-            'constraint_type': None, 
+            'constraint_init': False,
+            'constraint_type': None,
             'algebraic_vars_idx': None,
-            'exclude_algvar_from_error': False, 
+            'exclude_algvar_from_error': False,
             'rfn': None,
             'jacfn': None,
             }
@@ -224,24 +224,24 @@ class ddaspk(DaeBase):
         self.nsteps = self.options['max_steps']
         self.max_step = self.options['max_step_size']
         self.first_step = self.options['first_step']
-        self.nonneg =0 
-        if self.options['enforce_nonnegativity'] and self.options['constraint_init']: 
+        self.nonneg =0
+        if self.options['enforce_nonnegativity'] and self.options['constraint_init']:
             self.nonneg = 3
-        elif self.options['enforce_nonnegativity']: 
+        elif self.options['enforce_nonnegativity']:
             self.nonneg = 2
-        elif self.options['constraint_init']: 
+        elif self.options['constraint_init']:
             self.nonneg = 1
         if (self.nonneg == 1 or self.nonneg == 3) and self.options['constraint_type'] is None:
             raise ValueError('Give type of init cond contraint as '\
                               'an int array (>=0, >0, <=0, <0) or as int')
         else: self.constraint_type = self.options['constraint_type']
-        if self.options['compute_initcond'] is None: 
+        if self.options['compute_initcond'] is None:
             self.compute_initcond = 0
-        elif re.match(self.options['compute_initcond'], r'y0', re.I): 
+        elif re.match(self.options['compute_initcond'], r'y0', re.I):
             self.compute_initcond = 2
-        elif re.match(self.options['compute_initcond'], r'yp0', re.I): 
+        elif re.match(self.options['compute_initcond'], r'yp0', re.I):
             self.compute_initcond = 1
-        else: 
+        else:
             raise ValueError('Unknown init cond calculation method %s' %(
                                             self.options['compute_initcond']))
         if self.compute_initcond == 1 and not self.options['algebraic_vars_idx']:
@@ -303,7 +303,7 @@ class ddaspk(DaeBase):
             self.info[15] = 1
         lrw = 50 + max(self.order+4,7)*n
         if self.info[5]==0: lrw += pow(n, 2)
-        elif self.info[4]==0: 
+        elif self.info[4]==0:
             lrw += (2*self.ml+self.mu+1)*n + 2*(n/(self.ml+self.mu+1)+1)
         else: lrw += (2*self.ml+self.mu+1)*n
         if self.info[15] == 1: lrw +=n
@@ -335,7 +335,7 @@ class ddaspk(DaeBase):
         lid = 40
         if self.info[9]==1 or self.info[9]==3 :
             lid = 40 + n
-            if isscalar(self.constraint_type): 
+            if isscalar(self.constraint_type):
                 iwork[40:lid]=self.constraint_type
             else: iwork[40:lid]=self.constraint_type[:]
         self.info[10]=self.compute_initcond
@@ -354,7 +354,7 @@ class ddaspk(DaeBase):
             self.rwork[0] = 0.
 
         self.iwork = iwork
-        
+
         self.call_args = [self.info,self.rtol,self.atol,self.rwork,self.iwork]        #create storage
         self.tmp_res = empty(self.neq, float)
         if (self.ml is None or self.mu is None) :

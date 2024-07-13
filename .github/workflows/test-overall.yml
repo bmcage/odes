@@ -127,3 +127,4 @@ jobs:
         UPLOAD_SCIKITS_ODES_API_DOCS: ${{ github.repository == 'bmcage/odes' && 'true' || 'false' }}
         GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        API_DOCS_OUT_DIR: /tmp/new_sundials_docs

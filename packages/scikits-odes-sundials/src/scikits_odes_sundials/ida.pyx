@@ -280,8 +280,10 @@ cdef class IDA_JacRhsFunction:
                        np.ndarray J,
                        object userdata = None) except? -1:
         """
-        Returns the Jacobi matrix of the residual function, as
+        Returns the Jacobi matrix of the residual function, as:
+
             d(res)/d y + cj d(res)/d ydot
+
         (for dense the full matrix, for band only bands). Result has to be
         stored in the variable J, which is preallocated to the corresponding
         size.

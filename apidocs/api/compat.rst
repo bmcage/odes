@@ -1,9 +1,10 @@
-Lower Level API
-===============
+scikits.odes
+============
 
 scikits.odes
 ------------
 .. automodule:: scikits.odes
+    :members:
 
 scikits.odes.ode
 ----------------
