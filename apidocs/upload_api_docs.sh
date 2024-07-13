@@ -3,6 +3,7 @@
 set -ex
 
 if [ "true" = "$UPLOAD_SCIKITS_ODES_API_DOCS" ]; then
+    cd /tmp
     # Clone gh-pages
     git clone --branch gh-pages https://github.com/bmcage/odes gh-pages
     # Run rsync

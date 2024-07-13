@@ -259,8 +259,10 @@ cdef class CV_JacRhsFunction:
                        np.ndarray[DTYPE_t, ndim=1] fy,
                        np.ndarray[DTYPE_t, ndim=2] J) except? -1:
         """
-        Returns the Jacobi matrix of the right hand side function, as
+        Returns the Jacobi matrix of the right hand side function, as:
+
             d(rhs)/d y
+
         (for dense the full matrix, for band only bands). Result has to be
         stored in the variable J, which is preallocated to the corresponding
         size.

@@ -7,37 +7,39 @@ Making scipy ode solvers available via the ode API
 
 dopri5
 ------
-    This is an explicit runge-kutta method of order (4)5 due to Dormand & Prince
-    (with stepsize control and dense output).
-    The API of this solver is as the other scikit.odes ODE solvers
 
-    Authors:
+This is an explicit runge-kutta method of order (4)5 due to Dormand & Prince
+(with stepsize control and dense output).
+The API of this solver is as the other scikit.odes ODE solvers
 
-        E. Hairer and G. Wanner Universite de Geneve, Dept. de Mathematiques CH-1211 Geneve 24, Switzerland e-mail: ernst.hairer@math.unige.ch, gerhard.wanner@math.unige.ch
+Authors:
 
-    This code is described in [HNW93].
+    E. Hairer and G. Wanner Universite de Geneve, Dept. de Mathematiques CH-1211 Geneve 24, Switzerland e-mail: ernst.hairer@math.unige.ch, gerhard.wanner@math.unige.ch
 
-    This integrator accepts the following options:
+This code is described in [HNW93].
 
-        atol : float or sequence absolute tolerance for solution, default 1e-12
-        rtol : float or sequence relative tolerance for solution, default 1e-6
-        nsteps : int Maximum number of (internally defined) steps allowed during one call to the solver. Default=500
-        first_step : float
-        max_step : float
-        safety : float Safety factor on new step selection (default 0.9)
-        ifactor : float
-        dfactor : float Maximum factor to increase/decrease step size by in one step
-        beta : float Beta parameter for stabilised step size control.
-        verbosity : int Switch for printing messages (< 0 for no messages).
+This integrator accepts the following options:
+
+    atol : float or sequence absolute tolerance for solution, default 1e-12
+    rtol : float or sequence relative tolerance for solution, default 1e-6
+    nsteps : int Maximum number of (internally defined) steps allowed during one call to the solver. Default=500
+    first_step : float
+    max_step : float
+    safety : float Safety factor on new step selection (default 0.9)
+    ifactor : float
+    dfactor : float Maximum factor to increase/decrease step size by in one step
+    beta : float Beta parameter for stabilised step size control.
+    verbosity : int Switch for printing messages (< 0 for no messages).
 
 References
 [HNW93]	(1, 2) E. Hairer, S.P. Norsett and G. Wanner, Solving Ordinary Differential Equations i. Nonstiff Problems. 2nd edition. Springer Series in Computational Mathematics, Springer-Verlag (1993)
 
 dop853
 ------
-    This is an explicit runge-kutta method of order 8(5,3) due to Dormand & Prince
-    (with stepsize control and dense output).
-    Options and references the same as “dopri5”.
+
+This is an explicit runge-kutta method of order 8(5,3) due to Dormand & Prince
+(with stepsize control and dense output).
+Options and references the same as “dopri5”.
 
 """
 from collections import namedtuple
@@ -161,8 +163,7 @@ class dopri5(OdeBase):
          if old_api False:
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnumDop)
-                values = Named tuple with entries t and y and ydot. y will
-                            correspond to y_retn value and ydot to yp_retn!
+                values = Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!
                 errors = Named tuple with entries t_err and y_err
                 roots  = Named tuple with entries t_roots and y_roots
                 tstop  = Named tuple with entries t_stop and y_tstop
@@ -216,10 +217,8 @@ class dopri5(OdeBase):
                 of t starting at the current step.
 
                 If old_api=True, the old behavior is used:
-                 if t>0.0 then integration is performed until this time
-                          and results at this time are returned in y_retn
-                 if t<0.0 only one internal step is perfomed towards time abs(t)
-                         and results after this one time step are returned
+                 if t>0.0 then integration is performed until this time and results at this time are returned in y_retn
+                 if t<0.0 only one internal step is perfomed towards time abs(t) and results after this one time step are returned
             y_retn - numpy vector (ndim = 1) in which the computed
                      value will be stored  (needs to be preallocated).  If
                      None y_retn is not used.
@@ -231,8 +230,7 @@ class dopri5(OdeBase):
          if old_api False:
             A named tuple, with entries:
                 flag   = An integer flag (StatusEnumDOP)
-                values = Named tuple with entries t and y. y will
-                            correspond to y_retn value
+                values = Named tuple with entries t and y. y will correspond to y_retn value
                 errors = Named tuple with entries t_err and y_err
                 roots  = Named tuple with entries t_roots and y_roots
                 tstop  = Named tuple with entries t_stop and y_tstop
