@@ -4,7 +4,7 @@ requires = ['meson-python', 'numpy']
 
 [project]
 name = 'scikits-odes-daepack'
-version = "0.2"
+version = "3.0.0"
 description = 'Wrapper around daepack'
 readme = "README.md"
 authors = [
