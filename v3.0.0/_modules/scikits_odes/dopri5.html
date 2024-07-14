@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scikits_odes.dopri5 &#8212; Odes 3.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../../_static/badge_only.css?v=cf56f567" />
+    <script src="../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../_static/documentation_options.js?v=acc74ff5"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/docs-versions-menu.js?v=45d24689"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for scikits_odes.dopri5</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Created on Thu Jan 28 14:59:25 2016</span>
+<span class="c1"># @author: benny</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Making scipy ode solvers available via the ode API</span>
+<span class="sd">==================================================</span>
+
+<span class="sd">dopri5</span>
+<span class="sd">------</span>
+
+<span class="sd">This is an explicit runge-kutta method of order (4)5 due to Dormand &amp; Prince</span>
+<span class="sd">(with stepsize control and dense output).</span>
+<span class="sd">The API of this solver is as the other scikit.odes ODE solvers</span>
+
+<span class="sd">Authors:</span>
+
+<span class="sd">    E. Hairer and G. Wanner Universite de Geneve, Dept. de Mathematiques CH-1211 Geneve 24, Switzerland e-mail: ernst.hairer@math.unige.ch, gerhard.wanner@math.unige.ch</span>
+
+<span class="sd">This code is described in [HNW93].</span>
+
+<span class="sd">This integrator accepts the following options:</span>
+
+<span class="sd">    atol : float or sequence absolute tolerance for solution, default 1e-12</span>
+<span class="sd">    rtol : float or sequence relative tolerance for solution, default 1e-6</span>
+<span class="sd">    nsteps : int Maximum number of (internally defined) steps allowed during one call to the solver. Default=500</span>
+<span class="sd">    first_step : float</span>
+<span class="sd">    max_step : float</span>
+<span class="sd">    safety : float Safety factor on new step selection (default 0.9)</span>
+<span class="sd">    ifactor : float</span>
+<span class="sd">    dfactor : float Maximum factor to increase/decrease step size by in one step</span>
+<span class="sd">    beta : float Beta parameter for stabilised step size control.</span>
+<span class="sd">    verbosity : int Switch for printing messages (&lt; 0 for no messages).</span>
+
+<span class="sd">References</span>
+<span class="sd">[HNW93]	(1, 2) E. Hairer, S.P. Norsett and G. Wanner, Solving Ordinary Differential Equations i. Nonstiff Problems. 2nd edition. Springer Series in Computational Mathematics, Springer-Verlag (1993)</span>
+
+<span class="sd">dop853</span>
+<span class="sd">------</span>
+
+<span class="sd">This is an explicit runge-kutta method of order 8(5,3) due to Dormand &amp; Prince</span>
+<span class="sd">(with stepsize control and dense output).</span>
+<span class="sd">Options and references the same as “dopri5”.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">IntEnum</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">ode</span> <span class="k">as</span> <span class="n">_runner</span>
+
+<span class="kn">from</span> <span class="nn">scikits_odes_core</span> <span class="kn">import</span> <span class="n">OdeBase</span>
+
+<span class="n">SolverReturn</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s2">&quot;SolverReturn&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="s2">&quot;flag&quot;</span><span class="p">,</span> <span class="s2">&quot;values&quot;</span><span class="p">,</span> <span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tstop&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">SolverVariables</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;SolverVariables&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="StatusEnumDOP">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.StatusEnumDOP">[docs]</a>
+<span class="k">class</span> <span class="nc">StatusEnumDOP</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">SUCCESS</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">SOLOUT</span>  <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="n">INPUT_FAIL</span>     <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">NMAX_FAIL</span>      <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
+    <span class="n">STEPSIZE_FAIL</span>  <span class="o">=</span> <span class="o">-</span><span class="mi">3</span>
+    <span class="n">STIFFNESS_FAIL</span> <span class="o">=</span> <span class="o">-</span><span class="mi">4</span>
+
+    <span class="n">UNEXPECTED_IDID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10</span></div>
+
+
+<span class="n">STATUS_MESSAGE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span> <span class="s1">&#39;computation successful&#39;</span><span class="p">,</span>
+    <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">SOLOUT</span><span class="p">:</span> <span class="s1">&#39;comput. successful (interrupted by solout)&#39;</span><span class="p">,</span>
+    <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">INPUT_FAIL</span><span class="p">:</span> <span class="s1">&#39;input is not consistent&#39;</span><span class="p">,</span>
+    <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">NMAX_FAIL</span><span class="p">:</span> <span class="s1">&#39;larger nmax is needed&#39;</span><span class="p">,</span>
+    <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">STEPSIZE_FAIL</span><span class="p">:</span> <span class="s1">&#39;step size becomes too small&#39;</span><span class="p">,</span>
+    <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">STIFFNESS_FAIL</span><span class="p">:</span> <span class="s1">&#39;problem is probably stiff (interrupted)&#39;</span><span class="p">,</span>
+    <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">UNEXPECTED_IDID</span><span class="p">:</span> <span class="s1">&#39;Unexpected idid, check warnings for info&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<div class="viewcode-block" id="DOPSolveException">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.DOPSolveException">[docs]</a>
+<span class="k">class</span> <span class="nc">DOPSolveException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for exceptions raised by `DOP.validate_flags`.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">soln</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soln</span> <span class="o">=</span> <span class="n">soln</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">soln</span><span class="p">),)</span></div>
+
+
+<div class="viewcode-block" id="DOPSolveFailed">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.DOPSolveFailed">[docs]</a>
+<span class="k">class</span> <span class="nc">DOPSolveFailed</span><span class="p">(</span><span class="n">DOPSolveException</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;`DOP.solve` failed to reach endpoint&quot;&quot;&quot;</span>
+    <span class="n">_message</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;Solver failed with flag </span><span class="si">{0.flag}</span><span class="s2"> and finished at </span><span class="si">{0.errors.t}</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;with values </span><span class="si">{0.errors.y}</span><span class="s2">.&quot;</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dopri5">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.dopri5">[docs]</a>
+<span class="k">class</span> <span class="nc">dopri5</span><span class="p">(</span><span class="n">OdeBase</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;dopri5&#39;</span>
+    <span class="n">_runner</span> <span class="o">=</span> <span class="n">_runner</span>
+    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;rtol&#39;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span>
+            <span class="s1">&#39;atol&#39;</span><span class="p">:</span> <span class="mf">1e-12</span><span class="p">,</span>
+            <span class="s1">&#39;nsteps&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+            <span class="s1">&#39;max_step&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s1">&#39;first_step&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># determined by solver</span>
+            <span class="s1">&#39;safety&#39;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+            <span class="s1">&#39;ifactor&#39;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>
+            <span class="s1">&#39;dfactor&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+            <span class="s1">&#39;beta&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s1">&#39;verbosity&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="c1"># no messages if negative</span>
+            <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Rfn</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the ODE Solver and it&#39;s default values</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            Rfn     - right-hand-side function</span>
+<span class="sd">            options - additional options for initialization</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">rfn</span><span class="o">=</span><span class="n">Rfn</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_flags</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="dopri5.set_options">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.dopri5.set_options">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set specific options for the solver.</span>
+
+<span class="sd">        Calling set_options a second time, normally resets the solver.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_init_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;rfn&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_wrap_Rfn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="n">yout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfn</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">yout</span>
+
+<div class="viewcode-block" id="dopri5.init_step">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.dopri5.init_step">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the solver and allocates memory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            t0     - initial time</span>
+<span class="sd">            y0     - initial condition for y (can be list or numpy array)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">         if old_api:</span>
+<span class="sd">            not supported</span>
+
+<span class="sd">         if old_api False:</span>
+<span class="sd">            A named tuple, with entries:</span>
+<span class="sd">                flag   = An integer flag (StatusEnumDop)</span>
+<span class="sd">                values = Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">                errors = Named tuple with entries t_err and y_err</span>
+<span class="sd">                roots  = Named tuple with entries t_roots and y_roots</span>
+<span class="sd">                tstop  = Named tuple with entries t_stop and y_tstop</span>
+<span class="sd">                message= String with message in case of an error</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="n">y0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_data</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_wrap_Rfn</span><span class="p">)</span>\
+                        <span class="o">.</span><span class="n">set_integrator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                            <span class="n">rtol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;rtol&#39;</span><span class="p">],</span>
+                            <span class="n">atol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;atol&#39;</span><span class="p">],</span>
+                            <span class="n">nsteps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;nsteps&#39;</span><span class="p">],</span>
+                            <span class="n">max_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;max_step&#39;</span><span class="p">],</span>
+                            <span class="n">first_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;first_step&#39;</span><span class="p">],</span>  <span class="c1"># determined by solver</span>
+                            <span class="n">safety</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;safety&#39;</span><span class="p">],</span>
+                            <span class="n">ifactor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;ifactor&#39;</span><span class="p">],</span>
+                            <span class="n">dfactor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;dfactor&#39;</span><span class="p">],</span>
+                            <span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">],</span>
+                            <span class="n">verbosity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;verbosity&#39;</span><span class="p">])</span>\
+                        <span class="o">.</span><span class="n">set_initial_value</span><span class="p">(</span><span class="n">y0</span><span class="p">,</span> <span class="n">t0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">y_retn</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y0</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">y_retn</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">y0</span><span class="p">[:]</span>
+        <span class="n">soln</span> <span class="o">=</span> <span class="n">SolverReturn</span><span class="p">(</span>
+            <span class="n">flag</span><span class="o">=</span><span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_retn</span><span class="p">),</span>
+            <span class="n">errors</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">roots</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">tstop</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">message</span><span class="o">=</span><span class="n">STATUS_MESSAGE</span><span class="p">[</span><span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_flags</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_flags</span><span class="p">(</span><span class="n">soln</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">soln</span></div>
+
+
+<div class="viewcode-block" id="dopri5.step">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.dopri5.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for calling successive next step of the ODE solver to allow</span>
+<span class="sd">        more precise control over the solver. The &#39;init_step&#39; method has to</span>
+<span class="sd">        be called before the &#39;step&#39; method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            t - A step is done towards time t, and output at t returned.</span>
+<span class="sd">                This time can be higher or lower than the previous time.</span>
+<span class="sd">                If option &#39;one_step_compute&#39;==True, and the solver supports</span>
+<span class="sd">                it, only one internal solver step is done in the direction</span>
+<span class="sd">                of t starting at the current step.</span>
+
+<span class="sd">                If old_api=True, the old behavior is used:</span>
+<span class="sd">                 if t&gt;0.0 then integration is performed until this time and results at this time are returned in y_retn</span>
+<span class="sd">                 if t&lt;0.0 only one internal step is perfomed towards time abs(t) and results after this one time step are returned</span>
+<span class="sd">            y_retn - numpy vector (ndim = 1) in which the computed</span>
+<span class="sd">                     value will be stored  (needs to be preallocated).  If</span>
+<span class="sd">                     None y_retn is not used.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">         if old_api:</span>
+<span class="sd">             not supported</span>
+
+<span class="sd">         if old_api False:</span>
+<span class="sd">            A named tuple, with entries:</span>
+<span class="sd">                flag   = An integer flag (StatusEnumDOP)</span>
+<span class="sd">                values = Named tuple with entries t and y. y will correspond to y_retn value</span>
+<span class="sd">                errors = Named tuple with entries t_err and y_err</span>
+<span class="sd">                roots  = Named tuple with entries t_roots and y_roots</span>
+<span class="sd">                tstop  = Named tuple with entries t_stop and y_tstop</span>
+<span class="sd">                message= String with message in case of an error</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;DOPRI:step: init_step must be run before running the step method.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Integration must be forward! t must be &gt; previous timestep&quot;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">y_err</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">t_err</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">successful</span><span class="p">():</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">UNEXPECTED_IDID</span>
+            <span class="n">y_err</span> <span class="o">=</span> <span class="n">y</span>
+            <span class="n">t_err</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">SUCCESS</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">t</span>
+
+        <span class="k">return</span> <span class="n">SolverReturn</span><span class="p">(</span>
+            <span class="n">flag</span><span class="o">=</span><span class="n">flag</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">),</span>
+            <span class="n">errors</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t_err</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_err</span><span class="p">),</span>
+            <span class="n">roots</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">tstop</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">message</span><span class="o">=</span><span class="n">STATUS_MESSAGE</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dopri5.solve">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.dopri5.solve">[docs]</a>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the solver.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            tspan - an list/array of times at which the computed value will be</span>
+<span class="sd">                    returned. Must contain the start time as first entry..</span>
+<span class="sd">            y0    - list/numpy array of initial values</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">         if old_api</span>
+<span class="sd">            Not supported</span>
+<span class="sd">         if old_api False:</span>
+<span class="sd">            A named tuple, with entries:</span>
+<span class="sd">                flag   = An integer flag</span>
+<span class="sd">                values = Named tuple with entries t and y</span>
+<span class="sd">                errors = Named tuple with entries t and y</span>
+<span class="sd">                roots  = Named tuple with entries t and y</span>
+<span class="sd">                tstop  = Named tuple with entries t and y</span>
+<span class="sd">                message= String with message in case of an error</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">soln</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_step</span><span class="p">(</span><span class="n">tspan</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y0</span><span class="p">)</span>
+        <span class="n">nrt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tspan</span><span class="p">)</span>
+        <span class="n">t_retn</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">tspan</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">y_retn</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">tspan</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">y0</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">t_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">tspan</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">y0</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">successful</span><span class="p">()</span> <span class="ow">and</span> <span class="n">idx</span><span class="o">&lt;</span><span class="n">nrt</span><span class="p">:</span>
+            <span class="n">time</span> <span class="o">=</span> <span class="n">tspan</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+            <span class="n">t_retn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span>
+            <span class="n">y_retn</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">y</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">y_err</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">t_err</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">successful</span><span class="p">():</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">UNEXPECTED_IDID</span>
+            <span class="n">y_err</span> <span class="o">=</span> <span class="n">y_retn</span><span class="p">[</span><span class="n">idx</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">t_err</span> <span class="o">=</span> <span class="n">t_retn</span><span class="p">[</span><span class="n">idx</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># return values computed so far</span>
+            <span class="n">t_retn</span>  <span class="o">=</span> <span class="n">t_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">idx</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">y_retn</span>  <span class="o">=</span> <span class="n">y_retn</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">idx</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">SUCCESS</span>
+
+        <span class="n">soln</span> <span class="o">=</span> <span class="n">SolverReturn</span><span class="p">(</span>
+            <span class="n">flag</span><span class="o">=</span><span class="n">flag</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t_retn</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_retn</span><span class="p">),</span>
+            <span class="n">errors</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t_err</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_err</span><span class="p">),</span>
+            <span class="n">roots</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">tstop</span><span class="o">=</span><span class="n">SolverVariables</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">message</span><span class="o">=</span><span class="n">STATUS_MESSAGE</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_flags</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_flags</span><span class="p">(</span><span class="n">soln</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">soln</span></div>
+
+
+<div class="viewcode-block" id="dopri5.validate_flags">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.dopri5.validate_flags">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">soln</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates the flag returned by `dopri.solve`.</span>
+
+<span class="sd">        Validation happens using the following scheme:</span>
+<span class="sd">         * failures (`flag` &lt; 0) raise `DOPSolveFailed` or a subclass of it;</span>
+<span class="sd">         * otherwise, return an instance of `SolverReturn`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">soln</span><span class="o">.</span><span class="n">flag</span> <span class="o">==</span> <span class="n">StatusEnumDOP</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">soln</span>
+        <span class="k">if</span> <span class="n">soln</span><span class="o">.</span><span class="n">flag</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DOPSolveFailed</span><span class="p">(</span><span class="n">soln</span><span class="p">)</span>
+        <span class="n">warn</span><span class="p">(</span><span class="n">WARNING_STR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">soln</span><span class="o">.</span><span class="n">flag</span><span class="p">,</span> <span class="o">*</span><span class="n">soln</span><span class="o">.</span><span class="n">err_values</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">soln</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="dop853">
+<a class="viewcode-back" href="../../api/main.html#scikits_odes.dopri5.dop853">[docs]</a>
+<span class="k">class</span> <span class="nc">dop853</span><span class="p">(</span><span class="n">dopri5</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;dop853&#39;</span>
+    <span class="n">default_values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;rtol&#39;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span>
+            <span class="s1">&#39;atol&#39;</span><span class="p">:</span> <span class="mf">1e-12</span><span class="p">,</span>
+            <span class="s1">&#39;nsteps&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+            <span class="s1">&#39;max_step&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s1">&#39;first_step&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># determined by solver</span>
+            <span class="s1">&#39;safety&#39;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+            <span class="s1">&#39;ifactor&#39;</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span>
+            <span class="s1">&#39;dfactor&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+            <span class="s1">&#39;beta&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s1">&#39;verbosity&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="c1"># no messages if negative</span>
+            <span class="p">}</span></div>
+
+
+
+<span class="n">OdeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dopri5</span><span class="p">)</span>
+<span class="n">OdeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dop853</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Odes</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ode.html">ODE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dae.html">DAE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sundials.html">Sundials Solver Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">Lower Level API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2016, B. Malengier.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
