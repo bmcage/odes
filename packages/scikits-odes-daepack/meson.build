@@ -1,6 +1,6 @@
 project('scikits-odes-daepack',
   ['c', 'fortran'],
-  version : '0.1',
+  version : '0.2',
   meson_version: '>= 1.1.0',
   default_options : [
     'warning_level=1',
