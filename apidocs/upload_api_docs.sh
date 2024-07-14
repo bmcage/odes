@@ -11,7 +11,7 @@ if [ "true" = "$UPLOAD_SCIKITS_ODES_API_DOCS" ]; then
     rsync -av --delete "$API_DOCS_OUT_DIR"/* "./gh-pages/$branch_name/"
     # Run docs-versions-menu
     cd gh-pages
-    docs-versions-menu
+    docs-versions-menu --latest master --default-branch master
     # Commit and push
     git config user.name github-actions
     git config user.email github-actions@github.com
