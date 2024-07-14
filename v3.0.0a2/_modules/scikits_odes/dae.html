@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scikits_odes.dae &#8212; Odes 3.0.0a2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../../_static/badge_only.css?v=cf56f567" />
+    <script src="../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../_static/documentation_options.js?v=b3f21bc6"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/docs-versions-menu.js?v=45d24689"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for scikits_odes.dae</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Authors: B. Malengier based on ode.py</span>
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">First-order DAE solver</span>
+<span class="sd">======================</span>
+
+<span class="sd">User-friendly interface to various numerical integrators for solving an</span>
+<span class="sd">algebraic system of first order ODEs with prescribed initial conditions:</span>
+
+<span class="sd">.. math::</span>
+<span class="sd">    A \frac{dy(t)}{dt} = f(t,y(t)),</span>
+
+<span class="sd">    y(t=0)[i] = y0[i],</span>
+
+<span class="sd">    \frac{d y(t=0)}{dt}[i]  = yprime0[i],</span>
+
+<span class="sd">where :math:`i = 0, ..., len(y0) - 1`; :math:`A` is a (possibly singular) matrix</span>
+<span class="sd">of size :math:`i × i`; and :math:`f(t,y)` is a vector of size :math:`i` or more generally, equations of the form</span>
+
+<span class="sd">.. math::</span>
+<span class="sd">    G(t,y,y&#39;) = 0</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dae&#39;</span><span class="p">]</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s2">&quot;restructuredtext en&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">scikits_odes_core</span> <span class="kn">import</span> <span class="n">DaeBase</span>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="c1"># User interface</span>
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="dae">
+<a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae">[docs]</a>
+<span class="k">class</span> <span class="nc">dae</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A generic interface class to differential algebraic equations.</span>
+
+<span class="sd">    Define equation res = G(t,y,y&#39;) which can eg be G = f(y,t) - A y&#39; when</span>
+<span class="sd">    solving A y&#39; = f(y,t), and where (optional) jac is the jacobian matrix of</span>
+<span class="sd">    the nonlinear system see fortran source code), so d res/dy + scaling * d</span>
+<span class="sd">    res/dy&#39; or d res/dy depending on the backend.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    integrator_name : ``&#39;ida&#39;``, ``&#39;ddaspk&#39;`` or ``&#39;lsodi&#39;``</span>
+<span class="sd">        The integrator solver to use.</span>
+
+<span class="sd">    eqsres : residual function</span>
+<span class="sd">        Residual of the DAE. The signature of this function depends on the</span>
+<span class="sd">        solver used, see the solver documentation for details.</span>
+<span class="sd">        Generally however, you can assume the following signature to work:</span>
+
+<span class="sd">            ``eqsres(x, y, yprime, return_residual)``</span>
+
+<span class="sd">        with</span>
+<span class="sd">        x       : independent variable, eg the time, float</span>
+<span class="sd">        y       : array of n unknowns in x</span>
+<span class="sd">        yprime  : dy/dx array of n unknowns in x, dimension = dim(y)</span>
+<span class="sd">        return_residual: array that must be updated with the value of the residuals, so G(t,y,y&#39;).  The dimension is equal to dim(y)</span>
+<span class="sd">        return value: integer, 0 for success. It is not guaranteed that a solver takes this status into account</span>
+
+<span class="sd">        Some solvers will allow userdata to be passed to eqsres, or optional</span>
+<span class="sd">        formats that are more performant.</span>
+
+<span class="sd">    options : mapping</span>
+<span class="sd">        Additional options for initialization, solver dependent</span>
+<span class="sd">        See set_options method of the `integrator_name` you selected for</span>
+<span class="sd">        details.</span>
+
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odeint : an ODE integrator with a simpler interface based on lsoda from</span>
+<span class="sd">        ODEPACK</span>
+<span class="sd">    ode : class around vode ODE integrator</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Possible future solvers</span>
+
+<span class="sd">    ddaskr: Not included, starting hints:</span>
+<span class="sd">    http://osdir.com/ml/python.f2py.user/2005-07/msg00014.html</span>
+<span class="sd">    Modified Extended Backward Differentiation Formulae (MEBDF): Not included.</span>
+<span class="sd">    Fortran codes: http://www.ma.ic.ac.uk/~jcash/IVP_software/readme.html</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    DAE arise in many applications of dynamical systems, as well as in</span>
+<span class="sd">    discritisations of PDE (eg moving mesh combined with method of</span>
+<span class="sd">    lines).</span>
+<span class="sd">    As an easy example, consider the simple oscillator, which we write as</span>
+<span class="sd">    G(y,y&#39;,t) = 0 instead of the normal ode, and solve as a DAE.</span>
+
+<span class="sd">    &gt;&gt;&gt; from __future__ import print_function</span>
+<span class="sd">    &gt;&gt;&gt; from numpy import cos, sin, sqrt</span>
+<span class="sd">    &gt;&gt;&gt; k = 4.0</span>
+<span class="sd">    &gt;&gt;&gt; m = 1.0</span>
+<span class="sd">    &gt;&gt;&gt; initx = [1, 0.1]</span>
+<span class="sd">    &gt;&gt;&gt; initxp = [initx[1], -k/m*initx[0]]</span>
+<span class="sd">    &gt;&gt;&gt; def reseqn(t, x, xdot, result):</span>
+<span class="sd">        ... # we create residual equations for the problem</span>
+<span class="sd">        ... result[0] = m*xdot[1] + k*x[0]</span>
+<span class="sd">        ... result[1] = xdot[0] - x[1]</span>
+<span class="sd">    &gt;&gt;&gt; from scikits.odes import dae</span>
+<span class="sd">    &gt;&gt;&gt; solver = dae(&#39;ida&#39;, reseqn)</span>
+<span class="sd">    &gt;&gt;&gt; result = solver.solve([0., 1., 2.], initx, initxp)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">LOADED</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">integrator_name</span><span class="p">,</span> <span class="n">eqsres</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">integrator</span> <span class="o">=</span> <span class="n">find_dae_integrator</span><span class="p">(</span><span class="n">integrator_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">integrator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No integrator name match with </span><span class="si">%s</span><span class="s1"> or is not available.&#39;</span>\
+                  <span class="o">%</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">integrator_name</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span> <span class="o">=</span> <span class="n">integrator</span><span class="p">(</span><span class="n">eqsres</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+<div class="viewcode-block" id="dae.set_options">
+<a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae.set_options">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set specific options for the solver.</span>
+<span class="sd">        See the solver documentation for details.</span>
+
+<span class="sd">        Calling set_options a second time, normally resets the solver.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dae.solve">
+<a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae.solve">[docs]</a>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the solver.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tspan : list/array</span>
+<span class="sd">            A list of times at which the computed value will be returned. Must</span>
+<span class="sd">            contain the start time as first entry.</span>
+<span class="sd">        y0 : list/array</span>
+<span class="sd">            list array of initial values</span>
+<span class="sd">        yp0 : list/array</span>
+<span class="sd">            list array of initial values of derivatives</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        old_api is False : namedtuple</span>
+<span class="sd">            namedtuple with the following attributes</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    An integer flag (StatusEnumXXX)</span>
+<span class="sd">            ``values``  Named tuple with entries array t and array y and array ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">            ``errors``  Named tuple with entries t and y and ydot of error</span>
+<span class="sd">            ``roots``   Named tuple with entries array t and array y and array ydot</span>
+<span class="sd">            ``tstop``   Named tuple with entries array t and array y and array ydot</span>
+<span class="sd">            ``message`` String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        old_api is True : tuple</span>
+<span class="sd">            tuple with the following elements in order</span>
+
+<span class="sd">            ========== ==========================================</span>
+<span class="sd">            Field      Meaning</span>
+<span class="sd">            ========== ==========================================</span>
+<span class="sd">            ``flag``   indicating return status of the solver</span>
+<span class="sd">            ``t``      numpy array of times at which the computations were successful</span>
+<span class="sd">            ``y``      numpy array of values corresponding to times t (values of y[i, :] ~ t[i])</span>
+<span class="sd">            ``yp``     numpy array of derivatives corresponding to times t (values of yp[i, :] ~ t[i])</span>
+<span class="sd">            ``t_err``  float or None - if recoverable error occurred (for example reached maximum number of allowed iterations), this is the time at which it happened</span>
+<span class="sd">            ``y_err``  numpy array of values corresponding to time t_err</span>
+<span class="sd">            ``yp_err`` numpy array of derivatives corresponding to time t_err</span>
+<span class="sd">            ========== ==========================================</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dae.init_step">
+<a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae.init_step">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">yp_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the solver and allocates memory. It is not needed to</span>
+<span class="sd">        call this method if solve is used to compute the solution. In the case</span>
+<span class="sd">        step is used, init_step must be called first.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        t0 : number</span>
+<span class="sd">            initial time</span>
+<span class="sd">        y0 : list/array</span>
+<span class="sd">            initial condition for y</span>
+<span class="sd">        yp0 :  list/array</span>
+<span class="sd">            initial condition for yp</span>
+<span class="sd">        y_ic0 : numpy array</span>
+<span class="sd">            (optional) returns the calculated consistent initial condition for y</span>
+<span class="sd">        yp_ic0 :  numpy array</span>
+<span class="sd">            (optional) returns the calculated consistent initial condition for y</span>
+<span class="sd">            derivated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        old_api is False : namedtuple</span>
+<span class="sd">            namedtuple with the following attributes</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    An integer flag (StatusEnumXXX)</span>
+<span class="sd">            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">            ``errors``  Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``roots``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``tstop``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``message`` String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        old_api is True : tuple</span>
+<span class="sd">            tuple with the following elements in order</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    status of the computation (successful or error occurred)</span>
+<span class="sd">            ``t_out``   time, where the solver stopped (when no error occurred, t_out == t)</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">init_step</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span><span class="p">,</span> <span class="n">yp_ic0_retn</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dae.step">
+<a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yp_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for calling successive next step of the IDA solver to allow</span>
+<span class="sd">        more precise control over the IDA solver. The &#39;init_step&#39; method has to</span>
+<span class="sd">        be called before the &#39;step&#39; method.</span>
+
+<span class="sd">        A step is done towards time t, and output at t returned. This time can</span>
+<span class="sd">        be higher or lower than the previous time. If option</span>
+<span class="sd">        &#39;one_step_compute&#39;==True, and the solver supports it, only one internal</span>
+<span class="sd">        solver step is done in the direction of t starting at the current step.</span>
+
+<span class="sd">        If old_api=True, the old behavior is used: if t&gt;0.0 then integration is</span>
+<span class="sd">        performed until this time and results at this time are returned in</span>
+<span class="sd">        y_retn; else if if t&lt;0.0 only one internal step is performed towards time</span>
+<span class="sd">        abs(t) and results after this one time step are returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        t : number</span>
+<span class="sd">        y_retn : numpy array (ndim = 1) or None.</span>
+<span class="sd">            (Needs to be preallocated) If not None, will be filled with y at</span>
+<span class="sd">            time t. If None y_retn is not used.</span>
+<span class="sd">        yp_retn : numpy array (ndim = 1) or None.</span>
+<span class="sd">            (Needs to be preallocated) If not None, will be filled with</span>
+<span class="sd">            derivatives of y at time t. If None yp_retn is not used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        old_api is False : namedtuple</span>
+<span class="sd">            namedtuple with the following attributes</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    An integer flag (StatusEnumXXX)</span>
+<span class="sd">            ``values``  Named tuple with entries t and y and ydot. y will correspond to y_retn value and ydot to yp_retn!</span>
+<span class="sd">            ``errors``  Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``roots``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``tstop``   Named tuple with entries t and y and ydot</span>
+<span class="sd">            ``message`` String with message in case of an error</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        old_api is True : tuple</span>
+<span class="sd">            tuple with the following elements in order</span>
+
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            Field       Meaning</span>
+<span class="sd">            =========== ==========================================</span>
+<span class="sd">            ``flag``    status of the computation (successful or error occurred)</span>
+<span class="sd">            ``t_out``   time, where the solver stopped (when no error occurred, t_out == t)</span>
+<span class="sd">            =========== ==========================================</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clean up what is needed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_integrator&#39;</span><span class="p">):</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span></div>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="c1"># DAE integrators</span>
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="nf">find_dae_integrator</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dae</span><span class="o">.</span><span class="n">LOADED</span><span class="p">:</span>
+        <span class="c1">## ida</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">scikits_odes_sundials</span> <span class="kn">import</span> <span class="n">ida</span>
+            <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ida</span><span class="o">.</span><span class="n">IDA</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Could not load IDA solver&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1">## idas</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">scikits_odes_sundials</span> <span class="kn">import</span> <span class="n">idas</span>
+            <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idas</span><span class="o">.</span><span class="n">IDAS</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Could not load IDAS solver&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1">## ddaspk</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">scikits_odes_daepack.ddaspkint</span> <span class="kn">import</span> <span class="n">ddaspk</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1">## lsodi</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">scikits_odes_daepack.lsodiint</span> <span class="kn">import</span> <span class="n">lsodi</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">dae</span><span class="o">.</span><span class="n">LOADED</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">cl</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">cl</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Integrator name </span><span class="si">%s</span><span class="s1"> does not exsist&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Odes</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ode.html">ODE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dae.html">DAE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sundials.html">Sundials Solver Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">Lower Level API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2016, B. Malengier.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
