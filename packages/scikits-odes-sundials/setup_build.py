@@ -128,7 +128,7 @@ def get_sundials_config_pxi(include_dirs, dist):
     # Check for blas/lapack
     if check_macro_def(
         config_cmd,
-        "SUNDIALS_BLAS_LAPACK", headers=[SUNDIALS_CONFIG_H],
+        "SUNDIALS_BLAS_LAPACK_ENABLED", headers=[SUNDIALS_CONFIG_H],
         include_dirs=include_dirs
     ):
         has_lapack = True
