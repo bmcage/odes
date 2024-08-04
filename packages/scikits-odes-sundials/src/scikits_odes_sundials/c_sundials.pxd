@@ -19,6 +19,9 @@ cdef extern from "sundials/sundials_context.h":
     int SUNContext_Free(SUNContext* ctx)
 
 cdef extern from "sundials/sundials_version.h":
+
+    # Expose SUNDIALS version as char
+    char *SUNDIALS_VERSION
     
     #Fill a string with SUNDIALS version information */
     int SUNDIALSGetVersion(char *version, int len)
