@@ -3,12 +3,13 @@ SUNDIALS wrapper
 """
 
 import inspect
+
 from . import _version
-from . import common_defs as _common
+from . import common_defs
 
 __version__ = _version.get_versions()['version']
 
-SUNDIALS_VERSION = str(_common.sundials_version, 'utf-8')
+SUNDIALS_VERSION = str(common_defs.sundials_version, 'utf-8')
 
 
 class CVODESolveException(Exception):
@@ -76,3 +77,17 @@ def _get_num_args(func):
         if arg not in ("self", "cls"):
             arg_cnt += 1
     return arg_cnt
+
+
+from . import cvode
+from . import cvodes
+from . import ida
+from . import idas
+
+__all__ = [
+    'SUNDIALS_VERSION',
+    'cvode',
+    'cvodes',
+    'ida',
+    'idas',
+]
