@@ -6,7 +6,7 @@ import inspect
 from .c_sundials cimport (
     sunrealtype, sunindextype, N_Vector, SUNDlsMat, sunbooleantype,
     SUNMatrix, SUNMatGetID, SUNMATRIX_DENSE, SUNMATRIX_BAND, SUNMATRIX_SPARSE,
-    SUNMATRIX_CUSTOM,
+    SUNMATRIX_CUSTOM, SUNDIALS_VERSION,
 )
 from .c_nvector_serial cimport (
     N_VGetLength_Serial as nv_length_s, # use function not macro
@@ -21,6 +21,9 @@ from .c_sunmatrix cimport (
 from libc.stdio cimport stderr
 
 include "sundials_config.pxi"
+
+# Pull in SUNDIALS version
+sundials_version = SUNDIALS_VERSION
 
 precision = SUNDIALS_FLOAT_TYPE
 if SUNDIALS_FLOAT_TYPE == "single":
