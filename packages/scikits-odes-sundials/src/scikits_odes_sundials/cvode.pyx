@@ -300,7 +300,7 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 
 cdef int _jacdense(sunrealtype tt,
             N_Vector yy, N_Vector ff, SUNMatrix Jac,
-            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, 
+            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2,
             N_Vector tmp3) except? -1:
     """function with the signature of CVodeJacFn that calls python Jac
        Note: signature of Jac is SUNMatrix
@@ -387,8 +387,8 @@ class MutableBool(object):
     def __init__(self, value):
         self.value = value
 
-cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector ff, sunbooleantype jok, 
-                       sunbooleantype *jcurPtr, sunrealtype gamma, 
+cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector ff, sunbooleantype jok,
+                       sunbooleantype *jcurPtr, sunrealtype gamma,
                        void *auxiliary_data) except -1:
     """ function with the signature of CVLsPrecSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
@@ -403,7 +403,7 @@ cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector ff, sunbooleantype 
         nv_s2ndarray(yy, yy_tmp)
 
     jcurPtr_tmp = MutableBool(jcurPtr[0])
-    user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, jok, jcurPtr_tmp, 
+    user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, jok, jcurPtr_tmp,
                                                gamma, aux_data.user_data)
     jcurPtr[0] = jcurPtr_tmp.value
     return user_flag
@@ -469,8 +469,8 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
             user_flag = 0
         return user_flag
 
-cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector ff, N_Vector r, 
-                       N_Vector z, sunrealtype gamma, sunrealtype delta, int lr, 
+cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector ff, N_Vector r,
+                       N_Vector z, sunrealtype gamma, sunrealtype delta, int lr,
                        void *auxiliary_data) except? -1:
     """ function with the signature of CVLsPrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
@@ -711,7 +711,7 @@ cdef class CV_WrapErrHandler(CV_ErrHandler):
 cdef void _cv_err_handler_fn(
     int error_code, const char *module, const char *function, char *msg,
     void *eh_data
-):
+) noexcept:
     """
     function with the signature of CVErrHandlerFn, that calls python error
     handler
@@ -871,7 +871,7 @@ cdef class CVODE:
                     Defines the jacobian function and has to be a subclass
                     of CV_JacRhsFunction class or python function. This function
                     takes as input arguments current time t, current value of y,
-                    current value of f(t,y), and 
+                    current value of f(t,y), and
                     a 2D numpy array of returned jacobian and optional userdata.
                     Return value is 0 if successfull.
                     Jacobian is only used for dense or lapackdense linear solver
@@ -923,12 +923,12 @@ cdef class CVODE:
                                  For parallel implementation use_relaxation
                                  use lapackdense or lapackband respectively.
                     TODO: to add new solvers: pcg, spfgmr, superlumt, klu
-                    
+
             'nonlinsolver':
                 Values: 'newton' (= default), 'fixedpoint'
                 Description:
                     Specifies the used nonlinear solver.
-                    
+
             'lband', 'uband':
                 Values: non-negative integer, 0 = default
                 Description:
@@ -1484,7 +1484,7 @@ cdef class CVODE:
                 if (A == NULL or LS == NULL):
                     raise ValueError('Could not allocate matrix or linear solver')
                 flag = CVodeSetLinearSolver(cv_mem, LS, A)
-    
+
                 if flag == CVLS_ILL_INPUT:
                     raise ValueError('CVBand linear solver  setting failed, '
                                      'arguments incompatible')
@@ -1517,7 +1517,7 @@ cdef class CVODE:
                 else:
                     raise ValueError('LinSolver::Precondition: Unknown type: %s'
                                      % opts['precond_type'])
-    
+
                 if linsolver == 'spgmr':
                     LS = SUNLinSol_SPGMR(self.y0, pretype, <int> opts['maxl'], self.sunctx);
                     if LS == NULL:
@@ -1532,7 +1532,7 @@ cdef class CVODE:
                         raise ValueError('Could not allocate linear solver')
                 else:
                     raise ValueError('Given linsolver {} not implemented in odes'.format(linsolver))
-                    
+
                 flag = CVodeSetLinearSolver(cv_mem, LS, NULL);
                 if flag == CVLS_MEM_FAIL:
                         raise MemoryError('LinSolver:CVode memory allocation '
@@ -1542,7 +1542,7 @@ cdef class CVODE:
                                      .format(flag))
                 # TODO: make option for the Gram-Schmidt orthogonalization
                 #flag = SUNSPGMRSetGSType(LS, gstype);
-                                          
+
                 # TODO make option
                 #flag = CVodeSetEpsLin(cvode_mem, DELT);
                 if self.aux_data.prec_solvefn:
@@ -1558,10 +1558,10 @@ cdef class CVODE:
                 elif flag != CVLS_SUCCESS:
                     raise ValueError('CVodeSetPreconditioner failed with code {}'
                                      .format(flag))
-    
+
                 if self.aux_data.jac_times_vecfn:
                     if self.aux_data.jac_times_setupfn:
-                       flag = CVodeSetJacTimes(cv_mem, _jac_times_setupfn, 
+                       flag = CVodeSetJacTimes(cv_mem, _jac_times_setupfn,
                                                _jac_times_vecfn)
                     else:
                        flag = CVodeSetJacTimes(cv_mem, NULL, _jac_times_vecfn)
@@ -1615,14 +1615,14 @@ cdef class CVODE:
                     raise ValueError('LinSolver: Unknown solver type: %s'
                                          % opts['linsolver'])
         elif nonlinsolver == 'fixedpoint':
-            # create fixed point nonlinear solver object 
+            # create fixed point nonlinear solver object
             NLS = SUNNonlinSol_FixedPoint(self.y0, 0, self.sunctx);
             # attach nonlinear solver object to CVode
             flag = CVodeSetNonlinearSolver(cv_mem, NLS)
             if flag != CV_SUCCESS:
                 raise ValueError('CVodeSetNonlinearSolver failed with code {}'
                                  .format(flag))
-        
+
         if (linsolver in ['dense', 'lapackdense', 'lapackband', 'band']
             and self.aux_data.jac):
             # we need to create the correct shape for jacobian output, here is
