@@ -194,7 +194,7 @@ cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
 
 
 cdef int _res(sunrealtype tt, N_Vector yy, N_Vector yp,
-              N_Vector rr, void *auxiliary_data):
+              N_Vector rr, void *auxiliary_data) except? -1:
     """ function with the signature of IDAResFn """
     cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
 
@@ -262,7 +262,7 @@ cdef class IDA_WrapRootFunction(IDA_RootFunction):
         return user_flag
 
 cdef int _rootfn(sunrealtype t, N_Vector yy, N_Vector yp,
-                 sunrealtype *gout, void *auxiliary_data):
+                 sunrealtype *gout, void *auxiliary_data) except? -1:
     """ function with the signature of IDARootFn """
 
     aux_data = <IDA_data> auxiliary_data
@@ -354,7 +354,7 @@ cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
 
 cdef int _jacdense(sunrealtype tt, sunrealtype cj,
             N_Vector yy, N_Vector yp, N_Vector rr, SUNMatrix Jac,
-            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3):
+            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1:
     """function with the signature of IDAJacFn """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp, residual_tmp
     cdef np.ndarray jac_tmp
@@ -440,7 +440,7 @@ cdef class IDA_WrapPrecSetupFunction(IDA_PrecSetupFunction):
 
 cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
                        sunrealtype cj,
-                       void *auxiliary_data):
+                       void *auxiliary_data) except? -1:
     """ function with the signature of IDAPrecSetupFn, that calls
         the python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, rp_tmp, residual_tmp
@@ -526,7 +526,7 @@ cdef class IDA_WrapPrecSolveFunction(IDA_PrecSolveFunction):
 
 cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector r,
                        N_Vector rvec, N_Vector z, sunrealtype cj,
-                       sunrealtype delta, void *auxiliary_data):
+                       sunrealtype delta, void *auxiliary_data) except? -1:
     """ function with the signature of CVodePrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
 
@@ -637,7 +637,7 @@ cdef int _jac_times_vecfn(sunrealtype t, N_Vector yy, N_Vector yp, N_Vector rr, 
 
     if parallel_implementation:
         raise NotImplemented
-    
+
     yy_tmp = aux_data.yy_tmp
     yp_tmp = aux_data.yp_tmp
     rr_tmp = aux_data.residual_tmp
@@ -710,7 +710,7 @@ cdef class IDA_WrapJacTimesSetupFunction(IDA_JacTimesSetupFunction):
             user_flag = 0
         return user_flag
 
-cdef int _jac_times_setupfn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, 
+cdef int _jac_times_setupfn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
                             sunrealtype cj, void *user_data) except? -1:
     """ function with the signature of IDA_JacTimesSetupFunction, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp, rr_tmp
@@ -755,7 +755,7 @@ def no_continue_fn(t, y, yp, solver):
 cdef void _ida_err_handler_fn(
     int line, const char *func, const char *file, const char *msg,
     SUNErrCode err_code, void *err_user_data, SUNContext sunctx
-):
+) noexcept:
     """
     function with the signature of SUNErrHandlerFn, that calls python error
     handler
@@ -1067,10 +1067,10 @@ cdef class IDA(BaseSundialsSolver):
                         yy is the current value of the dependent variable vector, y(t).
                         yp is the current value of ˙y(t).
                         rr is the current value of the residual vector F(t, y, y˙).
-                        v is the vector by which the Jacobian must be multiplied to 
+                        v is the vector by which the Jacobian must be multiplied to
                             the right.
                         Jv is the computed output vector.
-                        cj is the scalar in the system Jacobian, proportional to the 
+                        cj is the scalar in the system Jacobian, proportional to the
                             inverse of the step size.
                         user data is a pointer to user data (optional)
             'jac_times_setupfn':
@@ -1078,14 +1078,14 @@ cdef class IDA(BaseSundialsSolver):
                 Description:
                     Optional. Default is to internal finite difference with no
                     extra setup.
-                    Defines a function that preprocesses and/or evaluates 
+                    Defines a function that preprocesses and/or evaluates
                     Jacobian-related data needed by the Jacobiantimes-vector routine
                     This function takes as input arguments:
                         tt is the current value of the independent variable.
                         yy is the current value of the dependent variable vector, y(t).
                         yp is the current value of ˙y(t).
                         rr is the current value of the residual vector F(t, y, y˙).
-                        cj is the scalar in the system Jacobian, proportional to the 
+                        cj is the scalar in the system Jacobian, proportional to the
                             inverse of the step size.
                         user data is a pointer to user data (optional)
             'err_handler':

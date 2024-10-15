@@ -116,7 +116,9 @@ cdef class IDA_ContinuationFunction:
                        np.ndarray[DTYPE_t, ndim=1] ydot,
                        IDA solver)
 
-cdef int _res(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj)
+cdef int _res(
+    sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj
+) except? -1
 
 
 cdef class IDA_data(Shared_data):
