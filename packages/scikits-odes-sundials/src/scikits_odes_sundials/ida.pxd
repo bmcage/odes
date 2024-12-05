@@ -1,6 +1,8 @@
 cimport numpy as np
-from .c_sundials cimport N_Vector, sunrealtype, SUNContext
-from .common_defs cimport DTYPE_t
+from .c_sundials cimport N_Vector, sunrealtype
+from .common_defs cimport (
+    DTYPE_t, Shared_ErrHandler, Shared_data, BaseSundialsSolver,
+)
 
 cdef class IDA_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
@@ -64,7 +66,7 @@ cdef class IDA_PrecSolveFunction:
                        DTYPE_t cj,
                        DTYPE_t delta,
                        object userdata = *) except? -1
-                           
+
 cdef class IDA_WrapPrecSolveFunction(IDA_PrecSolveFunction):
     cdef object _prec_solvefn
     cdef int with_userdata
@@ -116,21 +118,8 @@ cdef class IDA_ContinuationFunction:
 
 cdef int _res(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj)
 
-cdef class IDA_ErrHandler:
-    cpdef evaluate(self,
-                   int error_code,
-                   bytes module,
-                   bytes function,
-                   bytes msg,
-                   object user_data = *)
 
-cdef class IDA_WrapErrHandler(IDA_ErrHandler):
-    cdef object _err_handler
-    cdef int with_userdata
-    cpdef set_err_handler(self, object err_handler)
-
-
-cdef class IDA_data:
+cdef class IDA_data(Shared_data):
     cdef np.ndarray yy_tmp, yp_tmp, residual_tmp, jac_tmp
     cdef np.ndarray g_tmp, z_tmp, rvec_tmp, v_tmp
     cdef IDA_RhsFunction res
@@ -140,17 +129,14 @@ cdef class IDA_data:
     cdef IDA_PrecSolveFunction prec_solvefn
     cdef IDA_JacTimesVecFunction jac_times_vecfn
     cdef IDA_JacTimesSetupFunction jac_times_setupfn
-    cdef bint parallel_implementation
-    cdef object user_data
-    cdef IDA_ErrHandler err_handler
-    cdef object err_user_data
 
-cdef class IDA:
-    cdef N_Vector atol
+
+cdef class IDA(BaseSundialsSolver):
+    cdef void* _ida_mem
+    cdef IDA_data aux_data
 
     cdef N_Vector y0, yp0, residual, y, yp
     cdef N_Vector dae_vars_id, constraints
-    cdef long int N #problem size, i.e. len(y0) = N
     cdef list t_roots
     cdef list y_roots
     cdef list yp_roots
@@ -164,25 +150,11 @@ cdef class IDA:
     cdef int compute_initcond
     cdef DTYPE_t compute_initcond_t0
     cdef long int mupper, mlower
-    # ??? lband, uband, tcrit
-    # ??? constraint_type, algebraic_var
-    cdef bint initialized
 
-    cdef void* _ida_mem
-    cdef SUNContext sunctx
-    cdef dict options
-    cdef bint parallel_implementation
-    cdef bint _old_api, _step_compute, _validate_flags
     cdef sunrealtype t, t0
 
-    cdef IDA_data aux_data
-
-    cdef int verbosity
-
-    #cdef sunrealtype *y0, *yprime0
-
     # Functions
-    cpdef _create_suncontext(self)
+    cpdef _update_error_handler(self)
     cpdef _init_step(self, DTYPE_t t0,
                     np.ndarray[DTYPE_t, ndim=1] y0,
                     np.ndarray[DTYPE_t, ndim=1] yp0,

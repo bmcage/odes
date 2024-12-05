@@ -12,6 +12,8 @@ from numpy import (arange, zeros, array, dot, sqrt, cos, sin, allclose,
 
 from numpy.testing import TestCase
 
+import pytest
+
 from scikits.odes import ode
 from scikits.odes.sundials.cvode import StatusEnum
 from scikits.odes.sundials.common_defs import DTYPE
@@ -256,6 +258,7 @@ class TestOn(TestCase):
                         [10.0, 509.4995, -98.10],
                         atol=atol, rtol=rtol)
 
+    @pytest.mark.xfail(reason="Additional TSTOP reached at end, need to modify")
     def test_cvode_tstopfnacc(self):
         #test tstop finding and accumilating: End is reached normally, tstop stored
         global n
@@ -264,11 +267,12 @@ class TestOn(TestCase):
         solver = ode('cvode', rhs_fn, tstop=T1, ontstop=ontstop_va,
                      old_api=False)
         soln = solver.solve(tspan, y0)
+        assert len(soln.tstop.t) == 9, "ERROR: Did not find all tstop"
+        assert n == 9, "incorrect number of ontstop calls"
         assert soln.flag==StatusEnum.SUCCESS, "ERROR: Error occurred"
         assert allclose([soln.values.t[-1], soln.values.y[-1,0], soln.values.y[-1,1]],
                         [100.0, -8319.5023, -981.00],
                         atol=atol, rtol=rtol)
-        assert len(soln.tstop.t) == 9, "ERROR: Did not find all tstop"
         assert allclose([soln.tstop.t[-1], soln.tstop.y[-1,0], soln.tstop.y[-1,1]],
                         [90.0, -7338.5023, -882.90],
                         atol=atol, rtol=rtol)

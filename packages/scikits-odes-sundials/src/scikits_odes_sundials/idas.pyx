@@ -11,11 +11,10 @@ import numpy as np
 cimport numpy as np
 
 
-from .c_sundials cimport sunrealtype, N_Vector
-from .c_nvector_serial cimport *
-from .c_sunmatrix cimport *
-from .c_sunlinsol cimport *
-from .c_sunnonlinsol cimport *
+#from .c_nvector_serial cimport *
+#from .c_sunmatrix cimport *
+#from .c_sunlinsol cimport *
+#from .c_sunnonlinsol cimport *
 
 from .ida cimport (IDA_RhsFunction, IDA_WrapRhsFunction, IDA_RootFunction,
                    IDA_WrapRootFunction, IDA_JacRhsFunction,
@@ -24,20 +23,22 @@ from .ida cimport (IDA_RhsFunction, IDA_WrapRhsFunction, IDA_RootFunction,
                    IDA_WrapPrecSolveFunction, IDA_JacTimesVecFunction,
                    IDA_WrapJacTimesVecFunction, IDA_JacTimesSetupFunction,
                    IDA_WrapJacTimesSetupFunction, IDA_ContinuationFunction,
-                   IDA_ErrHandler, IDA_WrapErrHandler, IDA_data,
-                   IDA)
+                   IDA_data, IDA)
 
-from .c_idas cimport *
-from .common_defs cimport (
-    nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
+from .c_idas cimport (
+    IDA_SUCCESS, IDA_TSTOP_RETURN, IDA_ROOT_RETURN, IDA_WARNING,
+    IDA_TOO_MUCH_WORK, IDA_TOO_MUCH_ACC, IDA_ERR_FAIL, IDA_CONV_FAIL,
+    IDA_LINIT_FAIL, IDA_LSETUP_FAIL, IDA_LSOLVE_FAIL, IDA_RES_FAIL,
+    IDA_REP_RES_ERR, IDA_RTFUNC_FAIL, IDA_CONSTR_FAIL, IDA_FIRST_RES_FAIL,
+    IDA_LINESEARCH_FAIL, IDA_NO_RECOVERY, IDA_NLS_INIT_FAIL, IDA_NLS_SETUP_FAIL,
+    IDA_NLS_FAIL, IDA_MEM_NULL, IDA_MEM_FAIL, IDA_ILL_INPUT, IDA_NO_MALLOC,
+    IDA_BAD_EWT, IDA_BAD_K, IDA_BAD_T, IDA_BAD_DKY, IDA_VECTOROP_ERR,
+    IDA_UNRECOGNIZED_ERROR,
 )
-from .common_defs import DTYPE, INDEX_TYPE
-# this is needed because we want DTYPE and INDEX_TYPE to be
-# accessible from python (not only in cython)
-from . import (
-    IDASolveFailed, IDASolveFoundRoot, IDASolveReachedTSTOP, _get_num_args,
-)
-
+from .common_defs cimport DTYPE_t
+from .common_defs import DTYPE
+# this is needed because we want DTYPE to be accessible from python (not only
+# in cython)
 
 # TODO: parallel implementation: N_VectorParallel
 # TODO: linsolvers: check the output value for errors
@@ -390,7 +391,7 @@ cdef class IDAS(IDA):
                             inverse of the step size.
                         user data is a pointer to user data (optional)
             'err_handler':
-                Values: function of class IDA_ErrHandler, default = None
+                Values: function of class Shared_ErrHandler, default = None
                 Description:
                     Defines a function which controls output from the IDA
                     solver

@@ -135,10 +135,21 @@ def get_sundials_config_pxi(include_dirs, dist):
     else:
         has_lapack = False
 
+    if check_macro_true(
+        config_cmd,
+        "SUNDIALS_MPI_ENABLED", headers=[SUNDIALS_CONFIG_H],
+        include_dirs=include_dirs,
+    ):
+        SUNDIALS_MPI_ENABLED = True
+    else:
+        SUNDIALS_MPI_ENABLED = False
+
+
     cfg = dict(
         float_type = SUNDIALS_FLOAT_TYPE,
         index_size = SUNDIALS_INDEX_SIZE,
         has_lapack = has_lapack,
+        with_mpi = SUNDIALS_MPI_ENABLED,
     )
 
     return write_pxi(join(BASE_PATH, "sundials_config.pxi"), dict(
@@ -207,7 +218,7 @@ class build_ext(_build_ext):
                         CVODE_LIBRARY_DIRS.append(str(d))
                     for d in cvode_pkgconf.get('include_dirs', []):
                         CVODE_INCLUDE_DIRS.append(str(d))
-                    for lib in cvode_pkgconf.get('include_dirs', []):
+                    for lib in cvode_pkgconf.get('libraries', []):
                         CVODE_LIBRARIES.append(str(lib))
 
                     ida_pkgconf = pkgconfig.parse(PKGCONFIG_IDA)
@@ -215,7 +226,7 @@ class build_ext(_build_ext):
                         IDA_LIBRARY_DIRS.append(str(d))
                     for d in ida_pkgconf.get('include_dirs', []):
                         IDA_INCLUDE_DIRS.append(str(d))
-                    for lib in ida_pkgconf.get('include_dirs', []):
+                    for lib in ida_pkgconf.get('libraries', []):
                         IDA_LIBRARIES.append(str(lib))
 
 
@@ -224,7 +235,7 @@ class build_ext(_build_ext):
                         CVODES_LIBRARY_DIRS.append(str(d))
                     for d in cvodes_pkgconf.get('include_dirs', []):
                         CVODES_INCLUDE_DIRS.append(str(d))
-                    for lib in cvodes_pkgconf.get('include_dirs', []):
+                    for lib in cvodes_pkgconf.get('libraries', []):
                         CVODES_LIBRARIES.append(str(lib))
 
                     idas_pkgconf = pkgconfig.parse(PKGCONFIG_IDAS)
@@ -232,7 +243,7 @@ class build_ext(_build_ext):
                         IDAS_LIBRARY_DIRS.append(str(d))
                     for d in idas_pkgconf.get('include_dirs', []):
                         IDAS_INCLUDE_DIRS.append(str(d))
-                    for lib in idas_pkgconf.get('include_dirs', []):
+                    for lib in idas_pkgconf.get('libraries', []):
                         IDAS_LIBRARIES.append(str(lib))
                 except (EnvironmentError, PackageNotFoundError) as e:
                     pass
@@ -242,9 +253,27 @@ class build_ext(_build_ext):
         sundials_pxi, cfg = get_sundials_config_pxi(SUNDIALS_INCLUDE_DIRS,
                 self.distribution)
 
-        has_lapack = cfg['has_lapack']
-
         if not SUNDIALS_LIBRARIES:
+            has_lapack = cfg['has_lapack']
+            with_mpi = cfg["with_mpi"]
+            if with_mpi:
+                # use pkgconfig to find mpi
+                try:
+                    import pkgconfig
+                    from pkgconfig.pkgconfig import PackageNotFoundError
+                    try:
+                        mpi_pkgconf = pkgconfig.parse("mpi")
+                        for d in mpi_pkgconf.get('library_dirs', []):
+                            SUNDIALS_LIBRARY_DIRS.append(str(d))
+                        for d in mpi_pkgconf.get('include_dirs', []):
+                            SUNDIALS_INCLUDE_DIRS.append(str(d))
+                        for lib in mpi_pkgconf.get('libraries', []):
+                            SUNDIALS_LIBRARIES.append(str(lib))
+                    except (EnvironmentError, PackageNotFoundError) as e:
+                        pass
+                except ImportError:
+                    info("pkgconfig module not found, using preset paths")
+
             # This is where to put N_vector codes (currently only serial is
             # supported)
             SUNDIALS_LIBRARIES.append('sundials_nvecserial')

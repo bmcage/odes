@@ -10,17 +10,6 @@ include "sundials_config.pxi"
 import numpy as np
 cimport numpy as np
 
-from . import (
-    CVODESolveFailed, CVODESolveFoundRoot, CVODESolveReachedTSTOP,
-    _get_num_args,
-)
-
-from .c_sundials cimport sunrealtype, N_Vector
-from .c_nvector_serial cimport *
-from .c_sunmatrix cimport *
-from .c_sunlinsol cimport *
-from .c_sunnonlinsol cimport *
-
 from .cvode cimport (CV_RhsFunction, CV_WrapRhsFunction, CV_RootFunction,
                        CV_WrapRootFunction, CV_JacRhsFunction,
                        CV_WrapJacRhsFunction, CV_PrecSetupFunction,
@@ -28,15 +17,25 @@ from .cvode cimport (CV_RhsFunction, CV_WrapRhsFunction, CV_RootFunction,
                        CV_PrecSolveFunction, CV_WrapPrecSolveFunction,
                        CV_JacTimesVecFunction, CV_WrapJacTimesVecFunction,
                        CV_JacTimesSetupFunction, CV_WrapJacTimesSetupFunction,
-                       CV_ContinuationFunction, CV_ErrHandler, 
-                       CV_WrapErrHandler, CV_data, CVODE)
-from .c_cvodes cimport *
-from .common_defs cimport (
-    nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
+                       CV_ContinuationFunction, CV_data, CVODE)
+from .c_cvodes cimport (
+    CV_SUCCESS, CV_TSTOP_RETURN, CV_ROOT_RETURN, CV_WARNING, CV_TOO_MUCH_WORK,
+    CV_TOO_MUCH_ACC, CV_ERR_FAILURE, CV_CONV_FAILURE, CV_LINIT_FAIL,
+    CV_LSETUP_FAIL, CV_LSOLVE_FAIL, CV_RHSFUNC_FAIL, CV_FIRST_RHSFUNC_ERR,
+    CV_REPTD_RHSFUNC_ERR, CV_UNREC_RHSFUNC_ERR, CV_RTFUNC_FAIL,
+    CV_NLS_INIT_FAIL, CV_NLS_SETUP_FAIL, CV_CONSTR_FAIL, CV_NLS_FAIL,
+    CV_MEM_FAIL, CV_MEM_NULL, CV_ILL_INPUT, CV_NO_MALLOC, CV_BAD_K, CV_BAD_T,
+    CV_BAD_DKY, CV_TOO_CLOSE, CV_VECTOROP_ERR, CV_NO_QUAD, CV_QRHSFUNC_FAIL,
+    CV_FIRST_QRHSFUNC_ERR, CV_REPTD_QRHSFUNC_ERR, CV_UNREC_QRHSFUNC_ERR,
+    CV_NO_SENS, CV_SRHSFUNC_FAIL, CV_FIRST_SRHSFUNC_ERR, CV_REPTD_SRHSFUNC_ERR,
+    CV_UNREC_SRHSFUNC_ERR, CV_BAD_IS, CV_NO_QUADSENS, CV_QSRHSFUNC_FAIL,
+    CV_FIRST_QSRHSFUNC_ERR, CV_REPTD_QSRHSFUNC_ERR, CV_UNREC_QSRHSFUNC_ERR,
+    CV_UNRECOGNIZED_ERR,
 )
-from .common_defs import DTYPE, INDEX_TYPE
-# this is needed because we want DTYPE and INDEX_TYPE to be
-# accessible from python (not only in cython)
+from .common_defs cimport DTYPE_t
+from .common_defs import DTYPE
+# this is needed because we want DTYPE to be accessible from python (not only
+# in cython)
 
 
 # TODO: parallel implementation: N_VectorParallel
@@ -382,7 +381,7 @@ cdef class CVODES(CVODE):
             'nonlin_conv_coef':
                 default = 0,
             'err_handler':
-                Values: function of class CV_ErrHandler, default = None
+                Values: function of class Shared_ErrHandler, default = None
                 Description:
                     Defines a function which controls output from the CVODE
                     solver

@@ -11,8 +11,7 @@ from .cvode cimport (CV_RhsFunction, CV_WrapRhsFunction, CV_RootFunction,
                        CV_PrecSolveFunction, CV_WrapPrecSolveFunction,
                        CV_JacTimesVecFunction, CV_WrapJacTimesVecFunction,
                        CV_JacTimesSetupFunction, CV_WrapJacTimesSetupFunction,
-                       CV_ContinuationFunction, CV_ErrHandler, 
-                       CV_WrapErrHandler, CV_data, CVODE)
+                       CV_ContinuationFunction, CV_data, CVODE)
 
 cdef class CVS_data(CV_data):
     cdef np.ndarray yS_tmp, ySdot_tmp

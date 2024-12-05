@@ -16,18 +16,48 @@ from . import (
 )
 
 from .c_sundials cimport (
-    sunrealtype, N_Vector, SUNContext_Create, SUNContext_Free,
+    sunrealtype, N_Vector, SUNContext_Free, SUNMatrix, sunbooleantype,
+    SUNErrCode, SUNContext, SUNContext_ClearErrHandlers,
+    SUNContext_PushErrHandler, N_VDestroy, N_VClone,
+    SUN_PREC_NONE, SUN_PREC_LEFT, SUN_PREC_RIGHT, SUN_PREC_BOTH,
 )
-from .c_nvector_serial cimport *
-from .c_sunmatrix cimport *
-from .c_sunlinsol cimport *
-from .c_sunnonlinsol cimport *
+from .c_nvector_serial cimport N_VNew_Serial,N_VMake_Serial
+from .c_sunmatrix cimport SUNDenseMatrix, SUNBandMatrix
+from .c_sunlinsol cimport (
+    SUNLinSol_Dense, SUNLinSol_Band, SUNLinSol_SPGMR, SUNLinSol_SPBCGS,
+    SUNLinSol_SPTFQMR,
+)
+from .c_sunnonlinsol cimport SUNNonlinSol_FixedPoint
 
-from .c_cvode cimport *
+from .c_cvode cimport (
+    CV_SUCCESS, CV_TSTOP_RETURN, CV_ROOT_RETURN, CV_WARNING, CV_TOO_MUCH_WORK,
+    CV_TOO_MUCH_ACC, CV_ERR_FAILURE, CV_CONV_FAILURE, CV_LINIT_FAIL,
+    CV_LSETUP_FAIL, CV_LSOLVE_FAIL, CV_RHSFUNC_FAIL, CV_FIRST_RHSFUNC_ERR,
+    CV_REPTD_RHSFUNC_ERR, CV_UNREC_RHSFUNC_ERR, CV_RTFUNC_FAIL,
+    CV_NLS_INIT_FAIL, CV_NLS_SETUP_FAIL, CV_CONSTR_FAIL, CV_NLS_FAIL,
+    CV_MEM_FAIL, CV_MEM_NULL, CV_ILL_INPUT, CV_NO_MALLOC, CV_BAD_K, CV_BAD_T,
+    CV_BAD_DKY, CV_TOO_CLOSE, CV_VECTOROP_ERR, CV_UNRECOGNIZED_ERR,
+    CVodeRootInit, CVodeSStolerances, CVodeSVtolerances, CVodeSetStopTime,
+    CV_BDF, CV_ADAMS, CVodeFree, CVodeCreate, CVodeInit, CVodeReInit,
+    CVodeSetUserData, CVodeSetMaxOrd, CVodeSetMaxNumSteps, CVodeSetStabLimDet,
+    CVodeSetInitStep, CVodeSetMinStep, CVodeSetMaxStep, CVodeSetMaxNonlinIters,
+    CVodeSetMaxConvFails, CVodeSetNonlinConvCoef, CVodeSetLinearSolver,
+    CVLS_ILL_INPUT, CVLS_MEM_FAIL, CVLS_SUCCESS, CVDiag, CVDIAG_ILL_INPUT,
+    CVDIAG_MEM_FAIL, CVDIAG_SUCCESS, CVodeSetPreconditioner,
+    CVodeGetNumRhsEvals, CVodeGetNumLinIters, CVodeGetNumJtimesEvals,
+    CVodeGetNumPrecSolves, CVodeGetNumPrecEvals, CVodeGetIntegratorStats,
+    CVodeSetJacFn, CVodeSetNonlinearSolver, CVodeSetJacTimes, CVLS_LMEM_NULL,
+    CVLS_MEM_NULL, CVode, CV_NORMAL, CV_ONE_STEP,
+)
+
+
 from .common_defs cimport (
     nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
+    Shared_data, BaseSundialsSolver,
 )
-from .common_defs import DTYPE, INDEX_TYPE
+from .common_defs import (
+    DTYPE, INDEX_TYPE, Shared_WrapErrHandler, Shared_ErrHandler,
+)
 # this is needed because we want DTYPE and INDEX_TYPE to be
 # accessible from python (not only in cython)
 
@@ -676,59 +706,25 @@ cdef class CV_ContinuationFunction:
 def no_continue_fn(t, y, solver):
     return 1
 
-cdef class CV_ErrHandler:
-    cpdef evaluate(self,
-                   int error_code,
-                   bytes module,
-                   bytes function,
-                   bytes msg,
-                   object user_data = None):
-        """ format that error handling functions must match """
-        pass
-
-cdef class CV_WrapErrHandler(CV_ErrHandler):
-    cpdef set_err_handler(self, object err_handler):
-        """
-        set some (c/p)ython function as the error handler
-        """
-        nrarg = _get_num_args(err_handler)
-        self.with_userdata = (nrarg > 5) or (
-            nrarg == 5 and inspect.isfunction(err_handler)
-        )
-        self._err_handler = err_handler
-
-    cpdef evaluate(self,
-                   int error_code,
-                   bytes module,
-                   bytes function,
-                   bytes msg,
-                   object user_data = None):
-        if self.with_userdata == 1:
-            self._err_handler(error_code, module, function, msg, user_data)
-        else:
-            self._err_handler(error_code, module, function, msg)
 
 cdef void _cv_err_handler_fn(
-    int error_code, const char *module, const char *function, char *msg,
-    void *eh_data
+    int line, const char *func, const char *file, const char *msg,
+    SUNErrCode err_code, void *err_user_data, SUNContext sunctx
 ):
     """
-    function with the signature of CVErrHandlerFn, that calls python error
+    function with the signature of SUNErrHandlerFn, that calls python error
     handler
     """
-    aux_data = <CV_data> eh_data
-    aux_data.err_handler.evaluate(error_code,
-                                  module,
-                                  function,
-                                  msg,
-                                  aux_data.err_user_data)
+    aux_data = <CV_data> err_user_data
+    aux_data.err_handler.evaluate(
+        line, func, file, msg, err_code, aux_data.err_user_data
+    )
+
 
 # Auxiliary data carrying runtime vales for the CVODE solver
-cdef class CV_data:
+cdef class CV_data(Shared_data):
     def __cinit__(self, N):
-        self.parallel_implementation = False
-        self.user_data = None
-        self.err_user_data = None
+        super().__init__()
 
         self.yy_tmp = np.empty(N, DTYPE)
         self.yp_tmp = np.empty(N, DTYPE)
@@ -737,7 +733,7 @@ cdef class CV_data:
         self.r_tmp = np.empty(N, DTYPE)
         self.z_tmp = np.empty(N, DTYPE)
 
-cdef class CVODE:
+cdef class CVODE(BaseSundialsSolver):
 
     def __cinit__(self, Rfn, **options):
         """
@@ -749,7 +745,7 @@ cdef class CVODE:
                       of supported options and their values see set_options()
 
         """
-
+        super().__init__()
         default_values = {
             'implementation': 'serial',
             'lmm_type': 'BDF',
@@ -787,21 +783,23 @@ cdef class CVODE:
             'validate_flags': None,
             }
 
-        self.verbosity = 1
         self.options = default_values
-        self.N       = -1
-        self._old_api = False # use new api by default
-        self._step_compute = False #avoid dict lookup
-        self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
-        self.sunctx = NULL
-        self.initialized = False
 
-    cpdef _create_suncontext(self):
-        cdef int res = SUNContext_Create(NULL, &self.sunctx)
-        if res < 0:
-            raise RuntimeError("Failed to create Sundials context")
+    cpdef _update_error_handler(self):
+        cdef SUNErrCode res = SUNContext_ClearErrHandlers(self.sunctx)
+        if res:
+            raise RuntimeError(
+                "Failed to clear error handlers", code=int(res),
+            )
+        res = SUNContext_PushErrHandler(
+            self.sunctx, _cv_err_handler_fn, <void*> self.aux_data
+        )
+        if res:
+            raise RuntimeError(
+                "Failed to push new error handler", code=int(res),
+            )
 
     def set_options(self, **options):
         """
@@ -1009,7 +1007,7 @@ cdef class CVODE:
             'nonlin_conv_coef':
                 default = 0,
             'err_handler':
-                Values: function of class CV_ErrHandler, default = None
+                Values: function of class Shared_ErrHandler, default = None
                 Description:
                     Defines a function which controls output from the CVODE
                     solver
@@ -1040,17 +1038,7 @@ cdef class CVODE:
                     `solve`. See the `validate_flags` function for how this
                     affects `solve`.
         """
-
-        # Update values of all supplied options
-        for (key, value) in options.items():
-            if key.lower() in self.options:
-                self.options[key.lower()] = value
-            else:
-                raise ValueError("Option '%s' is not supported by solver" % key)
-
-        # If the solver is running, this re-sets runtime changeable options,
-        # otherwise it does nothing
-        self._set_runtime_changeable_options(options)
+        super().set_options(**options)
 
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=False):
@@ -1255,6 +1243,7 @@ cdef class CVODE:
         if self._old_api:
             return (flag, time)
         else:
+            flag = StatusEnum(flag)
             y_retn  = np.empty(len(np_y0), DTYPE)
             y_retn[:] = np_y0[:]
             soln = SolverReturn(
@@ -1263,7 +1252,7 @@ cdef class CVODE:
                 errors=SolverVariables(t=None, y=None),
                 roots=SolverVariables(t=None, y=None),
                 tstop=SolverVariables(t=None, y=None),
-                message=STATUS_MESSAGE[StatusEnum.SUCCESS]
+                message=STATUS_MESSAGE[flag]
             )
             if self._validate_flags:
                 return self.validate_flags(soln)
@@ -1351,23 +1340,15 @@ cdef class CVODE:
         # Set err_handler
         err_handler = opts.get('err_handler', None)
         if err_handler is not None:
-            if not isinstance(err_handler, CV_ErrHandler):
-                tmpfun = CV_WrapErrHandler()
+            if not isinstance(err_handler, Shared_ErrHandler):
+                tmpfun = Shared_WrapErrHandler()
                 tmpfun.set_err_handler(err_handler)
                 err_handler = tmpfun
 
             self.aux_data.err_handler = err_handler
 
-            flag = CVodeSetErrHandlerFn(
-                cv_mem, _cv_err_handler_fn, <void*> self.aux_data)
+            self._update_error_handler()
 
-            if flag == CV_SUCCESS:
-                pass
-            elif flag == CV_MEM_FAIL:
-                raise MemoryError(
-                    'CVodeSetErrHandlerFn: Memory allocation error')
-            else:
-                raise RuntimeError('CVodeSetErrHandlerFn: Unknown flag raised')
         self.aux_data.err_user_data = opts['err_user_data'] or opts['user_data']
 
         self.aux_data.parallel_implementation = self.parallel_implementation
@@ -1674,7 +1655,7 @@ cdef class CVODE:
 
          if old_api False (cvode solver):
             A named tuple, with entries:
-                flag   = An integer flag (StatusEnumXXX)
+                flag   = An integer flag (StatusEnum)
                 values = Named tuple with entries t and y and ydot. y will
                             correspond to y_retn value and ydot to yp_retn!
                 errors = Named tuple with entries t_err and y_err
@@ -1692,10 +1673,10 @@ cdef class CVODE:
         if self._old_api:
             return (flag, time)
         else:
-            y_retn  = np.empty(len(np_y0), DTYPE)
+            y_retn = np.empty(len(np_y0), DTYPE)
             y_retn[:] = np_y0[:]
             soln = SolverReturn(
-                flag=flag,
+                flag=StatusEnum.SUCCESS,
                 values=SolverVariables(t=time, y=y_retn),
                 errors=SolverVariables(t=None, y=None),
                 roots=SolverVariables(t=None, y=None),

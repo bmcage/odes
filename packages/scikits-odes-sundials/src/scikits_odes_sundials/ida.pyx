@@ -1,10 +1,7 @@
 # cython: embedsignature=True
 from cpython.exc cimport PyErr_CheckSignals
 from collections import namedtuple
-try:
-    from enum import IntEnum
-except ImportError:
-    from enum34 import IntEnum
+from enum import IntEnum
 import inspect
 from warnings import warn
 
@@ -13,25 +10,51 @@ include "sundials_config.pxi"
 import numpy as np
 cimport numpy as np
 
-
-from .c_sundials cimport (
-    sunrealtype, N_Vector, SUNContext_Create, SUNContext_Free,
-)
-from .c_nvector_serial cimport *
-from .c_sunmatrix cimport *
-from .c_sunlinsol cimport *
-from .c_sunnonlinsol cimport *
-
-from .c_ida cimport *
-from .common_defs cimport (
-    nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
-)
-from .common_defs import DTYPE, INDEX_TYPE
-# this is needed because we want DTYPE and INDEX_TYPE to be
-# accessible from python (not only in cython)
 from . import (
     IDASolveFailed, IDASolveFoundRoot, IDASolveReachedTSTOP, _get_num_args,
 )
+
+from .c_sundials cimport (
+    sunrealtype, N_Vector, SUNContext_Free, SUNMatrix, sunbooleantype,
+    SUNErrCode, SUNContext, SUNContext_ClearErrHandlers,
+    SUNContext_PushErrHandler, N_VDestroy, N_VClone,
+    SUN_PREC_NONE, SUN_PREC_LEFT, SUN_PREC_RIGHT, SUN_PREC_BOTH,
+)
+from .c_nvector_serial cimport N_VNew_Serial,N_VMake_Serial
+from .c_sunmatrix cimport SUNDenseMatrix, SUNBandMatrix
+from .c_sunlinsol cimport (
+    SUNLinSol_Dense, SUNLinSol_Band, SUNLinSol_SPGMR, SUNLinSol_SPBCGS,
+    SUNLinSol_SPTFQMR,
+)
+from .c_sunnonlinsol cimport SUNNonlinSol_FixedPoint
+
+from .c_ida cimport (
+    IDA_SUCCESS, IDA_TSTOP_RETURN, IDA_ROOT_RETURN, IDA_WARNING,
+    IDA_TOO_MUCH_WORK, IDA_TOO_MUCH_ACC, IDA_ERR_FAIL, IDA_CONV_FAIL,
+    IDA_LINIT_FAIL, IDA_LSETUP_FAIL, IDA_LSOLVE_FAIL, IDA_RES_FAIL,
+    IDA_REP_RES_ERR, IDA_RTFUNC_FAIL, IDA_CONSTR_FAIL, IDA_FIRST_RES_FAIL,
+    IDA_LINESEARCH_FAIL, IDA_NO_RECOVERY, IDA_NLS_INIT_FAIL, IDA_NLS_SETUP_FAIL,
+    IDA_NLS_FAIL, IDA_MEM_NULL, IDA_MEM_FAIL, IDA_ILL_INPUT, IDA_NO_MALLOC,
+    IDA_BAD_EWT, IDA_BAD_K, IDA_BAD_T, IDA_BAD_DKY, IDA_VECTOROP_ERR,
+    IDA_UNRECOGNIZED_ERROR, IDAFree, IDA_ONE_STEP, IDA_NORMAL, IDASolve,
+    IDAGetConsistentIC, IDA_Y_INIT, IDA_YA_YDP_INIT, IDACalcIC,
+    IDASetSuppressAlg, IDASetId, IDASetConstraints, IDASetJacFn, IDASetJacTimes,
+    IDALS_LMEM_NULL, IDASetPreconditioner, IDALS_SUCCESS, IDALS_MEM_NULL,
+    IDALS_ILL_INPUT, IDASetLinearSolver, IDASetNonlinConvCoef,
+    IDASetMaxConvFails, IDASetMaxNonlinIters, IDASetMaxStep, IDASetInitStep,
+    IDASetMaxNumSteps, IDASetMaxOrd, IDASetUserData, IDAReInit, IDAInit,
+    IDACreate, IDAFree, IDASetStopTime, IDASVtolerances, IDASStolerances,
+    IDARootInit,
+)
+from .common_defs cimport (
+    nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
+)
+from .common_defs import (
+    DTYPE, INDEX_TYPE, Shared_WrapErrHandler, Shared_ErrHandler, Shared_data,
+    BaseSundialsSolver,
+)
+# this is needed because we want DTYPE and INDEX_TYPE to be
+# accessible from python (not only in cython)
 
 
 # TODO: parallel implementation: N_VectorParallel
@@ -720,62 +743,28 @@ cdef class IDA_ContinuationFunction:
                        IDA solver):
         return self._fn(t, y, yp, solver)
 
+
 def no_continue_fn(t, y, yp, solver):
     return 1
 
-cdef class IDA_ErrHandler:
-    cpdef evaluate(self,
-                   int error_code,
-                   bytes module,
-                   bytes function,
-                   bytes msg,
-                   object user_data = None):
-        """ format that error handling functions must match """
-        pass
-
-cdef class IDA_WrapErrHandler(IDA_ErrHandler):
-    cpdef set_err_handler(self, object err_handler):
-        """
-        set some (c/p)ython function as the error handler
-        """
-        if _get_num_args(err_handler) == 5:
-            self.with_userdata = 1
-        else:
-            self.with_userdata = 0
-        self._err_handler = err_handler
-
-    cpdef evaluate(self,
-                   int error_code,
-                   bytes module,
-                   bytes function,
-                   bytes msg,
-                   object user_data = None):
-        if self.with_userdata == 1:
-            self._err_handler(error_code, module, function, msg, user_data)
-        else:
-            self._err_handler(error_code, module, function, msg)
 
 cdef void _ida_err_handler_fn(
-    int error_code, const char *module, const char *function, char *msg,
-    void *eh_data
+    int line, const char *func, const char *file, const char *msg,
+    SUNErrCode err_code, void *err_user_data, SUNContext sunctx
 ):
     """
-    function with the signature of IDAErrHandlerFn, that calls python error
+    function with the signature of SUNErrHandlerFn, that calls python error
     handler
     """
-    aux_data = <IDA_data> eh_data
-    aux_data.err_handler.evaluate(error_code,
-                                  module,
-                                  function,
-                                  msg,
-                                  aux_data.err_user_data)
+    aux_data = <IDA_data> err_user_data
+    aux_data.err_handler.evaluate(
+        line, func, file, msg, err_code, aux_data.err_user_data
+    )
 
 
-cdef class IDA_data:
+cdef class IDA_data(Shared_data):
     def __cinit__(self, N):
-        self.parallel_implementation = False
-        self.user_data = None
-        self.err_user_data = None
+        super().__init__()
 
         self.yy_tmp = np.empty(N, DTYPE)
         self.yp_tmp = np.empty(N, DTYPE)
@@ -787,7 +776,7 @@ cdef class IDA_data:
         self.v_tmp = np.empty(N, DTYPE)
         self.z_tmp = np.empty(N, DTYPE)
 
-cdef class IDA:
+cdef class IDA(BaseSundialsSolver):
 
     def __cinit__(self, Rfn, **options):
         """
@@ -797,7 +786,7 @@ cdef class IDA:
             Rfn     - residual function
             options - additional options for initialization
         """
-
+        super().__init__()
         default_values = {
             'implementation': 'serial',
             'rtol': 1e-6, 'atol': 1e-12,
@@ -837,21 +826,23 @@ cdef class IDA:
             'validate_flags': None,
             }
 
-        self.verbosity = 1
         self.options = default_values
-        self.N       = -1
-        self._old_api = False # use new api by default
-        self._step_compute = False #avoid dict lookup
-        self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)
         self._ida_mem = NULL
-        self.sunctx = NULL
-        self.initialized = False
 
-    cpdef _create_suncontext(self):
-        cdef int res = SUNContext_Create(NULL, &self.sunctx)
-        if res < 0:
-            raise RuntimeError("Failed to create Sundials context")
+    cpdef _update_error_handler(self):
+        cdef SUNErrCode res = SUNContext_ClearErrHandlers(self.sunctx)
+        if res:
+            raise RuntimeError(
+                "Failed to clear error handlers", code=int(res),
+            )
+        res = SUNContext_PushErrHandler(
+            self.sunctx, _ida_err_handler_fn, <void*> self.aux_data
+        )
+        if res:
+            raise RuntimeError(
+                "Failed to push new error handler", code=int(res),
+            )
 
     def set_options(self, **options):
         """
@@ -1094,7 +1085,7 @@ cdef class IDA:
                             inverse of the step size.
                         user data is a pointer to user data (optional)
             'err_handler':
-                Values: function of class IDA_ErrHandler, default = None
+                Values: function of class Shared_ErrHandler, default = None
                 Description:
                     Defines a function which controls output from the IDA
                     solver
@@ -1125,14 +1116,7 @@ cdef class IDA:
                     `solve`. See the `validate_flags` function for how this
                     affects `solve`.
         """
-
-        for (key, value) in options.items():
-            if key.lower() in self.options:
-                self.options[key.lower()] = value
-            else:
-                raise ValueError("Option '%s' is not supported by solver" % key)
-
-        self._set_runtime_changeable_options(options)
+        super().set_options(**options)
 
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=False):
@@ -1486,23 +1470,15 @@ cdef class IDA:
         # Set err_handler
         err_handler = opts.get('err_handler', None)
         if err_handler is not None:
-            if not isinstance(err_handler, IDA_ErrHandler):
-                tmpfun = IDA_WrapErrHandler()
+            if not isinstance(err_handler, Shared_ErrHandler):
+                tmpfun = Shared_WrapErrHandler()
                 tmpfun.set_err_handler(err_handler)
                 err_handler = tmpfun
 
             self.aux_data.err_handler = err_handler
 
-            flag = IDASetErrHandlerFn(
-                ida_mem, _ida_err_handler_fn, <void*> self.aux_data)
+            self._update_error_handler()
 
-            if flag == IDA_SUCCESS:
-                pass
-            elif flag == IDA_MEM_FAIL:
-                raise MemoryError(
-                    'IDASetErrHandlerFn: Memory allocation error')
-            else:
-                raise RuntimeError('IDASetErrHandlerFn: Unknown flag raised')
         self.aux_data.err_user_data = opts['err_user_data'] or opts['user_data']
 
         self.aux_data.parallel_implementation = self.parallel_implementation
@@ -2026,9 +2002,6 @@ cdef class IDA:
 
         if not flag:
             if self._old_api:
-                # print done in init_step method!
-#                print('IDAInitCond: Error occured during computation'
-#                      ' of initial condition, flag', flag)
                 return (False, ret_ic[1], y0, None, None, None, None)
             else:
                 return ret_ic

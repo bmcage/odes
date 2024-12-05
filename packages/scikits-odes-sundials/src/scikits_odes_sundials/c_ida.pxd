@@ -206,43 +206,6 @@ cdef extern from "ida/ida_ls.h":
     int IDAGetLastLinFlag(void *ida_mem, long int *flag)
     char *IDAGetLinReturnFlagName(long int flag)
 
-cdef extern from "ida/ida_direct.h":
-    
-    ctypedef IDALsJacFn IDAJacFn
-
-    int IDASetJacFn(void *ida_mem, IDAJacFn jac)
-    
-    int IDAGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
-    int IDAGetNumJacEvals(void *ida_mem, long int *njevals)
-    int IDAGetNumResEvals(void *ida_mem, long int *nfevalsLS)
-    int IDAGetLastFlag(void *ida_mem, long int *flag)
-    char *IDAGetReturnFlagName(long int flag)
-
-cdef extern from "ida/ida_spils.h":
-
-    ctypedef IDALsPrecSetupFn IDAPrecSetupFn;
-    ctypedef IDALsPrecSolveFn IDAPrecSolveFn;
-    ctypedef IDALsJacTimesSetupFn IDAJacTimesSetupFn;
-    ctypedef IDALsJacTimesVecFn IDAJacTimesVecFn;
-
-    int IDASetPreconditioner(void *ida_mem,
-                                  IDAPrecSetupFn pset,
-                                  IDAPrecSolveFn psolve)
-    int IDASetJacTimes(void *ida_mem, IDAJacTimesSetupFn jtsetup,
-                            IDAJacTimesVecFn jtimes)
-    int IDASetEpsLin(void *ida_mem, sunrealtype eplifac)
-    int IDASetIncrementFactor(void *ida_mem, sunrealtype dqincfac)
-    int IDAGetWorkSpace(void *ida_mem, long int *lenrwLS, long int *leniwLS)
-    int IDAGetNumPrecEvals(void *ida_mem, long int *npevals)
-    int IDAGetNumPrecSolves(void *ida_mem, long int *npsolves)
-    int IDAGetNumLinIters(void *ida_mem, long int *nliters)
-    int IDAGetNumConvFails(void *ida_mem, long int *nlcfails)
-    int IDAGetNumJTSetupEvals(void *ida_mem, long int *njtsetups)
-    int IDAGetNumJtimesEvals(void *ida_mem, long int *njvevals)
-    int IDAGetNumResEvals(void *ida_mem, long int *nrevalsLS)
-    int IDAGetLastFlag(void *ida_mem, long int *flag)
-    char *IDAGetReturnFlagName(long int flag)
-
 cdef extern from "ida/ida_bbdpre.h":
 
     ctypedef int (*IDABBDLocalFn)(sunindextype Nlocal, sunrealtype tt,
