@@ -97,16 +97,20 @@ cdef class CV_ContinuationFunction:
                        CVODE solver)
 
 cdef class CV_ErrHandler:
-    cpdef evaluate(self,
-                   int error_code,
-                   bytes module,
-                   bytes function,
-                   bytes msg,
-                   object user_data = *)
+    cpdef evaluate(
+        self,
+        int line,
+        bytes func,
+        bytes file,
+        bytes msg,
+        int err_code,
+        object user_data = *
+    )
 
 cdef class CV_WrapErrHandler(CV_ErrHandler):
     cdef object _err_handler
     cdef int with_userdata
+    cdef int new_err_handler
     cpdef set_err_handler(self, object err_handler)
 
 
@@ -143,6 +147,7 @@ cdef class CVODE:
 
     # Functions
     cpdef _create_suncontext(self)
+    cpdef _update_error_handler(self)
     cpdef _init_step(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
     cpdef _reinit_IC(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
 

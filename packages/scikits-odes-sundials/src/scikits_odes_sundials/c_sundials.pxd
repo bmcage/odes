@@ -1,32 +1,106 @@
 from libc.stdio cimport FILE
 
+
 cdef extern from "sundials/sundials_types.h":
     ctypedef float sunrealtype
     ctypedef unsigned int sunbooleantype
     ctypedef long sunindextype
+    ctypedef int SUNErrCode
+    cdef enum SUNOutputFormat:
+        SUN_OUTPUTFORMAT_TABLE,
+        SUN_OUTPUTFORMAT_CSV
+
+    ctypedef int SUNComm
+    cdef int SUN_COMM_NULL = 0
+
+    struct SUNContext_:
+        pass
+    ctypedef SUNContext_* SUNContext
+
+    struct SUNErrHandler_:
+        pass
+    ctypedef SUNErrHandler_* SUNErrHandler
+
+    struct SUNProfiler_:
+        pass
+    ctypedef SUNProfiler_* SUNProfiler
+
+    struct SUNLogger_:
+        pass
+    ctypedef SUNLogger_* SUNLogger
+
+    ctypedef void (*SUNErrHandlerFn)(int line, const char* func,
+        const char* file, const char* msg, SUNErrCode err_code,
+        void* err_user_data, SUNContext sunctx)
+
 
 cdef extern from "sundials/sundials_context.h":
-    struct _SUNContext:
-        pass
-    ctypedef _SUNContext* SUNContext
+    SUNErrCode SUNContext_Create(SUNComm comm, SUNContext* sunctx_out)
+    SUNErrCode SUNContext_GetLastError(SUNContext sunctx)
+    SUNErrCode SUNContext_PeekLastError(SUNContext sunctx)
+    SUNErrCode SUNContext_PushErrHandler(
+        SUNContext sunctx, SUNErrHandlerFn err_fn, void* err_user_data
+    )
+    SUNErrCode SUNContext_PopErrHandler(SUNContext sunctx)
+    SUNErrCode SUNContext_ClearErrHandlers(SUNContext sunctx)
+    SUNErrCode SUNContext_GetProfiler(SUNContext sunctx, SUNProfiler* profiler)
+    SUNErrCode SUNContext_SetProfiler(SUNContext sunctx, SUNProfiler profiler)
+    SUNErrCode SUNContext_GetLogger(SUNContext sunctx, SUNLogger* logger)
+    SUNErrCode SUNContext_SetLogger(SUNContext sunctx, SUNLogger logger)
+    SUNErrCode SUNContext_Free(SUNContext* ctx)
 
-    int SUNContext_Create(void* comm, SUNContext* ctx)
-    # Need to include profiler/logger headers
-    #int SUNContext_GetProfiler(SUNContext sunctx, SUNProfiler* profiler)
-    #int SUNContext_SetProfiler(SUNContext sunctx, SUNProfiler profiler)
-    #int SUNContext_GetLogger(SUNContext sunctx, SUNLogger* logger)
-    #int SUNContext_SetLogger(SUNContext sunctx, SUNLogger logger)
-    int SUNContext_Free(SUNContext* ctx)
+
+cdef extern from "sundials/sundials_errors.h":
+    enum: SUN_ERR_MINIMUM
+    enum: SUN_ERR_ARG_CORRUPT # argument provided is NULL or corrupted
+    enum: SUN_ERR_ARG_INCOMPATIBLE # argument provided is not compatible
+    enum: SUN_ERR_ARG_OUTOFRANGE # argument is out of the valid range
+    enum: SUN_ERR_ARG_WRONGTYPE # argument provided is not the right type
+    enum: SUN_ERR_ARG_DIMSMISMATCH # argument dimensions do not agree
+    enum: SUN_ERR_GENERIC # an error occurred
+    enum: SUN_ERR_CORRUPT # value is NULL or corrupt
+    enum: SUN_ERR_OUTOFRANGE # Value is out of the expected range
+    enum: SUN_ERR_FILE_OPEN # Unable to open file
+    enum: SUN_ERR_OP_FAIL # an operation failed
+    enum: SUN_ERR_MEM_FAIL # a memory operation failed
+    enum: SUN_ERR_MALLOC_FAIL # malloc returned NULL
+    enum: SUN_ERR_EXT_FAIL # a failure occurred in an external library
+    enum: SUN_ERR_DESTROY_FAIL # a destroy function returned an error
+    enum: SUN_ERR_NOT_IMPLEMENTED # operation is not implemented: function pointer is NULL
+    enum: SUN_ERR_USER_FCN_FAIL # the user provided callback function failed
+    enum: SUN_ERR_PROFILER_MAPFULL # the number of profiler entries exceeded SUNPROFILER_MAX_ENTRIES
+    enum: SUN_ERR_PROFILER_MAPGET # unknown error getting SUNProfiler timer
+    enum: SUN_ERR_PROFILER_MAPINSERT # unknown error inserting SUNProfiler timer
+    enum: SUN_ERR_PROFILER_MAPKEYNOTFOUND # timer was not found in SUNProfiler
+    enum: SUN_ERR_PROFILER_MAPSORT # error sorting SUNProfiler map
+    enum: SUN_ERR_SUNCTX_CORRUPT # SUNContext is NULL or corrupt
+    enum: SUN_ERR_MPI_FAIL # an MPI call returned something other than MPI_SUCCESS
+    enum: SUN_ERR_UNREACHABLE # Reached code that should be unreachable, open an issue at https://github.com/LLNL/sundials
+    enum: SUN_ERR_UNKNOWN # Unknown error occured, open an issue at https://github.com/LLNL/sundials
+    enum: SUN_ERR_MAXIMUM
+    enum: SUN_SUCCESS
+
+    cdef void SUNLogErrHandlerFn(
+        int line, const char* func, const char* file, const char* msg,
+        SUNErrCode err_code, void* err_user_data, SUNContext sunctx
+    )
+    cdef void SUNAbortErrHandlerFn(
+        int line, const char* func, const char* file, const char* msg,
+        SUNErrCode err_code, void* err_user_data, SUNContext sunctx
+    )
+    cdef const char* SUNGetErrMsg(SUNErrCode code)
+
 
 cdef extern from "sundials/sundials_version.h":
-    
-    #Fill a string with SUNDIALS version information */
+    # Fill a string with SUNDIALS version information */
     int SUNDIALSGetVersion(char *version, int len)
 
-    # Fills integers with the major, minor, and patch release version numbers and a string with the release label.
+    # Fills integers with the major, minor, and patch release version numbers
+    # and a string with the release label.
     int SUNDIALSGetVersionNumber(int *major, int *minor, int *patch,
                                  char *label, int len);
-                                             
+
+
 cdef extern from "sundials/sundials_nvector.h":
     cdef enum N_Vector_ID:
         SUNDIALS_NVEC_SERIAL,
@@ -197,6 +271,7 @@ cdef extern from "sundials/sundials_nvector.h":
     N_Vector N_VGetVecAtIndexVectorArray(N_Vector* vs, int index)
     void N_VSetVecAtIndexVectorArray(N_Vector* vs, int index, N_Vector w)
 
+
 cdef extern from "sundials/sundials_matrix.h":
     cdef enum SUNMatrix_ID:
         SUNMATRIX_DENSE,
@@ -243,6 +318,7 @@ cdef extern from "sundials/sundials_matrix.h":
     int SUNMatMatvec(SUNMatrix A, N_Vector x, N_Vector y)
     int SUNMatSpace(SUNMatrix A, long int *lenrw, long int *leniw)
 
+
 cdef extern from "sundials/sundials_iterative.h":
     enum:
         SUN_PREC_NONE
@@ -264,11 +340,6 @@ cdef extern from "sundials/sundials_iterative.h":
     int QRfact(int n, sunrealtype **h, sunrealtype *q, int job)
     int QRsol(int n, sunrealtype **h, sunrealtype *q, sunrealtype *b)
 
-    enum: SUNMAT_SUCCESS                  #    0  /* function successfull          */
-    enum: SUNMAT_ILL_INPUT                # -701  /* illegal function input        */
-    enum: SUNMAT_MEM_FAIL                 # -702  /* failed memory access/alloc    */
-    enum: SUNMAT_OPERATION_FAIL           # -703  /* a SUNMatrix operation returned nonzero */
-    enum: SUNMAT_MATVEC_SETUP_REQUIRED    # -704  /* the SUNMatMatvecSetup routine needs to be called */
 
 cdef extern from "sundials/sundials_linearsolver.h":
 
@@ -293,7 +364,7 @@ cdef extern from "sundials/sundials_linearsolver.h":
         SUNLINEARSOLVER_SUPERLUMT,
         SUNLINEARSOLVER_CUSOLVERSP_BATCHQR,
         SUNLINEARSOLVER_CUSTOM
-        
+
     struct _generic_SUNLinearSolver_Ops:
         pass
     struct _generic_SUNLinearSolver:
@@ -349,27 +420,24 @@ cdef extern from "sundials/sundials_linearsolver.h":
                                        long int *leniwLS)
     int SUNLinSolFree(SUNLinearSolver S)
 
-    enum: SUNLS_SUCCESS            #   0   /* successful/converged          */
-    
-    enum: SUNLS_MEM_NULL           # -801   /* mem argument is NULL          */
-    enum: SUNLS_ILL_INPUT          # -802   /* illegal function input        */
-    enum: SUNLS_MEM_FAIL           # -803   /* failed memory access          */
-    enum: SUNLS_ATIMES_FAIL_UNREC  # -804   /* atimes unrecoverable failure  */
-    enum: SUNLS_PSET_FAIL_UNREC    # -805   /* pset unrecoverable failure    */
-    enum: SUNLS_PSOLVE_FAIL_UNREC  # -806   /* psolve unrecoverable failure  */
-    enum: SUNLS_PACKAGE_FAIL_UNREC # -807   /* external package unrec. fail  */
-    enum: SUNLS_GS_FAIL            # -808   /* Gram-Schmidt failure          */
-    enum: SUNLS_QRSOL_FAIL         # -809   /* QRsol found singular R        */
-    enum: SUNLS_VECTOROP_ERR       # -810   /* vector operation error        */
+    enum: SUNLS_ATIMES_NULL       # atimes function is NULL
+    enum: SUNLS_ATIMES_FAIL_UNREC # atimes unrecoverable failure
+    enum: SUNLS_PSET_FAIL_UNREC   # pset unrecoverable failure
+    enum: SUNLS_PSOLVE_NULL       # psolve function is NULL
+    enum: SUNLS_PSOLVE_FAIL_UNREC # psolve unrecoverable failure
+    enum: SUNLS_GS_FAIL           # Gram-Schmidt failure
+    enum: SUNLS_QRSOL_FAIL        # QRsol found singular R
 
-    enum: SUNLS_RES_REDUCED        # 801   /* nonconv. solve, resid reduced */
-    enum: SUNLS_CONV_FAIL          # 802   /* nonconvergent solve           */
-    enum: SUNLS_ATIMES_FAIL_REC    # 803   /* atimes failed recoverably     */
-    enum: SUNLS_PSET_FAIL_REC      # 804   /* pset failed recoverably       */
-    enum: SUNLS_PSOLVE_FAIL_REC    # 805   /* psolve failed recoverably     */
-    enum: SUNLS_PACKAGE_FAIL_REC   # 806   /* external package recov. fail  */
-    enum: SUNLS_QRFACT_FAIL        # 807   /* QRfact found singular matrix  */
-    enum: SUNLS_LUFACT_FAIL        # 808   /* LUfact found singular matrix  */
+    enum: SUNLS_RECOV_FAILURE     # generic recoverable failure
+    enum: SUNLS_RES_REDUCED       # nonconv. solve, resid reduced
+    enum: SUNLS_CONV_FAIL         # nonconvergent solve
+    enum: SUNLS_ATIMES_FAIL_REC   # atimes failed recoverably
+    enum: SUNLS_PSET_FAIL_REC     # pset failed recoverably
+    enum: SUNLS_PSOLVE_FAIL_REC   # psolve failed recoverably
+    enum: SUNLS_PACKAGE_FAIL_REC  # external package recov. fail
+    enum: SUNLS_QRFACT_FAIL       # QRfact found singular matrix
+    enum: SUNLS_LUFACT_FAIL       # LUfact found singular matrix
+
 
 cdef extern from "sundials/sundials_direct.h":
     enum: SUNDIALS_DENSE
@@ -409,6 +477,7 @@ cdef extern from "sundials/sundials_direct.h":
     sunrealtype *newRealArray(sunindextype m)
     void destroyArray(void *v)
 
+
 cdef extern from "sundials/sundials_band.h":
     sunindextype SUNDlsMat_BandGBTRF(SUNDlsMat A, sunindextype *p)
     sunindextype SUNDlsMat_bandGBTRF(sunrealtype **a, sunindextype n, sunindextype mu, sunindextype ml,
@@ -426,6 +495,7 @@ cdef extern from "sundials/sundials_band.h":
     void SUNDlsMat_BandMatvec(SUNDlsMat A, sunrealtype *x, sunrealtype *y)
     void SUNDlsMat_bandMatvec(sunrealtype **a, sunrealtype *x, sunrealtype *y, sunindextype n,
                     sunindextype mu, sunindextype ml, sunindextype smu)
+
 
 cdef extern from "sundials/sundials_dense.h":
     sunindextype SUNDlsMat_DenseGETRF(SUNDlsMat A, sunindextype *p)
@@ -454,6 +524,7 @@ cdef extern from "sundials/sundials_dense.h":
     void SUNDlsMat_denseAddIdentity(sunrealtype **a, sunindextype n)
     void SUNDlsMat_DenseMatvec(SUNDlsMat A, sunrealtype *x, sunrealtype *y)
     void SUNDlsMat_denseMatvec(sunrealtype **a, sunrealtype *x, sunrealtype *y, sunindextype m, sunindextype n)
+
 
 cdef extern from "sundials/sundials_nonlinearsolver.h":
 
@@ -523,13 +594,5 @@ cdef extern from "sundials/sundials_nonlinearsolver.h":
     int SUNNonlinSolGetNumConvFails(SUNNonlinearSolver NLS,
                                     long int *nconvfails)
 
-
-    enum: SUN_NLS_SUCCESS         #  0
     enum: SUN_NLS_CONTINUE        # +901
     enum: SUN_NLS_CONV_RECVR      # +902
-    
-    enum: SUN_NLS_MEM_NULL        # -901
-    enum: SUN_NLS_MEM_FAIL        # -902
-    enum: SUN_NLS_ILL_INPUT       # -903
-    enum: SUN_NLS_VECTOROP_ERR    # -904
-    enum: SUN_NLS_EXT_FAIL        # -905 

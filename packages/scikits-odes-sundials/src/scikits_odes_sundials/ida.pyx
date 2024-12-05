@@ -724,12 +724,15 @@ def no_continue_fn(t, y, yp, solver):
     return 1
 
 cdef class IDA_ErrHandler:
-    cpdef evaluate(self,
-                   int error_code,
-                   bytes module,
-                   bytes function,
-                   bytes msg,
-                   object user_data = None):
+    cpdef evaluate(
+        self,
+        int line,
+        bytes func,
+        bytes file,
+        bytes msg,
+        int err_code,
+        object user_data = None,
+    ):
         """ format that error handling functions must match """
         pass
 
@@ -738,37 +741,57 @@ cdef class IDA_WrapErrHandler(IDA_ErrHandler):
         """
         set some (c/p)ython function as the error handler
         """
-        if _get_num_args(err_handler) == 5:
-            self.with_userdata = 1
-        else:
-            self.with_userdata = 0
+        nrarg = _get_num_args(err_handler)
+        self.new_err_handler = True if nrarg == 1 else False
+        self.with_userdata = (nrarg > 5) or (
+            nrarg == 5 and inspect.isfunction(err_handler)
+        )
         self._err_handler = err_handler
 
-    cpdef evaluate(self,
-                   int error_code,
-                   bytes module,
-                   bytes function,
-                   bytes msg,
-                   object user_data = None):
-        if self.with_userdata == 1:
-            self._err_handler(error_code, module, function, msg, user_data)
+    cpdef evaluate(
+        self,
+        int line,
+        bytes func,
+        bytes file,
+        bytes msg,
+        int err_code,
+        object user_data = None
+    ):
+        cdef dict dict_arg
+
+        # legacy mappings
+        cdef int error_code = err_code
+        cdef bytes module = file
+        cdef bytes function = func
+
+        if self.new_err_handler:
+            dict_arg = {
+                "line": line,
+                "func": func,
+                "file": file,
+                "msg": msg,
+                "err_code": err_code,
+                "user_data": user_data,
+            }
+            self._err_handler(dict_arg)
         else:
-            self._err_handler(error_code, module, function, msg)
+            if self.with_userdata == 1:
+                self._err_handler(error_code, module, function, msg, user_data)
+            else:
+                self._err_handler(error_code, module, function, msg)
 
 cdef void _ida_err_handler_fn(
-    int error_code, const char *module, const char *function, char *msg,
-    void *eh_data
+    int line, const char *func, const char *file, const char *msg,
+    SUNErrCode err_code, void *err_user_data, SUNContext sunctx
 ):
     """
     function with the signature of IDAErrHandlerFn, that calls python error
     handler
     """
-    aux_data = <IDA_data> eh_data
-    aux_data.err_handler.evaluate(error_code,
-                                  module,
-                                  function,
-                                  msg,
-                                  aux_data.err_user_data)
+    aux_data = <IDA_data> err_user_data
+    aux_data.err_handler.evaluate(
+        line, func, file, msg, err_code, aux_data.err_user_data
+    )
 
 
 cdef class IDA_data:
@@ -849,9 +872,23 @@ cdef class IDA:
         self.initialized = False
 
     cpdef _create_suncontext(self):
-        cdef int res = SUNContext_Create(NULL, &self.sunctx)
+        cdef int res = SUNContext_Create(SUN_COMM_NULL, &self.sunctx)
         if res < 0:
             raise RuntimeError("Failed to create Sundials context")
+
+    cpdef _update_error_handler(self):
+        cdef SUNErrCode res = SUNContext_ClearErrHandlers(self.sunctx)
+        if res:
+            raise RuntimeError(
+                "Failed to clear error handlers", code=int(res),
+            )
+        res = SUNContext_PushErrHandler(
+            self.sunctx, _ida_err_handler_fn, <void*> self.aux_data
+        )
+        if res:
+            raise RuntimeError(
+                "Failed to push new error handler", code=int(res),
+            )
 
     def set_options(self, **options):
         """
@@ -1493,16 +1530,8 @@ cdef class IDA:
 
             self.aux_data.err_handler = err_handler
 
-            flag = IDASetErrHandlerFn(
-                ida_mem, _ida_err_handler_fn, <void*> self.aux_data)
+            self._update_error_handler()
 
-            if flag == IDA_SUCCESS:
-                pass
-            elif flag == IDA_MEM_FAIL:
-                raise MemoryError(
-                    'IDASetErrHandlerFn: Memory allocation error')
-            else:
-                raise RuntimeError('IDASetErrHandlerFn: Unknown flag raised')
         self.aux_data.err_user_data = opts['err_user_data'] or opts['user_data']
 
         self.aux_data.parallel_implementation = self.parallel_implementation

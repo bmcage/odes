@@ -1,6 +1,7 @@
 from .c_sundials cimport *
 from libc.stdio cimport FILE
 
+
 cdef extern from "cvode/cvode.h":
     # lmm
     enum: CV_ADAMS # 1
@@ -123,6 +124,7 @@ cdef extern from "cvode/cvode.h":
     char *CVodeGetReturnFlagName(long int flag)
     void CVodeFree(void **cvode_mem)
 
+
 cdef extern from "cvode/cvode_ls.h":
     #CVDLS return values
     enum: CVLS_SUCCESS         #  0
@@ -186,15 +188,6 @@ cdef extern from "cvode/cvode_ls.h":
     int CVodeGetLastLinFlag(void *cvode_mem, long int *flag)
     char *CVodeGetLinReturnFlagName(long int flag)
 
-cdef extern from "cvode/cvode_direct.h":
-    ctypedef CVLsJacFn CVodeJacFn
-
-    int CVodeSetJacFn(void *cvode_mem, CVodeJacFn jac)
-    int CVodeGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
-    int CVodeGetNumJacEvals(void *cvode_mem, long int *njevals)
-    int CVodeGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
-    int CVodeGetLastFlag(void *cvode_mem, long int *flag)
-    char *CVodeGetReturnFlagName(long int flag)
 
 cdef extern from "cvode/cvode_bandpre.h":
     int CVBandPrecInit(void *cvode_mem, sunindextype N, sunindextype mu,
@@ -202,6 +195,7 @@ cdef extern from "cvode/cvode_bandpre.h":
     int CVBandPrecGetWorkSpace(void *cvode_mem, long int *lenrwLS, 
                                long int *leniwLS)
     int CVBandPrecGetNumRhsEvals(void *cvode_mem, long int *nfevalsBP)
+
 
 cdef extern from "cvode/cvode_diag.h":
     # CVDIAG return values
@@ -221,6 +215,7 @@ cdef extern from "cvode/cvode_diag.h":
     int CVDiagGetLastFlag(void *cvode_mem, long int *flag)
     char *CVDiagGetReturnFlagName(long int flag)
 
+
 cdef extern from "cvode/cvode_bbdpre.h":
     ctypedef int (*CVLocalFn)(sunindextype Nlocal, sunrealtype t, N_Vector y,
                               N_Vector g, void *user_data)
@@ -236,27 +231,3 @@ cdef extern from "cvode/cvode_bbdpre.h":
     int CVBBDPrecGetWorkSpace(void *cvode_mem, long int *lenrwBBDP, 
                               long int *leniwBBDP)
     int CVBBDPrecGetNumGfnEvals(void *cvode_mem, long int *ngevalsBBDP)
-
-cdef extern from "cvode/cvode_spils.h":
-
-    ctypedef CVLsPrecSetupFn CVodePrecSetupFn
-    ctypedef CVLsPrecSolveFn CVodePrecSolveFn
-    ctypedef CVLsJacTimesSetupFn CVodeJacTimesSetupFn
-    ctypedef CVLsJacTimesVecFn CVodeJacTimesVecFn
-
-    int CVodeSetEpsLin(void *cvode_mem, sunrealtype eplifac)
-    int CVodeSetPreconditioner(void *cvode_mem, CVodePrecSetupFn pset,
-                                 CVodePrecSolveFn psolve)
-    int CVodeSetJacTimes(void *cvode_mem, CVodeJacTimesSetupFn jtsetup,
-                           CVodeJacTimesVecFn jtimes)
-
-    int CVodeGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
-    int CVodeGetNumPrecEvals(void *cvode_mem, long int *npevals)
-    int CVodeGetNumPrecSolves(void *cvode_mem, long int *npsolves)
-    int CVodeGetNumLinIters(void *cvode_mem, long int *nliters)
-    int CVodeGetNumConvFails(void *cvode_mem, long int *nlcfails)
-    int CVodeGetNumJTSetupEvals(void *cvode_mem, long int *njtsetups)
-    int CVodeGetNumJtimesEvals(void *cvode_mem, long int *njvevals)
-    int CVodeGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
-    int CVodeGetLastFlag(void *cvode_mem, long int *flag)
-    char *CVodeGetReturnFlagName(long int flag)

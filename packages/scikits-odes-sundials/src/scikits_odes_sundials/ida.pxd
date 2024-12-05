@@ -117,16 +117,20 @@ cdef class IDA_ContinuationFunction:
 cdef int _res(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj)
 
 cdef class IDA_ErrHandler:
-    cpdef evaluate(self,
-                   int error_code,
-                   bytes module,
-                   bytes function,
-                   bytes msg,
-                   object user_data = *)
+    cpdef evaluate(
+        self,
+        int line,
+        bytes func,
+        bytes file,
+        bytes msg,
+        int err_code,
+        object user_data = *
+    )
 
 cdef class IDA_WrapErrHandler(IDA_ErrHandler):
     cdef object _err_handler
     cdef int with_userdata
+    cdef int new_err_handler
     cpdef set_err_handler(self, object err_handler)
 
 
@@ -183,6 +187,7 @@ cdef class IDA:
 
     # Functions
     cpdef _create_suncontext(self)
+    cpdef _update_error_handler(self)
     cpdef _init_step(self, DTYPE_t t0,
                     np.ndarray[DTYPE_t, ndim=1] y0,
                     np.ndarray[DTYPE_t, ndim=1] yp0,

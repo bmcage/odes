@@ -1,6 +1,7 @@
 from .c_sundials cimport *
 from libc.stdio cimport FILE
 
+
 cdef extern from "cvodes/cvodes.h":
     # lmm
     enum: CV_ADAMS # 1
@@ -57,7 +58,7 @@ cdef extern from "cvodes/cvodes.h":
     enum: CV_BAD_DKY           #   -26
     enum: CV_TOO_CLOSE         #   -27
     enum: CV_VECTOROP_ERR      #   -28
-    
+
     enum: CV_NO_QUAD             # -30
     enum: CV_QRHSFUNC_FAIL       # -31
     enum: CV_FIRST_QRHSFUNC_ERR  # -32
@@ -77,10 +78,10 @@ cdef extern from "cvodes/cvodes.h":
     enum: CV_FIRST_QSRHSFUNC_ERR # -52
     enum: CV_REPTD_QSRHSFUNC_ERR # -53
     enum: CV_UNREC_QSRHSFUNC_ERR # -54
-    
+
     enum: CV_UNRECOGNIZED_ERR    # -99
-    
-    # adjoint return values 
+
+    # adjoint return values
 
     enum: CV_NO_ADJ             # -101
     enum: CV_NO_FWD             # -102
@@ -335,7 +336,7 @@ cdef extern from "cvodes/cvodes.h":
 
     # Optional Input Functions For Adjoint Problems
     int CVodeSetAdjNoSensi(void *cvode_mem)
-    
+
     int CVodeSetUserDataB(void *cvode_mem, int which, void *user_dataB)
     int CVodeSetMaxOrdB(void *cvode_mem, int which, int maxordB)
     int CVodeSetMaxNumStepsB(void *cvode_mem, int which, long int mxstepsB)
@@ -379,7 +380,7 @@ cdef extern from "cvodes/cvodes.h":
 
     int CVodeGetAdjCurrentCheckPoint(void *cvode_mem, void **addr)
 
-    
+
 cdef extern from "cvodes/cvodes_ls.h":
     #CVDLS return values
     enum: CVLS_SUCCESS         #  0
@@ -395,7 +396,7 @@ cdef extern from "cvodes/cvodes_ls.h":
 
     enum: CVLS_NO_ADJ           # -101
     enum: CVLS_LMEMB_NULL       # -102
-    
+
     ctypedef int (*CVLsJacFn)(sunrealtype t, N_Vector y, N_Vector fy,
                               SUNMatrix Jac, void *user_data,
                               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1
@@ -534,20 +535,6 @@ cdef extern from "cvodes/cvodes_ls.h":
     int CVodeSetLinSysFnB(void *cvode_mem, int which, CVLsLinSysFnB linsys)
     int CVodeSetLinSysFnBS(void *cvode_mem, int which, CVLsLinSysFnBS linsys)
 
-cdef extern from "cvodes/cvodes_direct.h":
-    ctypedef CVLsJacFn CVodeJacFn
-    ctypedef CVLsJacFnB CVodeJacFnB
-    ctypedef CVLsJacFnBS CVodeJacFnBS
-
-    int CVodeSetJacFn(void *cvode_mem, CVodeJacFn jac)
-    int CVodeGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
-    int CVodeGetNumJacEvals(void *cvode_mem, long int *njevals)
-    int CVodeGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
-    int CVodeGetLastFlag(void *cvode_mem, long int *flag)
-    char *CVodeGetReturnFlagName(long int flag)
-
-    int CVodeSetJacFnB(void *cvode_mem, int which, CVodeJacFnB jacB)
-    int CVodeSetJacFnBS(void *cvode_mem, int which, CVodeJacFnBS jacBS)
 
 cdef extern from "cvodes/cvodes_bandpre.h":
     int CVBandPrecInit(void *cvode_mem, sunindextype N, sunindextype mu,
@@ -558,6 +545,7 @@ cdef extern from "cvodes/cvodes_bandpre.h":
 
     int CVBandPrecInitB(void *cvode_mem, int which,
                         sunindextype nB, sunindextype muB, sunindextype mlB)
+
 
 cdef extern from "cvodes/cvodes_diag.h":
     # CVDIAG return values
@@ -572,7 +560,7 @@ cdef extern from "cvodes/cvodes_diag.h":
     enum: CVDIAG_RHSFUNC_RECVR   # -7
 
     enum: CVDIAG_NO_ADJ          # -101
-    
+
     int CVDiag(void *cvode_mem)
     int CVDiagGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
     int CVDiagGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
@@ -580,6 +568,7 @@ cdef extern from "cvodes/cvodes_diag.h":
     char *CVDiagGetReturnFlagName(long int flag)
 
     int CVDiagB(void *cvode_mem, int which)
+
 
 cdef extern from "cvodes/cvodes_bbdpre.h":
     ctypedef int (*CVLocalFn)(sunindextype Nlocal, sunrealtype t, N_Vector y,
@@ -612,50 +601,3 @@ cdef extern from "cvodes/cvodes_bbdpre.h":
     int CVBBDPrecReInitB(void *cvode_mem, int which,
                          sunindextype mudqB, sunindextype mldqB,
                          sunrealtype dqrelyB)
-
-cdef extern from "cvodes/cvodes_spils.h":
-
-    ctypedef CVLsPrecSetupFn CVodePrecSetupFn
-    ctypedef CVLsPrecSolveFn CVodePrecSolveFn
-    ctypedef CVLsJacTimesSetupFn CVodeJacTimesSetupFn
-    ctypedef CVLsJacTimesVecFn CVodeJacTimesVecFn
-    
-    ctypedef CVLsPrecSetupFnB CVodePrecSetupFnB;
-    ctypedef CVLsPrecSetupFnBS CVodePrecSetupFnBS;
-    ctypedef CVLsPrecSolveFnB CVodePrecSolveFnB;
-    ctypedef CVLsPrecSolveFnBS CVodePrecSolveFnBS;
-    ctypedef CVLsJacTimesSetupFnB CVodeJacTimesSetupFnB;
-    ctypedef CVLsJacTimesSetupFnBS CVodeJacTimesSetupFnBS;
-    ctypedef CVLsJacTimesVecFnB CVodeJacTimesVecFnB;
-    ctypedef CVLsJacTimesVecFnBS CVodeJacTimesVecFnBS;
-
-    int CVodeSetEpsLin(void *cvode_mem, sunrealtype eplifac)
-    int CVodeSetPreconditioner(void *cvode_mem, CVodePrecSetupFn pset,
-                                 CVodePrecSolveFn psolve)
-    int CVodeSetJacTimes(void *cvode_mem, CVodeJacTimesSetupFn jtsetup,
-                           CVodeJacTimesVecFn jtimes)
-
-    int CVodeGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS)
-    int CVodeGetNumPrecEvals(void *cvode_mem, long int *npevals)
-    int CVodeGetNumPrecSolves(void *cvode_mem, long int *npsolves)
-    int CVodeGetNumLinIters(void *cvode_mem, long int *nliters)
-    int CVodeGetNumConvFails(void *cvode_mem, long int *nlcfails)
-    int CVodeGetNumJTSetupEvals(void *cvode_mem, long int *njtsetups)
-    int CVodeGetNumJtimesEvals(void *cvode_mem, long int *njvevals)
-    int CVodeGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS)
-    int CVodeGetLastFlag(void *cvode_mem, long int *flag)
-    char *CVodeGetReturnFlagName(long int flag)
-
-    int CVodeSetEpsLinB(void *cvode_mem, int which, sunrealtype eplifacB)
-    int CVodeSetPreconditionerB(void *cvode_mem, int which,
-                                  CVodePrecSetupFnB psetB,
-                                  CVodePrecSolveFnB psolveB)
-    int CVodeSetPreconditionerBS(void *cvode_mem, int which,
-                                   CVodePrecSetupFnBS psetBS,
-                                   CVodePrecSolveFnBS psolveBS)
-    int CVodeSetJacTimesB(void *cvode_mem, int which,
-                            CVodeJacTimesSetupFnB jtsetupB,
-                            CVodeJacTimesVecFnB jtimesB)
-    int CVodeSetJacTimesBS(void *cvode_mem, int which,
-                             CVodeJacTimesSetupFnBS jtsetupBS,
-                             CVodeJacTimesVecFnBS jtimesBS)

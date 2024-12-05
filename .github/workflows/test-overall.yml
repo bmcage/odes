@@ -11,62 +11,62 @@ jobs:
       matrix:
         include:
           #- python-version: "3.7"
-          #  sundials-version: "6.5.0"
+          #  sundials-version: "7.1.1"
           #  tox-env: py37-test
           #  sundials-precision: double
           #  sundials-index-size: 64
           - python-version: "3.8"
-            sundials-version: "6.5.0"
+            sundials-version: "7.1.1"
             tox-env: py38-test
             sundials-precision: double
             sundials-index-size: 64
           - python-version: "3.9"
-            sundials-version: "6.5.0"
+            sundials-version: "7.1.1"
             tox-env: py39-test
             sundials-precision: double
             sundials-index-size: 64
           - python-version: "3.10"
-            sundials-version: "6.5.0"
+            sundials-version: "7.1.1"
             tox-env: py310-test
             sundials-precision: double
             sundials-index-size: 64
           - python-version: "3.11"
-            sundials-version: "6.5.0"
+            sundials-version: "7.1.1"
             tox-env: py311-test
             sundials-precision: double
             sundials-index-size: 64
           - python-version: "3.12"
-            sundials-version: "6.5.0"
+            sundials-version: "7.1.1"
             tox-env: py312-test
             sundials-precision: double
             sundials-index-size: 64
           - python-version: "3.11"
-            sundials-version: "6.5.0"
+            sundials-version: "7.1.1"
             tox-env: apidocs
             sundials-precision: double
             sundials-index-size: 64
           - python-version: "3.11"
-            sundials-version: "6.5.0"
+            sundials-version: "7.1.1"
             tox-env: docs
             sundials-precision: double
             sundials-index-size: 64
           - python-version: "3.11"
-            sundials-version: "6.5.0"
+            sundials-version: "7.1.1"
             tox-env: py311-test
             sundials-precision: double
             sundials-index-size: 32
           #- python-version: "3.11"
-          #  sundials-version: "6.5.0"
+          #  sundials-version: "7.1.1"
           #  tox-env: py311-test
           #  sundials-precision: single
           #  sundials-index-size: 64
           - python-version: "3.11"
-            sundials-version: "6.5.0"
+            sundials-version: "7.1.1"
             tox-env: py311-test
             sundials-precision: extended
             sundials-index-size: 64
           #- python-version: "3.12"
-          #  sundials-version: "6.5.0"
+          #  sundials-version: "7.1.1"
           #  tox-env: py312-notebooks
           #  sundials-precision: double
           #  sundials-index-size: 64
