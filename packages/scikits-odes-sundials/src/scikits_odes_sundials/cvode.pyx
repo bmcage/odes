@@ -1246,7 +1246,6 @@ cdef class CVODE(BaseSundialsSolver):
             flag = StatusEnum(flag)
             y_retn  = np.empty(len(np_y0), DTYPE)
             y_retn[:] = np_y0[:]
-            print("init_step", flag)
             soln = SolverReturn(
                 flag=flag,
                 values=SolverVariables(t=time, y=y_retn),
@@ -1676,7 +1675,6 @@ cdef class CVODE(BaseSundialsSolver):
         else:
             y_retn = np.empty(len(np_y0), DTYPE)
             y_retn[:] = np_y0[:]
-            print("reinit_IC", flag)
             soln = SolverReturn(
                 flag=StatusEnum.SUCCESS,
                 values=SolverVariables(t=time, y=y_retn),
@@ -1768,7 +1766,6 @@ cdef class CVODE(BaseSundialsSolver):
                 return flag, t, y, t_tstop[0], y_tstop[0]
             return flag, t, y, t_err, y_err
 
-        print("solve", flag)
         soln = SolverReturn(
             flag=flag,
             values=SolverVariables(t=t, y=y),
@@ -1960,7 +1957,6 @@ cdef class CVODE(BaseSundialsSolver):
         if self._old_api:
             return flagCV, t_out
 
-        print("step", flag)
         return SolverReturn(
             flag=flag,
             values=SolverVariables(t=sol_t_out, y=y_out),

@@ -2002,9 +2002,6 @@ cdef class IDA(BaseSundialsSolver):
 
         if not flag:
             if self._old_api:
-                # print done in init_step method!
-#                print('IDAInitCond: Error occured during computation'
-#                      ' of initial condition, flag', flag)
                 return (False, ret_ic[1], y0, None, None, None, None)
             else:
                 return ret_ic
