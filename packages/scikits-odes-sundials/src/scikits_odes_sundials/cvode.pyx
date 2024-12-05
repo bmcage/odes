@@ -16,7 +16,7 @@ from . import (
 )
 
 from .c_sundials cimport (
-    sunrealtype, N_Vector, SUNContext_Create, SUNContext_Free,
+    sunrealtype, N_Vector, SUNContext_Free,
 )
 from .c_nvector_serial cimport *
 from .c_sunmatrix cimport *
@@ -26,6 +26,9 @@ from .c_sunnonlinsol cimport *
 from .c_cvode cimport *
 from .common_defs cimport (
     nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
+)
+from .common_defs cimport (
+    Shared_data, BaseSundialsSolver,
 )
 from .common_defs import (
     DTYPE, INDEX_TYPE, Shared_WrapErrHandler, Shared_ErrHandler,
@@ -694,11 +697,9 @@ cdef void _cv_err_handler_fn(
 
 
 # Auxiliary data carrying runtime vales for the CVODE solver
-cdef class CV_data:
+cdef class CV_data(Shared_data):
     def __cinit__(self, N):
-        self.parallel_implementation = False
-        self.user_data = None
-        self.err_user_data = None
+        super().__init__()
 
         self.yy_tmp = np.empty(N, DTYPE)
         self.yp_tmp = np.empty(N, DTYPE)
@@ -707,7 +708,7 @@ cdef class CV_data:
         self.r_tmp = np.empty(N, DTYPE)
         self.z_tmp = np.empty(N, DTYPE)
 
-cdef class CVODE:
+cdef class CVODE(BaseSundialsSolver):
 
     def __cinit__(self, Rfn, **options):
         """
@@ -719,7 +720,7 @@ cdef class CVODE:
                       of supported options and their values see set_options()
 
         """
-
+        super().__init__()
         default_values = {
             'implementation': 'serial',
             'lmm_type': 'BDF',
@@ -757,21 +758,9 @@ cdef class CVODE:
             'validate_flags': None,
             }
 
-        self.verbosity = 1
         self.options = default_values
-        self.N       = -1
-        self._old_api = False # use new api by default
-        self._step_compute = False #avoid dict lookup
-        self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)
         self._cv_mem = NULL
-        self.sunctx = NULL
-        self.initialized = False
-
-    cpdef _create_suncontext(self):
-        cdef int res = SUNContext_Create(SUN_COMM_NULL, &self.sunctx)
-        if res < 0:
-            raise RuntimeError("Failed to create Sundials context")
 
     cpdef _update_error_handler(self):
         cdef SUNErrCode res = SUNContext_ClearErrHandlers(self.sunctx)
@@ -1024,17 +1013,7 @@ cdef class CVODE:
                     `solve`. See the `validate_flags` function for how this
                     affects `solve`.
         """
-
-        # Update values of all supplied options
-        for (key, value) in options.items():
-            if key.lower() in self.options:
-                self.options[key.lower()] = value
-            else:
-                raise ValueError("Option '%s' is not supported by solver" % key)
-
-        # If the solver is running, this re-sets runtime changeable options,
-        # otherwise it does nothing
-        self._set_runtime_changeable_options(options)
+        super().set_options(**options)
 
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=False):

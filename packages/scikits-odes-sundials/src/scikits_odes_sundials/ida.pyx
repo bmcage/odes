@@ -15,7 +15,7 @@ from . import (
 )
 
 from .c_sundials cimport (
-    sunrealtype, N_Vector, SUNContext_Create, SUNContext_Free,
+    sunrealtype, N_Vector, SUNContext_Free,
 )
 from .c_nvector_serial cimport *
 from .c_sunmatrix cimport *
@@ -27,7 +27,8 @@ from .common_defs cimport (
     nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
 )
 from .common_defs import (
-    DTYPE, INDEX_TYPE, Shared_WrapErrHandler, Shared_ErrHandler,
+    DTYPE, INDEX_TYPE, Shared_WrapErrHandler, Shared_ErrHandler, Shared_data,
+    BaseSundialsSolver,
 )
 # this is needed because we want DTYPE and INDEX_TYPE to be
 # accessible from python (not only in cython)
@@ -738,11 +739,9 @@ cdef void _ida_err_handler_fn(
     )
 
 
-cdef class IDA_data:
+cdef class IDA_data(Shared_data):
     def __cinit__(self, N):
-        self.parallel_implementation = False
-        self.user_data = None
-        self.err_user_data = None
+        super().__init__()
 
         self.yy_tmp = np.empty(N, DTYPE)
         self.yp_tmp = np.empty(N, DTYPE)
@@ -754,7 +753,7 @@ cdef class IDA_data:
         self.v_tmp = np.empty(N, DTYPE)
         self.z_tmp = np.empty(N, DTYPE)
 
-cdef class IDA:
+cdef class IDA(BaseSundialsSolver):
 
     def __cinit__(self, Rfn, **options):
         """
@@ -764,7 +763,7 @@ cdef class IDA:
             Rfn     - residual function
             options - additional options for initialization
         """
-
+        super().__init__()
         default_values = {
             'implementation': 'serial',
             'rtol': 1e-6, 'atol': 1e-12,
@@ -804,21 +803,9 @@ cdef class IDA:
             'validate_flags': None,
             }
 
-        self.verbosity = 1
         self.options = default_values
-        self.N       = -1
-        self._old_api = False # use new api by default
-        self._step_compute = False #avoid dict lookup
-        self._validate_flags = False # don't validate by default
         self.set_options(rfn=Rfn, **options)
         self._ida_mem = NULL
-        self.sunctx = NULL
-        self.initialized = False
-
-    cpdef _create_suncontext(self):
-        cdef int res = SUNContext_Create(SUN_COMM_NULL, &self.sunctx)
-        if res < 0:
-            raise RuntimeError("Failed to create Sundials context")
 
     cpdef _update_error_handler(self):
         cdef SUNErrCode res = SUNContext_ClearErrHandlers(self.sunctx)
@@ -1106,14 +1093,7 @@ cdef class IDA:
                     `solve`. See the `validate_flags` function for how this
                     affects `solve`.
         """
-
-        for (key, value) in options.items():
-            if key.lower() in self.options:
-                self.options[key.lower()] = value
-            else:
-                raise ValueError("Option '%s' is not supported by solver" % key)
-
-        self._set_runtime_changeable_options(options)
+        super().set_options(**options)
 
     cpdef _set_runtime_changeable_options(self, object options,
                                           bint supress_supported_check=False):

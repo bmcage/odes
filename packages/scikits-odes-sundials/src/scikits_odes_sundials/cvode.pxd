@@ -1,8 +1,10 @@
 #defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 cimport numpy as np
-from .c_sundials cimport N_Vector, sunrealtype, SUNContext
-from .common_defs cimport DTYPE_t, INDEX_TYPE_t, Shared_ErrHandler
+from .c_sundials cimport N_Vector, sunrealtype
+from .common_defs cimport (
+    DTYPE_t, Shared_ErrHandler, Shared_data, BaseSundialsSolver,
+)
 
 cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
@@ -97,7 +99,7 @@ cdef class CV_ContinuationFunction:
                        CVODE solver)
 
 
-cdef class CV_data:
+cdef class CV_data(Shared_data):
     cdef np.ndarray yy_tmp, yp_tmp, jac_tmp, g_tmp, r_tmp, z_tmp
     cdef CV_RhsFunction rfn
     cdef CV_JacRhsFunction jac
@@ -106,30 +108,19 @@ cdef class CV_data:
     cdef CV_PrecSetupFunction prec_setupfn
     cdef CV_JacTimesVecFunction jac_times_vecfn
     cdef CV_JacTimesSetupFunction jac_times_setupfn
-    cdef bint parallel_implementation
-    cdef object user_data
-    cdef Shared_ErrHandler err_handler
-    cdef object err_user_data
 
-cdef class CVODE:
-    cdef N_Vector atol
+
+cdef class CVODE(BaseSundialsSolver):
     cdef void* _cv_mem
-    cdef SUNContext sunctx
-    cdef dict options
-    cdef bint parallel_implementation, initialized, _old_api, _step_compute, _validate_flags
     cdef CV_data aux_data
 
-    cdef INDEX_TYPE_t N #problem size, i.e. len(y0) = N
     cdef N_Vector y0, y, yp # for 'step' method
     cdef list t_roots
     cdef list y_roots
     cdef list t_tstop
     cdef list y_tstop
 
-    cdef int verbosity
-
     # Functions
-    cpdef _create_suncontext(self)
     cpdef _update_error_handler(self)
     cpdef _init_step(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)
     cpdef _reinit_IC(self, DTYPE_t t0, np.ndarray[DTYPE_t, ndim=1] y0)

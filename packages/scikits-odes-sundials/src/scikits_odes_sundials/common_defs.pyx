@@ -6,7 +6,7 @@ import inspect
 from .c_sundials cimport (
     sunrealtype, sunindextype, N_Vector, SUNDlsMat, sunbooleantype,
     SUNMatrix, SUNMatGetID, SUNMATRIX_DENSE, SUNMATRIX_BAND, SUNMATRIX_SPARSE,
-    SUNMATRIX_CUSTOM,
+    SUNMATRIX_CUSTOM, SUNContext_Create, SUNContext_Free, SUN_COMM_NULL,
 )
 from .c_nvector_serial cimport (
     N_VGetLength_Serial as nv_length_s, # use function not macro
@@ -266,3 +266,44 @@ cdef class Shared_WrapErrHandler(Shared_ErrHandler):
                 self._err_handler(error_code, module, function, msg, user_data)
             else:
                 self._err_handler(error_code, module, function, msg)
+
+
+cdef class Shared_data:
+    def __cinit__(self):
+        self.parallel_implementation = False
+        self.user_data = None
+        self.err_user_data = None
+
+
+cdef class BaseSundialsSolver:
+    def __cinit__(self):
+        self.sunctx = NULL
+        self.initialized = False
+        self._old_api = False # use new api by default
+        self._step_compute = False #avoid dict lookup
+        self._validate_flags = False # don't validate by default
+        self.verbosity = 1
+        self.N = -1
+
+    cpdef _create_suncontext(self):
+        cdef int res = SUNContext_Create(SUN_COMM_NULL, &self.sunctx)
+        if res < 0:
+            raise RuntimeError("Failed to create Sundials context")
+
+    def set_options(self, **options):
+        """
+        Reads the options list and assigns values for the solver.
+        """
+        # Update values of all supplied options
+        for (key, value) in options.items():
+            if key.lower() in self.options:
+                self.options[key.lower()] = value
+            else:
+                raise ValueError("Option '%s' is not supported by solver" % key)
+
+        # If the solver is running, this re-sets runtime changeable options,
+        # otherwise it does nothing
+        self._set_runtime_changeable_options(options)
+
+    def __dealloc__(self):
+        if self.sunctx is not NULL: SUNContext_Free(&self.sunctx)
