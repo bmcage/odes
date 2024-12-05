@@ -24,8 +24,7 @@ from .ida cimport (IDA_RhsFunction, IDA_WrapRhsFunction, IDA_RootFunction,
                    IDA_WrapPrecSolveFunction, IDA_JacTimesVecFunction,
                    IDA_WrapJacTimesVecFunction, IDA_JacTimesSetupFunction,
                    IDA_WrapJacTimesSetupFunction, IDA_ContinuationFunction,
-                   IDA_ErrHandler, IDA_WrapErrHandler, IDA_data,
-                   IDA)
+                   IDA_data, IDA)
 
 from .c_idas cimport *
 from .common_defs cimport (
@@ -390,7 +389,7 @@ cdef class IDAS(IDA):
                             inverse of the step size.
                         user data is a pointer to user data (optional)
             'err_handler':
-                Values: function of class IDA_ErrHandler, default = None
+                Values: function of class Shared_ErrHandler, default = None
                 Description:
                     Defines a function which controls output from the IDA
                     solver

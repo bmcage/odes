@@ -2,7 +2,7 @@
 
 cimport numpy as np
 from .c_sundials cimport N_Vector, sunrealtype, SUNContext
-from .common_defs cimport DTYPE_t, INDEX_TYPE_t
+from .common_defs cimport DTYPE_t, INDEX_TYPE_t, Shared_ErrHandler
 
 cdef class CV_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
@@ -96,23 +96,6 @@ cdef class CV_ContinuationFunction:
     cpdef int evaluate(self, DTYPE_t t, np.ndarray[DTYPE_t, ndim=1] y,
                        CVODE solver)
 
-cdef class CV_ErrHandler:
-    cpdef evaluate(
-        self,
-        int line,
-        bytes func,
-        bytes file,
-        bytes msg,
-        int err_code,
-        object user_data = *
-    )
-
-cdef class CV_WrapErrHandler(CV_ErrHandler):
-    cdef object _err_handler
-    cdef int with_userdata
-    cdef int new_err_handler
-    cpdef set_err_handler(self, object err_handler)
-
 
 cdef class CV_data:
     cdef np.ndarray yy_tmp, yp_tmp, jac_tmp, g_tmp, r_tmp, z_tmp
@@ -125,7 +108,7 @@ cdef class CV_data:
     cdef CV_JacTimesSetupFunction jac_times_setupfn
     cdef bint parallel_implementation
     cdef object user_data
-    cdef CV_ErrHandler err_handler
+    cdef Shared_ErrHandler err_handler
     cdef object err_user_data
 
 cdef class CVODE:

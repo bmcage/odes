@@ -1,10 +1,7 @@
 # cython: embedsignature=True
 from cpython.exc cimport PyErr_CheckSignals
 from collections import namedtuple
-try:
-    from enum import IntEnum
-except ImportError:
-    from enum34 import IntEnum
+from enum import IntEnum
 import inspect
 from warnings import warn
 
@@ -13,6 +10,9 @@ include "sundials_config.pxi"
 import numpy as np
 cimport numpy as np
 
+from . import (
+    IDASolveFailed, IDASolveFoundRoot, IDASolveReachedTSTOP, _get_num_args,
+)
 
 from .c_sundials cimport (
     sunrealtype, N_Vector, SUNContext_Create, SUNContext_Free,
@@ -26,12 +26,11 @@ from .c_ida cimport *
 from .common_defs cimport (
     nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
 )
-from .common_defs import DTYPE, INDEX_TYPE
+from .common_defs import (
+    DTYPE, INDEX_TYPE, Shared_WrapErrHandler, Shared_ErrHandler,
+)
 # this is needed because we want DTYPE and INDEX_TYPE to be
 # accessible from python (not only in cython)
-from . import (
-    IDASolveFailed, IDASolveFoundRoot, IDASolveReachedTSTOP, _get_num_args,
-)
 
 
 # TODO: parallel implementation: N_VectorParallel
@@ -720,72 +719,17 @@ cdef class IDA_ContinuationFunction:
                        IDA solver):
         return self._fn(t, y, yp, solver)
 
+
 def no_continue_fn(t, y, yp, solver):
     return 1
 
-cdef class IDA_ErrHandler:
-    cpdef evaluate(
-        self,
-        int line,
-        bytes func,
-        bytes file,
-        bytes msg,
-        int err_code,
-        object user_data = None,
-    ):
-        """ format that error handling functions must match """
-        pass
-
-cdef class IDA_WrapErrHandler(IDA_ErrHandler):
-    cpdef set_err_handler(self, object err_handler):
-        """
-        set some (c/p)ython function as the error handler
-        """
-        nrarg = _get_num_args(err_handler)
-        self.new_err_handler = True if nrarg == 1 else False
-        self.with_userdata = (nrarg > 5) or (
-            nrarg == 5 and inspect.isfunction(err_handler)
-        )
-        self._err_handler = err_handler
-
-    cpdef evaluate(
-        self,
-        int line,
-        bytes func,
-        bytes file,
-        bytes msg,
-        int err_code,
-        object user_data = None
-    ):
-        cdef dict dict_arg
-
-        # legacy mappings
-        cdef int error_code = err_code
-        cdef bytes module = file
-        cdef bytes function = func
-
-        if self.new_err_handler:
-            dict_arg = {
-                "line": line,
-                "func": func,
-                "file": file,
-                "msg": msg,
-                "err_code": err_code,
-                "user_data": user_data,
-            }
-            self._err_handler(dict_arg)
-        else:
-            if self.with_userdata == 1:
-                self._err_handler(error_code, module, function, msg, user_data)
-            else:
-                self._err_handler(error_code, module, function, msg)
 
 cdef void _ida_err_handler_fn(
     int line, const char *func, const char *file, const char *msg,
     SUNErrCode err_code, void *err_user_data, SUNContext sunctx
 ):
     """
-    function with the signature of IDAErrHandlerFn, that calls python error
+    function with the signature of SUNErrHandlerFn, that calls python error
     handler
     """
     aux_data = <IDA_data> err_user_data
@@ -1131,7 +1075,7 @@ cdef class IDA:
                             inverse of the step size.
                         user data is a pointer to user data (optional)
             'err_handler':
-                Values: function of class IDA_ErrHandler, default = None
+                Values: function of class Shared_ErrHandler, default = None
                 Description:
                     Defines a function which controls output from the IDA
                     solver
@@ -1523,8 +1467,8 @@ cdef class IDA:
         # Set err_handler
         err_handler = opts.get('err_handler', None)
         if err_handler is not None:
-            if not isinstance(err_handler, IDA_ErrHandler):
-                tmpfun = IDA_WrapErrHandler()
+            if not isinstance(err_handler, Shared_ErrHandler):
+                tmpfun = Shared_WrapErrHandler()
                 tmpfun.set_err_handler(err_handler)
                 err_handler = tmpfun
 

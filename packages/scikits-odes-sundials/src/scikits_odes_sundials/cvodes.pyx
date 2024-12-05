@@ -28,8 +28,7 @@ from .cvode cimport (CV_RhsFunction, CV_WrapRhsFunction, CV_RootFunction,
                        CV_PrecSolveFunction, CV_WrapPrecSolveFunction,
                        CV_JacTimesVecFunction, CV_WrapJacTimesVecFunction,
                        CV_JacTimesSetupFunction, CV_WrapJacTimesSetupFunction,
-                       CV_ContinuationFunction, CV_ErrHandler, 
-                       CV_WrapErrHandler, CV_data, CVODE)
+                       CV_ContinuationFunction, CV_data, CVODE)
 from .c_cvodes cimport *
 from .common_defs cimport (
     nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
@@ -382,7 +381,7 @@ cdef class CVODES(CVODE):
             'nonlin_conv_coef':
                 default = 0,
             'err_handler':
-                Values: function of class CV_ErrHandler, default = None
+                Values: function of class Shared_ErrHandler, default = None
                 Description:
                     Defines a function which controls output from the CVODE
                     solver

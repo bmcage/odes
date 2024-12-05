@@ -1,6 +1,6 @@
 cimport numpy as np
 from .c_sundials cimport N_Vector, sunrealtype, SUNContext
-from .common_defs cimport DTYPE_t
+from .common_defs cimport DTYPE_t, Shared_ErrHandler
 
 cdef class IDA_RhsFunction:
     cpdef int evaluate(self, DTYPE_t t,
@@ -116,23 +116,6 @@ cdef class IDA_ContinuationFunction:
 
 cdef int _res(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *self_obj)
 
-cdef class IDA_ErrHandler:
-    cpdef evaluate(
-        self,
-        int line,
-        bytes func,
-        bytes file,
-        bytes msg,
-        int err_code,
-        object user_data = *
-    )
-
-cdef class IDA_WrapErrHandler(IDA_ErrHandler):
-    cdef object _err_handler
-    cdef int with_userdata
-    cdef int new_err_handler
-    cpdef set_err_handler(self, object err_handler)
-
 
 cdef class IDA_data:
     cdef np.ndarray yy_tmp, yp_tmp, residual_tmp, jac_tmp
@@ -146,7 +129,7 @@ cdef class IDA_data:
     cdef IDA_JacTimesSetupFunction jac_times_setupfn
     cdef bint parallel_implementation
     cdef object user_data
-    cdef IDA_ErrHandler err_handler
+    cdef Shared_ErrHandler err_handler
     cdef object err_user_data
 
 cdef class IDA:

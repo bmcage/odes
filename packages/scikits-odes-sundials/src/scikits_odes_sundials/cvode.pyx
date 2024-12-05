@@ -27,7 +27,9 @@ from .c_cvode cimport *
 from .common_defs cimport (
     nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
 )
-from .common_defs import DTYPE, INDEX_TYPE
+from .common_defs import (
+    DTYPE, INDEX_TYPE, Shared_WrapErrHandler, Shared_ErrHandler,
+)
 # this is needed because we want DTYPE and INDEX_TYPE to be
 # accessible from python (not only in cython)
 
@@ -676,75 +678,20 @@ cdef class CV_ContinuationFunction:
 def no_continue_fn(t, y, solver):
     return 1
 
-cdef class CV_ErrHandler:
-    cpdef evaluate(
-        self,
-        int line,
-        bytes func,
-        bytes file,
-        bytes msg,
-        int err_code,
-        object user_data = None,
-    ):
-        """ format that error handling functions must match """
-        pass
-
-cdef class CV_WrapErrHandler(CV_ErrHandler):
-    cpdef set_err_handler(self, object err_handler):
-        """
-        set some (c/p)ython function as the error handler
-        """
-        nrarg = _get_num_args(err_handler)
-        self.new_err_handler = True if nrarg == 1 else False
-        self.with_userdata = (nrarg > 5) or (
-            nrarg == 5 and inspect.isfunction(err_handler)
-        )
-        self._err_handler = err_handler
-
-    cpdef evaluate(
-        self,
-        int line,
-        bytes func,
-        bytes file,
-        bytes msg,
-        int err_code,
-        object user_data = None
-    ):
-        cdef dict dict_arg
-
-        # legacy mappings
-        cdef int error_code = err_code
-        cdef bytes module = file
-        cdef bytes function = func
-
-        if self.new_err_handler:
-            dict_arg = {
-                "line": line,
-                "func": func,
-                "file": file,
-                "msg": msg,
-                "err_code": err_code,
-                "user_data": user_data,
-            }
-            self._err_handler(dict_arg)
-        else:
-            if self.with_userdata == 1:
-                self._err_handler(error_code, module, function, msg, user_data)
-            else:
-                self._err_handler(error_code, module, function, msg)
 
 cdef void _cv_err_handler_fn(
     int line, const char *func, const char *file, const char *msg,
     SUNErrCode err_code, void *err_user_data, SUNContext sunctx
 ):
     """
-    function with the signature of CVErrHandlerFn, that calls python error
+    function with the signature of SUNErrHandlerFn, that calls python error
     handler
     """
     aux_data = <CV_data> err_user_data
     aux_data.err_handler.evaluate(
         line, func, file, msg, err_code, aux_data.err_user_data
     )
+
 
 # Auxiliary data carrying runtime vales for the CVODE solver
 cdef class CV_data:
@@ -1046,7 +993,7 @@ cdef class CVODE:
             'nonlin_conv_coef':
                 default = 0,
             'err_handler':
-                Values: function of class CV_ErrHandler, default = None
+                Values: function of class Shared_ErrHandler, default = None
                 Description:
                     Defines a function which controls output from the CVODE
                     solver
@@ -1390,8 +1337,8 @@ cdef class CVODE:
         # Set err_handler
         err_handler = opts.get('err_handler', None)
         if err_handler is not None:
-            if not isinstance(err_handler, CV_ErrHandler):
-                tmpfun = CV_WrapErrHandler()
+            if not isinstance(err_handler, Shared_ErrHandler):
+                tmpfun = Shared_WrapErrHandler()
                 tmpfun.set_err_handler(err_handler)
                 err_handler = tmpfun
 

@@ -17,6 +17,7 @@ from .c_sunmatrix cimport (
     SUNBandMatrix_Columns, SUNBandMatrix_UpperBandwidth,
     SUNBandMatrix_LowerBandwidth, SUNBandMatrix_Column,
 )
+from . import _get_num_args
 
 from libc.stdio cimport stderr
 
@@ -205,3 +206,63 @@ cdef ensure_numpy_float_array(object value):
     except:
         raise ValueError('ensure_numpy_float_array: value not a number or '
                          'sequence of numbers: %s' % value)
+
+### Error Handling
+
+
+cdef class Shared_ErrHandler:
+    cpdef evaluate(
+        self,
+        int line,
+        bytes func,
+        bytes file,
+        bytes msg,
+        int err_code,
+        object user_data = None,
+    ):
+        """ format that error handling functions must match """
+        pass
+
+cdef class Shared_WrapErrHandler(Shared_ErrHandler):
+    cpdef set_err_handler(self, object err_handler):
+        """
+        set some (c/p)ython function as the error handler
+        """
+        nrarg = _get_num_args(err_handler)
+        self.new_err_handler = True if nrarg == 1 else False
+        self.with_userdata = (nrarg > 5) or (
+            nrarg == 5 and inspect.isfunction(err_handler)
+        )
+        self._err_handler = err_handler
+
+    cpdef evaluate(
+        self,
+        int line,
+        bytes func,
+        bytes file,
+        bytes msg,
+        int err_code,
+        object user_data = None
+    ):
+        cdef dict dict_arg
+
+        # legacy mappings
+        cdef int error_code = err_code
+        cdef bytes module = file
+        cdef bytes function = func
+
+        if self.new_err_handler:
+            dict_arg = {
+                "line": line,
+                "func": func,
+                "file": file,
+                "msg": msg,
+                "err_code": err_code,
+                "user_data": user_data,
+            }
+            self._err_handler(dict_arg)
+        else:
+            if self.with_userdata == 1:
+                self._err_handler(error_code, module, function, msg, user_data)
+            else:
+                self._err_handler(error_code, module, function, msg)

@@ -9,8 +9,7 @@ from .ida cimport (IDA_RhsFunction, IDA_WrapRhsFunction, IDA_RootFunction,
                    IDA_WrapPrecSolveFunction, IDA_JacTimesVecFunction,
                    IDA_WrapJacTimesVecFunction, IDA_JacTimesSetupFunction,
                    IDA_WrapJacTimesSetupFunction, IDA_ContinuationFunction,
-                   IDA_ErrHandler, IDA_WrapErrHandler, IDA_data,
-                   IDA)
+                   IDA_data, IDA)
 
 
 cdef class IDAS_data(IDA_data):
@@ -19,5 +18,5 @@ cdef class IDAS_data(IDA_data):
 cdef class IDAS(IDA):
     cdef N_Vector aStol
     cdef IDAS_data aux_dataS
-    
+
     cdef int Ns   #sensitivity parameter size

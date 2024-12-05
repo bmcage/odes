@@ -27,3 +27,21 @@ cdef int SUNMatrix2ndarray(SUNMatrix m, np.ndarray a) except? -1
 cdef int ndarray2SUNMatrix(SUNMatrix m, np.ndarray a) except? -1
 
 cdef ensure_numpy_float_array(object value)
+
+
+cdef class Shared_ErrHandler:
+    cpdef evaluate(
+        self,
+        int line,
+        bytes func,
+        bytes file,
+        bytes msg,
+        int err_code,
+        object user_data = *
+    )
+
+cdef class Shared_WrapErrHandler(Shared_ErrHandler):
+    cdef object _err_handler
+    cdef int with_userdata
+    cdef int new_err_handler
+    cpdef set_err_handler(self, object err_handler)
