@@ -101,10 +101,7 @@ def jac_vec_error_immediate(v, Jv, t, y):
     return -1
 
 class TestCVodeReturn(TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super(TestCVodeReturn, self).__init__(*args, **kwargs)
-        self.solvername = "cvode"
+    solvername = "cvode"
 
     def test_normal_rhs(self):
         solver = ode(self.solvername, normal_rhs, old_api=False)
@@ -312,6 +309,4 @@ class TestCVodeReturn(TestCase):
         )
 
 class TestCVodesReturn(TestCVodeReturn):
-    def __init__(self, *args, **kwargs):
-        super(TestCVodesReturn, self).__init__(*args, **kwargs)
-        self.solvername = "cvodes"
+    solvername = "cvodes"

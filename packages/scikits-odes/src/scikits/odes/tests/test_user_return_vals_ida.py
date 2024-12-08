@@ -77,10 +77,7 @@ def jac_error_immediate(t, y, ydot, residual, cj, J):
     return -1
 
 class TestIdaReturn(TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super(TestIdaReturn, self).__init__(*args, **kwargs)
-        self.solvername = "ida"
+    solvername = "ida"
 
     def test_normal_rhs(self):
         solver = dae(self.solvername, normal_rhs, old_api=False)
@@ -235,6 +232,4 @@ class TestIdaReturn(TestCase):
 
 
 class TestIdasReturn(TestIdaReturn):
-    def __init__(self, *args, **kwargs):
-        super(TestIdasReturn, self).__init__(*args, **kwargs)
-        self.solvername = "idas"
+    solvername = "idas"
