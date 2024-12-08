@@ -40,6 +40,11 @@ jobs:
             tox-env: py312
             sundials-precision: double
             sundials-index-size: 64
+          - python-version: "3.13"
+            sundials-version: "7.1.1"
+            tox-env: py313
+            sundials-precision: double
+            sundials-index-size: 64
           - python-version: "3.11"
             sundials-version: "7.1.1"
             tox-env: check-manifest
