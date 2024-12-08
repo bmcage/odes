@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "numpy", "cython<3", "pkgconfig"]
+requires = ["setuptools", "numpy", "cython", "pkgconfig"]
 
 [project]
 name = 'scikits-odes-sundials'
