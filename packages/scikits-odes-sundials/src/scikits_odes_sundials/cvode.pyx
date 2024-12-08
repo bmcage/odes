@@ -27,27 +27,31 @@ from .c_sunlinsol cimport (
     SUNLinSol_Dense, SUNLinSol_Band, SUNLinSol_SPGMR, SUNLinSol_SPBCGS,
     SUNLinSol_SPTFQMR,
 )
+if SUNDIALS_BLAS_LAPACK:
+    from .c_sunlinsol cimport (
+        SUNLinSol_LapackBand, SUNLinSol_LapackDense,
+    )
 from .c_sunnonlinsol cimport SUNNonlinSol_FixedPoint
 
 from .c_cvode cimport (
-    CV_SUCCESS, CV_TSTOP_RETURN, CV_ROOT_RETURN, CV_WARNING, CV_TOO_MUCH_WORK,
-    CV_TOO_MUCH_ACC, CV_ERR_FAILURE, CV_CONV_FAILURE, CV_LINIT_FAIL,
-    CV_LSETUP_FAIL, CV_LSOLVE_FAIL, CV_RHSFUNC_FAIL, CV_FIRST_RHSFUNC_ERR,
-    CV_REPTD_RHSFUNC_ERR, CV_UNREC_RHSFUNC_ERR, CV_RTFUNC_FAIL,
-    CV_NLS_INIT_FAIL, CV_NLS_SETUP_FAIL, CV_CONSTR_FAIL, CV_NLS_FAIL,
-    CV_MEM_FAIL, CV_MEM_NULL, CV_ILL_INPUT, CV_NO_MALLOC, CV_BAD_K, CV_BAD_T,
-    CV_BAD_DKY, CV_TOO_CLOSE, CV_VECTOROP_ERR, CV_UNRECOGNIZED_ERR,
-    CVodeRootInit, CVodeSStolerances, CVodeSVtolerances, CVodeSetStopTime,
-    CV_BDF, CV_ADAMS, CVodeFree, CVodeCreate, CVodeInit, CVodeReInit,
-    CVodeSetUserData, CVodeSetMaxOrd, CVodeSetMaxNumSteps, CVodeSetStabLimDet,
-    CVodeSetInitStep, CVodeSetMinStep, CVodeSetMaxStep, CVodeSetMaxNonlinIters,
-    CVodeSetMaxConvFails, CVodeSetNonlinConvCoef, CVodeSetLinearSolver,
-    CVLS_ILL_INPUT, CVLS_MEM_FAIL, CVLS_SUCCESS, CVDiag, CVDIAG_ILL_INPUT,
-    CVDIAG_MEM_FAIL, CVDIAG_SUCCESS, CVodeSetPreconditioner,
-    CVodeGetNumRhsEvals, CVodeGetNumLinIters, CVodeGetNumJtimesEvals,
-    CVodeGetNumPrecSolves, CVodeGetNumPrecEvals, CVodeGetIntegratorStats,
-    CVodeSetJacFn, CVodeSetNonlinearSolver, CVodeSetJacTimes, CVLS_LMEM_NULL,
-    CVLS_MEM_NULL, CVode, CV_NORMAL, CV_ONE_STEP,
+    CV_ADAMS, CV_BAD_DKY, CV_BAD_K, CV_BAD_T, CV_BDF, CV_CONSTR_FAIL,
+    CV_CONV_FAILURE, CV_ERR_FAILURE, CV_FIRST_RHSFUNC_ERR, CV_ILL_INPUT,
+    CV_LINIT_FAIL, CV_LSETUP_FAIL, CV_LSOLVE_FAIL, CV_MEM_FAIL, CV_MEM_NULL,
+    CV_NLS_FAIL, CV_NLS_INIT_FAIL, CV_NLS_SETUP_FAIL, CV_NORMAL, CV_NO_MALLOC,
+    CV_ONE_STEP, CV_REPTD_RHSFUNC_ERR, CV_RHSFUNC_FAIL, CV_ROOT_RETURN,
+    CV_RTFUNC_FAIL, CV_SUCCESS, CV_TOO_CLOSE, CV_TOO_MUCH_ACC, CV_TOO_MUCH_WORK,
+    CV_TSTOP_RETURN, CV_UNRECOGNIZED_ERR, CV_UNREC_RHSFUNC_ERR, CV_VECTOROP_ERR,
+    CV_WARNING, CVDIAG_ILL_INPUT, CVDIAG_MEM_FAIL, CVDIAG_SUCCESS, CVDiag,
+    CVLS_ILL_INPUT, CVLS_LMEM_NULL, CVLS_MEM_FAIL, CVLS_MEM_NULL, CVLS_SUCCESS,
+    CVode, CVodeCreate, CVodeFree, CVodeGetIntegratorStats,
+    CVodeGetNumJtimesEvals, CVodeGetNumLinIters, CVodeGetNumPrecEvals,
+    CVodeGetNumPrecSolves, CVodeGetNumRhsEvals, CVodeInit, CVodeReInit,
+    CVodeRootInit, CVodeSStolerances, CVodeSVtolerances, CVodeSetInitStep,
+    CVodeSetJacFn, CVodeSetJacTimes, CVodeSetLinearSolver, CVodeSetMaxConvFails,
+    CVodeSetMaxNonlinIters, CVodeSetMaxNumSteps, CVodeSetMaxOrd,
+    CVodeSetMaxStep, CVodeSetMinStep, CVodeSetNonlinConvCoef,
+    CVodeSetNonlinearSolver, CVodeSetPreconditioner, CVodeSetStabLimDet,
+    CVodeSetStopTime, CVodeSetUserData,
 )
 
 
@@ -1448,44 +1452,62 @@ cdef class CVODE(BaseSundialsSolver):
                 LS = SUNLinSol_Dense(self.y0, A, self.sunctx)
                 # check if memory was allocated
                 if (A == NULL or LS == NULL):
-                    raise ValueError('Could not allocate matrix or linear solver')
+                    raise ValueError(
+                        'Could not allocate matrix or linear solver'
+                    )
                 # attach matrix and linear solver to cvode
                 flag = CVodeSetLinearSolver(cv_mem, LS, A)
                 if flag == CVLS_ILL_INPUT:
-                    raise ValueError('CVDense linear solver setting failed, '
-                                    'arguments incompatible')
+                    raise ValueError(
+                        'CVDense linear solver setting failed, '
+                        'arguments incompatible'
+                    )
                 elif flag == CVLS_MEM_FAIL:
-                    raise MemoryError('CVDense linear solver memory allocation error.')
+                    raise MemoryError(
+                        'CVDense linear solver memory allocation error.'
+                    )
                 elif flag != CVLS_SUCCESS:
-                    raise ValueError('CVodeSetLinearSolver failed with code {}'
-                                     .format(flag))
+                    raise ValueError(
+                        f'CVodeSetLinearSolver failed with code {flag}'
+                    )
             elif linsolver == 'band':
-                A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'], self.sunctx);
-                LS = SUNLinSol_Band(self.y0, A, self.sunctx);
+                A = SUNBandMatrix(
+                    N, <int> opts['uband'], <int> opts['lband'], self.sunctx
+                )
+                LS = SUNLinSol_Band(self.y0, A, self.sunctx)
                 if (A == NULL or LS == NULL):
-                    raise ValueError('Could not allocate matrix or linear solver')
+                    raise ValueError(
+                        'Could not allocate matrix or linear solver'
+                    )
                 flag = CVodeSetLinearSolver(cv_mem, LS, A)
-    
+
                 if flag == CVLS_ILL_INPUT:
-                    raise ValueError('CVBand linear solver  setting failed, '
-                                     'arguments incompatible')
+                    raise ValueError(
+                        'CVBand linear solver setting failed, '
+                        'arguments incompatible'
+                    )
                 elif flag == CVLS_MEM_FAIL:
-                    raise MemoryError('CVBand linear solver memory allocation error.')
+                    raise MemoryError(
+                        'CVBand linear solver memory allocation error.'
+                    )
                 elif flag != CVLS_SUCCESS:
-                    raise ValueError('CVodeSetLinearSolver failed with code {}'
-                                     .format(flag))
+                    raise ValueError(
+                        f'CVodeSetLinearSolver failed with code {flag}'
+                    )
             elif linsolver == 'diag':
                 flag = CVDiag(cv_mem)
                 if flag == CVDIAG_ILL_INPUT:
-                        raise ValueError('CVDiag solver is not compatible with'
-                                         ' the current nvector implementation.')
+                    raise ValueError(
+                        'CVDiag solver is not compatible with '
+                        'the current nvector implementation.'
+                    )
                 elif flag == CVDIAG_MEM_FAIL:
-                        raise MemoryError('CVDiag memory allocation error.')
+                    raise MemoryError(
+                        'CVDiag memory allocation error.'
+                    )
                 elif flag != CVDIAG_SUCCESS:
-                    raise ValueError('CVDiag failed with code {}'
-                                     .format(flag))
-            elif ((linsolver == 'spgmr') or (linsolver == 'spbcgs')
-                  or (linsolver == 'sptfqmr')):
+                    raise ValueError(f'CVDiag failed with code {flag}')
+            elif linsolver in ('spgmr', 'spbcgs', 'sptfqmr'):
                 precond_type = opts['precond_type'].lower()
                 if precond_type == 'none':
                     pretype = SUN_PREC_NONE
@@ -1496,105 +1518,151 @@ cdef class CVODE(BaseSundialsSolver):
                 elif precond_type == 'both':
                     pretype = SUN_PREC_BOTH
                 else:
-                    raise ValueError('LinSolver::Precondition: Unknown type: %s'
-                                     % opts['precond_type'])
-    
+                    raise ValueError(
+                        'LinSolver::Precondition: Unknown type: '
+                        f'{opts["precond_type"]}'
+                    )
+
                 if linsolver == 'spgmr':
-                    LS = SUNLinSol_SPGMR(self.y0, pretype, <int> opts['maxl'], self.sunctx);
+                    LS = SUNLinSol_SPGMR(
+                        self.y0, pretype, <int> opts['maxl'], self.sunctx
+                    )
                     if LS == NULL:
                         raise ValueError('Could not allocate linear solver')
                 elif linsolver == 'spbcgs':
-                    LS = SUNLinSol_SPBCGS(self.y0, pretype, <int> opts['maxl'], self.sunctx);
+                    LS = SUNLinSol_SPBCGS(
+                        self.y0, pretype, <int> opts['maxl'], self.sunctx
+                    )
                     if LS == NULL:
                         raise ValueError('Could not allocate linear solver')
                 elif linsolver == 'sptfqmr':
-                    LS = SUNLinSol_SPTFQMR(self.y0, pretype, <int> opts['maxl'], self.sunctx);
+                    LS = SUNLinSol_SPTFQMR(
+                        self.y0, pretype, <int> opts['maxl'], self.sunctx
+                    )
                     if LS == NULL:
                         raise ValueError('Could not allocate linear solver')
                 else:
-                    raise ValueError('Given linsolver {} not implemented in odes'.format(linsolver))
-                    
+                    raise NotImplementedError(
+                        f'Given linsolver {linsolver} not implemented in odes'
+                    )
+
                 flag = CVodeSetLinearSolver(cv_mem, LS, NULL);
                 if flag == CVLS_MEM_FAIL:
-                        raise MemoryError('LinSolver:CVode memory allocation '
-                                          'error.')
+                    raise MemoryError(
+                        'LinSolver:CVode memory allocation error.'
+                    )
                 elif flag != CVLS_SUCCESS:
-                    raise ValueError('CVodeSetLinearSolver failed with code {}'
-                                     .format(flag))
+                    raise ValueError(
+                        f'CVodeSetLinearSolver failed with code {flag}'
+                    )
                 # TODO: make option for the Gram-Schmidt orthogonalization
                 #flag = SUNSPGMRSetGSType(LS, gstype);
-                                          
+
                 # TODO make option
                 #flag = CVodeSetEpsLin(cvode_mem, DELT);
                 if self.aux_data.prec_solvefn:
                     if self.aux_data.prec_setupfn:
-                        flag = CVodeSetPreconditioner(cv_mem, _prec_setupfn, _prec_solvefn)
+                        flag = CVodeSetPreconditioner(
+                            cv_mem, _prec_setupfn, _prec_solvefn
+                        )
                     else:
-                        flag = CVodeSetPreconditioner(cv_mem, NULL, _prec_solvefn)
+                        flag = CVodeSetPreconditioner(
+                            cv_mem, NULL, _prec_solvefn
+                        )
                 if flag == CVLS_MEM_NULL:
-                    raise ValueError('LinSolver: The cvode mem pointer is NULL.')
+                    raise ValueError(
+                        'LinSolver: The cvode mem pointer is NULL.'
+                    )
                 elif flag == CVLS_LMEM_NULL:
-                    raise ValueError('LinSolver: The cvspils linear solver has '
-                                     'not been initialized.')
+                    raise ValueError(
+                        'LinSolver: The cvspils linear solver has not been '
+                        'initialized.'
+                    )
                 elif flag != CVLS_SUCCESS:
-                    raise ValueError('CVodeSetPreconditioner failed with code {}'
-                                     .format(flag))
-    
+                    raise ValueError(
+                        'CVodeSetPreconditioner failed with code {flag}'
+                    )
+
                 if self.aux_data.jac_times_vecfn:
                     if self.aux_data.jac_times_setupfn:
-                       flag = CVodeSetJacTimes(cv_mem, _jac_times_setupfn, 
-                                               _jac_times_vecfn)
+                        flag = CVodeSetJacTimes(
+                            cv_mem, _jac_times_setupfn, _jac_times_vecfn
+                        )
                     else:
-                       flag = CVodeSetJacTimes(cv_mem, NULL, _jac_times_vecfn)
+                        flag = CVodeSetJacTimes(cv_mem, NULL, _jac_times_vecfn)
                 if flag == CVLS_MEM_NULL:
-                    raise ValueError('LinSolver: The cvode mem pointer is NULL.')
+                    raise ValueError(
+                        'LinSolver: The cvode mem pointer is NULL.'
+                    )
                 elif flag == CVLS_LMEM_NULL:
-                    raise ValueError('LinSolver: The cvspils linear solver has '
-                                     'not been initialized.')
+                    raise ValueError(
+                        'LinSolver: The cvspils linear solver has not been '
+                        'initialized.'
+                    )
                 elif flag != CVLS_SUCCESS:
-                    raise ValueError('CVodeSetJacTimes failed with code {}'
-                                     .format(flag))
-            else:
+                    raise ValueError(
+                        f'CVodeSetJacTimes failed with code {flag}'
+                    )
+            elif linsolver in ['lapackdense', 'lapackband']:
                 if SUNDIALS_BLAS_LAPACK:
                     if linsolver == 'lapackdense':
                         A = SUNDenseMatrix(N, N, self.sunctx)
-                        LS = SUNLapackDense(self.y0, A)
+                        LS = SUNLinSol_LapackDense(self.y0, A, self.sunctx)
                         # check if memory was allocated
                         if (A == NULL or LS == NULL):
-                            raise ValueError('Could not allocate matrix or linear solver')
+                            raise ValueError(
+                                'Could not allocate matrix or linear solver'
+                            )
                         # attach matrix and linear solver to cvode
                         flag = CVodeSetLinearSolver(cv_mem, LS, A)
                         if flag == CVLS_ILL_INPUT:
-                            raise ValueError('CVDense lapack linear solver setting failed, '
-                                            'arguments incompatible')
+                            raise ValueError(
+                                'CVDense lapack linear solver setting failed, '
+                                'arguments incompatible'
+                            )
                         elif flag == CVLS_MEM_FAIL:
-                            raise MemoryError('CVDense lapack linear solver memory allocation error.')
+                            raise MemoryError(
+                                'CVDense lapack linear solver memory '
+                                'allocation error.'
+                            )
                         elif flag != CVLS_SUCCESS:
-                            raise ValueError('CVodeSetLinearSolver failed with code {}'
-                                             .format(flag))
+                            raise ValueError(
+                                f'CVodeSetLinearSolver failed with code {flag}'
+                            )
                     elif linsolver == 'lapackband':
-                        A = SUNBandMatrix(N, <int> opts['uband'], <int> opts['lband'], self.sunctx)
-                        LS = SUNLapackBand(self.y0, A)
+                        A = SUNBandMatrix(
+                            N, <int> opts['uband'], <int> opts['lband'],
+                            self.sunctx
+                        )
+                        LS = SUNLinSol_LapackBand(self.y0, A, self.sunctx)
                         if (A == NULL or LS == NULL):
-                            raise ValueError('Could not allocate matrix or linear solver')
+                            raise ValueError(
+                                'Could not allocate matrix or linear solver'
+                            )
                         flag = CVodeSetLinearSolver(cv_mem, LS, A)
                         if flag == CVLS_ILL_INPUT:
-                            raise ValueError('CVLapackBand linear solver setting failed, '
-                                             'arguments incompatible')
+                            raise ValueError(
+                                'CVLapackBand linear solver setting failed, '
+                                'arguments incompatible'
+                            )
                         elif flag == CVLS_MEM_FAIL:
-                            raise MemoryError('CVLapackBand linear solver memory allocation error.')
+                            raise MemoryError(
+                                'CVLapackBand linear solver memory '
+                                'allocation error.'
+                            )
                         elif flag != CVLS_SUCCESS:
-                            raise ValueError('CVodeSetLinearSolver failed with code {}'
-                                             .format(flag))
-                    else:
-                        raise ValueError('LinSolver: Unknown solver type: %s'
-                                             % opts['linsolver'])
-                elif linsolver in ['lapackdense', 'lapackband']:
-                    raise ValueError('LinSolver: LAPACK not available, cannot execute solver type: %s'
-                                         % opts['linsolver'])
+                            raise ValueError(
+                                f'CVodeSetLinearSolver failed with code {flag}'
+                            )
                 else:
-                    raise ValueError('LinSolver: Unknown solver type: %s'
-                                         % opts['linsolver'])
+                    raise ValueError(
+                        'LinSolver: LAPACK not available, cannot execute '
+                        f'solver type: {linsolver}'
+                    )
+            else:
+                raise ValueError(
+                    'LinSolver: Unknown solver type {linsolver}'
+                )
         elif nonlinsolver == 'fixedpoint':
             # create fixed point nonlinear solver object 
             NLS = SUNNonlinSol_FixedPoint(self.y0, 0, self.sunctx);
@@ -1603,7 +1671,7 @@ cdef class CVODE(BaseSundialsSolver):
             if flag != CV_SUCCESS:
                 raise ValueError('CVodeSetNonlinearSolver failed with code {}'
                                  .format(flag))
-        
+
         if (linsolver in ['dense', 'lapackdense', 'lapackband', 'band']
             and self.aux_data.jac):
             # we need to create the correct shape for jacobian output, here is
