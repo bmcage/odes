@@ -18,9 +18,11 @@ def rhs(x, y, ydot):
     #ydot[:] = (np.cos(x) * (x + 0.1) - np.sin(x)) / np.pow((x + 0.1), 2)
 
 
-class GetInfoTest(unittest.TestCase):
+class GetInfoTestCVODE(unittest.TestCase):
+    solvername = 'cvode'
+
     def setUp(self):
-        self.ode = ode('cvode', rhs, old_api=False)
+        self.ode = ode(self.solvername, rhs, old_api=False)
         self.solution = self.ode.solve(xs, np.array([1]))
 
     def test_we_integrated_correctly(self):
@@ -45,9 +47,16 @@ class GetInfoTest(unittest.TestCase):
         assert 'NumRhsEvals' in info
         assert info['NumRhsEvals'] > 0
 
-class GetInfoTestSpils(unittest.TestCase):
+
+class GetInfoTestCVODES(GetInfoTestCVODE):
+    solvername = 'cvodes'
+
+
+class GetInfoTestSpilsCVODE(unittest.TestCase):
+    solvername = 'cvode'
+
     def setUp(self):
-        self.ode = ode('cvode', rhs, linsolver="spgmr", old_api=False)
+        self.ode = ode(self.solvername, rhs, linsolver="spgmr", old_api=False)
         self.solution = self.ode.solve(xs, np.array([1]))
 
     def test_ode_exposes_num_njtimes_evals(self):
@@ -55,3 +64,7 @@ class GetInfoTestSpils(unittest.TestCase):
         print("ode.get_info() =\n", info)
         assert 'NumJtimesEvals' in info
         assert info['NumJtimesEvals'] > 0
+
+
+class GetInfoTestSpilsCVODES(GetInfoTestSpilsCVODE):
+    solvername = 'cvodes'

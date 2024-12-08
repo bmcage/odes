@@ -125,15 +125,16 @@ def ontstop_vc(t, y, solver):
 
     return 0
 
-class TestOn(TestCase):
+class TestOnCVODE(TestCase):
     """
     Check integrate.dae
     """
+    solvername = 'cvode'
 
     def test_cvode_rootfn_noroot(self):
         #test calling sequence. End is reached before root is found
         tspan = np.arange(0, t_end1 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
+        solver = ode(self.solvername, rhs_fn, nr_rootfns=1, rootfn=root_fn,
                      old_api=False)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.SUCCESS, "ERROR: Error occurred"
@@ -144,7 +145,7 @@ class TestOn(TestCase):
     def test_cvode_rootfn(self):
         #test root finding and stopping: End is reached at a root
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
+        solver = ode(self.solvername, rhs_fn, nr_rootfns=1, rootfn=root_fn,
                      old_api=False)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.ROOT_RETURN, "ERROR: Root not found!"
@@ -155,7 +156,7 @@ class TestOn(TestCase):
     def test_cvode_rootfnacc(self):
         #test root finding and accumilating: End is reached normally, roots stored
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
+        solver = ode(self.solvername, rhs_fn, nr_rootfns=1, rootfn=root_fn,
                      onroot=onroot_va,
                      old_api=False)
         soln = solver.solve(tspan, y0)
@@ -171,7 +172,7 @@ class TestOn(TestCase):
     def test_cvode_rootfn_stop(self):
         #test root finding and stopping: End is reached at a root with a function
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
+        solver = ode(self.solvername, rhs_fn, nr_rootfns=1, rootfn=root_fn,
                      onroot=onroot_vb,
                      old_api=False)
         soln = solver.solve(tspan, y0)
@@ -183,7 +184,7 @@ class TestOn(TestCase):
     def test_cvode_rootfn_test(self):
         #test root finding and accumilating: End is reached after a number of root
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn,
+        solver = ode(self.solvername, rhs_fn, nr_rootfns=1, rootfn=root_fn,
                      onroot=onroot_vc,
                      old_api=False)
         soln = solver.solve(tspan, y0)
@@ -199,7 +200,7 @@ class TestOn(TestCase):
     def test_cvode_rootfn_two(self):
         #test two root finding
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, nr_rootfns=2, rootfn=root_fn2,
+        solver = ode(self.solvername, rhs_fn, nr_rootfns=2, rootfn=root_fn2,
                      onroot=onroot_vc,
                      old_api=False)
         soln = solver.solve(tspan, y0)
@@ -215,7 +216,7 @@ class TestOn(TestCase):
     def test_cvode_rootfn_end(self):
         #test root finding with root at endtime
         tspan = np.arange(0, 30 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, nr_rootfns=1, rootfn=root_fn3,
+        solver = ode(self.solvername, rhs_fn, nr_rootfns=1, rootfn=root_fn3,
                      onroot=onroot_vc,
                      old_api=False)
         soln = solver.solve(tspan, y0)
@@ -233,7 +234,7 @@ class TestOn(TestCase):
         global n
         n = 0
         tspan = np.arange(0, t_end1 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, tstop=T1+1, ontstop=ontstop_va,
+        solver = ode(self.solvername, rhs_fn, tstop=T1+1, ontstop=ontstop_va,
                      old_api=False)
 
         soln = solver.solve(tspan, y0)
@@ -247,7 +248,7 @@ class TestOn(TestCase):
         global n
         n = 0
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, tstop=T1,
+        solver = ode(self.solvername, rhs_fn, tstop=T1,
                      old_api=False)
         soln = solver.solve(tspan, y0)
         assert soln.flag==StatusEnum.TSTOP_RETURN, "ERROR: Tstop not found!"
@@ -264,7 +265,7 @@ class TestOn(TestCase):
         global n
         n = 0
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, tstop=T1, ontstop=ontstop_va,
+        solver = ode(self.solvername, rhs_fn, tstop=T1, ontstop=ontstop_va,
                      old_api=False)
         soln = solver.solve(tspan, y0)
         assert len(soln.tstop.t) == 9, "ERROR: Did not find all tstop"
@@ -282,7 +283,7 @@ class TestOn(TestCase):
         global n
         n = 0
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, tstop=T1, ontstop=ontstop_vb,
+        solver = ode(self.solvername, rhs_fn, tstop=T1, ontstop=ontstop_vb,
                      old_api=False)
 
         soln = solver.solve(tspan, y0)
@@ -302,7 +303,7 @@ class TestOn(TestCase):
         global n
         n = 0
         tspan = np.arange(0, t_end2 + 1, 1.0, DTYPE)
-        solver = ode('cvode', rhs_fn, tstop=T1, ontstop=ontstop_vc,
+        solver = ode(self.solvername, rhs_fn, tstop=T1, ontstop=ontstop_vc,
                      old_api=False)
 
         soln = solver.solve(tspan, y0)
@@ -315,3 +316,7 @@ class TestOn(TestCase):
         assert allclose([soln.tstop.t[-1], soln.tstop.y[-1,0], soln.tstop.y[-1,1]],
                         [30.0, -1452.5024, -294.30],
                         atol=atol, rtol=rtol)
+
+
+class TestOnCVODES(TestOnCVODE):
+    solvername = 'cvodes'
