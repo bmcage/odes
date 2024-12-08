@@ -334,7 +334,7 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 
 cdef int _jacdense(sunrealtype tt,
             N_Vector yy, N_Vector ff, SUNMatrix Jac,
-            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, 
+            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2,
             N_Vector tmp3) except? -1:
     """function with the signature of CVodeJacFn that calls python Jac
        Note: signature of Jac is SUNMatrix
@@ -421,8 +421,8 @@ class MutableBool(object):
     def __init__(self, value):
         self.value = value
 
-cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector ff, sunbooleantype jok, 
-                       sunbooleantype *jcurPtr, sunrealtype gamma, 
+cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector ff, sunbooleantype jok,
+                       sunbooleantype *jcurPtr, sunrealtype gamma,
                        void *auxiliary_data) except -1:
     """ function with the signature of CVLsPrecSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
@@ -437,7 +437,7 @@ cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector ff, sunbooleantype 
         nv_s2ndarray(yy, yy_tmp)
 
     jcurPtr_tmp = MutableBool(jcurPtr[0])
-    user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, jok, jcurPtr_tmp, 
+    user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, jok, jcurPtr_tmp,
                                                gamma, aux_data.user_data)
     jcurPtr[0] = jcurPtr_tmp.value
     return user_flag
@@ -503,8 +503,8 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
             user_flag = 0
         return user_flag
 
-cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector ff, N_Vector r, 
-                       N_Vector z, sunrealtype gamma, sunrealtype delta, int lr, 
+cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector ff, N_Vector r,
+                       N_Vector z, sunrealtype gamma, sunrealtype delta, int lr,
                        void *auxiliary_data) except? -1:
     """ function with the signature of CVLsPrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
@@ -714,7 +714,7 @@ def no_continue_fn(t, y, solver):
 cdef void _cv_err_handler_fn(
     int line, const char *func, const char *file, const char *msg,
     SUNErrCode err_code, void *err_user_data, SUNContext sunctx
-):
+) noexcept:
     """
     function with the signature of SUNErrHandlerFn, that calls python error
     handler
@@ -873,7 +873,7 @@ cdef class CVODE(BaseSundialsSolver):
                     Defines the jacobian function and has to be a subclass
                     of CV_JacRhsFunction class or python function. This function
                     takes as input arguments current time t, current value of y,
-                    current value of f(t,y), and 
+                    current value of f(t,y), and
                     a 2D numpy array of returned jacobian and optional userdata.
                     Return value is 0 if successfull.
                     Jacobian is only used for dense or lapackdense linear solver
@@ -925,12 +925,12 @@ cdef class CVODE(BaseSundialsSolver):
                                  For parallel implementation use_relaxation
                                  use lapackdense or lapackband respectively.
                     TODO: to add new solvers: pcg, spfgmr, superlumt, klu
-                    
+
             'nonlinsolver':
                 Values: 'newton' (= default), 'fixedpoint'
                 Description:
                     Specifies the used nonlinear solver.
-                    
+
             'lband', 'uband':
                 Values: non-negative integer, 0 = default
                 Description:
@@ -1664,7 +1664,7 @@ cdef class CVODE(BaseSundialsSolver):
                     'LinSolver: Unknown solver type {linsolver}'
                 )
         elif nonlinsolver == 'fixedpoint':
-            # create fixed point nonlinear solver object 
+            # create fixed point nonlinear solver object
             NLS = SUNNonlinSol_FixedPoint(self.y0, 0, self.sunctx);
             # attach nonlinear solver object to CVode
             flag = CVodeSetNonlinearSolver(cv_mem, NLS)

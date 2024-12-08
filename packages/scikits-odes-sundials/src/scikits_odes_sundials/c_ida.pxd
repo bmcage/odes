@@ -49,19 +49,19 @@ cdef extern from "ida/ida.h":
     enum: IDA_BAD_T           #-26
     enum: IDA_BAD_DKY         #-27
     enum: IDA_VECTOROP_ERR    #-28
-    
+
     enum: IDA_UNRECOGNIZED_ERROR #-99
 
     ctypedef int (*IDAResFn)(sunrealtype tt, N_Vector yy, N_Vector yp,
-                    N_Vector rr, void *user_data)
+                    N_Vector rr, void *user_data) except? -1
 
     ctypedef int (*IDARootFn)(sunrealtype t, N_Vector y, N_Vector yp,
-                    sunrealtype *gout, void *user_data)
+                    sunrealtype *gout, void *user_data) except? -1
 
     ctypedef int (*IDAEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
 
-    ctypedef void (*IDAErrHandlerFn)(int error_code, const char *module, 
-                                    const char *function, char *msg, 
+    ctypedef void (*IDAErrHandlerFn)(int error_code, const char *module,
+                                    const char *function, char *msg,
                                     void *user_data)
 
     void *IDACreate(SUNContext sunctx)
@@ -74,7 +74,7 @@ cdef extern from "ida/ida.h":
     int IDASVtolerances(void *ida_mem, sunrealtype reltol, N_Vector abstol)
     int IDAWFtolerances(void *ida_mem, IDAEwtFn efun)
     int IDACalcIC(void *ida_mem, int icopt, sunrealtype tout1)
-    
+
     int IDASetNonlinConvCoefIC(void *ida_mem, sunrealtype epiccon)
     int IDASetMaxNumStepsIC(void *ida_mem, int maxnh)
     int IDASetMaxNumJacsIC(void *ida_mem, int maxnj)
@@ -82,7 +82,7 @@ cdef extern from "ida/ida.h":
     int IDASetLineSearchOffIC(void *ida_mem, sunbooleantype lsoff)
     int IDASetStepToleranceIC(void *ida_mem, sunrealtype steptol)
     int IDASetMaxBacksIC(void *ida_mem, int maxbacks)
-    
+
     int IDASetErrHandlerFn(void *ida_mem, IDAErrHandlerFn ehfun, void *eh_data)
     int IDASetErrFile(void *ida_mem, FILE *errfp)
     int IDASetUserData(void *ida_mem, void *user_data)
@@ -107,10 +107,10 @@ cdef extern from "ida/ida.h":
 
     int IDASolve(void *ida_mem, sunrealtype tout, sunrealtype *tret,
                  N_Vector yret, N_Vector ypret, int itask)
-    
+
     int IDAComputeY(void *ida_mem, N_Vector ycor, N_Vector y)
     int IDAComputeYp(void *ida_mem, N_Vector ycor, N_Vector yp)
-    
+
     int IDAGetDky(void *ida_mem, sunrealtype t, int k, N_Vector dky)
 
     int IDAGetWorkSpace(void *ida_mem, long int *lenrw, long int *leniw)
@@ -162,17 +162,17 @@ cdef extern from "ida/ida_ls.h":
     ctypedef int (*IDALsJacFn)(sunrealtype t, sunrealtype c_j, N_Vector y,
                                N_Vector yp, N_Vector r, SUNMatrix Jac,
                                void *user_data, N_Vector tmp1,
-                               N_Vector tmp2, N_Vector tmp3)
+                               N_Vector tmp2, N_Vector tmp3) except? -1
 
     ctypedef int (*IDALsPrecSetupFn)(sunrealtype tt, N_Vector yy,
                                     N_Vector yp, N_Vector rr,
-                                    sunrealtype c_j, void *user_data)
+                                    sunrealtype c_j, void *user_data) except? -1
 
     ctypedef int (*IDALsPrecSolveFn)(sunrealtype tt, N_Vector yy,
                                     N_Vector yp, N_Vector rr,
                                     N_Vector rvec, N_Vector zvec,
                                     sunrealtype c_j, sunrealtype delta,
-                                    void *user_data)
+                                    void *user_data) except? -1
 
     ctypedef int (*IDALsJacTimesSetupFn)(sunrealtype tt, N_Vector yy,
                                         N_Vector yp, N_Vector rr,
@@ -185,7 +185,7 @@ cdef extern from "ida/ida_ls.h":
                                       N_Vector tmp1, N_Vector tmp2) except? -1
 
     int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
-    
+
     int IDASetJacFn(void *ida_mem, IDALsJacFn jac)
     int IDASetPreconditioner(void *ida_mem, IDALsPrecSetupFn pset,
                              IDALsPrecSolveFn psolve)
@@ -205,6 +205,7 @@ cdef extern from "ida/ida_ls.h":
     int IDAGetNumLinResEvals(void *ida_mem, long int *nrevalsLS)
     int IDAGetLastLinFlag(void *ida_mem, long int *flag)
     char *IDAGetLinReturnFlagName(long int flag)
+
 
 cdef extern from "ida/ida_bbdpre.h":
 
