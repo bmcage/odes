@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DAE Solvers &#8212; Odes 3.1.0a1+2.gb3f361b documentation</title>
+    <title>DAE Solvers &#8212; Odes 3.1.0a2+4.g04d1c6b documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="_static/badge_only.css?v=cf56f567" />
     <script src="_static/jquery.js?v=5d32c60e"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-    <script src="_static/documentation_options.js?v=60475469"></script>
+    <script src="_static/documentation_options.js?v=b132bf1f"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/docs-versions-menu.js?v=45d24689"></script>
@@ -40,8 +40,8 @@
   <section id="dae-solvers">
 <h1>DAE Solvers<a class="headerlink" href="#dae-solvers" title="Link to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="scikits.odes.dae.dae">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scikits.odes.dae.</span></span><span class="sig-name descname"><span class="pre">dae</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">integrator_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eqsres</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikits.odes.dae.dae" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scikits_odes.dae.</span></span><span class="sig-name descname"><span class="pre">dae</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">integrator_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eqsres</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>A generic interface class to differential algebraic equations.</p>
 <p>Define equation res = G(t,y,y’) which can eg be G = f(y,t) - A y’ when
 solving A y’ = f(y,t), and where (optional) jac is the jacobian matrix of
@@ -103,14 +103,14 @@ G(y,y’,t) = 0 instead of the normal ode, and solve as a DAE.</p>
 <span class="go">    ... # we create residual equations for the problem</span>
 <span class="go">    ... result[0] = m*xdot[1] + k*x[0]</span>
 <span class="go">    ... result[1] = xdot[0] - x[1]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits.odes</span> <span class="kn">import</span> <span class="n">dae</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scikits_odes</span> <span class="kn">import</span> <span class="n">dae</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">solver</span> <span class="o">=</span> <span class="n">dae</span><span class="p">(</span><span class="s1">&#39;ida&#39;</span><span class="p">,</span> <span class="n">reseqn</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">initx</span><span class="p">,</span> <span class="n">initxp</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="scikits.odes.dae.dae.init_step">
-<span class="sig-name descname"><span class="pre">init_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_ic0_retn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp_ic0_retn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae.init_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikits.odes.dae.dae.init_step" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">init_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_ic0_retn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp_ic0_retn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae.init_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Initializes the solver and allocates memory. It is not needed to
 call this method if solve is used to compute the solution. In the case
 step is used, init_step must be called first.</p>
@@ -180,16 +180,16 @@ derivated.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="scikits.odes.dae.dae.set_options">
-<span class="sig-name descname"><span class="pre">set_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae.set_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikits.odes.dae.dae.set_options" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">set_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae.set_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Set specific options for the solver.
 See the solver documentation for details.</p>
 <p>Calling set_options a second time, normally resets the solver.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="scikits.odes.dae.dae.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tspan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikits.odes.dae.dae.solve" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tspan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Runs the solver.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -270,8 +270,8 @@ contain the start time as first entry.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="scikits.odes.dae.dae.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_retn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp_retn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikits.odes.dae.dae.step" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_retn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp_retn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scikits_odes/dae.html#dae.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Method for calling successive next step of the IDA solver to allow
 more precise control over the IDA solver. The ‘init_step’ method has to
 be called before the ‘step’ method.</p>
@@ -379,16 +379,7 @@ derivatives of y at time t. If None yp_retn is not used.</p></li>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="ode.html">ODE Solvers</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">DAE Solvers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#scikits.odes.dae.dae"><code class="docutils literal notranslate"><span class="pre">dae</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#scikits.odes.dae.dae.init_step"><code class="docutils literal notranslate"><span class="pre">dae.init_step()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#scikits.odes.dae.dae.set_options"><code class="docutils literal notranslate"><span class="pre">dae.set_options()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#scikits.odes.dae.dae.solve"><code class="docutils literal notranslate"><span class="pre">dae.solve()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#scikits.odes.dae.dae.step"><code class="docutils literal notranslate"><span class="pre">dae.step()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DAE Solvers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sundials.html">Sundials Solver Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">Lower Level API</a></li>
 </ul>
