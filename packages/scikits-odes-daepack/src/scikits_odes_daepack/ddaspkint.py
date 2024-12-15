@@ -9,7 +9,7 @@ This code solves a system of differential/algebraic equations of the form
 G(t,y,y') = 0 , using a combination of Backward Differentiation Formula
 (BDF) methods and a choice of two linear system solution methods: direct
 (dense or band) or Krylov (iterative).
-Krylov is not supported from within scikits.odes.
+Krylov is not supported from within scikits_odes.
 In order to support it, a new interface should be created ddaspk_krylov,
 with a different signature, reflecting the changes needed.
 

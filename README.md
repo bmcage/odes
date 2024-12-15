@@ -30,7 +30,7 @@ A simple example solving the Van der Pol oscillator is as follows:
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
-from scikits.odes import ode
+from scikits_odes import ode
 
 t0, y0 = 1, np.array([0.5, 0.5])  # initial condition
 def van_der_pol(t, y, ydot):

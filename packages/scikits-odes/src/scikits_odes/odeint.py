@@ -112,8 +112,8 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
 
     See Also
     --------
-    scikits.odes.ode.ode : a more object-oriented integrator
-    scikits.odes.dae.dae : a solver for differential-algebraic equations
+    scikits_odes.ode.ode : a more object-oriented integrator
+    scikits_odes.dae.dae : a solver for differential-algebraic equations
     scipy.integrate.quad : for finding the area under a curve
 
     Examples
@@ -159,7 +159,7 @@ def odeint(rhsfun, tout, y0,  method='bdf', **options):
 
     Call `odeint` to generate the solution.
 
-    >>> from scikits.odes.odeint import odeint
+    >>> from scikits_odes.odeint import odeint
     >>> sol = odeint(pend, t, y0)
 
     The solution is a named tuple `sol`. sol.values.y is an array with shape (101, 2).

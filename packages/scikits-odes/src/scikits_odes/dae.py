@@ -104,7 +104,7 @@ class dae(object):
         ... # we create residual equations for the problem
         ... result[0] = m*xdot[1] + k*x[0]
         ... result[1] = xdot[0] - x[1]
-    >>> from scikits.odes import dae
+    >>> from scikits_odes import dae
     >>> solver = dae('ida', reseqn)
     >>> result = solver.solve([0., 1., 2.], initx, initxp)
     """

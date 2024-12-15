@@ -1,5 +1,5 @@
 DAE Solvers
 -----------------------------
 
-.. autoclass:: scikits.odes.dae.dae
+.. autoclass:: scikits_odes.dae.dae
    :members:

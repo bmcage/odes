@@ -42,7 +42,7 @@ class ode(object):
         The solver to use.
 
         ``'cvode'`` selects the CVODE solver from the SUNDIALS package.
-        See py:class:`scikits.odes.sundials.cvode.CVODE` for solver specific
+        See py:class:`scikits_odes_sundials.cvode.CVODE` for solver specific
         options.
 
         ``'dopri5'`` selects the Dormand & Prince Runge-Kutta order (4)5
@@ -78,7 +78,7 @@ class ode(object):
 
     See Also
     --------
-    scikits.odes.odeint.odeint : an ODE integrator with a simpler interface
+    scikits_odes.odeint.odeint : an ODE integrator with a simpler interface
     scipy.integrate : Methods in scipy for ODE integration
 
     Examples
@@ -98,7 +98,7 @@ class ode(object):
             xdot[0] = x[1]
             xdot[1] = - k/m * x[0]
 
-    >>> from scikits.odes import ode
+    >>> from scikits_odes import ode
     >>> solver = ode('cvode', rhseqn, old_api=False)
     >>> result = solver.solve([0., 1., 2.], initx)
     >>> print('   t        Solution          Exact')

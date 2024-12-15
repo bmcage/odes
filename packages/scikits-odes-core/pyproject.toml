@@ -4,7 +4,7 @@ requires = ["setuptools"]
 [project]
 name = 'scikits-odes-core'
 dynamic = ["version"]
-description = 'Core support module for scikits.odes'
+description = 'Core support module for scikits-odes'
 readme = "README.md"
 authors = [
     {name = 'B. Malengier', email = 'benny.malengier@gmail.org'},
