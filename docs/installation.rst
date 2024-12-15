@@ -47,8 +47,10 @@ with ``odes``:
 
     * - SUNDIALS version
       - ``odes`` version
+    * - 7.x
+      - 3.1.x
     * - 6.x
-      - 2.7.x
+      - 2.7.x and 3.0.x
     * - 5.x
       - 2.6.x
     * - 4.x
@@ -67,7 +69,7 @@ Installation
 ------------
 To install ``odes``, use::
 
-    pip install scikits.odes
+    pip install scikits-odes
 
 which will download the latest version from PyPI. This will handle the installation of the additional runtime dependencies of ``odes``. You should then run the tests to make sure everything is set up correctly.
 
@@ -79,7 +81,7 @@ Testing your version of ``odes``
 To test the version in python, use in the python shell::
 
     >>> import pkg_resources
-    >>> pkg_resources.get_distribution("scikits.odes").version
+    >>> pkg_resources.get_distribution("scikits-odes").version
 
     
 Running the Tests
@@ -90,7 +92,7 @@ You need nose to run the tests. To install nose, run::
 
 To run the tests, in the python shell::
 
-    >>> import scikits.odes as od; od.test()
+    >>> import scikits_odes as od; od.test()
     
 Note that the sundials library must be in your ``LD_LIBRARY_PATH``. So, make sure the directory ``$SUNDIALS_INST/lib`` is included. You can do this for example as follows (assuming sundials was installed in ``/usr/local``::
 
@@ -120,7 +122,7 @@ LAPACK Not Found
 ................
 Most issues with using ``odes`` are due to incorrectly setting the LAPACK libraries, resulting in error, typically::
 
-    AttributeError: module 'scikits.odes.sundials.cvode' has no attribute 'CVODE'
+    AttributeError: module 'scikits_odes_sundials.cvode' has no attribute 'CVODE'
 
 or::
 
@@ -189,7 +191,7 @@ You can verify that lapack is available (although the nix install will have
 run many tests to check this already), try the following python snippet in the interpreter::
 
     import numpy as np
-    from scikits.odes.odeint import odeint
+    from scikits_odes.odeint import odeint
     
     tout = np.linspace(0, 1)
     initial_values = np.array([1])

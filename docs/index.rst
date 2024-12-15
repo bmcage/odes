@@ -8,9 +8,9 @@ Welcome to the ODES scikit documentation!
 
 The ODES scikit provides access to Ordinary Differential Equation (ODE) solvers
 and Differential Algebraic Equation (DAE) solvers not included in `scipy`_. A
-convenience function :py:func:`scikits.odes.odeint.odeint` is available for fast
+convenience function :py:func:`scikits_odes.odeint.odeint` is available for fast
 and fire and forget integration. Object oriented class solvers
-:py:class:`scikits.odes.ode.ode` and :py:class:`scikits.odes.dae.dae` are
+:py:class:`scikits_odes.ode.ode` and :py:class:`scikits_odes.dae.dae` are
 available for fine control. Finally, the low levels solvers are also directly
 exposed for specialised needs.
 
