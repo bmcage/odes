@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scikits_odes.odeint &#8212; Odes 3.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/badge_only.css?v=cf56f567" />
+    <script src="../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../_static/documentation_options.js?v=dd1205ac"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/docs-versions-menu.js?v=45d24689"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for scikits_odes.odeint</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Feb  1 13:38:24 2016</span>
+
+<span class="sd">@author: benny</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">.ode</span> <span class="kn">import</span> <span class="n">ode</span>
+
+
+<div class="viewcode-block" id="odeint">
+<a class="viewcode-back" href="../../ode.html#scikits_odes.odeint.odeint">[docs]</a>
+<span class="k">def</span> <span class="nf">odeint</span><span class="p">(</span><span class="n">rhsfun</span><span class="p">,</span> <span class="n">tout</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">method</span><span class="o">=</span><span class="s1">&#39;bdf&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integrate a system of ordinary differential equations.</span>
+<span class="sd">    *odeint* is a wrapper around the ode class, as a convenience function to</span>
+<span class="sd">    quickly integrate a system of ode.</span>
+<span class="sd">    Solves the initial value problem for stiff or non-stiff systems</span>
+<span class="sd">    of first order ode&#39;s:</span>
+
+<span class="sd">        rhs = dy/dt = fun(t, y)</span>
+
+<span class="sd">    where y can be a vector, then rhsfun must be a function computing rhs with</span>
+<span class="sd">    signature:</span>
+
+<span class="sd">        rhsfun(t, y, rhs)</span>
+
+<span class="sd">    storing the computed dy/dt in the rhs array passed to the function</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rhsfun : callable(t, y, out)</span>
+<span class="sd">        Computes the derivative at dy/dt in terms of t and y, and stores in out</span>
+<span class="sd">    y0 : array</span>
+<span class="sd">        Initial condition on y (can be a vector).</span>
+<span class="sd">    t : array</span>
+<span class="sd">        A sequence of time points for which to solve for y.  The initial</span>
+<span class="sd">        value point should be the first element of this sequence.</span>
+<span class="sd">    method : string, solution method to use.</span>
+<span class="sd">        Available are all the ode class solvers as well as some convenience</span>
+<span class="sd">        shorthands:</span>
+
+<span class="sd">        =======  ==============================================================</span>
+<span class="sd">        Method   Meaning</span>
+<span class="sd">        =======  ==============================================================</span>
+<span class="sd">        bdf      This uses the &#39;cvode&#39; solver in default from, which is a</span>
+<span class="sd">                 variable step, variable coefficient Backward Differentiation</span>
+<span class="sd">                 Formula solver, good for stiff ODE. Newton iterations are</span>
+<span class="sd">                 used to solve the nonlinear system.</span>
+<span class="sd">        admo     This uses the &#39;cvode&#39; solver with option lmm_type=&#39;ADAMS&#39;,</span>
+<span class="sd">                 which is a variable step Adams-Moulton method (linear</span>
+<span class="sd">                 multistep method), good for non-stiff ODE. Functional</span>
+<span class="sd">                 iterations are used to solve the nonlinear system.</span>
+<span class="sd">        rk5      This uses the &#39;dopri5&#39; solver, which is a variable step</span>
+<span class="sd">                 Runge-Kutta method of order (4)5 (use for non-stiff ODE)</span>
+<span class="sd">        rk8      This uses the &#39;dop853&#39; solver, which is a variable step</span>
+<span class="sd">                 Runge-Kutta method of order 8(5,3)</span>
+<span class="sd">        =======  ==============================================================</span>
+
+<span class="sd">        For educational purposes, you can also access following methods:</span>
+
+<span class="sd">        =======  ==============================================================</span>
+<span class="sd">        Method   Meaning</span>
+<span class="sd">        =======  ==============================================================</span>
+<span class="sd">        beuler   This is the Implicit Euler (backward Euler) method (order 1),</span>
+<span class="sd">                 which is obtained via the &#39;bdf&#39; method, setting the order</span>
+<span class="sd">                 option to 1, setting large tolerances,  and fixing the</span>
+<span class="sd">                 stepsize.</span>
+<span class="sd">                 Use option &#39;step&#39; to change stepsize, default: step=0.05.</span>
+<span class="sd">                 Use option &#39;rtol&#39; and &#39;atol&#39; to use more strict tolerances</span>
+<span class="sd">                 Note: this is not completely the backward Euler method, as</span>
+<span class="sd">                 the cvode solver has added control options!</span>
+<span class="sd">        trapz    This is the Trapezoidal Rule method (order 2), which is</span>
+<span class="sd">                 obtained via the &#39;admo&#39; method, setting option order to 2,</span>
+<span class="sd">                 setting large tolerances and fixing the stepsize.</span>
+<span class="sd">                 Use option &#39;step&#39; to change stepsize, default: step=0.05.</span>
+<span class="sd">                 Use option &#39;rtol&#39; and &#39;atol&#39; to use more strict tolerances</span>
+<span class="sd">                 Note: The cvode solver might change the order to 1 internally</span>
+<span class="sd">                 in which case this becomes beuler method. Set atol, rtol</span>
+<span class="sd">                 options as strict as possible.</span>
+<span class="sd">        =======  ==============================================================</span>
+
+<span class="sd">        You can also access the solvers of ode via their names:</span>
+
+<span class="sd">        =======  ==============================================================</span>
+<span class="sd">        Method   Meaning</span>
+<span class="sd">        =======  ==============================================================</span>
+<span class="sd">        cvode    This uses the &#39;cvode&#39; solver</span>
+<span class="sd">        dopri5   This uses the &#39;dopri5&#39; solver</span>
+<span class="sd">        dop853   This uses the &#39;dop853&#39; solver</span>
+<span class="sd">        =======  ==============================================================</span>
+
+<span class="sd">    options : extra solver options, optional</span>
+<span class="sd">        Every solver has it&#39;s own extra options, see the ode class and the</span>
+<span class="sd">        details of the solvers available there to know the options possible per</span>
+<span class="sd">        solver</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    solution : named tuple</span>
+<span class="sd">        A single named tuple is returned containing the result of the</span>
+<span class="sd">        integration.</span>
+
+<span class="sd">        ========  ==========================================</span>
+<span class="sd">        Field     Meaning</span>
+<span class="sd">        ========  ==========================================</span>
+<span class="sd">        flag      An integer flag</span>
+<span class="sd">        values    Named tuple with fields t and y</span>
+<span class="sd">        errors    Named tuple with fields t and y</span>
+<span class="sd">        roots     Named tuple with fields t and y</span>
+<span class="sd">        tstop     Named tuple with fields t and y</span>
+<span class="sd">        message   String with message in case of an error</span>
+<span class="sd">        ========  ==========================================</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    scikits_odes.ode.ode : a more object-oriented integrator</span>
+<span class="sd">    scikits_odes.dae.dae : a solver for differential-algebraic equations</span>
+<span class="sd">    scipy.integrate.quad : for finding the area under a curve</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    The second order differential equation for the angle `theta` of a</span>
+<span class="sd">    pendulum acted on by gravity with friction can be written:</span>
+
+<span class="sd">    .. math:: \\theta&#39;&#39;(t) + b \\theta&#39;(t) + c \\sin(\\theta(t)) = 0</span>
+
+<span class="sd">    where `b` and `c` are positive constants, and a prime (&#39;) denotes a</span>
+<span class="sd">    derivative.  To solve this equation with `odeint`, we must first convert</span>
+<span class="sd">    it to a system of first order equations.  By defining the angular</span>
+<span class="sd">    velocity ``omega(t) = theta&#39;(t)``, we obtain the system:</span>
+
+<span class="sd">    .. math:: \\theta&#39;(t) = \\omega(t)</span>
+<span class="sd">     \\omega&#39;(t) = -b \\omega(t) - c \\sin(\\theta(t))</span>
+
+<span class="sd">    We assume the constants are `b` = 0.25 and `c` = 5.0:</span>
+
+<span class="sd">    &gt;&gt;&gt; b = 0.25</span>
+<span class="sd">    &gt;&gt;&gt; c = 5.0</span>
+
+<span class="sd">    Let `y` be the vector [`theta`, `omega`].  We implement this system</span>
+<span class="sd">    in python as:</span>
+
+<span class="sd">    &gt;&gt;&gt; def pend(t, y, out):</span>
+<span class="sd">     ...     theta, omega = y</span>
+<span class="sd">     ...     out[:] = [omega, -b*omega - c*np.sin(theta)]</span>
+<span class="sd">     ...</span>
+
+<span class="sd">    In case you want b and c easily changable, make pend a class method, and</span>
+<span class="sd">    consider attributes b and c accessible via `self.b` and `self.c`.</span>
+<span class="sd">    For initial conditions, we assume the pendulum is nearly vertical</span>
+<span class="sd">    with `theta(0)` = `pi` - 0.1, and it initially at rest, so</span>
+<span class="sd">    `omega(0)` = 0.  Then the vector of initial conditions is</span>
+
+<span class="sd">    &gt;&gt;&gt; y0 = [np.pi - 0.1, 0.0]</span>
+
+<span class="sd">    We generate a solution 101 evenly spaced samples in the interval</span>
+<span class="sd">    0 &lt;= `t` &lt;= 10.  So our array of times is</span>
+
+<span class="sd">    &gt;&gt;&gt; t = np.linspace(0, 10, 101)</span>
+
+<span class="sd">    Call `odeint` to generate the solution.</span>
+
+<span class="sd">    &gt;&gt;&gt; from scikits_odes.odeint import odeint</span>
+<span class="sd">    &gt;&gt;&gt; sol = odeint(pend, t, y0)</span>
+
+<span class="sd">    The solution is a named tuple `sol`. sol.values.y is an array with shape (101, 2).</span>
+<span class="sd">    The first column is `theta(t)`, and the second is `omega(t)`.</span>
+<span class="sd">    The following code plots both components.</span>
+
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; plt.plot(sol.values.t, sol.values.y[:, 0], &#39;b&#39;, label=&#39;theta(t)&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; plt.plot(sol.values.t, sol.values.y[:, 1], &#39;g&#39;, label=&#39;omega(t)&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; plt.legend(loc=&#39;best&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; plt.xlabel(&#39;t&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; plt.grid()</span>
+<span class="sd">    &gt;&gt;&gt; plt.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">tout</span><span class="p">)</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">y0</span><span class="p">)</span>
+
+    <span class="n">int_name</span> <span class="o">=</span> <span class="s1">&#39;cvode&#39;</span>
+    <span class="c1">#always use old api</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;old_api&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;bdf&#39;</span><span class="p">):</span>
+        <span class="n">int_name</span> <span class="o">=</span> <span class="s1">&#39;cvode&#39;</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;admo&#39;</span><span class="p">):</span>
+        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;lmm_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ADAMS&#39;</span>
+        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;nonlinsolver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fixedpoint&#39;</span>
+        <span class="n">int_name</span> <span class="o">=</span> <span class="s1">&#39;cvode&#39;</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;rk5&#39;</span><span class="p">):</span>
+        <span class="n">int_name</span> <span class="o">=</span> <span class="s1">&#39;dopri5&#39;</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;rk8&#39;</span><span class="p">):</span>
+        <span class="n">int_name</span> <span class="o">=</span> <span class="s1">&#39;dop853&#39;</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;beuler&#39;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;trapz&#39;</span><span class="p">):</span>
+        <span class="n">int_name</span> <span class="o">=</span> <span class="s1">&#39;cvode&#39;</span>
+        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">options</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">):</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.05</span>
+        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;min_step_size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span>
+        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;max_step_size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span>
+        <span class="c1">#no error control possible, try to disable it:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">options</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s1">&#39;atol&#39;</span><span class="p">):</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;atol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e3</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">options</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s1">&#39;rtol&#39;</span><span class="p">):</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;rtol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e3</span>
+        <span class="k">del</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;trapz&#39;</span><span class="p">):</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;lmm_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ADAMS&#39;</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;nonlinsolver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fixedpoint&#39;</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">int_name</span> <span class="o">=</span> <span class="n">method</span>
+
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">ode</span><span class="p">(</span><span class="n">int_name</span><span class="p">,</span> <span class="n">rhsfun</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y0</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Odes</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ode.html">ODE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dae.html">DAE Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sundials.html">Sundials Solver Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">Lower Level API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2016, B. Malengier.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
