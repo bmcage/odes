@@ -6,10 +6,10 @@ Structure of ``odes`` and User's Guide
 There are a number of different ways of using ``odes`` to solve a system of
 ODEs/DAEs:
 
- * :py:class:`scikits.odes.ode.ode` and :py:class:`scikits.odes.dae.dae` classes, which provides an object oriented interface and significant amount of control of the solver.
- * :py:func:`scikits.odes.odeint.odeint`, a single function alternative to the object
+ * :py:class:`scikits_odes.ode.ode` and :py:class:`scikits_odes.dae.dae` classes, which provides an object oriented interface and significant amount of control of the solver.
+ * :py:func:`scikits_odes.odeint.odeint`, a single function alternative to the object
    oriented interface.
- * Accessing the lower-level solver-specific wrappers, such as the modules in :py:mod:`scikits.odes.sundials`.
+ * Accessing the lower-level solver-specific wrappers, such as the modules in :py:mod:`scikits_odes_sundials`.
 
 In general, a user supplies a function with the signature::
 
@@ -30,7 +30,7 @@ The simplest user program using the ``odeint`` interface, assuming you have
 implemented the ODE ``right_hand_side`` mentioned above, is::
 
     import numpy as np
-    from scikits.odes.odeint import odeint
+    from scikits_odes.odeint import odeint
 
     tout = np.linspace(0, 1)
     initial_values = np.array([0])
@@ -93,7 +93,7 @@ The simplest user program using the ``ode`` interface, assuming you have
 implemented the ODE ``right_hand_side`` mentioned above, is::
 
     import numpy as np
-    from scikits.odes.ode import ode
+    from scikits_odes.ode import ode
 
     SOLVER = 'cvode'
     tout = np.linspace(0, 1)
@@ -132,7 +132,7 @@ The simplest user program using the ``dae`` interface, assuming you have
 implemented the DAE ``right_hand_side`` mentioned above, is::
 
     import numpy as np
-    from scikits.odes.dae import dae
+    from scikits_odes.dae import dae
 
     SOLVER = 'ida'
     tout = np.linspace(0, 1)
