@@ -18,7 +18,7 @@ a variable called
 :py:mod:`scikits_odes_sundials` (other modules may have :py:const:`DTYPE`
 defined, but :py:mod:`scikits_odes_sundials` should be preferred). Additionally
 :py:const:`scikits_odes_sundials.precision` contains the precision setting found
-by scikits.odes.
+by scikits-odes.
 
 To use :py:const:`DTYPE`, treat it as a numpy dtype; use it whenever you need to
 create an array::

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-scikits.odes is a scikit offering a cython wrapper around some extra ode/dae
+scikits_odes is a scikit offering a cython wrapper around some extra ode/dae
 solvers, so they can mature outside of scipy.
 
 It offers wrappers around the following solvers from `SUNDIALS`_
