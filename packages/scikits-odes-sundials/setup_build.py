@@ -273,6 +273,9 @@ class build_ext(_build_ext):
                         pass
                 except ImportError:
                     info("pkgconfig module not found, using preset paths")
+                    
+            # SUNDIALS core types/context, needed starting with 7.0
+            SUNDIALS_LIBRARIES.append('sundials_core') 
 
             # This is where to put N_vector codes (currently only serial is
             # supported)
