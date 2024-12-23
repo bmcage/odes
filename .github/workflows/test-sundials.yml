@@ -129,13 +129,14 @@ jobs:
         TOXENV: ${{ matrix.tox-env }}
 
   test-windows:
-    name: (Test ${{ matrix.python-version }}, ${{ matrix.os }})
+    name: tests (${{ matrix.python-version }}, ${{matrix.sundials-version}}, ${{ matrix.os }}, double, 32)
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         os: [macos-latest, windows-latest]  # set more OS here, if desired
         python-version: ["3.9", "3.13"]  # set more python versions here, if desired
+        sundials-version: ["7.1.1"]  # set more SUNDIALS version here, if desired
         
     defaults:
       run:
@@ -154,7 +155,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Setup SUNDIALS
-        run: conda install sundials=7.1.1 -c conda-forge  # SUNDIALS version is set here
+        run: conda install sundials=${{ matrix.sundials-version }} -c conda-forge
 
       - name: Verify environment
         run: |
@@ -164,10 +165,13 @@ jobs:
       - name: Set SUNDIALS installation path
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            echo "SUNDIALS_INST=%CONDA_PREFIX%/Library" >> $GITHUB_ENV
+            SUNDIALS_INST="$CONDA_PREFIX\Library"
           else
-            echo "SUNDIALS_INST=$CONDA_PREFIX" >> $GITHUB_ENV
+            SUNDIALS_INST="$CONDA_PREFIX"
           fi
+
+          echo "SUNDIALS_INST is set to: $SUNDIALS_INST"
+          echo "SUNDIALS_INST=$SUNDIALS_INST" >> $GITHUB_ENV
 
       - name: Install scikits-odes-sundials
         working-directory: packages/scikits-odes-sundials
