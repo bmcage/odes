@@ -128,7 +128,7 @@ jobs:
       env:
         TOXENV: ${{ matrix.tox-env }}
 
-  test-windows:
+  tests-win-mac:
     name: tests (${{ matrix.python-version }}, ${{matrix.sundials-version}}, ${{ matrix.os }}, double, 32)
     runs-on: ${{ matrix.os }}
 
