@@ -134,9 +134,13 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]  # set more OS here, if desired
-        python-version: ["3.9", "3.13"]  # set more python versions here, if desired
-        sundials-version: ["7.1.1"]  # set more SUNDIALS version here, if desired
+        os: [windows-latest, macos-latest, macos-13]
+        sundials-version: ["7.1.1"]
+        include:
+          - python-version: "3.9"
+            tox-env: py39
+          - python-version: "3.13"
+            tox-env: py313
         
     defaults:
       run:
@@ -173,11 +177,10 @@ jobs:
           echo "SUNDIALS_INST is set to: $SUNDIALS_INST"
           echo "SUNDIALS_INST=$SUNDIALS_INST" >> $GITHUB_ENV
 
-      - name: Install scikits-odes-sundials
-        working-directory: packages/scikits-odes-sundials
+      - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .
+          python -m pip install --upgrade tox
 
       - name: List info
         run: |
@@ -185,7 +188,7 @@ jobs:
           conda list
                 
       - name: Run tests
-        working-directory: packages/scikits-odes-sundials/src/scikits_odes_sundials
-        run: |
-          pip install pytest
-          pytest .
+        working-directory: packages/scikits-odes-sundials
+        run: tox
+        env:
+          TOXENV: ${{ matrix.tox-env }}
