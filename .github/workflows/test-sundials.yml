@@ -192,6 +192,6 @@ jobs:
                 
       - name: Run tests
         working-directory: packages/scikits-odes-sundials
-        run: tox
+        run: tox || tox --recreate
         env:
           TOXENV: ${{ matrix.tox-env }}
