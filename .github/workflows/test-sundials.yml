@@ -183,7 +183,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
-          python -m pip install --upgrade tox
+
+      - name: Get tox
+        run: conda install tox
 
       - name: List info
         run: |
@@ -192,6 +194,6 @@ jobs:
                 
       - name: Run tests
         working-directory: packages/scikits-odes-sundials
-        run: tox || tox --recreate
+        run: tox
         env:
           TOXENV: ${{ matrix.tox-env }}
