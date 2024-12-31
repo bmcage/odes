@@ -143,6 +143,9 @@ jobs:
             tox-env: py39
           - python-version: "3.13"
             tox-env: py313
+        exclude:
+          - os: windows-latest  # Issue with tox venv, cannot access openssl
+            python-version: "3.9"
         
     defaults:
       run:
@@ -183,9 +186,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
-
-      - name: Get tox
-        run: conda install tox
+          python -m pip install --upgrade tox
 
       - name: List info
         run: |
