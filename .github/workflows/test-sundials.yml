@@ -171,7 +171,7 @@ jobs:
           conda info
           conda list
 
-      - name: Set SUNDIALS installation path
+      - name: Set SUNDIALS and SSL paths
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             SUNDIALS_INST="$CONDA_PREFIX\Library"
@@ -181,6 +181,9 @@ jobs:
 
           echo "SUNDIALS_INST is set to: $SUNDIALS_INST"
           echo "SUNDIALS_INST=$SUNDIALS_INST" >> $GITHUB_ENV
+
+          echo "SSL_CERT_FILE is at: $SSL_CERT_FILE"
+          echo "SSL_CERT_FILE=$SSL_CERT_FILE" >> $GITHUB_ENV
 
       - name: Install python dependencies
         run: |
