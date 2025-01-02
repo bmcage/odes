@@ -143,9 +143,9 @@ jobs:
             tox-env: py39
           - python-version: "3.13"
             tox-env: py313
-        exclude:
-          - os: windows-latest  # Issue with tox venv, cannot access openssl
-            python-version: "3.9"
+        # exclude:
+        #   - os: windows-latest  # Issue with tox venv, pip has no ssl access
+        #     python-version: "3.9"
         
     defaults:
       run:
