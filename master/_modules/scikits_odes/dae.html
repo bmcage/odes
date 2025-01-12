@@ -4,14 +4,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>scikits_odes.dae &#8212; Odes 3.1.0+2.g27f9a83 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <title>scikits_odes.dae &#8212; Odes 3.1.0+16.gea608d8 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../_static/badge_only.css?v=cf56f567" />
     <script src="../../_static/jquery.js?v=5d32c60e"></script>
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-    <script src="../../_static/documentation_options.js?v=47cd4b52"></script>
+    <script src="../../_static/documentation_options.js?v=df9219bf"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/docs-versions-menu.js?v=45d24689"></script>
@@ -60,10 +60,10 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dae&#39;</span><span class="p">]</span>
 <span class="n">__docformat__</span> <span class="o">=</span> <span class="s2">&quot;restructuredtext en&quot;</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 
-<span class="kn">from</span> <span class="nn">scikits_odes_core</span> <span class="kn">import</span> <span class="n">DaeBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scikits_odes_core</span><span class="w"> </span><span class="kn">import</span> <span class="n">DaeBase</span>
 
 
 <span class="c1">#------------------------------------------------------------------------------</span>
@@ -72,7 +72,7 @@
 
 <div class="viewcode-block" id="dae">
 <a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae">[docs]</a>
-<span class="k">class</span> <span class="nc">dae</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">dae</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A generic interface class to differential algebraic equations.</span>
 
@@ -150,7 +150,7 @@
 
     <span class="n">LOADED</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">integrator_name</span><span class="p">,</span> <span class="n">eqsres</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">integrator_name</span><span class="p">,</span> <span class="n">eqsres</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
         <span class="n">integrator</span> <span class="o">=</span> <span class="n">find_dae_integrator</span><span class="p">(</span><span class="n">integrator_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">integrator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No integrator name match with </span><span class="si">%s</span><span class="s1"> or is not available.&#39;</span>\
@@ -160,7 +160,7 @@
 
 <div class="viewcode-block" id="dae.set_options">
 <a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae.set_options">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set specific options for the solver.</span>
 <span class="sd">        See the solver documentation for details.</span>
@@ -172,7 +172,7 @@
 
 <div class="viewcode-block" id="dae.solve">
 <a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae.solve">[docs]</a>
-    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>  <span class="n">yp0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Runs the solver.</span>
 
@@ -223,7 +223,7 @@
 
 <div class="viewcode-block" id="dae.init_step">
 <a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae.init_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">yp_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">yp0</span><span class="p">,</span> <span class="n">y_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">yp_ic0_retn</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initializes the solver and allocates memory. It is not needed to</span>
 <span class="sd">        call this method if solve is used to compute the solution. In the case</span>
@@ -275,7 +275,7 @@
 
 <div class="viewcode-block" id="dae.step">
 <a class="viewcode-back" href="../../dae.html#scikits_odes.dae.dae.step">[docs]</a>
-    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yp_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yp_retn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method for calling successive next step of the IDA solver to allow</span>
 <span class="sd">        more precise control over the IDA solver. The &#39;init_step&#39; method has to</span>
@@ -331,7 +331,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y_retn</span><span class="p">,</span> <span class="n">yp_retn</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Clean up what is needed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -343,11 +343,11 @@
 <span class="c1"># DAE integrators</span>
 <span class="c1">#------------------------------------------------------------------------------</span>
 
-<span class="k">def</span> <span class="nf">find_dae_integrator</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_dae_integrator</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">dae</span><span class="o">.</span><span class="n">LOADED</span><span class="p">:</span>
         <span class="c1">## ida</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">scikits_odes_sundials</span> <span class="kn">import</span> <span class="n">ida</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">scikits_odes_sundials</span><span class="w"> </span><span class="kn">import</span> <span class="n">ida</span>
             <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ida</span><span class="o">.</span><span class="n">IDA</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Could not load IDA solver&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
@@ -356,7 +356,7 @@
 
         <span class="c1">## idas</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">scikits_odes_sundials</span> <span class="kn">import</span> <span class="n">idas</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">scikits_odes_sundials</span><span class="w"> </span><span class="kn">import</span> <span class="n">idas</span>
             <span class="n">DaeBase</span><span class="o">.</span><span class="n">integrator_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idas</span><span class="o">.</span><span class="n">IDAS</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Could not load IDAS solver&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
@@ -365,13 +365,13 @@
 
         <span class="c1">## ddaspk</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">scikits_odes_daepack.ddaspkint</span> <span class="kn">import</span> <span class="n">ddaspk</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">scikits_odes_daepack.ddaspkint</span><span class="w"> </span><span class="kn">import</span> <span class="n">ddaspk</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="c1">## lsodi</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">scikits_odes_daepack.lsodiint</span> <span class="kn">import</span> <span class="n">lsodi</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">scikits_odes_daepack.lsodiint</span><span class="w"> </span><span class="kn">import</span> <span class="n">lsodi</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
 
