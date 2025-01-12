@@ -143,9 +143,6 @@ jobs:
             tox-env: py39
           - python-version: "3.13"
             tox-env: py313
-        exclude:
-          - os: windows-latest  # Issue with tox venv, pip has no ssl access
-            python-version: "3.9"
         
     defaults:
       run:
@@ -155,21 +152,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup conda/python
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Setup Python and SUNDIALS
+        uses: mamba-org/setup-micromamba@v2
         with:
-          auto-update-conda: true
-          miniconda-version: latest
-          activate-environment: odes
-          python-version: ${{ matrix.python-version }}
-
-      - name: Setup SUNDIALS
-        run: conda install sundials=${{ matrix.sundials-version }} -c conda-forge
+          environment-name: odes
+          create-args: >-
+            python=${{ matrix.python-version }}
+            sundials=${{ matrix.sundials-version }}
+          condarc: |
+            channels:
+              - conda-forge
 
       - name: Verify environment
         run: |
-          conda info
-          conda list
+          micromamba info
+          micromamba list
 
       - name: Set SUNDIALS path
         run: |
@@ -190,8 +187,8 @@ jobs:
 
       - name: List info
         run: |
-          conda info
-          conda list
+          micromamba info
+          micromamba list
                 
       - name: Run tests
         working-directory: packages/scikits-odes-sundials
