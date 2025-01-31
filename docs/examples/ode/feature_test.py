@@ -13,54 +13,56 @@ from numpy import asarray, cos, sin, sqrt
 import numpy as np
 
 #data
-k = 4.0
-m = 1.0
+userdata = dict(
+k = 4.0,
+m = 1.0,
+t1 = 10.,
+rhs_calls = 0,
+jac_calls = 0,
+)
 #initial data on t=0, x[0] = u, x[1] = \dot{u}, xp = \dot{x}
 initx = [1, 0.1]
 
 #define function for the right-hand-side equations which has specific signature
-def rhseqn(t, x, xdot):
+def rhseqn(t, x, xdot, my_user_data):
     """ we create rhs equations for the problem"""
+
+    k = my_user_data['k']
+    m = my_user_data['m']
+    my_user_data['rhs_calls'] += 1
     xdot[0] = x[1]
     xdot[1] = - k/m * x[0]
 
-def jaceqn(t, x, fx, jac):
+def jaceqn(t, x, fx, jac, my_user_data):#=None):
+    my_user_data['jac_calls'] += 1
+    if my_user_data is None:
+        print("ERROR")
+        return 0
+
+    k = my_user_data['k']
+    m = my_user_data['m']
+
     jac[0,1] = 1
     jac[1,0] = -k/m
 
 #instantiate the solver
-from scikits.odes import ode
-solver = ode('cvode', rhseqn, jacfn=jaceqn, )
-#obtain solution at a required time
-result = solver.solve([0., 10., 20.], initx)
-
-print('\n   t        Solution          Exact')
-print('------------------------------------')
-#for t, u in zip(result[1], result[2]):
-for t, u in zip(result.values.t, result.values.y):
-    print('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
-
-#continue the solver
-#result = solver.solve([result[1][-1], result[1][-1]+1], result[2][-1])
-result = solver.solve([result.values.t[-1], result.values.t[-1]+1, result.values.t[-1]+110], result.values.y[-1])
-print('------------------------------------')
-print('  ...continuation of the solution')
-print('------------------------------------')
-
-#for t, u in zip(result[1], result[2]):
-for t, u in zip(result.values.t, result.values.y):
-    print ('%4.2f %15.6g %15.6g' % (t, u[0], initx[0]*cos(sqrt(k/m)*t)+initx[1]*sin(sqrt(k/m)*t)/sqrt(k/m)))
-
-
-from scikits.odes.sundials.cvode import CVODE, StatusEnum
+#from scikits.odes.sundials.cvode import CVODE, StatusEnum, CV_WrapJacRhsFunction
+#SolverClass = CVODE
+from scikits.odes.sundials.cvode import CV_WrapJacRhsFunction
+from scikits.odes.sundials.cvodes import CVODES, StatusEnum
+SolverClass = CVODES
 from collections import namedtuple
 
-def rootfn(t, x, g):
+def rootfn(t, x, g, my_user_data):
+    t1 = my_user_data['t1']
     g[0] = x[0]
     g[1] = x[1]
-    g[2] = t - 10.
-solver = CVODE(rhseqn, jacfn=jaceqn, old_api=False, one_step_compute=True,
-               rootfn=rootfn, nr_rootfns=3)
+    g[2] = t - t1
+
+solver = SolverClass(
+    rhseqn, user_data=userdata,# jacfn=jaceqn,
+    old_api=False, one_step_compute=True,
+               rootfn=rootfn, nr_rootfns=3, )
 
 next_tstop = 10.
 solver.init_step(0., initx)
@@ -69,8 +71,13 @@ dense_t = []
 dense_y = []
 roots = []
 Root = namedtuple("Root", ["index", "rootsfound"])
+print("starting loop")
+#print(solver.get_info(), solver.num_chk_pts, solver.options["rfn"])
+res = solver.solve([0, 10.0], initx)
+
 for cnt in range(1000):
-    res = solver.step(1.)
+    #res = solver.step(1.)
+    s
     print(cnt, res.flag, res.values.t)
     dense_t.append(np.copy(res.values.t))
     dense_y.append(np.copy(res.values.y))
@@ -80,13 +87,20 @@ for cnt in range(1000):
             roots.append(Root(cnt, rootsfound))
 
         case StatusEnum.TSTOP_RETURN:
+            #continue
             break
-t = np.array(dense_t)
-y = np.array(dense_y)
 
 
-    #if res.values.t > 9.99:
-    #    break
+    if res.values.t > 10.01:
+        print("broke from t")
+        break
     #print(cnt, res)
     #if res.values.y[0] <= 0.:
     #    break
+t = np.array(dense_t)
+y = np.array(dense_y)
+print(solver.get_info())
+print(userdata)
+print(cnt)
+print(solver.num_chk_pts)
+

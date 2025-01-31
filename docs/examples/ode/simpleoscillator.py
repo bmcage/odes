@@ -25,7 +25,7 @@ def rhseqn(t, x, xdot):
 
 #instantiate the solver
 from scikits.odes import ode
-solver = ode('cvode', rhseqn, old_api=True)
+solver = ode('cvode', rhseqn, old_api=True, rtol=1E-12, atol=1E-15)
 #obtain solution at a required time
 result = solver.solve([0., 10., 20.], initx)
 

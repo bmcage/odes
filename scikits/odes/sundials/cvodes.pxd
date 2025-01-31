@@ -20,5 +20,10 @@ cdef class CVS_data(CV_data):
 cdef class CVODES(CVODE):
     cdef N_Vector aStol
     cdef CVS_data aux_dataS
+    cdef public int num_chk_pts
 
     cdef int Ns   #sensitivity parameter size
+    cpdef _init_adjoint_step(self)
+    cpdef _solve(self, np.ndarray[DTYPE_t, ndim=1] tspan,
+                       np.ndarray[DTYPE_t, ndim=1] y0)
+

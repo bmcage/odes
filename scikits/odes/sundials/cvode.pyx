@@ -5,6 +5,8 @@ from enum import IntEnum
 import inspect
 from warnings import warn
 
+# Use python setup.py intall to install
+
 include "sundials_config.pxi"
 
 import numpy as np
@@ -1971,15 +1973,15 @@ cdef class CVODE:
         t_err = None
         y_err = None
         sol_t_out = t_out
-        if flagCV == CV_SUCCESS or flag == CV_WARNING:
-            pass
-        elif flagCV == CV_ROOT_RETURN:
-            self.t_roots.append(np.copy(t_out))
-            self.y_roots.append(np.copy(y_out))
-        elif flagCV == CV_TSTOP_RETURN:
-            self.t_tstop.append(np.copy(t_out))
-            self.y_tstop.append(np.copy(y_out))
-        elif flagCV < 0:
+        #if flagCV == CV_SUCCESS or flag == CV_WARNING:
+        #    pass
+        #elif flagCV == CV_ROOT_RETURN:
+        #    self.t_roots.append(np.copy(t_out))
+        #    self.y_roots.append(np.copy(y_out))
+        #elif flagCV == CV_TSTOP_RETURN:
+        #    self.t_tstop.append(np.copy(t_out))
+        #    self.y_tstop.append(np.copy(y_out))
+        if flagCV < 0:
             t_err = np.copy(t_out)
             y_err = np.copy(y_out)
             sol_t_out = None

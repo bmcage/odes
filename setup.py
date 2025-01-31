@@ -60,6 +60,7 @@ setup(
         # If any package contains *.pxd files, include them:
         '': ['*.pxd'],
     },
+    gdb_debug=True,
     classifiers = CLASSIFIERS,
     **additional_kwargs
 )

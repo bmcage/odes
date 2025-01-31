@@ -29,7 +29,7 @@ from .cvode cimport (CV_RhsFunction, CV_WrapRhsFunction, CV_RootFunction,
                        CV_JacTimesVecFunction, CV_WrapJacTimesVecFunction,
                        CV_JacTimesSetupFunction, CV_WrapJacTimesSetupFunction,
                        CV_ContinuationFunction, CV_ErrHandler, 
-                       CV_WrapErrHandler, CV_data, CVODE)
+                       CV_WrapErrHandler, CV_data, CVODE,)
 from .c_cvodes cimport *
 from .common_defs cimport (
     nv_s2ndarray, ndarray2nv_s, ndarray2SUNMatrix, DTYPE_t, INDEX_TYPE_t,
@@ -162,7 +162,7 @@ cdef class CVS_data(CV_data):
 
 cdef class CVODES(CVODE):
 
-    def __cinit__(self, Rfn, **options):
+    def __cinit__(self, Rfn, num_steps_per_chk=1, interp_type=CV_POLYNOMIAL, **options):
         """
         Initialize the CVODE Solver and it's default values
 
@@ -172,9 +172,11 @@ cdef class CVODES(CVODE):
                       of supported options and their values see set_options()
 
         """
-        super(CVODES, self).__init__(Rfn, **options)
-        
+        self.num_chk_pts = 0
         self.Ns       = -1
+        super(CVODES, self).__init__(Rfn, **options)
+        self.options["num_steps_per_chk"] = num_steps_per_chk
+        self.options["interp_type"] = interp_type
 
     def set_options(self, **options):
         """
@@ -453,7 +455,13 @@ cdef class CVODES(CVODE):
         """
         
         soln = super(CVODES, self).init_step(t0, y0)
+        #self._init_adjoint_step()
+
         return soln
+
+    cpdef _init_adjoint_step(self):#, long int steps, int interp):
+        cdef void* cv_mem = self._cv_mem
+        CVodeAdjInit(cv_mem, self.options["num_steps_per_chk"], self.options["interp_type"])
 
     def solve(self, object tspan, object y0):
         """

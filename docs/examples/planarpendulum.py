@@ -47,6 +47,8 @@ import numpy as np
 from scikits.odes.sundials import ida
 import matplotlib.pyplot as plt
 
+np.float = float
+
 def draw_graphs(fignum, t, x, y):
     plt.ion()
     plt.figure(fignum)
