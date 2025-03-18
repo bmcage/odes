@@ -540,7 +540,7 @@ cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector r,
         yp_tmp = aux_data.yp_tmp
         residual_tmp = aux_data.residual_tmp
 
-        if aux_data.r_vec is None:
+        if aux_data.rvec_tmp is None:
             N = len(yy_tmp)
             aux_data.rvec_tmp = np.empty(N, DTYPE)
 
@@ -557,7 +557,7 @@ cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector r,
         nv_s2ndarray(rvec, rvec_tmp)
         nv_s2ndarray(z, z_tmp)
 
-    user_flag = aux_data.prec_solvefn.evaluate(tt, yy_tmp, residual_tmp,
+    user_flag = aux_data.prec_solvefn.evaluate(tt, yy_tmp, yp_tmp, residual_tmp,
                                                rvec_tmp, z_tmp, cj, delta,
                                                aux_data.user_data)
 
@@ -878,7 +878,7 @@ cdef class IDA(BaseSundialsSolver):
                     Absolute tolerancy
             'linsolver':
                 Values: 'dense' (= default), 'lapackdense', 'band',
-                        'lapackband', 'spgmr', 'spbcg', 'sptfqmr'
+                        'lapackband', 'spgmr', 'spbcgs', 'sptfqmr'
                 Description:
                     Specifies used linear solver.
                     Limitations: Linear solvers for dense and band matrices can
@@ -898,7 +898,7 @@ cdef class IDA(BaseSundialsSolver):
                 Values: 0 (= default), 1, 2, 3, 4, 5
                 Description:
                     Dimension of the number of used Krylov subspaces
-                    (used only by 'spgmr', 'spbcg', 'sptfqmr' linsolvers)
+                    (used only by 'spgmr', 'spbcgs', 'sptfqmr' linsolvers)
             'tstop':
                 Values: float, 0.0 = default
                 Description:
