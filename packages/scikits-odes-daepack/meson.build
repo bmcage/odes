@@ -4,7 +4,8 @@ project('scikits-odes-daepack',
   meson_version: '>= 1.1.0',
   default_options : [
     'warning_level=1',
-    'buildtype=release'
+    'buildtype=release',
+    'c_std=c17',
   ])
 
 py = import('python').find_installation(pure: false)
