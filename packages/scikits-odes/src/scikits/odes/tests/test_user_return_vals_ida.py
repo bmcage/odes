@@ -5,17 +5,17 @@ from .. import dae
 from ..sundials.ida import StatusEnumIDA
 
 def normal_rhs(t, y, ydot, res):
-    res[0] = ydot - t
+    res[0] = ydot[0] - t
 
 def complex_rhs(t, y, ydot, res):
-    res[0] = ydot - t + y
+    res[0] = ydot[0] - t + y[0]
 
 def rhs_with_return(t, y, ydot, res):
-    res[0] = ydot - t
+    res[0] = ydot[0] - t
     return 0
 
 def rhs_problem_late(t, y, ydot, res):
-    res[0] = ydot - t
+    res[0] = ydot[0] - t
     if t > 0.5:
         return 1
 
@@ -23,7 +23,7 @@ def rhs_problem_immediate(t, y, ydot, res):
     return 1
 
 def rhs_error_late(t, y, ydot, res):
-    res[0] = ydot - t
+    res[0] = ydot[0] - t
     if t > 0.5:
         return -1
 

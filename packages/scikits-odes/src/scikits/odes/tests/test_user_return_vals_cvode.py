@@ -8,7 +8,7 @@ def normal_rhs(t, y, ydot):
     ydot[0] = t
 
 def complex_rhs(t, y, ydot):
-    ydot[0] = t - y
+    ydot[0] = t - y[0]
 
 def rhs_with_return(t, y, ydot):
     ydot[0] = t
