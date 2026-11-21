@@ -200,6 +200,9 @@ cdef int _res(sunrealtype tt, N_Vector yy, N_Vector yp,
 
     aux_data = <IDA_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    # IDA ignores a failed Jacobian-times-vector product, so stop it here.
+    if aux_data.exception is not None:
+        return -1
     try:
         if parallel_implementation:
             raise NotImplemented
