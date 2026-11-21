@@ -53,6 +53,9 @@ cdef class Shared_data:
     cdef object user_data
     cdef Shared_ErrHandler err_handler
     cdef object err_user_data
+    cdef object exception
+
+    cdef int raise_stored_exception(self) except -1
 
 
 cdef class BaseSundialsSolver:

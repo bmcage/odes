@@ -189,30 +189,33 @@ cdef class CV_WrapRhsFunction(CV_RhsFunction):
         return user_flag
 
 cdef int _rhsfn(sunrealtype tt, N_Vector yy, N_Vector yp,
-              void *auxiliary_data) except? -1:
+              void *auxiliary_data) noexcept:
     """ function with the signature of CVRhsFn, that calls python Rhs """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp
 
     aux_data = <CV_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
+            yp_tmp = aux_data.yp_tmp
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
-        yp_tmp = aux_data.yp_tmp
+            nv_s2ndarray(yy, yy_tmp)
+            #nv_s2ndarray(yp, yp_tmp)
 
-        nv_s2ndarray(yy, yy_tmp)
-        #nv_s2ndarray(yp, yp_tmp)
+        user_flag = aux_data.rfn.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
 
-    user_flag = aux_data.rfn.evaluate(tt, yy_tmp, yp_tmp, aux_data.user_data)
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            ndarray2nv_s(yp, yp_tmp)
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        ndarray2nv_s(yp, yp_tmp)
-
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # Root function
 cdef class CV_RootFunction:
@@ -254,30 +257,33 @@ cdef class CV_WrapRootFunction(CV_RootFunction):
             user_flag = 0
         return user_flag
 
-cdef int _rootfn(sunrealtype t, N_Vector y, sunrealtype *gout, void *auxiliary_data) except? -1:
+cdef int _rootfn(sunrealtype t, N_Vector y, sunrealtype *gout, void *auxiliary_data) noexcept:
     """ function with the signature of CVRootFn """
 
     aux_data = <CV_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
-
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
-        g_tmp  = aux_data.g_tmp
-
-        nv_s2ndarray(y, yy_tmp)
-
-    user_flag = aux_data.rootfn.evaluate(t, yy_tmp, g_tmp, aux_data.user_data)
-
     cdef int i
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        for i in np.arange(len(g_tmp)):
-            gout[i] = <sunrealtype> g_tmp[i]
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
+            g_tmp  = aux_data.g_tmp
 
-    return user_flag
+            nv_s2ndarray(y, yy_tmp)
+
+        user_flag = aux_data.rootfn.evaluate(t, yy_tmp, g_tmp, aux_data.user_data)
+
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            for i in np.arange(len(g_tmp)):
+                gout[i] = <sunrealtype> g_tmp[i]
+
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # Jacobian function
 cdef class CV_JacRhsFunction:
@@ -335,7 +341,7 @@ cdef class CV_WrapJacRhsFunction(CV_JacRhsFunction):
 cdef int _jacdense(sunrealtype tt,
             N_Vector yy, N_Vector ff, SUNMatrix Jac,
             void *auxiliary_data, N_Vector tmp1, N_Vector tmp2,
-            N_Vector tmp3) except? -1:
+            N_Vector tmp3) noexcept:
     """function with the signature of CVodeJacFn that calls python Jac
        Note: signature of Jac is SUNMatrix
     """
@@ -344,24 +350,28 @@ cdef int _jacdense(sunrealtype tt,
 
     aux_data = <CV_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
-        jac_tmp = aux_data.jac_tmp
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
+            jac_tmp = aux_data.jac_tmp
 
-        nv_s2ndarray(yy, yy_tmp)
-        ff_tmp = aux_data.z_tmp
-        nv_s2ndarray(ff, ff_tmp)
+            nv_s2ndarray(yy, yy_tmp)
+            ff_tmp = aux_data.z_tmp
+            nv_s2ndarray(ff, ff_tmp)
 
-    user_flag = aux_data.jac.evaluate(tt, yy_tmp, ff_tmp, jac_tmp)
+        user_flag = aux_data.jac.evaluate(tt, yy_tmp, ff_tmp, jac_tmp)
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        ndarray2SUNMatrix(Jac, jac_tmp)
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            ndarray2SUNMatrix(Jac, jac_tmp)
 
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # Precondioner setup funtion
 cdef class CV_PrecSetupFunction:
@@ -423,24 +433,27 @@ class MutableBool(object):
 
 cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector ff, sunbooleantype jok,
                        sunbooleantype *jcurPtr, sunrealtype gamma,
-                       void *auxiliary_data) except -1:
+                       void *auxiliary_data) noexcept:
     """ function with the signature of CVLsPrecSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp
 
     aux_data = <CV_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
+            nv_s2ndarray(yy, yy_tmp)
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
-        nv_s2ndarray(yy, yy_tmp)
-
-    jcurPtr_tmp = MutableBool(jcurPtr[0])
-    user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, jok, jcurPtr_tmp,
-                                               gamma, aux_data.user_data)
-    jcurPtr[0] = jcurPtr_tmp.value
-    return user_flag
+        jcurPtr_tmp = MutableBool(jcurPtr[0])
+        user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, jok, jcurPtr_tmp,
+                                                   gamma, aux_data.user_data)
+        jcurPtr[0] = jcurPtr_tmp.value
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # Precondioner solve funtion
 cdef class CV_PrecSolveFunction:
@@ -505,32 +518,35 @@ cdef class CV_WrapPrecSolveFunction(CV_PrecSolveFunction):
 
 cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector ff, N_Vector r,
                        N_Vector z, sunrealtype gamma, sunrealtype delta, int lr,
-                       void *auxiliary_data) except? -1:
+                       void *auxiliary_data) noexcept:
     """ function with the signature of CVLsPrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
 
     aux_data = <CV_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
+            r_tmp = aux_data.r_tmp
+            z_tmp = aux_data.z_tmp
 
-        r_tmp = aux_data.r_tmp
-        z_tmp = aux_data.z_tmp
+            nv_s2ndarray(yy, yy_tmp)
+            nv_s2ndarray(r, r_tmp)
 
-        nv_s2ndarray(yy, yy_tmp)
-        nv_s2ndarray(r, r_tmp)
+        user_flag = aux_data.prec_solvefn.evaluate(tt, yy_tmp, r_tmp, z_tmp, gamma, delta, lr, aux_data.user_data)
 
-    user_flag = aux_data.prec_solvefn.evaluate(tt, yy_tmp, r_tmp, z_tmp, gamma, delta, lr, aux_data.user_data)
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            ndarray2nv_s(z, z_tmp)
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        ndarray2nv_s(z, z_tmp)
-
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # JacTimesVec function
 cdef class CV_JacTimesVecFunction:
@@ -588,32 +604,35 @@ cdef class CV_WrapJacTimesVecFunction(CV_JacTimesVecFunction):
         return user_flag
 
 cdef int _jac_times_vecfn(N_Vector v, N_Vector Jv, sunrealtype t, N_Vector y,
-                          N_Vector fy, void *user_data, N_Vector tmp) except? -1:
+                          N_Vector fy, void *user_data, N_Vector tmp) noexcept:
     """ function with the signature of CVodeJacTimesVecFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, v_tmp, Jv_tmp
 
     aux_data = <CV_data> user_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            y_tmp = aux_data.yy_tmp
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        y_tmp = aux_data.yy_tmp
+            v_tmp = aux_data.r_tmp
+            Jv_tmp = aux_data.z_tmp
 
-        v_tmp = aux_data.r_tmp
-        Jv_tmp = aux_data.z_tmp
+            nv_s2ndarray(y, y_tmp)
+            nv_s2ndarray(v, v_tmp)
 
-        nv_s2ndarray(y, y_tmp)
-        nv_s2ndarray(v, v_tmp)
+        user_flag = aux_data.jac_times_vecfn.evaluate(v_tmp, Jv_tmp, t, y_tmp, aux_data.user_data)
 
-    user_flag = aux_data.jac_times_vecfn.evaluate(v_tmp, Jv_tmp, t, y_tmp, aux_data.user_data)
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            ndarray2nv_s(Jv, Jv_tmp)
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        ndarray2nv_s(Jv, Jv_tmp)
-
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # JacTimesVec function
 cdef class CV_JacTimesSetupFunction:
@@ -669,31 +688,34 @@ cdef class CV_WrapJacTimesSetupFunction(CV_JacTimesSetupFunction):
         return user_flag
 
 cdef int _jac_times_setupfn(sunrealtype t, N_Vector y, N_Vector fy,
-                            void *user_data) except? -1:
+                            void *user_data) noexcept:
     """ function with the signature of CVodeJacTimesSetupFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] y_tmp, fy_tmp
 
     aux_data = <CV_data> user_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            y_tmp = aux_data.yy_tmp
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        y_tmp = aux_data.yy_tmp
+            fy_tmp = aux_data.z_tmp
 
-        fy_tmp = aux_data.z_tmp
+            nv_s2ndarray(y, y_tmp)
+            nv_s2ndarray(fy, fy_tmp)
 
-        nv_s2ndarray(y, y_tmp)
-        nv_s2ndarray(fy, fy_tmp)
+        user_flag = aux_data.jac_times_setupfn.evaluate(t, y_tmp, fy_tmp, aux_data.user_data)
 
-    user_flag = aux_data.jac_times_setupfn.evaluate(t, y_tmp, fy_tmp, aux_data.user_data)
+        #if parallel_implementation:
+        #    raise NotImplemented
+        #else:
+        #    ndarray2nv_s(fy, fy_tmp)
 
-    #if parallel_implementation:
-    #    raise NotImplemented
-    #else:
-    #    ndarray2nv_s(fy, fy_tmp)
-
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 cdef class CV_ContinuationFunction:
     """
@@ -1877,6 +1899,7 @@ cdef class CVODE(BaseSundialsSolver):
 
         while True:
             flag = CVode(cv_mem, <sunrealtype> t,  y, &t_out, CV_NORMAL)
+            self.aux_data.raise_stored_exception()
 
             nv_s2ndarray(y,  y_last)
 
@@ -1984,6 +2007,7 @@ cdef class CVODE(BaseSundialsSolver):
                 flagCV = CVode(self._cv_mem, <sunrealtype> t,  y, &t_out, CV_ONE_STEP)
             else:
                 flagCV = CVode(self._cv_mem, <sunrealtype> t,  y, &t_out, CV_NORMAL)
+        self.aux_data.raise_stored_exception()
 
         if self._old_api:
             warn("Old api is deprecated, move to new api", DeprecationWarning)

@@ -53,10 +53,10 @@ cdef extern from "ida/ida.h":
     enum: IDA_UNRECOGNIZED_ERROR #-99
 
     ctypedef int (*IDAResFn)(sunrealtype tt, N_Vector yy, N_Vector yp,
-                    N_Vector rr, void *user_data) except? -1
+                    N_Vector rr, void *user_data) noexcept
 
     ctypedef int (*IDARootFn)(sunrealtype t, N_Vector y, N_Vector yp,
-                    sunrealtype *gout, void *user_data) except? -1
+                    sunrealtype *gout, void *user_data) noexcept
 
     ctypedef int (*IDAEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
 
@@ -162,27 +162,27 @@ cdef extern from "ida/ida_ls.h":
     ctypedef int (*IDALsJacFn)(sunrealtype t, sunrealtype c_j, N_Vector y,
                                N_Vector yp, N_Vector r, SUNMatrix Jac,
                                void *user_data, N_Vector tmp1,
-                               N_Vector tmp2, N_Vector tmp3) except? -1
+                               N_Vector tmp2, N_Vector tmp3) noexcept
 
     ctypedef int (*IDALsPrecSetupFn)(sunrealtype tt, N_Vector yy,
                                     N_Vector yp, N_Vector rr,
-                                    sunrealtype c_j, void *user_data) except? -1
+                                    sunrealtype c_j, void *user_data) noexcept
 
     ctypedef int (*IDALsPrecSolveFn)(sunrealtype tt, N_Vector yy,
                                     N_Vector yp, N_Vector rr,
                                     N_Vector rvec, N_Vector zvec,
                                     sunrealtype c_j, sunrealtype delta,
-                                    void *user_data) except? -1
+                                    void *user_data) noexcept
 
     ctypedef int (*IDALsJacTimesSetupFn)(sunrealtype tt, N_Vector yy,
                                         N_Vector yp, N_Vector rr,
-                                        sunrealtype c_j, void *user_data) except? -1
+                                        sunrealtype c_j, void *user_data) noexcept
 
     ctypedef int (*IDALsJacTimesVecFn)(sunrealtype tt, N_Vector yy,
                                       N_Vector yp, N_Vector rr,
                                       N_Vector v, N_Vector Jv,
                                       sunrealtype c_j, void *user_data,
-                                      N_Vector tmp1, N_Vector tmp2) except? -1
+                                      N_Vector tmp1, N_Vector tmp2) noexcept
 
     int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
 
