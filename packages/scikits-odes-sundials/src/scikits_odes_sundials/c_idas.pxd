@@ -426,13 +426,13 @@ cdef extern from "idas/idas_ls.h":
 
     ctypedef int (*IDALsJacTimesSetupFn)(sunrealtype tt, N_Vector yy,
                                         N_Vector yp, N_Vector rr,
-                                        sunrealtype c_j, void *user_data) except? -1
+                                        sunrealtype c_j, void *user_data) noexcept
 
     ctypedef int (*IDALsJacTimesVecFn)(sunrealtype tt, N_Vector yy,
                                       N_Vector yp, N_Vector rr,
                                       N_Vector v, N_Vector Jv,
                                       sunrealtype c_j, void *user_data,
-                                      N_Vector tmp1, N_Vector tmp2) except? -1
+                                      N_Vector tmp1, N_Vector tmp2) noexcept
 
     int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
 
