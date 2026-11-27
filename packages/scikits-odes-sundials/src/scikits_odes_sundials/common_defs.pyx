@@ -273,6 +273,17 @@ cdef class Shared_data:
         self.parallel_implementation = False
         self.user_data = None
         self.err_user_data = None
+        self.exception = None
+
+    cdef int raise_stored_exception(self) except -1:
+        """
+        Raise the exception that a user callback raised inside SUNDIALS.
+        The C callbacks cannot raise, so they store it here instead.
+        """
+        exc, self.exception = self.exception, None
+        if exc is not None:
+            raise exc
+        return 0
 
 
 cdef class BaseSundialsSolver:

@@ -194,31 +194,37 @@ cdef class IDA_WrapRhsFunction(IDA_RhsFunction):
 
 
 cdef int _res(sunrealtype tt, N_Vector yy, N_Vector yp,
-              N_Vector rr, void *auxiliary_data) except? -1:
+              N_Vector rr, void *auxiliary_data) noexcept:
     """ function with the signature of IDAResFn """
     cdef np.ndarray[DTYPE_t, ndim=1] residual_tmp, yy_tmp, yp_tmp
 
     aux_data = <IDA_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    # IDA ignores a failed Jacobian-times-vector product, so stop it here.
+    if aux_data.exception is not None:
+        return -1
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
+            yp_tmp = aux_data.yp_tmp
+            residual_tmp = aux_data.residual_tmp
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
-        yp_tmp = aux_data.yp_tmp
-        residual_tmp = aux_data.residual_tmp
+            nv_s2ndarray(yy, yy_tmp)
+            nv_s2ndarray(yp, yp_tmp)
 
-        nv_s2ndarray(yy, yy_tmp)
-        nv_s2ndarray(yp, yp_tmp)
+        user_flag = aux_data.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, aux_data.user_data)
 
-    user_flag = aux_data.res.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, aux_data.user_data)
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            ndarray2nv_s(rr, residual_tmp)
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        ndarray2nv_s(rr, residual_tmp)
-
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # Root function
 cdef class IDA_RootFunction:
@@ -262,32 +268,35 @@ cdef class IDA_WrapRootFunction(IDA_RootFunction):
         return user_flag
 
 cdef int _rootfn(sunrealtype t, N_Vector yy, N_Vector yp,
-                 sunrealtype *gout, void *auxiliary_data) except? -1:
+                 sunrealtype *gout, void *auxiliary_data) noexcept:
     """ function with the signature of IDARootFn """
 
     aux_data = <IDA_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
-
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
-        yp_tmp = aux_data.yp_tmp
-        g_tmp  = aux_data.g_tmp
-
-        nv_s2ndarray(yy, yy_tmp)
-        nv_s2ndarray(yp, yp_tmp)
-
-    user_flag = aux_data.rootfn.evaluate(t, yy_tmp, yp_tmp, g_tmp, aux_data.user_data)
-
     cdef int i
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        for i in np.arange(len(g_tmp)):
-            gout[i] = <sunrealtype> g_tmp[i]
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
+            yp_tmp = aux_data.yp_tmp
+            g_tmp  = aux_data.g_tmp
 
-    return user_flag
+            nv_s2ndarray(yy, yy_tmp)
+            nv_s2ndarray(yp, yp_tmp)
+
+        user_flag = aux_data.rootfn.evaluate(t, yy_tmp, yp_tmp, g_tmp, aux_data.user_data)
+
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            for i in np.arange(len(g_tmp)):
+                gout[i] = <sunrealtype> g_tmp[i]
+
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # Jacobian function
 cdef class IDA_JacRhsFunction:
@@ -354,35 +363,39 @@ cdef class IDA_WrapJacRhsFunction(IDA_JacRhsFunction):
 
 cdef int _jacdense(sunrealtype tt, sunrealtype cj,
             N_Vector yy, N_Vector yp, N_Vector rr, SUNMatrix Jac,
-            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1:
+            void *auxiliary_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) noexcept:
     """function with the signature of IDAJacFn """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp, residual_tmp
     cdef np.ndarray jac_tmp
 
     aux_data = <IDA_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
-        yp_tmp = aux_data.yp_tmp
-        residual_tmp = aux_data.residual_tmp
-        if aux_data.jac_tmp is None:
-            N = len(yy_tmp)
-            aux_data.jac_tmp = np.empty((N,N), DTYPE)
-        jac_tmp = aux_data.jac_tmp
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
+            yp_tmp = aux_data.yp_tmp
+            residual_tmp = aux_data.residual_tmp
+            if aux_data.jac_tmp is None:
+                N = len(yy_tmp)
+                aux_data.jac_tmp = np.empty((N,N), DTYPE)
+            jac_tmp = aux_data.jac_tmp
 
-        nv_s2ndarray(yy, yy_tmp)
-        nv_s2ndarray(yp, yp_tmp)
-        nv_s2ndarray(rr, residual_tmp)
-    user_flag = aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, cj, jac_tmp, aux_data.user_data)
+            nv_s2ndarray(yy, yy_tmp)
+            nv_s2ndarray(yp, yp_tmp)
+            nv_s2ndarray(rr, residual_tmp)
+        user_flag = aux_data.jac.evaluate(tt, yy_tmp, yp_tmp, residual_tmp, cj, jac_tmp, aux_data.user_data)
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        ndarray2SUNMatrix(Jac, jac_tmp)
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            ndarray2SUNMatrix(Jac, jac_tmp)
 
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 
 # Precondioner setup funtion
@@ -440,27 +453,30 @@ cdef class IDA_WrapPrecSetupFunction(IDA_PrecSetupFunction):
 
 cdef int _prec_setupfn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
                        sunrealtype cj,
-                       void *auxiliary_data) except? -1:
+                       void *auxiliary_data) noexcept:
     """ function with the signature of IDAPrecSetupFn, that calls
         the python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, rp_tmp, residual_tmp
 
     aux_data = <IDA_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
+            yp_tmp = aux_data.yp_tmp
+            residual_tmp = aux_data.residual_tmp
+            nv_s2ndarray(yy, yy_tmp)
+            nv_s2ndarray(yp, yp_tmp)
+            nv_s2ndarray(rr, residual_tmp)
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
-        yp_tmp = aux_data.yp_tmp
-        residual_tmp = aux_data.residual_tmp
-        nv_s2ndarray(yy, yy_tmp)
-        nv_s2ndarray(yp, yp_tmp)
-        nv_s2ndarray(rr, residual_tmp)
-
-    user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, yp_tmp,
-                                               residual_tmp, cj, aux_data.user_data)
-    return user_flag
+        user_flag = aux_data.prec_setupfn.evaluate(tt, yy_tmp, yp_tmp,
+                                                   residual_tmp, cj, aux_data.user_data)
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # Precondioner solve funtion
 cdef class IDA_PrecSolveFunction:
@@ -526,47 +542,50 @@ cdef class IDA_WrapPrecSolveFunction(IDA_PrecSolveFunction):
 
 cdef int _prec_solvefn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector r,
                        N_Vector rvec, N_Vector z, sunrealtype cj,
-                       sunrealtype delta, void *auxiliary_data) except? -1:
+                       sunrealtype delta, void *auxiliary_data) noexcept:
     """ function with the signature of CVodePrecSolveFn, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, r_tmp, z_tmp
 
     aux_data = <IDA_data> auxiliary_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    try:
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            yy_tmp = aux_data.yy_tmp
+            yp_tmp = aux_data.yp_tmp
+            residual_tmp = aux_data.residual_tmp
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        yy_tmp = aux_data.yy_tmp
-        yp_tmp = aux_data.yp_tmp
-        residual_tmp = aux_data.residual_tmp
+            if aux_data.r_vec is None:
+                N = len(yy_tmp)
+                aux_data.rvec_tmp = np.empty(N, DTYPE)
 
-        if aux_data.r_vec is None:
-            N = len(yy_tmp)
-            aux_data.rvec_tmp = np.empty(N, DTYPE)
+            if aux_data.z_tmp is None:
+                N = len(yy_tmp)
+                aux_data.z_tmp = np.empty(N, DTYPE)
 
-        if aux_data.z_tmp is None:
-            N = len(yy_tmp)
-            aux_data.z_tmp = np.empty(N, DTYPE)
+            rvec_tmp = aux_data.rvec_tmp
+            z_tmp = aux_data.z_tmp
 
-        rvec_tmp = aux_data.rvec_tmp
-        z_tmp = aux_data.z_tmp
+            nv_s2ndarray(yy, yy_tmp)
+            nv_s2ndarray(yp, yp_tmp)
+            nv_s2ndarray(r, residual_tmp)
+            nv_s2ndarray(rvec, rvec_tmp)
+            nv_s2ndarray(z, z_tmp)
 
-        nv_s2ndarray(yy, yy_tmp)
-        nv_s2ndarray(yp, yp_tmp)
-        nv_s2ndarray(r, residual_tmp)
-        nv_s2ndarray(rvec, rvec_tmp)
-        nv_s2ndarray(z, z_tmp)
+        user_flag = aux_data.prec_solvefn.evaluate(tt, yy_tmp, residual_tmp,
+                                                   rvec_tmp, z_tmp, cj, delta,
+                                                   aux_data.user_data)
 
-    user_flag = aux_data.prec_solvefn.evaluate(tt, yy_tmp, residual_tmp,
-                                               rvec_tmp, z_tmp, cj, delta,
-                                               aux_data.user_data)
+        if parallel_implementation:
+            raise NotImplemented
+        else:
+            ndarray2nv_s(z, z_tmp)
 
-    if parallel_implementation:
-        raise NotImplemented
-    else:
-        ndarray2nv_s(z, z_tmp)
-
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # JacTimesVec function
 cdef class IDA_JacTimesVecFunction:
@@ -628,33 +647,36 @@ cdef class IDA_WrapJacTimesVecFunction(IDA_JacTimesVecFunction):
         return user_flag
 
 cdef int _jac_times_vecfn(sunrealtype t, N_Vector yy, N_Vector yp, N_Vector rr, N_Vector v,
-        N_Vector Jv, sunrealtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) except? -1:
+        N_Vector Jv, sunrealtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) noexcept:
     """ function with the signature of IDA_JacTimesVecFunction, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp, rr_tmp, v_tmp, Jv_tmp
 
     aux_data = <IDA_data> user_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    try:
+        if parallel_implementation:
+            raise NotImplemented
 
-    if parallel_implementation:
-        raise NotImplemented
+        yy_tmp = aux_data.yy_tmp
+        yp_tmp = aux_data.yp_tmp
+        rr_tmp = aux_data.residual_tmp
+        v_tmp = aux_data.v_tmp
+        Jv_tmp = aux_data.z_tmp
 
-    yy_tmp = aux_data.yy_tmp
-    yp_tmp = aux_data.yp_tmp
-    rr_tmp = aux_data.residual_tmp
-    v_tmp = aux_data.v_tmp
-    Jv_tmp = aux_data.z_tmp
+        nv_s2ndarray(yy, yy_tmp)
+        nv_s2ndarray(yp, yp_tmp)
+        nv_s2ndarray(rr, rr_tmp)
+        nv_s2ndarray(v, v_tmp)
 
-    nv_s2ndarray(yy, yy_tmp)
-    nv_s2ndarray(yp, yp_tmp)
-    nv_s2ndarray(rr, rr_tmp)
-    nv_s2ndarray(v, v_tmp)
+        user_flag = aux_data.jac_times_vecfn.evaluate(t, yy_tmp, yp_tmp, rr_tmp, v_tmp,
+                Jv_tmp, cj, aux_data.user_data)
 
-    user_flag = aux_data.jac_times_vecfn.evaluate(t, yy_tmp, yp_tmp, rr_tmp, v_tmp,
-            Jv_tmp, cj, aux_data.user_data)
+        ndarray2nv_s(Jv, Jv_tmp)
 
-    ndarray2nv_s(Jv, Jv_tmp)
-
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 # JacTimesVec function
 cdef class IDA_JacTimesSetupFunction:
@@ -711,27 +733,30 @@ cdef class IDA_WrapJacTimesSetupFunction(IDA_JacTimesSetupFunction):
         return user_flag
 
 cdef int _jac_times_setupfn(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
-                            sunrealtype cj, void *user_data) except? -1:
+                            sunrealtype cj, void *user_data) noexcept:
     """ function with the signature of IDA_JacTimesSetupFunction, that calls python function """
     cdef np.ndarray[DTYPE_t, ndim=1] yy_tmp, yp_tmp, rr_tmp
 
     aux_data = <IDA_data> user_data
     cdef bint parallel_implementation = aux_data.parallel_implementation
+    try:
+        if parallel_implementation:
+            raise NotImplemented
 
-    if parallel_implementation:
-        raise NotImplemented
+        yy_tmp = aux_data.yy_tmp
+        yp_tmp = aux_data.yp_tmp
+        rr_tmp = aux_data.residual_tmp
 
-    yy_tmp = aux_data.yy_tmp
-    yp_tmp = aux_data.yp_tmp
-    rr_tmp = aux_data.residual_tmp
+        nv_s2ndarray(yy, yy_tmp)
+        nv_s2ndarray(yp, yp_tmp)
+        nv_s2ndarray(rr, rr_tmp)
 
-    nv_s2ndarray(yy, yy_tmp)
-    nv_s2ndarray(yp, yp_tmp)
-    nv_s2ndarray(rr, rr_tmp)
+        user_flag = aux_data.jac_times_setupfn.evaluate(tt, yy_tmp, yp_tmp, rr_tmp, cj, aux_data.user_data)
 
-    user_flag = aux_data.jac_times_setupfn.evaluate(tt, yy_tmp, yp_tmp, rr_tmp, cj, aux_data.user_data)
-
-    return user_flag
+        return user_flag
+    except BaseException as exc:
+        aux_data.exception = exc
+        return -1
 
 
 cdef class IDA_ContinuationFunction:
@@ -1852,6 +1877,7 @@ cdef class IDA(BaseSundialsSolver):
                 flag = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, t0 + ic_t0)
             elif compute_initcond == 'y0':
                 flag = IDACalcIC(ida_mem, IDA_Y_INIT, t0 + ic_t0)
+            self.aux_data.raise_stored_exception()
 
             if not (flag == IDA_SUCCESS):
                 return (flag, t0)
@@ -2072,6 +2098,7 @@ cdef class IDA(BaseSundialsSolver):
         while True:
             flag = IDASolve(self._ida_mem, <sunrealtype> t, &t_out, y, yp,
                             IDA_NORMAL)
+            self.aux_data.raise_stored_exception()
 
             nv_s2ndarray(y,  y_last)
             nv_s2ndarray(yp,  yp_last)
@@ -2221,6 +2248,7 @@ cdef class IDA(BaseSundialsSolver):
             else:
                 flagIDA = IDASolve(self._ida_mem, <sunrealtype> t, &t_out, y, yp,
                                    IDA_NORMAL)
+        self.aux_data.raise_stored_exception()
 
         cdef np.ndarray[DTYPE_t, ndim=1] y_out
         cdef np.ndarray[DTYPE_t, ndim=1] yp_out

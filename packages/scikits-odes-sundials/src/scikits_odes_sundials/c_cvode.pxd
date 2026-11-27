@@ -48,8 +48,8 @@ cdef extern from "cvode/cvode.h":
     
     enum: CV_UNRECOGNIZED_ERR  #   -99
 
-    ctypedef int (*CVRhsFn)(sunrealtype t, N_Vector y, N_Vector ydot, void *user_data) except? -1
-    ctypedef int (*CVRootFn)(sunrealtype t, N_Vector y, sunrealtype *gout, void *user_data) except? -1
+    ctypedef int (*CVRhsFn)(sunrealtype t, N_Vector y, N_Vector ydot, void *user_data) noexcept
+    ctypedef int (*CVRootFn)(sunrealtype t, N_Vector y, sunrealtype *gout, void *user_data) noexcept
     ctypedef int (*CVEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
     ctypedef void (*CVErrHandlerFn)(int error_code,
                                char *module, char *function,
@@ -140,22 +140,22 @@ cdef extern from "cvode/cvode_ls.h":
 
     ctypedef int (*CVLsJacFn)(sunrealtype t, N_Vector y, N_Vector fy,
                               SUNMatrix Jac, void *user_data,
-                              N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) except? -1
+                              N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) noexcept
 
     ctypedef int (*CVLsPrecSetupFn)(sunrealtype t, N_Vector y, N_Vector fy,
                                     sunbooleantype jok, sunbooleantype *jcurPtr,
-                                    sunrealtype gamma, void *user_data) except? -1
+                                    sunrealtype gamma, void *user_data) noexcept
 
     ctypedef int (*CVLsPrecSolveFn)(sunrealtype t, N_Vector y, N_Vector fy,
                                     N_Vector r, N_Vector z, sunrealtype gamma,
-                                    sunrealtype delta, int lr, void *user_data) except? -1
+                                    sunrealtype delta, int lr, void *user_data) noexcept
 
     ctypedef int (*CVLsJacTimesSetupFn)(sunrealtype t, N_Vector y,
-                                       N_Vector fy, void *user_data) except? -1
+                                       N_Vector fy, void *user_data) noexcept
 
     ctypedef int (*CVLsJacTimesVecFn)(N_Vector v, N_Vector Jv, sunrealtype t,
                                       N_Vector y, N_Vector fy,
-                                      void *user_data, N_Vector tmp) except? -1
+                                      void *user_data, N_Vector tmp) noexcept
 
     ctypedef int (*CVLsLinSysFn)(sunrealtype t, N_Vector y, N_Vector fy, 
                                  SUNMatrix A, sunbooleantype jok, 
